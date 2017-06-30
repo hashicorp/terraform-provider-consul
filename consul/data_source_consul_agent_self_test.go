@@ -13,7 +13,7 @@ func TestAccDataConsulAgentSelf_basic(t *testing.T) {
 		PreCheck:  func() { testAccPreCheck(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccDataConsulAgentSelfConfig,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDataSourceValue("data.consul_agent_self.read", "acl_datacenter", "<all>"),
@@ -44,16 +44,12 @@ func TestAccDataConsulAgentSelf_basic(t *testing.T) {
 					testAccCheckDataSourceValue("data.consul_agent_self.read", "name", "<any>"),
 					testAccCheckDataSourceValue("data.consul_agent_self.read", "pid_file", "<all>"),
 					testAccCheckDataSourceValue("data.consul_agent_self.read", "rejoin_after_leave", "<any>"),
-					// testAccCheckDataSourceValue("data.consul_agent_self.read", "retry_join", "<all>"),
-					// testAccCheckDataSourceValue("data.consul_agent_self.read", "retry_join_wan", "<any>"),
 					testAccCheckDataSourceValue("data.consul_agent_self.read", "retry_max_attempts", "<any>"),
 					testAccCheckDataSourceValue("data.consul_agent_self.read", "retry_max_attempts_wan", "<any>"),
 					testAccCheckDataSourceValue("data.consul_agent_self.read", "serf_lan_bind_addr", "<all>"),
 					testAccCheckDataSourceValue("data.consul_agent_self.read", "serf_wan_bind_addr", "<all>"),
 					testAccCheckDataSourceValue("data.consul_agent_self.read", "server_mode", "<any>"),
 					testAccCheckDataSourceValue("data.consul_agent_self.read", "server_name", "<all>"),
-					// testAccCheckDataSourceValue("data.consul_agent_self.read", "start_join", "<all>"),
-					// testAccCheckDataSourceValue("data.consul_agent_self.read", "start_join_wan", "<all>"),
 					testAccCheckDataSourceValue("data.consul_agent_self.read", "syslog_facility", "<any>"),
 					testAccCheckDataSourceValue("data.consul_agent_self.read", "telemetry.enable_hostname", "<all>"),
 					testAccCheckDataSourceValue("data.consul_agent_self.read", "tls_ca_file", "<all>"),
