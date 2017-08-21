@@ -11,6 +11,20 @@ description: |-
 A high-level resource for creating a Service in Consul. Currently,
 defining health checks for a service is not supported.
 
+**Most users should not use this resource**. When using Consul with
+compute instances, it's better to install
+[the Consul Agent](https://www.consul.io/docs/agent/basics.html)
+on these machines and register services via the agent. This ensures
+that services get assigned to the appropriate Consul "nodes" and
+allows service health to integrate with general node health as
+reported by the agent.
+
+To register a non-compute resource, such as a hosted database,
+as a service, as described in
+[Consul's _External Services_ guide](https://www.consul.io/docs/guides/external.html),
+use [`consul_catalog_entry`](catalog_entry.html) instead, which
+can create an arbitrary service record in the Consul catalog.
+
 ## Example Usage
 
 ```hcl
