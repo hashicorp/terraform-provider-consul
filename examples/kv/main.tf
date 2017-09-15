@@ -10,7 +10,7 @@ provider "aws" {
 }
 
 # Setup a key in Consul to provide inputs
-resource "consul_keys" "input" {
+data "consul_keys" "input" {
   key {
     name    = "size"
     path    = "tf_test/size"
@@ -22,7 +22,7 @@ resource "consul_keys" "input" {
 # instance type
 resource "aws_instance" "test" {
   ami           = "${lookup(var.aws_amis, var.aws_region)}"
-  instance_type = "${consul_keys.input.var.size}"
+  instance_type = "${data.consul_keys.input.var.size}"
 }
 
 # Setup a key in Consul to store the instance id and
