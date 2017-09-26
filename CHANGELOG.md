@@ -1,8 +1,8 @@
-## 1.0.0 (Unreleased)
+## 1.0.0 (September 26, 2017)
 
 BUG FIXES:
 
-* d/consul_agent_self: The `enable_ui` config setting was always set to false, regardless of the actual agent configuration [GH-16]
+* d/consul_agent_self: The `enable_ui` config setting was always set to false, regardless of the actual agent configuration ([#16](https://github.com/terraform-providers/terraform-provider-consul/issues/16))
 
 ## 0.1.0 (June 20, 2017)
 
