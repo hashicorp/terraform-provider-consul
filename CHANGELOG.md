@@ -1,8 +1,8 @@
-## 0.1.1 (Unreleased)
+## 1.0.0 (Unreleased)
 
 BUG FIXES:
 
-* d/consul_agent_self: Fix the casing on EnableUI so that set to state [GH-16]
+* d/consul_agent_self: The `enable_ui` config setting was always set to false, regardless of the actual agent configuration [GH-16]
 
 ## 0.1.0 (June 20, 2017)
 
