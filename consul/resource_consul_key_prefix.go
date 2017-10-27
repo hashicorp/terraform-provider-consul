@@ -40,6 +40,11 @@ func resourceConsulKeyPrefix() *schema.Resource {
 					Type: schema.TypeString,
 				},
 			},
+
+			"override": &schema.Schema{
+				Type:     schema.TypeBool,
+				Optional: true,
+			},
 		},
 	}
 }
@@ -56,6 +61,7 @@ func resourceConsulKeyPrefixCreate(d *schema.ResourceData, meta interface{}) err
 	keyClient := newKeyClient(kv, dc, token)
 
 	pathPrefix := d.Get("path_prefix").(string)
+	override := d.Get("override").(bool)
 	subKeys := map[string]string{}
 	for k, vI := range d.Get("subkeys").(map[string]interface{}) {
 		subKeys[k] = vI.(string)
@@ -64,15 +70,23 @@ func resourceConsulKeyPrefixCreate(d *schema.ResourceData, meta interface{}) err
 	// To reduce the impact of mistakes, we will only "create" a prefix that
 	// is currently empty. This way we are less likely to accidentally
 	// conflict with other mechanisms managing the same prefix.
+	// Unless the 'override' key is set to true, in this case the prefix will be
+	// deleted before "creation"
 	currentSubKeys, err := keyClient.GetUnderPrefix(pathPrefix)
 	if err != nil {
 		return err
 	}
 	if len(currentSubKeys) > 0 {
-		return fmt.Errorf(
-			"%d keys already exist under %s; delete them before managing this prefix with Terraform",
-			len(currentSubKeys), pathPrefix,
-		)
+		if !override {
+			return fmt.Errorf(
+				"%d keys already exist under %s; delete them before managing this prefix with Terraform",
+				len(currentSubKeys), pathPrefix,
+			)
+		}
+		err := resourceConsulKeyPrefixDelete(d, meta)
+		if err != nil {
+			return err
+		}
 	}
 
 	// Ideally we'd use d.Partial(true) here so we can correctly record
