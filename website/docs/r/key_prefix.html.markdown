@@ -23,7 +23,7 @@ managing a set of related keys.
 To avoid accidentally clobbering matching data that existed in Consul before
 a `consul_key_prefix` resource was created, creation of a key prefix instance
 will fail if any matching keys are already present in the key/value store.
-If any conflicting data is present, you must first delete it manually.
+If any conflicting data is present, you must first delete it manually, unless you use the *override* argument.
 
 ~> **Warning** After this resource is instantiated, Terraform takes control
 over *all* keys with the given path prefix, and will remove any matching keys
@@ -37,6 +37,7 @@ those keys were created outside of Terraform.
 resource "consul_key_prefix" "myapp_config" {
   datacenter = "nyc1"
   token      = "abcd"
+  override   = false
 
   # Prefix to add to prepend to all of the subkey names below.
   path_prefix = "myapp/config/"
@@ -62,6 +63,8 @@ The following arguments are supported:
 
 * `token` - (Optional) The ACL token to use. This overrides the
   token that the agent provides by default.
+
+* `override` - (Optional) Set it to true if you want to delete the existing key prefix before it's re-creation.
 
 * `path_prefix` - (Required) Specifies the common prefix shared by all keys
   that will be managed by this resource instance. In most cases this will
