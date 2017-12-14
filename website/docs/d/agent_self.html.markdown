@@ -6,7 +6,7 @@ description: |-
   Provides the configuration information of the local Consul agent.
 ---
 
-# consul_agent__self
+# consul_agent_self
 
 The `consul_agent_self` data source returns
 [configuration and status data](https://www.consul.io/docs/agent/http/agent.html#agent_self)
