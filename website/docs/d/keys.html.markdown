@@ -63,6 +63,6 @@ The `key` block supports the following:
 
 The following attributes are exported:
 
-* `datacenter` - The datacenter the keys are being read from to.
+* `datacenter` - The datacenter the keys are being read from.
 * `var.<name>` - For each name given, the corresponding attribute
   has the value of the key.
