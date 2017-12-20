@@ -18,6 +18,7 @@ func TestAccDataConsulKeyPrefix_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConsulKeyPrefixAttribute("data.consul_key_prefix.read", "var.read1", "written1"),
 					testAccCheckConsulKeyPrefixAttribute("data.consul_key_prefix.read", "var.read2", "written2"),
+					testAccCheckConsulKeyPrefixAttribute("data.consul_key_prefix.read", "var.read3", "default3"),
 					testAccCheckConsulKeyPrefixAttribute("data.consul_key_prefix.read", "datacenter", "dc1"),
 					testAccCheckConsulKeyPrefixAttribute("data.consul_key_prefix.read", "path_prefix", "myapp/config/"),
 					resource.TestCheckNoResourceAttr("data.consul_key_prefix.read", "subkeys.%"),
@@ -79,6 +80,12 @@ data "consul_key_prefix" "read" {
     subkey {
         path = "key2/value"
         name = "read2"
+    }
+
+    subkey {
+        path = "key3/foo/bar"
+        name = "read3"
+        default = "default3"
     }
 }
 
