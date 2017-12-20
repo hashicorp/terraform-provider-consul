@@ -29,7 +29,7 @@ func dataSourceConsulKeyPrefix() *schema.Resource {
 
 			"subkey": &schema.Schema{
 				Type:     schema.TypeSet,
-				Required: true,
+				Optional: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"name": &schema.Schema{
@@ -53,6 +53,14 @@ func dataSourceConsulKeyPrefix() *schema.Resource {
 			"var": &schema.Schema{
 				Type:     schema.TypeMap,
 				Computed: true,
+			},
+
+			"subkeys": &schema.Schema{
+				Type:     schema.TypeMap,
+				Computed: true,
+				Elem: &schema.Schema{
+					Type: schema.TypeString,
+				},
 			},
 		},
 	}
@@ -94,10 +102,17 @@ func dataSourceConsulKeyPrefixRead(d *schema.ResourceData, meta interface{}) err
 		return err
 	}
 
+	if len(keys) <= 0 {
+		subKeys, err := keyClient.GetUnderPrefix(pathPrefix)
+		if err != nil {
+			return err
+		}
+		d.Set("subkeys", subKeys)
+	}
+
 	// Store the datacenter on this resource, which can be helpful for reference
 	// in case it was read from the provider
 	d.Set("datacenter", dc)
-
 	d.Set("path_prefix", pathPrefix)
 
 	d.SetId("-")

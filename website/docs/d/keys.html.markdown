@@ -44,8 +44,8 @@ The following arguments are supported:
 * `token` - (Optional) The ACL token to use. This overrides the
   token that the agent provides by default.
 
-* `key` - (Required) Specifies a key in Consul to be read or written.
-  Supported values documented below.
+* `key` - (Required) Specifies a key in Consul to be read. Supported
+  values documented below. Multiple blocks supported.
 
 The `key` block supports the following:
 

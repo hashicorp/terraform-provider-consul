@@ -20,6 +20,12 @@ func TestAccDataConsulKeyPrefix_basic(t *testing.T) {
 					testAccCheckConsulKeyPrefixAttribute("data.consul_key_prefix.read", "var.read2", "written2"),
 					testAccCheckConsulKeyPrefixAttribute("data.consul_key_prefix.read", "datacenter", "dc1"),
 					testAccCheckConsulKeyPrefixAttribute("data.consul_key_prefix.read", "path_prefix", "myapp/config/"),
+					resource.TestCheckNoResourceAttr("data.consul_key_prefix.read", "subkeys.%"),
+					resource.TestCheckNoResourceAttr("data.consul_key_prefix.read", "subkeys.key1"),
+					resource.TestCheckNoResourceAttr("data.consul_key_prefix.read", "subkeys.key2/value"),
+					resource.TestCheckResourceAttr("data.consul_key_prefix.read2", "subkeys.%", "2"),
+					resource.TestCheckResourceAttr("data.consul_key_prefix.read2", "subkeys.key1", "written1"),
+					resource.TestCheckResourceAttr("data.consul_key_prefix.read2", "subkeys.key2/value", "written2"),
 				),
 			},
 		},
@@ -74,5 +80,13 @@ data "consul_key_prefix" "read" {
         path = "key2/value"
         name = "read2"
     }
+}
+
+data "consul_key_prefix" "read2" {
+    # Create a dependency on the resource so we're sure to
+    # have the value in place before we try to read it.
+    datacenter = "${consul_key_prefix.write.datacenter}"
+
+    path_prefix = "${consul_key_prefix.write.path_prefix}"
 }
 `

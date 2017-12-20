@@ -38,6 +38,23 @@ resource "aws_instance" "app" {
 }
 ```
 
+```hcl
+data "consul_key_prefix" "web" {
+  datacenter = "nyc1"
+  token      = "efgh"
+
+  # Prefix to add to prepend to all of the subkey names below.
+  path_prefix = "myapp/config/"
+}
+
+# Start our instance with the dynamic ami value
+resource "aws_instance" "web" {
+  ami = "${data.consul_key_prefix.web["app/launch_ami"]}"
+
+  # ...
+}
+```
+
 ## Argument Reference
 
 The following arguments are supported:
@@ -51,6 +68,9 @@ The following arguments are supported:
 * `path_prefix` - (Required) Specifies the common prefix shared by all keys
   that will be read by this data source instance. In most cases, this will
   end with a slash to read a "folder" of subkeys.
+
+* `subkey` - (Optional) Specifies a subkey in Consul to be read. Supported
+  values documented below. Multiple blocks supported.
 
 The `subkey` block supports the following:
 
@@ -73,3 +93,5 @@ The following attributes are exported:
 * `path_prefix` - the common prefix shared by all keys being read.
 * `var.<name>` - For each name given, the corresponding attribute
   has the value of the key.
+* `subkeys` - A map of the subkeys and values is set if no `subkey`
+  block is provided.
