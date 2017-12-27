@@ -72,6 +72,27 @@ func TestResourceProvider_ConfigureTLS(t *testing.T) {
 	}
 }
 
+func TestResourceProvider_ConfigureTLSInsecure(t *testing.T) {
+	rp := Provider()
+
+	raw := map[string]interface{}{
+		"address":    "demo.consul.io:80",
+		"datacenter": "nyc3",
+		"scheme":     "https",
+		"insecure":   true,
+	}
+
+	rawConfig, err := config.NewRawConfig(raw)
+	if err != nil {
+		t.Fatalf("err: %s", err)
+	}
+
+	err = rp.Configure(terraform.NewResourceConfig(rawConfig))
+	if err != nil {
+		t.Fatalf("err: %s", err)
+	}
+}
+
 func testAccPreCheck(t *testing.T) {
 	if v := os.Getenv("CONSUL_HTTP_ADDR"); v != "" {
 		return

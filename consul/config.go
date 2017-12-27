@@ -17,6 +17,7 @@ type Config struct {
 	CAFile     string `mapstructure:"ca_file"`
 	CertFile   string `mapstructure:"cert_file"`
 	KeyFile    string `mapstructure:"key_file"`
+	Insecure   bool   `mapstructure:"insecure"`
 }
 
 // Client() returns a new client for accessing consul.
@@ -37,6 +38,9 @@ func (c *Config) Client() (*consulapi.Client, error) {
 	tlsConfig.CAFile = c.CAFile
 	tlsConfig.CertFile = c.CertFile
 	tlsConfig.KeyFile = c.KeyFile
+	if c.Insecure {
+		tlsConfig.InsecureSkipVerify = c.Insecure
+	}
 	cc, err := consulapi.SetupTLSConfig(tlsConfig)
 	if err != nil {
 		return nil, err
@@ -61,8 +65,8 @@ func (c *Config) Client() (*consulapi.Client, error) {
 
 	client, err := consulapi.NewClient(config)
 
-	log.Printf("[INFO] Consul Client configured with address: '%s', scheme: '%s', datacenter: '%s'",
-		config.Address, config.Scheme, config.Datacenter)
+	log.Printf("[INFO] Consul Client configured with address: '%s', scheme: '%s', datacenter: '%s'"+
+		", insecure: '%t'", config.Address, config.Scheme, config.Datacenter, tlsConfig.InsecureSkipVerify)
 	if err != nil {
 		return nil, err
 	}
