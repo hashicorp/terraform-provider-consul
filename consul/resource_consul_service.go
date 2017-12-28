@@ -2,6 +2,7 @@ package consul
 
 import (
 	"fmt"
+	"log"
 
 	consulapi "github.com/hashicorp/consul/api"
 	"github.com/hashicorp/terraform/helper/schema"
@@ -120,7 +121,9 @@ func resourceConsulServiceRead(d *schema.ResourceData, meta interface{}) error {
 	if services, err := agent.Services(); err != nil {
 		return fmt.Errorf("Failed to get services from Consul agent: %v", err)
 	} else if service, ok := services[identifier]; !ok {
-		return fmt.Errorf("Failed to get service '%s' from Consul agent", identifier)
+		log.Printf("[WARN] Service not found in Consul, removing from state: %s", identifier)
+		d.SetId("")
+		return nil
 	} else {
 		d.SetId(service.ID)
 

@@ -1,0 +1,25 @@
+version: "3"
+services:
+  consul:
+    image: consul:latest
+    environment:
+      CONSUL_LOCAL_CONFIG: "{disable_update_check: true}"
+      CONSUL_BIND_INTERFACE: eth0
+    entrypoint:
+      - consul
+      - agent
+      - -server
+      - -bootstrap-expect=1
+      - -config-dir=/consul/config
+      - -data-dir=/tmp/consul/data
+      - -bind={{ GetInterfaceIP "eth0" }}
+      - -client=0.0.0.0
+      - -ui
+      - -raft-protocol=3
+    ports:
+      - "8300:8300"
+      - "8400:8400"
+      - "8500:8500"
+      - "8600:8600/udp"
+    volumes:
+      - ./config:/consul/config
