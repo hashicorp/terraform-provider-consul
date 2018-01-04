@@ -4,6 +4,10 @@ NEW FEATURES:
 
 * New data source: `consul_key_prefix` corresponds to the existing resource of the same name, allowing config to access a set of keys with a common prefix as a Terraform map for more convenient access [GH-34]
 
+BUG FIXES:
+
+* `consul_service` resource now correctly detects when a service has been deleted outside of Terraform, flagging it for re-creation rather than returning an error [GH-33]
+
 ## 1.0.0 (September 26, 2017)
 
 BUG FIXES:
