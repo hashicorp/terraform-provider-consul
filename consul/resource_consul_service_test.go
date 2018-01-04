@@ -33,6 +33,32 @@ func TestAccConsulService_basic(t *testing.T) {
 	})
 }
 
+func TestAccConsulService_extremove(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() {},
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckConsulServiceDestroy,
+		Steps: []resource.TestStep{
+			resource.TestStep{
+				Config:             testAccConsulServiceConfig,
+				ExpectNonEmptyPlan: true,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckConsulServiceExists(),
+					testAccCheckConsulServiceValue("consul_service.app", "address", "www.google.com"),
+					testAccCheckConsulServiceValue("consul_service.app", "id", "google"),
+					testAccCheckConsulServiceValue("consul_service.app", "service_id", "google"),
+					testAccCheckConsulServiceValue("consul_service.app", "name", "google"),
+					testAccCheckConsulServiceValue("consul_service.app", "port", "80"),
+					testAccCheckConsulServiceValue("consul_service.app", "tags.#", "2"),
+					testAccCheckConsulServiceValue("consul_service.app", "tags.0", "tag0"),
+					testAccCheckConsulServiceValue("consul_service.app", "tags.1", "tag1"),
+					testAccCheckConsulServiceDeregister("google"),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckConsulServiceDestroy(s *terraform.State) error {
 	agent := testAccProvider.Meta().(*consulapi.Client).Agent()
 	services, err := agent.Services()
@@ -44,6 +70,25 @@ func testAccCheckConsulServiceDestroy(s *terraform.State) error {
 		return fmt.Errorf("Service still exists: %#v", "google")
 	}
 	return nil
+}
+
+func testAccCheckConsulServiceDeregister(identifier string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		agent := testAccProvider.Meta().(*consulapi.Client).Agent()
+		err := agent.ServiceDeregister(identifier)
+		if err != nil {
+			return fmt.Errorf("Could not deregister service: %#v", err)
+		}
+		services, err := agent.Services()
+		if err != nil {
+			return fmt.Errorf("Could not retrieve services: %#v", err)
+		}
+		_, ok := services[identifier]
+		if ok {
+			return fmt.Errorf("Service still exists: %#v", identifier)
+		}
+		return nil
+	}
 }
 
 func testAccCheckConsulServiceExists() resource.TestCheckFunc {
