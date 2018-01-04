@@ -1,4 +1,9 @@
-## 1.0.1 (Unreleased)
+## 1.1.0 (Unreleased)
+
+NEW FEATURES:
+
+* New data source: `consul_key_prefix` corresponds to the existing resource of the same name, allowing config to access a set of keys with a common prefix as a Terraform map for more convenient access [GH-34]
+
 ## 1.0.0 (September 26, 2017)
 
 BUG FIXES:
