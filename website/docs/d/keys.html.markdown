@@ -44,8 +44,8 @@ The following arguments are supported:
 * `token` - (Optional) The ACL token to use. This overrides the
   token that the agent provides by default.
 
-* `key` - (Required) Specifies a key in Consul to be read or written.
-  Supported values documented below.
+* `key` - (Required) Specifies a key in Consul to be read. Supported
+  values documented below. Multiple blocks supported.
 
 The `key` block supports the following:
 
@@ -63,6 +63,6 @@ The `key` block supports the following:
 
 The following attributes are exported:
 
-* `datacenter` - The datacenter the keys are being read from to.
+* `datacenter` - The datacenter the keys are being read from.
 * `var.<name>` - For each name given, the corresponding attribute
   has the value of the key.
