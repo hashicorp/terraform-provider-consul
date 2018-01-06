@@ -59,7 +59,7 @@ func Provider() terraform.ResourceProvider {
 				DefaultFunc: schema.EnvDefaultFunc("CONSUL_KEY_FILE", ""),
 			},
 
-			"insecure": &schema.Schema{
+			"insecure_https": &schema.Schema{
 				Type:     schema.TypeBool,
 				Optional: true,
 				Default:  false,

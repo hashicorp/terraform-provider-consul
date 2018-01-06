@@ -1,6 +1,7 @@
 package consul
 
 import (
+	"fmt"
 	"log"
 	"net/http"
 	"strings"
@@ -9,15 +10,15 @@ import (
 )
 
 type Config struct {
-	Datacenter string `mapstructure:"datacenter"`
-	Address    string `mapstructure:"address"`
-	Scheme     string `mapstructure:"scheme"`
-	HttpAuth   string `mapstructure:"http_auth"`
-	Token      string `mapstructure:"token"`
-	CAFile     string `mapstructure:"ca_file"`
-	CertFile   string `mapstructure:"cert_file"`
-	KeyFile    string `mapstructure:"key_file"`
-	Insecure   bool   `mapstructure:"insecure"`
+	Datacenter    string `mapstructure:"datacenter"`
+	Address       string `mapstructure:"address"`
+	Scheme        string `mapstructure:"scheme"`
+	HttpAuth      string `mapstructure:"http_auth"`
+	Token         string `mapstructure:"token"`
+	CAFile        string `mapstructure:"ca_file"`
+	CertFile      string `mapstructure:"cert_file"`
+	KeyFile       string `mapstructure:"key_file"`
+	InsecureHttps bool   `mapstructure:"insecure_https"`
 }
 
 // Client() returns a new client for accessing consul.
@@ -38,8 +39,11 @@ func (c *Config) Client() (*consulapi.Client, error) {
 	tlsConfig.CAFile = c.CAFile
 	tlsConfig.CertFile = c.CertFile
 	tlsConfig.KeyFile = c.KeyFile
-	if c.Insecure {
-		tlsConfig.InsecureSkipVerify = c.Insecure
+	if c.InsecureHttps {
+		if config.Scheme != "https" {
+			return nil, fmt.Errorf("insecure_https is meant to be used when scheme is https")
+		}
+		tlsConfig.InsecureSkipVerify = c.InsecureHttps
 	}
 	cc, err := consulapi.SetupTLSConfig(tlsConfig)
 	if err != nil {
@@ -66,7 +70,7 @@ func (c *Config) Client() (*consulapi.Client, error) {
 	client, err := consulapi.NewClient(config)
 
 	log.Printf("[INFO] Consul Client configured with address: '%s', scheme: '%s', datacenter: '%s'"+
-		", insecure: '%t'", config.Address, config.Scheme, config.Datacenter, tlsConfig.InsecureSkipVerify)
+		", insecure_https: '%t'", config.Address, config.Scheme, config.Datacenter, tlsConfig.InsecureSkipVerify)
 	if err != nil {
 		return nil, err
 	}

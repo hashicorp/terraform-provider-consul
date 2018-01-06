@@ -72,14 +72,14 @@ func TestResourceProvider_ConfigureTLS(t *testing.T) {
 	}
 }
 
-func TestResourceProvider_ConfigureTLSInsecure(t *testing.T) {
+func TestResourceProvider_ConfigureTLSInsecureHttps(t *testing.T) {
 	rp := Provider()
 
 	raw := map[string]interface{}{
-		"address":    "demo.consul.io:80",
-		"datacenter": "nyc3",
-		"scheme":     "https",
-		"insecure":   true,
+		"address":        "demo.consul.io:80",
+		"datacenter":     "nyc3",
+		"scheme":         "https",
+		"insecure_https": true,
 	}
 
 	rawConfig, err := config.NewRawConfig(raw)
@@ -90,6 +90,27 @@ func TestResourceProvider_ConfigureTLSInsecure(t *testing.T) {
 	err = rp.Configure(terraform.NewResourceConfig(rawConfig))
 	if err != nil {
 		t.Fatalf("err: %s", err)
+	}
+}
+
+func TestResourceProvider_ConfigureTLSInsecureHttpsMismatch(t *testing.T) {
+	rp := Provider()
+
+	raw := map[string]interface{}{
+		"address":        "demo.consul.io:80",
+		"datacenter":     "nyc3",
+		"scheme":         "http",
+		"insecure_https": true,
+	}
+
+	rawConfig, err := config.NewRawConfig(raw)
+	if err != nil {
+		t.Fatalf("err: %s", err)
+	}
+
+	err = rp.Configure(terraform.NewResourceConfig(rawConfig))
+	if err == nil {
+		t.Fatal("Provider should error if insecure_https is set but scheme is not https")
 	}
 }
 
