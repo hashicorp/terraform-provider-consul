@@ -42,7 +42,7 @@ func TestAccConsulCatalogEntry_extremove(t *testing.T) {
 		CheckDestroy: testAccCheckConsulCatalogEntryDestroy,
 		Steps: []resource.TestStep{
 			resource.TestStep{
-				Config: testAccConsulCatalogEntryConfig,
+				Config:             testAccConsulCatalogEntryConfig,
 				ExpectNonEmptyPlan: true,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConsulCatalogEntryExists(),
