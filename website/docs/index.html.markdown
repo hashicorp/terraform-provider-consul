@@ -51,3 +51,4 @@ The following arguments are supported:
 * `ca_file` - (Optional) A path to a PEM-encoded certificate authority used to verify the remote agent's certificate.
 * `cert_file` - (Optional) A path to a PEM-encoded certificate provided to the remote agent; requires use of `key_file`.
 * `key_file`- (Optional) A path to a PEM-encoded private key, required if `cert_file` is specified.
+* `insecure_https`- (Optional) Boolean value to disable SSL certificate verification; setting this value to true is not recommended for production use. Only use this with scheme set to "https".
