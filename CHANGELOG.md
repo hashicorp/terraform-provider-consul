@@ -6,6 +6,7 @@ NEW FEATURES:
 
 BUG FIXES:
 
+* `consul_catalog` resource now correctly re-creates resources deleted out-of-band. [GH-30]
 * `consul_service` resource type now correctly detects when a service has been deleted outside of Terraform, flagging it for re-creation rather than returning an error [GH-33]
 * `consul_catalog_service` data source now accepts the `tag` and `datacenter` arguments, as was described in documentation [GH-32]
 
