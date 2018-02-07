@@ -35,6 +35,34 @@ func TestAccConsulCatalogEntry_basic(t *testing.T) {
 	})
 }
 
+func TestAccConsulCatalogEntry_extremove(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() {},
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckConsulCatalogEntryDestroy,
+		Steps: []resource.TestStep{
+			resource.TestStep{
+				Config:             testAccConsulCatalogEntryConfig,
+				ExpectNonEmptyPlan: true,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckConsulCatalogEntryExists(),
+					testAccCheckConsulCatalogEntryValue("consul_catalog_entry.app", "address", "127.0.0.1"),
+					testAccCheckConsulCatalogEntryValue("consul_catalog_entry.app", "node", "bastion"),
+					testAccCheckConsulCatalogEntryValue("consul_catalog_entry.app", "service.#", "1"),
+					testAccCheckConsulCatalogEntryValue("consul_catalog_entry.app", "service.3112399829.address", "www.google.com"),
+					testAccCheckConsulCatalogEntryValue("consul_catalog_entry.app", "service.3112399829.id", "google1"),
+					testAccCheckConsulCatalogEntryValue("consul_catalog_entry.app", "service.3112399829.name", "google"),
+					testAccCheckConsulCatalogEntryValue("consul_catalog_entry.app", "service.3112399829.port", "80"),
+					testAccCheckConsulCatalogEntryValue("consul_catalog_entry.app", "service.3112399829.tags.#", "2"),
+					testAccCheckConsulCatalogEntryValue("consul_catalog_entry.app", "service.3112399829.tags.2154398732", "tag0"),
+					testAccCheckConsulCatalogEntryValue("consul_catalog_entry.app", "service.3112399829.tags.4151227546", "tag1"),
+					testAccCheckConsulCatalogEntryDeregister("bastion"),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckConsulCatalogEntryDestroy(s *terraform.State) error {
 	catalog := testAccProvider.Meta().(*consulapi.Client).Catalog()
 	qOpts := consulapi.QueryOptions{}
@@ -47,6 +75,32 @@ func testAccCheckConsulCatalogEntryDestroy(s *terraform.State) error {
 		return fmt.Errorf("Service still exists: %#v", "google")
 	}
 	return nil
+}
+
+func testAccCheckConsulCatalogEntryDeregister(node string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		catalog := testAccProvider.Meta().(*consulapi.Client).Catalog()
+		wOpts := consulapi.WriteOptions{}
+
+		deregistration := consulapi.CatalogDeregistration{
+			Node: node,
+		}
+		_, err := catalog.Deregister(&deregistration, &wOpts)
+		if err != nil {
+			return err
+		}
+
+		qOpts := consulapi.QueryOptions{}
+		services, _, err := catalog.Services(&qOpts)
+		if err != nil {
+			return fmt.Errorf("Could not retrieve services: %#v", err)
+		}
+		_, ok := services["google"]
+		if ok {
+			return fmt.Errorf("Service still exists: %#v", "google")
+		}
+		return nil
+	}
 }
 
 func testAccCheckConsulCatalogEntryExists() resource.TestCheckFunc {
