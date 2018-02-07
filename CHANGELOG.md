@@ -1,5 +1,9 @@
 ## 1.1.0 (Unreleased)
 
+IMPROVEMENTS:
+
+* The provider now allows you to skip HTTPS certificate verification by supplying the `insecure_https` option. [GH-31]
+
 NEW FEATURES:
 
 * New data source: `consul_key_prefix` corresponds to the existing resource of the same name, allowing config to access a set of keys with a common prefix as a Terraform map for more convenient access [GH-34]
