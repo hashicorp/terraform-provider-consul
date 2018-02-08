@@ -15,6 +15,14 @@ defaults for all arguments.
 
 Use the navigation to the left to read about the available resources.
 
+~> **NOTE:** The Consul provider should not be confused with the [Consul remote
+state backend][consul-remote-state-backend], which is one of many backends that
+can be used to store Terraform state. The Consul provider is instead used to
+manage resources within Consul itself, such as adding external services or
+working with the key/value store.
+
+[consul-remote-state-backend]: /docs/backends/types/consul.html
+
 ## Example Usage
 
 ```hcl
