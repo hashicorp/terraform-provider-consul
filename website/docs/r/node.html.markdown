@@ -30,7 +30,7 @@ The following arguments are supported:
 * `name` - (Required) The name of the node being added to, or
   referenced in the catalog.
 
-* `nodemeta` - (Optional) KV metadata pairs
+* `node_meta` - (Optional) KV metadata pairs
 
 ## Attributes Reference
 
@@ -38,4 +38,4 @@ The following attributes are exported:
 
 * `address` - The address of the service.
 * `name` - The name of the service.
-* `nodemeta` - (https://www.consul.io/docs/agent/http/catalog.html#Meta) KV metadata pairs
+* `node_meta` - (https://www.consul.io/docs/agent/http/catalog.html#Meta) KV metadata pairs
