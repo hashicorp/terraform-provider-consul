@@ -34,7 +34,7 @@ func resourceConsulNode() *schema.Resource {
 				ForceNew: true,
 			},
 
-			"nodemeta": &schema.Schema{
+			"node_meta": &schema.Schema{
 				Type:     schema.TypeMap,
 				Optional: true,
 				ForceNew: true,
@@ -73,20 +73,20 @@ func resourceConsulNodeCreate(d *schema.ResourceData, meta interface{}) error {
 	address := d.Get("address").(string)
 	name := d.Get("name").(string)
 
-	nodemeta := make(map[string]string)
-	if v, ok := d.GetOk("nodemeta"); ok {
+	nodeMeta := make(map[string]string)
+	if v, ok := d.GetOk("node_meta"); ok {
 		for k, j := range v.(map[string]interface{}) {
-			nodemeta[k] = j.(string)
+			nodeMeta[k] = j.(string)
 		}
 	} else {
-		nodemeta = nil
+		nodeMeta = nil
 	}
 
 	registration := &consulapi.CatalogRegistration{
 		Address:    address,
 		Datacenter: dc,
 		Node:       name,
-		NodeMeta:   nodemeta,
+		NodeMeta:   nodeMeta,
 	}
 
 	if _, err := catalog.Register(registration, &wOpts); err != nil {
