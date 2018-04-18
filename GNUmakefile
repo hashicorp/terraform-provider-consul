@@ -46,7 +46,7 @@ test-compile:
 
 test-serv: fmtcheck
 	@docker pull "consul:$(CONSUL_VERSION)"
-	docker run -p 127.0.0.1:8500:8500 "consul:$(CONSUL_VERSION)"
+	docker run --rm -p 127.0.0.1:8500:8500 "consul:$(CONSUL_VERSION)"
 
 .PHONY: build test testacc vet fmt fmtcheck errcheck vendor-status test-compile test-serv
 
