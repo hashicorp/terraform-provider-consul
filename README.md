@@ -35,10 +35,6 @@ $ cd $GOPATH/src/github.com/terraform-providers/terraform-provider-$PROVIDER_NAM
 $ make build
 ```
 
-Using the provider
-----------------------
-## Fill in for each provider
-
 Developing the Provider
 ---------------------------
 
@@ -60,9 +56,41 @@ $ make test
 ```
 
 In order to run the full suite of Acceptance tests, run `make testacc`.
-
-*Note:* Acceptance tests create real resources, and often cost money to run.
+This should be performed before merging or opening pull requests.
 
 ```sh
-$ make testacc
+$ CONSUL_HTTP_ADDR=localhost:8500 make testacc
+```
+
+This requires a running Consul agent locally. This provider targets
+the latest version of Consul, but older versions should be compatible where
+possible. In some cases, older versions of this provider will work with
+older versions of Consul.
+
+If you have [Docker](https://docs.docker.com/install/) installed, you can
+run Consul with the following command:
+
+```sh
+$ make test-serv
+```
+
+By default, this will use the latest version of Consul based on the latest
+image in the Docker repository. You can specify a version with the following:
+
+```sh
+$ CONSUL_VERSION=1.0.1 make test-serv
+```
+
+This command will run attached and will stop Consul when
+interrupted. Images will be cached locally by Docker so it is quicky to
+restart the server as necessary. This will expose Consul on the default
+adddress.
+
+Nightly acceptance tests are run against the `latest` tag of the Consul
+Docker image. To run the acceptance tests against a development
+version of Consul, you can [compile it](https://github.com/hashicorp/consul#developing-consul)
+locally and then run it in development mode:
+
+```
+$ consul agent -dev
 ```

@@ -1,5 +1,6 @@
 TEST?=$$(go list ./... |grep -v 'vendor')
 GOFMT_FILES?=$$(find . -name '*.go' |grep -v vendor)
+CONSUL_VERSION ?= "latest"
 
 default: build
 
@@ -43,5 +44,9 @@ test-compile:
 	fi
 	go test -c $(TEST) $(TESTARGS)
 
-.PHONY: build test testacc vet fmt fmtcheck errcheck vendor-status test-compile
+test-serv: fmtcheck
+	@docker pull "consul:$(CONSUL_VERSION)"
+	docker run --rm -p 127.0.0.1:8500:8500 "consul:$(CONSUL_VERSION)"
+
+.PHONY: build test testacc vet fmt fmtcheck errcheck vendor-status test-compile test-serv
 
