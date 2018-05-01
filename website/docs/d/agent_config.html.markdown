@@ -8,6 +8,10 @@ description: |-
 
 # consul_agent_config
 
+~> **Note:** The `consul_agent_config` resource differs from `consul_agent_self`,
+providing less information but utilizing stable APIs. `consul_agent_self` will be
+deprecated in a future release.
+
 The `consul_agent_config` data source returns
 [configuration and status data](https://www.consul.io/docs/agent/http/agent.html#agent_self)
 from the agent specified in the `provider`.
