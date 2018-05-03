@@ -1,0 +1,38 @@
+---
+layout: "consul"
+page_title: "Consul: consul_agent_config"
+sidebar_current: "docs-consul-data-source-agent-config"
+description: |-
+  Provides the configuration information of the local Consul agent.
+---
+
+# consul_agent_config
+
+~> **Note:** The `consul_agent_config` resource differs from `consul_agent_self`,
+providing less information but utilizing stable APIs. `consul_agent_self` will be
+deprecated in a future release.
+
+The `consul_agent_config` data source returns
+[configuration and status data](https://www.consul.io/docs/agent/http/agent.html#agent_self)
+from the agent specified in the `provider`.
+
+## Example Usage
+
+```hcl
+data "consul_agent_config" "remote_agent" {}
+
+output "info" {
+  consul_version = "${data.consul_agent_config.version}"
+}
+```
+
+## Attributes Reference
+
+The following attributes are exported:
+
+* `datacenter` - The datacenter the agent is running in
+* `node_id` - The ID of the node the agent is running on
+* `node_name` - The name of the node the agent is running on
+* `server` - Boolean if the agent is a server or not
+* `revision` - The first 9 characters of the VCS revision of the build of Consul that is running
+* `version` - The version of the build of Consul that is running
