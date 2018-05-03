@@ -170,6 +170,12 @@ func dataSourceConsulAgentSelf() *schema.Resource {
 	return &schema.Resource{
 		Read: dataSourceConsulAgentSelfRead,
 		Schema: map[string]*schema.Schema{
+			"deprecated": {
+				Type:       schema.TypeBool,
+				Optional:   true,
+				Default:    true,
+				Deprecated: "Note about why we're deprecating this resource",
+			},
 			agentSelfACLDatacenter: {
 				Computed: true,
 				Type:     schema.TypeString,
