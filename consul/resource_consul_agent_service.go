@@ -28,8 +28,9 @@ func resourceConsulAgentService() *schema.Resource {
 			},
 
 			"name": &schema.Schema{
-				Type:     schema.TypeString,
-				Required: true,
+				Type:       schema.TypeString,
+				Required:   true,
+				Deprecated: "The consul_agent_service resource will be deprecated and removed in a future version. More information: https://github.com/terraform-providers/terraform-provider-consul/issues/46",
 			},
 
 			"port": &schema.Schema{
