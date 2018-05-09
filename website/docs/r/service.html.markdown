@@ -3,27 +3,18 @@ layout: "consul"
 page_title: "Consul: consul_service"
 sidebar_current: "docs-consul-resource-service"
 description: |-
-  A high-level resource for creating a Service in Consul. Since Consul requires clients to register services with either the catalog or an agent, `consul_service` may register with either the catalog or an agent, depending on the configuration of `consul_service`. For now, `consul_service` always registers services with the agent running at the address defined in the `consul` resource. Health checks are not currently supported.
+  A high-level resource for creating a Service in Consul in the Consul catalog.
 ---
 
 # consul_service
 
-A high-level resource for creating a Service in Consul. Currently,
-defining health checks for a service is not supported.
+A high-level resource for creating a Service in Consul in the Consul catalog. This
+is appropriate for registering [external services](https://www.consul.io/docs/guides/external.html) and
+can be used to create services addressable by Consul that cannot be registered
+with a [local agent](https://www.consul.io/docs/agent/basics.html).
 
-**Most users should not use this resource**. When using Consul with
-compute instances, it's better to install
-[the Consul Agent](https://www.consul.io/docs/agent/basics.html)
-on these machines and register services via the agent. This ensures
-that services get assigned to the appropriate Consul "nodes" and
-allows service health to integrate with general node health as
-reported by the agent.
-
-To register a non-compute resource, such as a hosted database,
-as a service, as described in
-[Consul's _External Services_ guide](https://www.consul.io/docs/guides/external.html),
-use [`consul_catalog_entry`](catalog_entry.html) instead, which
-can create an arbitrary service record in the Consul catalog.
+If the Consul agent is running on the node where this service is registered, it is
+not recommended to use this resource.
 
 ## Example Usage
 
@@ -40,13 +31,13 @@ resource "consul_service" "google" {
 
 The following arguments are supported:
 
-* `service_id` - (Optional, string) The ID of the service, defaults to the value of `name`
-  if not supplied.
+* `name` - (Required, string) The name of the service.
 
 * `address` - (Optional, string) The address of the service. Defaults to the
   address of the agent.
 
-* `name` - (Required, string) The name of the service.
+* `service_id` (Optional, string) - If the service ID is not provided, it will be defaulted to the value
+of the `name` attribute.
 
 * `port` - (Optional, int) The port of the service.
 
@@ -58,7 +49,7 @@ The following arguments are supported:
 
 The following attributes are exported:
 
-* `service_id` - The id of the service, defaults to the value of `name`.
+* `id` - The ID of the service.
 * `address` - The address of the service.
 * `name` - The name of the service.
 * `port` - The port of the service.

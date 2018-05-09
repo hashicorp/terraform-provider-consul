@@ -8,6 +8,10 @@ description: |-
 
 # consul_agent_self
 
+~> **Warning:** The `consul_agent_self` resource has been deprecated and will be removed
+from a future release of the provider. Read the [upgrade instructions](/docs/providers/consul/upgrading.html#deprecation-of-consul_agent_self) for more information.
+
+
 The `consul_agent_self` data source returns
 [configuration and status data](https://www.consul.io/docs/agent/http/agent.html#agent_self)
 from the agent specified in the `provider`.

@@ -8,8 +8,9 @@ description: |-
 
 # consul_agent_service
 
-!> The `consul_agent_service` resource has been deprecated and will be removed in a future release. Please
-read the [upgrade guide](/docs/providers/consul/upgrading.html) for more information.
+!> The `consul_agent_service` resource has been deprecated in version 1.1.0 of the provider
+and will be removed in a future release. Please read the [upgrade guide](/docs/providers/consul/upgrading.html#deprecation-of-consul_agent_service)
+for more information.
 
 Provides access to the agent service data in Consul. This can be used to
 define a service associated with a particular agent. Currently, defining

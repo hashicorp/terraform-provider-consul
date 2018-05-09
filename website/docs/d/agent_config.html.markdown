@@ -8,12 +8,12 @@ description: |-
 
 # consul_agent_config
 
-~> **Note:** The `consul_agent_config` resource differs from `consul_agent_self`,
+-> **Note:** The `consul_agent_config` resource differs from [`consul_agent_self`](/docs/providers/consul/d/agent_self.html),
 providing less information but utilizing stable APIs. `consul_agent_self` will be
 deprecated in a future release.
 
 The `consul_agent_config` data source returns
-[configuration and status data](https://www.consul.io/docs/agent/http/agent.html#agent_self)
+[configuration data](https://www.consul.io/api/agent.html#read-configuration)
 from the agent specified in the `provider`.
 
 ## Example Usage
