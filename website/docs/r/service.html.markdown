@@ -18,12 +18,29 @@ not recommended to use this resource.
 
 ## Example Usage
 
+Creating a new node with the service:
+
 ```hcl
 resource "consul_service" "google" {
-  address = "www.google.com"
   name    = "google"
+  node    = "${consul_node.compute.name}"
   port    = 80
-  tags    = ["tag0", "tag1"]
+  tags    = ["tag0"]
+}
+
+resource "consul_node" "compute" {
+  name    = "compute-google"
+  address = "www.google.com"
+}
+```
+
+Utilizing an existing known node:
+
+```hcl
+resource "consul_service" "google" {
+  name    = "google"
+  node    = "google"
+  port    = 443
 }
 ```
 
@@ -33,8 +50,10 @@ The following arguments are supported:
 
 * `name` - (Required, string) The name of the service.
 
+* `node` - (Required, string) The node the to register the service on.
+
 * `address` - (Optional, string) The address of the service. Defaults to the
-  address of the agent.
+  address of the node.
 
 * `service_id` (Optional, string) - If the service ID is not provided, it will be defaulted to the value
 of the `name` attribute.
@@ -51,6 +70,7 @@ The following attributes are exported:
 
 * `id` - The ID of the service.
 * `address` - The address of the service.
+* `node` - The node the service is registered on.
 * `name` - The name of the service.
 * `port` - The port of the service.
 * `tags` - The tags of the service.

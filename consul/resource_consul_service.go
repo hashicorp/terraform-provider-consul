@@ -2,7 +2,6 @@ package consul
 
 import (
 	"fmt"
-	"log"
 
 	consulapi "github.com/hashicorp/consul/api"
 	"github.com/hashicorp/terraform/helper/schema"
@@ -11,7 +10,7 @@ import (
 func resourceConsulService() *schema.Resource {
 	return &schema.Resource{
 		Create: resourceConsulServiceCreate,
-		Update: resourceConsulServiceCreate,
+		Update: resourceConsulServiceUpdate,
 		Read:   resourceConsulServiceRead,
 		Delete: resourceConsulServiceDelete,
 
@@ -20,7 +19,6 @@ func resourceConsulService() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
-				ForceNew: true,
 			},
 
 			"service_id": &schema.Schema{
@@ -33,19 +31,24 @@ func resourceConsulService() *schema.Resource {
 			"name": &schema.Schema{
 				Type:     schema.TypeString,
 				Required: true,
+				ForceNew: true,
+			},
+
+			"node": &schema.Schema{
+				Type:     schema.TypeString,
+				Required: true,
+				ForceNew: true,
 			},
 
 			"port": &schema.Schema{
 				Type:     schema.TypeInt,
 				Optional: true,
-				ForceNew: true,
 			},
 
 			"tags": &schema.Schema{
 				Type:     schema.TypeList,
 				Optional: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
-				ForceNew: true,
 			},
 		},
 	}
@@ -53,23 +56,56 @@ func resourceConsulService() *schema.Resource {
 
 func resourceConsulServiceCreate(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*consulapi.Client)
-	agent := client.Agent()
+	catalog := client.Catalog()
 
 	name := d.Get("name").(string)
-	identifier := name
+	node := d.Get("node").(string)
 
-	if serviceId, ok := d.GetOk("service_id"); ok {
-		identifier = serviceId.(string)
+	dc := ""
+	if _, ok := d.GetOk("datacenter"); ok {
+		dc = d.Get("datacenter").(string)
 	}
 
-	registration := consulapi.AgentServiceRegistration{Name: name, ID: identifier}
+	// Check to see if the node exists. We do this because
+	// the Consul API will upsert nodes that don't exist, but
+	// Terraform won't be able to track that. Requiring
+	// them to exist either ensures that it is knowlingly tracked
+	// outside of TF state or that it is referencing a node
+	// managed by the consul_node resource (or datasource)
+	nodeCheck, _, err := client.Catalog().Node(node, &consulapi.QueryOptions{Datacenter: dc})
+	if err != nil {
+		return fmt.Errorf("Cannot retrieve node: %v", err)
+	}
+	if nodeCheck == nil {
+		return fmt.Errorf("Node does not exist: '%s'", node)
+	}
 
+	// Setup the operations using the datacenter
+	wOpts := consulapi.WriteOptions{Datacenter: dc}
+
+	registration := &consulapi.CatalogRegistration{
+		Datacenter: dc,
+		Node:       node,
+		Service: &consulapi.AgentService{
+			Service: name,
+		},
+	}
+
+	// If the address is not specified, use the nodes
 	if address, ok := d.GetOk("address"); ok {
 		registration.Address = address.(string)
+		registration.Service.Address = address.(string)
+	} else {
+		registration.Address = nodeCheck.Node.Address
+		registration.Service.Address = nodeCheck.Node.Address
+	}
+
+	if serviceID, ok := d.GetOk("service_id"); ok {
+		registration.Service.ID = serviceID.(string)
 	}
 
 	if port, ok := d.GetOk("port"); ok {
-		registration.Port = port.(int)
+		registration.Service.Port = port.(int)
 	}
 
 	if v, ok := d.GetOk("tags"); ok {
@@ -78,77 +114,148 @@ func resourceConsulServiceCreate(d *schema.ResourceData, meta interface{}) error
 		for i, raw := range vs {
 			s[i] = raw.(string)
 		}
-		registration.Tags = s
+		registration.Service.Tags = s
 	}
 
-	if err := agent.ServiceRegister(&registration); err != nil {
-		return fmt.Errorf("Failed to register service '%s' with Consul agent: %v", name, err)
+	if _, err := catalog.Register(registration, &wOpts); err != nil {
+		return fmt.Errorf("Failed to register service (dc: '%s'): %v", dc, err)
 	}
 
-	// Update the resource
-	if serviceMap, err := agent.Services(); err != nil {
-		return fmt.Errorf("Failed to read services from Consul agent: %v", err)
-	} else if service, ok := serviceMap[identifier]; !ok {
-		return fmt.Errorf("Failed to read service '%s' from Consul agent: %v", identifier, err)
+	// Set the ID, attributes will be populated by read. We assume the
+	// service name is the ID as the Consul API returned successfully.
+	d.SetId(name)
+
+	return resourceConsulServiceRead(d, meta)
+}
+
+func resourceConsulServiceUpdate(d *schema.ResourceData, meta interface{}) error {
+	client := meta.(*consulapi.Client)
+	catalog := client.Catalog()
+
+	name := d.Get("name").(string)
+	node := d.Get("node").(string)
+
+	dc := ""
+	if _, ok := d.GetOk("datacenter"); ok {
+		dc = d.Get("datacenter").(string)
+	}
+
+	// Setup the operations using the datacenter
+	wOpts := consulapi.WriteOptions{Datacenter: dc}
+
+	registration := &consulapi.CatalogRegistration{
+		Datacenter: dc,
+		Node:       node,
+		Service: &consulapi.AgentService{
+			Service: name,
+		},
+	}
+
+	// If we have a service_id
+	if serviceID, ok := d.GetOk("service_id"); ok {
+		registration.Service.ID = serviceID.(string)
+	}
+
+	if address, ok := d.GetOk("address"); ok {
+		registration.Address = address.(string)
+		registration.Service.Address = address.(string)
 	} else {
-		d.SetId(service.ID)
-
-		d.Set("address", service.Address)
-		d.Set("service_id", service.ID)
-		d.Set("name", service.Service)
-		d.Set("port", service.Port)
-		tags := make([]string, 0, len(service.Tags))
-		for _, tag := range service.Tags {
-			tags = append(tags, tag)
-		}
-		d.Set("tags", tags)
+		// If we don't have an address, skip updating the node
+		registration.SkipNodeUpdate = true
 	}
 
-	return nil
+	if port, ok := d.GetOk("port"); ok {
+		registration.Service.Port = port.(int)
+	}
+
+	if v, ok := d.GetOk("tags"); ok {
+		vs := v.([]interface{})
+		s := make([]string, len(vs))
+		for i, raw := range vs {
+			s[i] = raw.(string)
+		}
+		registration.Service.Tags = s
+	}
+
+	if _, err := catalog.Register(registration, &wOpts); err != nil {
+		return fmt.Errorf("Failed to update service (dc: '%s'): %v", dc, err)
+	}
+
+	return resourceConsulServiceRead(d, meta)
 }
 
 func resourceConsulServiceRead(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*consulapi.Client)
-	agent := client.Agent()
+
+	dc := ""
+	if _, ok := d.GetOk("datacenter"); ok {
+		dc = d.Get("datacenter").(string)
+	}
 
 	name := d.Get("name").(string)
-	identifier := name
 
-	if serviceId, ok := d.GetOk("service_id"); ok {
-		identifier = serviceId.(string)
+	qOpts := consulapi.QueryOptions{Datacenter: dc}
+	services, meta, err := client.Catalog().Service(name, "", &qOpts)
+	if err != nil {
+		return fmt.Errorf("Failed to retrieve service (dc: '%s'): %v", dc, err)
 	}
 
-	if services, err := agent.Services(); err != nil {
-		return fmt.Errorf("Failed to get services from Consul agent: %v", err)
-	} else if service, ok := services[identifier]; !ok {
-		log.Printf("[WARN] Service not found in Consul, removing from state: %s", identifier)
-		d.SetId("")
-		return nil
-	} else {
-		d.SetId(service.ID)
-
-		d.Set("address", service.Address)
-		d.Set("service_id", service.ID)
-		d.Set("name", service.Service)
-		d.Set("port", service.Port)
-		tags := make([]string, 0, len(service.Tags))
-		for _, tag := range service.Tags {
-			tags = append(tags, tag)
-		}
-		d.Set("tags", tags)
+	if len(services) > 1 {
+		return fmt.Errorf("Multiple services returned after creation (dc: '%s'): %v", dc, services)
 	}
+
+	service := services[0]
+
+	d.Set("address", service.ServiceAddress)
+	d.Set("service_id", service.ID)
+	d.Set("name", service.ServiceName)
+	d.Set("port", service.ServicePort)
+	tags := make([]string, 0, len(service.ServiceTags))
+	for _, tag := range service.ServiceTags {
+		tags = append(tags, tag)
+	}
+	d.Set("tags", tags)
+	d.Set("node", service.Node)
 
 	return nil
 }
 
 func resourceConsulServiceDelete(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*consulapi.Client)
-	catalog := client.Agent()
+	catalog := client.Catalog()
+	id := d.Id()
+	node := d.Get("node").(string)
 
-	id := d.Get("service_id").(string)
+	dc := ""
+	if _, ok := d.GetOk("datacenter"); ok {
+		dc = d.Get("datacenter").(string)
+	}
 
-	if err := catalog.ServiceDeregister(id); err != nil {
-		return fmt.Errorf("Failed to deregister service '%s' from Consul agent: %v", id, err)
+	var token string
+	if v, ok := d.GetOk("token"); ok {
+		token = v.(string)
+	}
+
+	// If we specified a custom service_id, we need
+	// to utilize it for the delete
+	if serviceID, ok := d.GetOk("service_id"); ok {
+		id = serviceID.(string)
+	}
+
+	// Setup the operations using the datacenter
+	wOpts := consulapi.WriteOptions{Datacenter: dc, Token: token}
+
+	// TODO(pearkes): Should we add an option to automatically
+	// deregister nodes associated with the service?
+	deregistration := consulapi.CatalogDeregistration{
+		Datacenter: dc,
+		Node:       node,
+		ServiceID:  id,
+	}
+
+	if _, err := catalog.Deregister(&deregistration, &wOpts); err != nil {
+		return fmt.Errorf("Failed to deregister Consul service with id '%s' in %s: %v",
+			id, dc, err)
 	}
 
 	// Clear the ID
