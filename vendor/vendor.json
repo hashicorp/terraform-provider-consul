@@ -247,11 +247,13 @@
 			"revisionTime": "2017-01-17T13:00:17Z"
 		},
 		{
-			"checksumSHA1": "ygEjA1d52B1RDmZu8+1WTwkrYDQ=",
+			"checksumSHA1": "cZw5u6BGWe3gjJxmXT6J0Tfn6Mw=",
 			"comment": "v0.6.3-28-g3215b87",
 			"path": "github.com/hashicorp/consul/api",
-			"revision": "48d7b069ad443a48ffa93364048ff8909b5d1fa2",
-			"revisionTime": "2017-02-07T15:38:46Z"
+			"revision": "5174058f0d2bda63fa5198ab96c33d9a909c58ed",
+			"revisionTime": "2018-05-11T18:57:42Z",
+			"version": "v1.1.0",
+			"versionExact": "v1.1.0"
 		},
 		{
 			"checksumSHA1": "cdOCt0Yb+hdErz8NAQqayxPmRsY=",
@@ -286,6 +288,12 @@
 			"path": "github.com/hashicorp/go-plugin",
 			"revision": "f72692aebca2008343a9deb06ddb4b17f7051c15",
 			"revisionTime": "2017-02-17T16:27:05Z"
+		},
+		{
+			"checksumSHA1": "A1PcINvF3UiwHRKn8UcgARgvGRs=",
+			"path": "github.com/hashicorp/go-rootcerts",
+			"revision": "6bb64b370b90e7ef1fa532be9e591a81c3493e00",
+			"revisionTime": "2016-05-03T14:34:40Z"
 		},
 		{
 			"checksumSHA1": "85XUnluYJL7F55ptcwdmN8eSOsk=",
