@@ -2,7 +2,7 @@ package main
 
 import (
 	"github.com/hashicorp/terraform/plugin"
-	"github.com/terraform-providers/terraform-provider-consul/consul"
+	"github.com/schoology/terraform-provider-consul/consul"
 )
 
 func main() {

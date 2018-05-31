@@ -21,17 +21,17 @@ Requirements
 Building The Provider
 ---------------------
 
-Clone repository to: `$GOPATH/src/github.com/terraform-providers/terraform-provider-consul`
+Clone repository to: `$GOPATH/src/github.com/schoology/terraform-provider-consul`
 
 ```sh
-$ mkdir -p $GOPATH/src/github.com/terraform-providers; cd $GOPATH/src/github.com/terraform-providers
-$ git clone git@github.com:terraform-providers/terraform-provider-consul
+$ mkdir -p $GOPATH/src/github.com/schoology; cd $GOPATH/src/github.com/schoology
+$ git clone git@github.com:schoology/terraform-provider-consul
 ```
 
 Enter the provider directory and build the provider
 
 ```sh
-$ cd $GOPATH/src/github.com/terraform-providers/terraform-provider-consul
+$ cd $GOPATH/src/github.com/schoology/terraform-provider-consul
 $ make build
 ```
 
