@@ -99,6 +99,7 @@ func Provider() terraform.ResourceProvider {
 			"consul_node":           resourceConsulNode(),
 			"consul_prepared_query": resourceConsulPreparedQuery(),
 			"consul_service":        resourceConsulService(),
+			"consul_intention":      resourceConsulIntention(),
 		},
 
 		ConfigureFunc: providerConfigure,
