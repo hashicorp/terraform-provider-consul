@@ -49,6 +49,8 @@ the configuration to be modified.
 **From `consul_agent_service` to `consul_service`:**
 
 1. Rename `consul_agent_service` resources to `consul_service` in the Terraform configuration files.
+1. Add the `node` attribute where the service is currently registered, retrievable
+by [querying the catalog](https://www.consul.io/api/catalog.html#list-nodes-for-service) or using the UI. This new attribute is required.
 1. For a small number of resources, the first class [`state rm`](https://www.terraform.io/docs/commands/state/rm.html) and [`import`](https://www.terraform.io/docs/import/usage.html) commands can
 be used to first remove the old resource from the state, and then import it under the new resource
 name.
