@@ -1,0 +1,10 @@
+subkeys:
+    myconf:
+        - a: "do"
+        - b: "re"
+        - c: "mi"
+    servers:
+        useast:
+            - host: "host01"
+        uswest:
+            - host: "host02"

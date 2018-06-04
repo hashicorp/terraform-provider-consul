@@ -23,9 +23,10 @@ website/node_modules
 *.iml
 *.test
 *.iml
-
+vendor/
+_vendor*
 website/vendor
-
+terraform-provider-consul-yaml
 # Test exclusions
 !command/test-fixtures/**/*.tfstate
 !command/test-fixtures/**/.terraform/
