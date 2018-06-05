@@ -20,9 +20,10 @@ func resourceConsulCatalogEntry() *schema.Resource {
 
 		Schema: map[string]*schema.Schema{
 			"address": &schema.Schema{
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
+				Type:       schema.TypeString,
+				Required:   true,
+				ForceNew:   true,
+				Deprecated: "The consul_catalog_entry resource will be deprecated and removed in a future version. More information: https://github.com/terraform-providers/terraform-provider-consul/issues/46",
 			},
 
 			"datacenter": &schema.Schema{
