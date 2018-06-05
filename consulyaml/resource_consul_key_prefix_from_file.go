@@ -86,6 +86,18 @@ func parseMapItem(item yaml.MapItem, subKeys map[string]string, parent string) {
 	}
 }
 
+// getDC is used to get the datacenter of the local agent
+func getDC(d *schema.ResourceData, client *consulapi.Client) (string, error) {
+	if v, ok := d.GetOk("datacenter"); ok {
+		return v.(string), nil
+	}
+	info, err := client.Agent().Self()
+	if err != nil {
+		return "", fmt.Errorf("Failed to get datacenter from Consul agent: %v", err)
+	}
+	return info["Config"]["Datacenter"].(string), nil
+}
+
 func resourceConsulKeyPrefixCreateFile(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*consulapi.Client)
 	kv := client.KV()

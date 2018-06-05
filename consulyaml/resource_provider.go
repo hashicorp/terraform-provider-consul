@@ -76,23 +76,10 @@ func Provider() terraform.ResourceProvider {
 		},
 
 		DataSourcesMap: map[string]*schema.Resource{
-			"consul_agent_self":       dataSourceConsulAgentSelf(),
-			"consul_agent_config":     dataSourceConsulAgentConfig(),
-			"consul_catalog_nodes":    dataSourceConsulCatalogNodes(),
-			"consul_catalog_service":  dataSourceConsulCatalogService(),
-			"consul_catalog_services": dataSourceConsulCatalogServices(),
-			"consul_keys":             dataSourceConsulKeys(),
-			"consul_key_prefix":       dataSourceConsulKeyPrefix(),
+			//"consul_key_prefix": dataSourceConsulKeyPrefix(),
 		},
 
 		ResourcesMap: map[string]*schema.Resource{
-			"consul_agent_service":             resourceConsulAgentService(),
-			"consul_catalog_entry":             resourceConsulCatalogEntry(),
-			"consul_keys":                      resourceConsulKeys(),
-			"consul_key_prefix":                resourceConsulKeyPrefix(),
-			"consul_node":                      resourceConsulNode(),
-			"consul_prepared_query":            resourceConsulPreparedQuery(),
-			"consul_service":                   resourceConsulService(),
 			"consul-yaml_key_prefix_from_file": resourceConsulKeyPrefixFromFile(),
 		},
 
