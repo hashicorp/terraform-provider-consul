@@ -1,14 +1,14 @@
 ---
 layout: "consul"
-page_title: "Consul: consul_catalog_nodes"
-sidebar_current: "docs-consul-data-source-catalog-nodes"
+page_title: "Consul: consul_nodes"
+sidebar_current: "docs-consul-data-source-nodes"
 description: |-
   Provides a list of nodes in a given Consul datacenter.
 ---
 
-# consul_catalog_nodes
+# consul_nodes
 
-The `consul_catalog_nodes` data source returns a list of Consul nodes that have
+The `consul_nodes` data source returns a list of Consul nodes that have
 been registered with the Consul cluster in a given datacenter.  By specifying a
 different datacenter in the `query_options` it is possible to retrieve a list of
 nodes from a different WAN-attached Consul datacenter.
@@ -16,16 +16,16 @@ nodes from a different WAN-attached Consul datacenter.
 ## Example Usage
 
 ```hcl
-data "consul_catalog_nodes" "read-dc1-nodes" {
+data "consul_nodes" "read-dc1-nodes" {
   query_options {
-    # Optional parameter: implicitly uses the current datacenter of the agent  
+    # Optional parameter: implicitly uses the current datacenter of the agent
     datacenter = "dc1"
   }
 }
 
 # Set the description to a whitespace delimited list of the node names
 resource "example_resource" "app" {
-  description = "${join(" ", formatlist("%s", data.consul_catalog_nodes.node_names))}"
+  description = "${join(" ", formatlist("%s", data.consul_nodes.node_names))}"
 
   # ...
 }

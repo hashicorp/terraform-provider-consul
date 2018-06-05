@@ -1,28 +1,28 @@
 ---
 layout: "consul"
 page_title: "Consul: consul_catalog_service"
-sidebar_current: "docs-consul-data-source-catalog-service"
+sidebar_current: "docs-consul-data-source-service"
 description: |-
   Provides details about a specific Consul service
 ---
 
-# consul_catalog_service
+# consul_service
 
-`consul_catalog_service` provides details about a specific Consul service in a
+`consul_service` provides details about a specific Consul service in a
 given datacenter.  The results include a list of nodes advertising the specified
 service, the node's IP address, port number, node ID, etc.  By specifying a
 different datacenter in the `query_options` it is possible to retrieve a list of
 services from a different WAN-attached Consul datacenter.
 
-This data source is different from the `consul_catalog_services` (plural) data
+This data source is different from the `consul_services` (plural) data
 source, which provides a summary of the current Consul services.
 
 ## Example Usage
 
 ```hcl
-data "consul_catalog_service" "read-consul-dc1" {
+data "consul_service" "read-consul-dc1" {
   query_options {
-    # Optional parameter: implicitly uses the current datacenter of the agent  
+    # Optional parameter: implicitly uses the current datacenter of the agent
     datacenter = "dc1"
   }
 
@@ -31,7 +31,7 @@ data "consul_catalog_service" "read-consul-dc1" {
 
 # Set the description to a whitespace delimited list of the node names
 resource "example_resource" "app" {
-  description = "${join(" ", data.consul_catalog_service.nodes)}"
+  description = "${join(" ", data.consul_service.nodes)}"
 
   # ...
 }

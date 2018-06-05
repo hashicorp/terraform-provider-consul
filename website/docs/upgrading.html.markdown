@@ -41,7 +41,7 @@ the cluster, and for other internal reasons, this API was the incorrect one to u
 
 View migration instructions [here][migrate_service].
 
-### Migrating to consul_service or consul_node
+### Migrating to consul_service or consul_node resources
 
 Migration to the `consul_service` resources are possible in two ways. Both require
 the configuration to be modified.
