@@ -40,6 +40,13 @@ func resourceConsulService() *schema.Resource {
 				ForceNew: true,
 			},
 
+			"datacenter": &schema.Schema{
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+				ForceNew: true,
+			},
+
 			"port": &schema.Schema{
 				Type:     schema.TypeInt,
 				Optional: true,
@@ -91,6 +98,10 @@ func resourceConsulServiceCreate(d *schema.ResourceData, meta interface{}) error
 		},
 	}
 
+	// By default, the ID will match the name of the service
+	// which we use later to query the catalog entry
+	ident := name
+
 	// If the address is not specified, use the nodes
 	if address, ok := d.GetOk("address"); ok {
 		registration.Address = address.(string)
@@ -102,6 +113,9 @@ func resourceConsulServiceCreate(d *schema.ResourceData, meta interface{}) error
 
 	if serviceID, ok := d.GetOk("service_id"); ok {
 		registration.Service.ID = serviceID.(string)
+		// If we are specifying an ID, we need to
+		// query it as such
+		ident = serviceID.(string)
 	}
 
 	if port, ok := d.GetOk("port"); ok {
@@ -121,9 +135,12 @@ func resourceConsulServiceCreate(d *schema.ResourceData, meta interface{}) error
 		return fmt.Errorf("Failed to register service (dc: '%s'): %v", dc, err)
 	}
 
-	// Set the ID, attributes will be populated by read. We assume the
-	// service name is the ID as the Consul API returned successfully.
-	d.SetId(name)
+	service, err := retrieveService(client, name, ident, node, dc)
+	if err != nil {
+		return err
+	}
+
+	d.SetId(service.ServiceID)
 
 	return resourceConsulServiceRead(d, meta)
 }
@@ -192,22 +209,18 @@ func resourceConsulServiceRead(d *schema.ResourceData, meta interface{}) error {
 		dc = d.Get("datacenter").(string)
 	}
 
+	id := d.Id()
 	name := d.Get("name").(string)
+	node := d.Get("node").(string)
 
-	qOpts := consulapi.QueryOptions{Datacenter: dc}
-	services, meta, err := client.Catalog().Service(name, "", &qOpts)
+	service, err := retrieveService(client, name, id, node, dc)
 	if err != nil {
-		return fmt.Errorf("Failed to retrieve service (dc: '%s'): %v", dc, err)
+		return err
 	}
-
-	if len(services) > 1 {
-		return fmt.Errorf("Multiple services returned after creation (dc: '%s'): %v", dc, services)
-	}
-
-	service := services[0]
 
 	d.Set("address", service.ServiceAddress)
-	d.Set("service_id", service.ID)
+	d.Set("service_id", service.ServiceID)
+	d.Set("datacenter", service.Datacenter)
 	d.Set("name", service.ServiceName)
 	d.Set("port", service.ServicePort)
 	tags := make([]string, 0, len(service.ServiceTags))
@@ -245,8 +258,6 @@ func resourceConsulServiceDelete(d *schema.ResourceData, meta interface{}) error
 	// Setup the operations using the datacenter
 	wOpts := consulapi.WriteOptions{Datacenter: dc, Token: token}
 
-	// TODO(pearkes): Should we add an option to automatically
-	// deregister nodes associated with the service?
 	deregistration := consulapi.CatalogDeregistration{
 		Datacenter: dc,
 		Node:       node,
@@ -261,4 +272,21 @@ func resourceConsulServiceDelete(d *schema.ResourceData, meta interface{}) error
 	// Clear the ID
 	d.SetId("")
 	return nil
+}
+
+func retrieveService(client *consulapi.Client, name string, ident string, node string, dc string) (*consulapi.CatalogService, error) {
+	qOpts := consulapi.QueryOptions{Datacenter: dc}
+	services, _, err := client.Catalog().Service(name, "", &qOpts)
+	if err != nil {
+		return nil, err
+	}
+
+	// Only one service with a given ID may be present per node
+	for _, s := range services {
+		if s.ServiceID == ident {
+			return s, nil
+		}
+	}
+
+	return nil, fmt.Errorf("Failed to retrieve service: '%s', services: %v", name, len(services))
 }

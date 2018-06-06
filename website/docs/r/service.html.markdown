@@ -50,7 +50,7 @@ The following arguments are supported:
 
 * `name` - (Required, string) The name of the service.
 
-* `node` - (Required, string) The node the to register the service on.
+* `node` - (Required, string) The name of the node the to register the service on.
 
 * `address` - (Optional, string) The address of the service. Defaults to the
   address of the node.
@@ -63,6 +63,8 @@ of the `name` attribute.
 * `tags` - (Optional, set of strings) A list of values that are opaque to Consul,
   but can be used to distinguish between services or nodes.
 
+* `datacenter` - (Optional) The datacenter to use. This overrides the datacenter in the
+provider setup and the agent's default datacenter.
 
 ## Attributes Reference
 

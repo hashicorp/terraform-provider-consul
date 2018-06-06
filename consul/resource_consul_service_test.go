@@ -61,6 +61,25 @@ func TestAccConsulService_basicModify(t *testing.T) {
 	})
 }
 
+func TestAccConsulService_serviceID(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() {},
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckConsulServiceDestroy,
+		Steps: []resource.TestStep{
+			resource.TestStep{
+				Config: testAccConsulServiceConfigServiceID,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("consul_service.google", "id", "8ce84078-b32a-4039-bb68-17b13b7c2396"),
+					resource.TestCheckResourceAttr("consul_service.google", "service_id", "8ce84078-b32a-4039-bb68-17b13b7c2396"),
+					resource.TestCheckResourceAttr("consul_service.google", "address", "www.google.com"),
+					resource.TestCheckResourceAttr("consul_service.google", "node", "compute-google"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccConsulService_nodeDoesNotExist(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() {},
@@ -133,6 +152,18 @@ resource "consul_service" "google" {
 	node    = "${consul_node.compute.name}"
 	port    = 80
 	tags    = ["tag0", "tag1"]
+  }
+
+  resource "consul_node" "compute" {
+	name    = "compute-google"
+	address = "www.google.com"
+  }
+`
+const testAccConsulServiceConfigServiceID = `
+resource "consul_service" "google" {
+	name       = "google"
+	service_id = "8ce84078-b32a-4039-bb68-17b13b7c2396"
+	node       = "${consul_node.compute.name}"
   }
 
   resource "consul_node" "compute" {
