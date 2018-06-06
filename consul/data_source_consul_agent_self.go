@@ -172,8 +172,7 @@ func dataSourceConsulAgentSelf() *schema.Resource {
 		Schema: map[string]*schema.Schema{
 			"deprecated": {
 				Type:       schema.TypeBool,
-				Optional:   true,
-				Default:    true,
+				Required:   true,
 				Deprecated: "The consul_agent_self resource will be deprecated and removed in a future version. More information: https://github.com/terraform-providers/terraform-provider-consul/issues/46",
 			},
 			agentSelfACLDatacenter: {
