@@ -14,9 +14,24 @@ func TestAccDataConsulCatalogServices_basic(t *testing.T) {
 			resource.TestStep{
 				Config: testAccDataConsulCatalogServicesConfig,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDataSourceValue("data.consul_catalog_services.read", "datacenter", "dc1"),
-					testAccCheckDataSourceValue("data.consul_catalog_services.read", "services.%", "1"),
-					testAccCheckDataSourceValue("data.consul_catalog_services.read", "services.consul", ""),
+					testAccCheckDataSourceValue("data.consul_services.read", "datacenter", "dc1"),
+					testAccCheckDataSourceValue("data.consul_services.read", "services.%", "1"),
+					testAccCheckDataSourceValue("data.consul_services.read", "services.consul", ""),
+				),
+			},
+		},
+	})
+}
+
+func TestAccDataConsulCatalogServices_alias(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:  func() { testAccPreCheck(t) },
+		Providers: testAccProviders,
+		Steps: []resource.TestStep{
+			resource.TestStep{
+				Config: testAccDataConsulCatalogServicesConfig,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.consul_services.read", "services.%", "1"),
 				),
 			},
 		},
@@ -24,7 +39,7 @@ func TestAccDataConsulCatalogServices_basic(t *testing.T) {
 }
 
 const testAccDataConsulCatalogServicesConfig = `
-data "consul_catalog_services" "read" {
+data "consul_services" "read" {
   query_options {
     allow_stale = true
     require_consistent = false
@@ -33,4 +48,8 @@ data "consul_catalog_services" "read" {
     wait_time = "1m"
   }
 }
+`
+
+const testAccDataConsulCatalogServicesAlias = `
+data "consul_catalog_services" "read" {}
 `
