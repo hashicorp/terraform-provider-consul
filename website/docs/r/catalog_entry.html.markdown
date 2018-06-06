@@ -8,7 +8,7 @@ description: |-
 
 # consul_catalog_entry
 
-!> The `consul_agent_service` resource has been deprecated in version 1.1.0 of the provider
+!> The `consul_catalog_entry` resource has been deprecated in version 1.1.0 of the provider
 and will be removed in a future release. Please read the [upgrade guide](/docs/providers/consul/upgrading.html#deprecation-of-consul_catalog_entry)
 for more information.
 
