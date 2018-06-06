@@ -8,7 +8,7 @@ description: |-
 
 # consul_agent_service
 
-!> The `consul_agent_service` resource has been deprecated in version 1.1.0 of the provider
+!> The `consul_agent_service` resource has been deprecated in version 2.0.0 of the provider
 and will be removed in a future release. Please read the [upgrade guide](/docs/providers/consul/upgrading.html#deprecation-of-consul_agent_service)
 for more information.
 

@@ -12,9 +12,9 @@ This page includes details on our compatibility promise and guidelines to
 follow when upgrading between versions of the provider. Whenever possible,
 we recommend verifying upgrades in isolated test environments.
 
-## Upgrading to 1.1.0
+## Upgrading to 2.0.0
 
-There were several major deprecation notices introduced in 1.1.0. This
+There were several major deprecation notices introduced in 2.0.0. This
 reviews the details of each and provides migration instructions to the
 appropriate resources.
 
