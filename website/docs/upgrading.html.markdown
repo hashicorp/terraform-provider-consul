@@ -31,7 +31,7 @@ therefore it is being removed from this provider.
 ### Deprecation of consul_agent_service
 
 The `consul_agent_service` resource will be removed in the next major version
-of the provider. As a result, we recommend moving to the [`consul_service`](/docs/providers/consul/d/agent_service.html) resource.
+of the provider. As a result, we recommend moving to the [`consul_service`](/docs/providers/consul/r/service.html) resource.
 
 This resource has been updated to use the correct catalog APIs in place
 of service registration APIs. The `consul_agent_service` resource previously also
