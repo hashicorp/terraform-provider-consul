@@ -1,8 +1,12 @@
 package consulyaml
 
 import (
+	"crypto/sha256"
+	"encoding/hex"
+	"fmt"
 	"log"
 
+	consulapi "github.com/hashicorp/consul/api"
 	"github.com/hashicorp/terraform/helper/schema"
 	"github.com/hashicorp/terraform/terraform"
 	"github.com/mitchellh/mapstructure"
@@ -95,4 +99,21 @@ func providerConfigure(d *schema.ResourceData) (interface{}, error) {
 	}
 	log.Printf("[INFO] Initializing Consul client")
 	return config.Client()
+}
+
+func yamlhash(s string) string {
+	sha := sha256.Sum256([]byte(s))
+	return hex.EncodeToString(sha[:])
+}
+
+// getDC is used to get the datacenter of the local agent
+func getDC(d *schema.ResourceData, client *consulapi.Client) (string, error) {
+	if v, ok := d.GetOk("datacenter"); ok {
+		return v.(string), nil
+	}
+	info, err := client.Agent().Self()
+	if err != nil {
+		return "", fmt.Errorf("Failed to get datacenter from Consul agent: %v", err)
+	}
+	return info["Config"]["Datacenter"].(string), nil
 }

@@ -3,6 +3,7 @@ package consulyaml
 import (
 	"fmt"
 	"io/ioutil"
+	"log"
 	"os"
 	"strconv"
 
@@ -40,8 +41,19 @@ func resourceConsulKeyPrefixFromFile() *schema.Resource {
 			"subkeys_file": {
 				Type:     schema.TypeString,
 				Required: true,
+				ForceNew: true,
 				Elem: &schema.Schema{
 					Type: schema.TypeString,
+				},
+			},
+
+			"yaml_hash": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Default:  "",
+				ForceNew: false,
+				StateFunc: func(v interface{}) string {
+					return yamlhash(v.(string))
 				},
 			},
 		},
@@ -84,18 +96,6 @@ func parseMapItem(item yaml.MapItem, subKeys map[string]string, parent string) {
 	default:
 		panic(fmt.Sprintf("Found type of value we don't understand: %T\n", v))
 	}
-}
-
-// getDC is used to get the datacenter of the local agent
-func getDC(d *schema.ResourceData, client *consulapi.Client) (string, error) {
-	if v, ok := d.GetOk("datacenter"); ok {
-		return v.(string), nil
-	}
-	info, err := client.Agent().Self()
-	if err != nil {
-		return "", fmt.Errorf("Failed to get datacenter from Consul agent: %v", err)
-	}
-	return info["Config"]["Datacenter"].(string), nil
 }
 
 func resourceConsulKeyPrefixCreateFile(d *schema.ResourceData, meta interface{}) error {
@@ -142,7 +142,6 @@ func resourceConsulKeyPrefixCreateFile(d *schema.ResourceData, meta interface{})
 	d.Set("datacenter", dc)
 	d.Set("path_prefix", pathPrefix)
 	d.Set("subkeys", subKeys)
-	d.SetId("consul")
 
 	for k, v := range subKeys {
 		fullPath := pathPrefix + k
@@ -154,14 +153,126 @@ func resourceConsulKeyPrefixCreateFile(d *schema.ResourceData, meta interface{})
 
 	return nil
 }
-func resourceConsulKeyPrefixReadFile(d *schema.ResourceData, m interface{}) error {
+func resourceConsulKeyPrefixReadFile(d *schema.ResourceData, meta interface{}) error {
+	client := meta.(*consulapi.Client)
+	kv := client.KV()
+	token := d.Get("token").(string)
+	yamlfile := d.Get("subkeys_file").(string)
+	dc, err := getDC(d, client)
+	if err != nil {
+		return err
+	}
+
+	keyClient := newKeyClient(kv, dc, token)
+	pathPrefix := d.Id()
+
+	subKeys, err := keyClient.GetUnderPrefix(pathPrefix)
+	if err != nil {
+		return err
+	}
+
+	d.Set("subkeys", subKeys)
+
+	yamlContent, err := ioutil.ReadFile(yamlfile)
+	if err != nil {
+		return err
+	}
+
+	d.Set("yaml_hash", yamlhash(string(yamlContent)))
+
+	// Store the datacenter on this resource, which can be helpful for reference
+	// in case it was read from the provider
+	d.Set("datacenter", dc)
+
 	return nil
 }
 
-func resourceConsulKeyPrefixUpdateFile(d *schema.ResourceData, m interface{}) error {
+func resourceConsulKeyPrefixUpdateFile(d *schema.ResourceData, meta interface{}) error {
+	client := meta.(*consulapi.Client)
+	kv := client.KV()
+	token := d.Get("token").(string)
+	dc, err := getDC(d, client)
+	if err != nil {
+		return err
+	}
+	currenthash := d.Get("yaml_hash").(string)
+	keyClient := newKeyClient(kv, dc, token)
+
+	pathPrefix := d.Id()
+	if d.HasChange("yaml_hash") {
+		log.Printf("# Hash hange detected: %s", currenthash)
+		o, n := d.GetChange("subkeys")
+		if o == nil {
+			o = map[string]interface{}{}
+		}
+		if n == nil {
+			n = map[string]interface{}{}
+		}
+
+		om := o.(map[string]interface{})
+		nm := n.(map[string]interface{})
+
+		// First we'll write all of the stuff in the "new map" nm,
+		// and then we'll delete any keys that appear in the "old map" om
+		// and do not also appear in nm. This ordering means that if a subkey
+		// name is changed we will briefly have both the old and new names in
+		// Consul, as opposed to briefly having neither.
+
+		// Again, we'd ideally use d.Partial(true) here but it doesn't work
+		// for maps and so we'll just rely on a subsequent Read to tidy up
+		// after a partial write.
+
+		// Write new and changed keys
+		for k, vI := range nm {
+			v := vI.(string)
+			fullPath := pathPrefix + k
+			err := keyClient.Put(fullPath, v)
+			if err != nil {
+				return fmt.Errorf("error while writing %s: %s", fullPath, err)
+			}
+		}
+
+		// Remove deleted keys
+		for k, _ := range om {
+			if _, exists := nm[k]; exists {
+				continue
+			}
+			fullPath := pathPrefix + k
+			err := keyClient.Delete(fullPath)
+			if err != nil {
+				return fmt.Errorf("error while deleting %s: %s", fullPath, err)
+			}
+		}
+
+	}
+
+	// Store the datacenter on this resource, which can be helpful for reference
+	// in case it was read from the provider
+	d.Set("datacenter", dc)
 	return nil
 }
 
-func resourceConsulKeyPrefixDeleteFile(d *schema.ResourceData, m interface{}) error {
+func resourceConsulKeyPrefixDeleteFile(d *schema.ResourceData, meta interface{}) error {
+	client := meta.(*consulapi.Client)
+	kv := client.KV()
+	token := d.Get("token").(string)
+	dc, err := getDC(d, client)
+	if err != nil {
+		return err
+	}
+
+	keyClient := newKeyClient(kv, dc, token)
+
+	pathPrefix := d.Id()
+
+	// Delete everything under our prefix, since the entire set of keys under
+	// the given prefix is considered to be managed exclusively by Terraform.
+	err = keyClient.DeleteUnderPrefix(pathPrefix)
+	if err != nil {
+		return err
+	}
+
+	d.SetId("")
+
 	return nil
 }

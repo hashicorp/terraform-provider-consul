@@ -57,6 +57,7 @@ func (c *keyClient) GetUnderPrefix(pathPrefix string) (map[string]string, error)
 	for _, pair := range pairs {
 		subKey := pair.Key[len(pathPrefix):]
 		value[subKey] = string(pair.Value)
+		fmt.Printf("pair: '%s", pair.Value)
 	}
 	return value, nil
 }
