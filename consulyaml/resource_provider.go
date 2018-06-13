@@ -5,6 +5,7 @@ import (
 	"encoding/hex"
 	"fmt"
 	"log"
+	"strconv"
 
 	consulapi "github.com/hashicorp/consul/api"
 	"github.com/hashicorp/terraform/helper/schema"
@@ -78,10 +79,9 @@ func Provider() terraform.ResourceProvider {
 				}, ""),
 			},
 		},
-
-		DataSourcesMap: map[string]*schema.Resource{
-			//"consul_key_prefix": dataSourceConsulKeyPrefix(),
-		},
+		/*DataSourcesMap: map[string]*schema.Resource{
+			"consul-yaml_key_prefix_from_file": dataSourceConsulKeyPrefixFromFile(),
+		},*/
 
 		ResourcesMap: map[string]*schema.Resource{
 			"consul-yaml_key_prefix_from_file": resourceConsulKeyPrefixFromFile(),
@@ -116,4 +116,77 @@ func getDC(d *schema.ResourceData, client *consulapi.Client) (string, error) {
 		return "", fmt.Errorf("Failed to get datacenter from Consul agent: %v", err)
 	}
 	return info["Config"]["Datacenter"].(string), nil
+}
+
+func resourceConsulKeysDelete(d *schema.ResourceData, meta interface{}) error {
+	client := meta.(*consulapi.Client)
+	kv := client.KV()
+	token := d.Get("token").(string)
+	dc, err := getDC(d, client)
+	if err != nil {
+		return err
+	}
+
+	keyClient := newKeyClient(kv, dc, token)
+
+	// Clean up any keys that we're explicitly managing
+	keys := d.Get("key").(*schema.Set).List()
+	for _, raw := range keys {
+		_, path, sub, err := parseKey(raw)
+		if err != nil {
+			return err
+		}
+
+		// Skip if the key is non-managed
+		shouldDelete, ok := sub["delete"].(bool)
+		if !ok || !shouldDelete {
+			continue
+		}
+
+		if err := keyClient.Delete(path); err != nil {
+			return err
+		}
+	}
+
+	// Clear the ID
+	d.SetId("")
+	return nil
+}
+
+// parseKey is used to parse a key into a name, path, config or error
+func parseKey(raw interface{}) (string, string, map[string]interface{}, error) {
+	sub, ok := raw.(map[string]interface{})
+	if !ok {
+		return "", "", nil, fmt.Errorf("Failed to unroll: %#v", raw)
+	}
+
+	key := sub["name"].(string)
+
+	path, ok := sub["path"].(string)
+	if !ok {
+		return "", "", nil, fmt.Errorf("Failed to get path for key '%s'", key)
+	}
+	return key, path, sub, nil
+}
+
+// attributeValue determines the value for a key, potentially
+// using a default value if provided.
+func attributeValue(sub map[string]interface{}, readValue string) string {
+	// Use the value if given
+	if readValue != "" {
+		return readValue
+	}
+
+	// Use a default if given
+	if raw, ok := sub["default"]; ok {
+		switch def := raw.(type) {
+		case string:
+			return def
+		case bool:
+			return strconv.FormatBool(def)
+		}
+	}
+
+	// No value
+	return ""
 }

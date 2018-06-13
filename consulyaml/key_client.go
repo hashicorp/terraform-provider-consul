@@ -3,8 +3,10 @@ package consulyaml
 import (
 	"fmt"
 	"log"
+	"reflect"
 
 	consulapi "github.com/hashicorp/consul/api"
+	"github.com/hashicorp/terraform/helper/schema"
 )
 
 // keyClient is a wrapper around the upstream Consul client that is
@@ -94,4 +96,13 @@ func (c *keyClient) DeleteUnderPrefix(pathPrefix string) error {
 		return fmt.Errorf("Failed to delete Consul keys under '%s': %s", pathPrefix, err)
 	}
 	return nil
+}
+
+func subkeysDiff(k, old, new string, d *schema.ResourceData) bool {
+	equivalent := reflect.DeepEqual(old, new)
+	log.Printf(
+		"[DEBUG] XXXXXXXX inside the diff func old: %#v new: %#v",
+		old, new,
+	)
+	return equivalent
 }
