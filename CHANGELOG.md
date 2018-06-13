@@ -1,5 +1,10 @@
 ## 1.1.0 (Unreleased)
 
+NOTES:
+
+* This will be the last release prior to significant changes coming to the provider that will deprecate
+multiple resources. These changes are primarily to simplify overlap of resource functionality, ensure we are using the correct APIs/design provided by Consul for something like Terraform, and remove resources that can no longer be supported by the current version of the Consul API (1.0+). Read more [here](https://github.com/terraform-providers/terraform-provider-consul/issues/46).
+
 IMPROVEMENTS:
 
 * The provider now allows you to skip HTTPS certificate verification by supplying the `insecure_https` option. [GH-31]
