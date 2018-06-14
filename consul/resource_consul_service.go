@@ -81,7 +81,7 @@ func resourceConsulServiceCreate(d *schema.ResourceData, meta interface{}) error
 	// managed by the consul_node resource (or datasource)
 	nodeCheck, _, err := client.Catalog().Node(node, &consulapi.QueryOptions{Datacenter: dc})
 	if err != nil {
-		return fmt.Errorf("Cannot retrieve node: %v", err)
+		return fmt.Errorf("Cannot retrieve node '%s': %v", node, err)
 	}
 	if nodeCheck == nil {
 		return fmt.Errorf("Node does not exist: '%s'", node)
@@ -135,9 +135,11 @@ func resourceConsulServiceCreate(d *schema.ResourceData, meta interface{}) error
 		return fmt.Errorf("Failed to register service (dc: '%s'): %v", dc, err)
 	}
 
+	// Retrieve the service again to get the canonical service ID. We can't
+	// get this back from the register call or through
 	service, err := retrieveService(client, name, ident, node, dc)
 	if err != nil {
-		return err
+		return fmt.Errorf("Failed to retrieve service '%s' after registration. This may mean that the service should be manually deregistered. %v", ident, err)
 	}
 
 	d.SetId(service.ServiceID)
