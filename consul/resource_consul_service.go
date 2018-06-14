@@ -285,7 +285,7 @@ func retrieveService(client *consulapi.Client, name string, ident string, node s
 
 	// Only one service with a given ID may be present per node
 	for _, s := range services {
-		if s.ServiceID == ident {
+		if (s.ServiceID == ident) && (s.Node == node) {
 			return s, nil
 		}
 	}
