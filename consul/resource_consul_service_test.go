@@ -54,7 +54,12 @@ func TestAccConsulService_basicModify(t *testing.T) {
 			resource.TestStep{
 				Config: testAccConsulServiceConfigBasicAddress,
 				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("consul_service.google", "id", "google"),
 					resource.TestCheckResourceAttr("consul_service.google", "address", "lb.google.com"),
+					resource.TestCheckResourceAttr("consul_service.google", "tags.#", "2"),
+					resource.TestCheckResourceAttr("consul_service.google", "tags.0", "tag0"),
+					resource.TestCheckResourceAttr("consul_service.google", "tags.1", "tag1"),
+					resource.TestCheckResourceAttr("consul_service.google", "port", "80"),
 				),
 			},
 		},
