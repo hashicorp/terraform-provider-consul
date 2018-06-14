@@ -19,12 +19,12 @@ func TestAccConsulService_basic(t *testing.T) {
 			resource.TestStep{
 				Config: testAccConsulServiceConfigBasic,
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("consul_service.google", "id", "google"),
-					resource.TestCheckResourceAttr("consul_service.google", "address", "www.google.com"),
-					resource.TestCheckResourceAttr("consul_service.google", "node", "compute-google"),
-					resource.TestCheckResourceAttr("consul_service.google", "port", "80"),
-					resource.TestCheckResourceAttr("consul_service.google", "tags.#", "1"),
-					resource.TestCheckResourceAttr("consul_service.google", "tags.0", "tag0"),
+					resource.TestCheckResourceAttr("consul_service.example", "id", "example"),
+					resource.TestCheckResourceAttr("consul_service.example", "address", "www.hashicorptest.com"),
+					resource.TestCheckResourceAttr("consul_service.example", "node", "compute-example"),
+					resource.TestCheckResourceAttr("consul_service.example", "port", "80"),
+					resource.TestCheckResourceAttr("consul_service.example", "tags.#", "1"),
+					resource.TestCheckResourceAttr("consul_service.example", "tags.0", "tag0"),
 				),
 			},
 		},
@@ -40,26 +40,26 @@ func TestAccConsulService_basicModify(t *testing.T) {
 			resource.TestStep{
 				Config: testAccConsulServiceConfigBasic,
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("consul_service.google", "id", "google"),
+					resource.TestCheckResourceAttr("consul_service.example", "id", "example"),
 				),
 			},
 			resource.TestStep{
 				Config: testAccConsulServiceConfigBasicNewTags,
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("consul_service.google", "tags.#", "2"),
-					resource.TestCheckResourceAttr("consul_service.google", "tags.0", "tag0"),
-					resource.TestCheckResourceAttr("consul_service.google", "tags.1", "tag1"),
+					resource.TestCheckResourceAttr("consul_service.example", "tags.#", "2"),
+					resource.TestCheckResourceAttr("consul_service.example", "tags.0", "tag0"),
+					resource.TestCheckResourceAttr("consul_service.example", "tags.1", "tag1"),
 				),
 			},
 			resource.TestStep{
 				Config: testAccConsulServiceConfigBasicAddress,
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("consul_service.google", "id", "google"),
-					resource.TestCheckResourceAttr("consul_service.google", "address", "lb.google.com"),
-					resource.TestCheckResourceAttr("consul_service.google", "tags.#", "2"),
-					resource.TestCheckResourceAttr("consul_service.google", "tags.0", "tag0"),
-					resource.TestCheckResourceAttr("consul_service.google", "tags.1", "tag1"),
-					resource.TestCheckResourceAttr("consul_service.google", "port", "80"),
+					resource.TestCheckResourceAttr("consul_service.example", "id", "example"),
+					resource.TestCheckResourceAttr("consul_service.example", "address", "lb.hashicorptest.com"),
+					resource.TestCheckResourceAttr("consul_service.example", "tags.#", "2"),
+					resource.TestCheckResourceAttr("consul_service.example", "tags.0", "tag0"),
+					resource.TestCheckResourceAttr("consul_service.example", "tags.1", "tag1"),
+					resource.TestCheckResourceAttr("consul_service.example", "port", "80"),
 				),
 			},
 		},
@@ -75,10 +75,10 @@ func TestAccConsulService_serviceID(t *testing.T) {
 			resource.TestStep{
 				Config: testAccConsulServiceConfigServiceID,
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("consul_service.google", "id", "8ce84078-b32a-4039-bb68-17b13b7c2396"),
-					resource.TestCheckResourceAttr("consul_service.google", "service_id", "8ce84078-b32a-4039-bb68-17b13b7c2396"),
-					resource.TestCheckResourceAttr("consul_service.google", "address", "www.google.com"),
-					resource.TestCheckResourceAttr("consul_service.google", "node", "compute-google"),
+					resource.TestCheckResourceAttr("consul_service.example", "id", "8ce84078-b32a-4039-bb68-17b13b7c2396"),
+					resource.TestCheckResourceAttr("consul_service.example", "service_id", "8ce84078-b32a-4039-bb68-17b13b7c2396"),
+					resource.TestCheckResourceAttr("consul_service.example", "address", "www.hashicorptest.com"),
+					resource.TestCheckResourceAttr("consul_service.example", "node", "compute-example"),
 				),
 			},
 		},
@@ -117,62 +117,62 @@ func testAccCheckConsulServiceDestroy(s *terraform.State) error {
 
 const testAccConsulServiceConfigNoNode = `
 resource "consul_service" "example" {
-	name = "google"
+	name = "example"
 	node = "external"
 }
 `
 
 const testAccConsulServiceConfigBasic = `
-resource "consul_service" "google" {
-	name    = "google"
+resource "consul_service" "example" {
+	name    = "example"
 	node    = "${consul_node.compute.name}"
 	port    = 80
 	tags    = ["tag0"]
   }
 
   resource "consul_node" "compute" {
-	name    = "compute-google"
-	address = "www.google.com"
+	name    = "compute-example"
+	address = "www.hashicorptest.com"
   }
 `
 
 const testAccConsulServiceConfigBasicNewTags = `
-resource "consul_service" "google" {
-	name    = "google"
+resource "consul_service" "example" {
+	name    = "example"
 	node    = "${consul_node.compute.name}"
 	port    = 80
 	tags    = ["tag0", "tag1"]
   }
 
   resource "consul_node" "compute" {
-	name    = "compute-google"
-	address = "www.google.com"
+	name    = "compute-example"
+	address = "www.hashicorptest.com"
   }
 `
 
 const testAccConsulServiceConfigBasicAddress = `
-resource "consul_service" "google" {
-	name    = "google"
-	address = "lb.google.com"
+resource "consul_service" "example" {
+	name    = "example"
+	address = "lb.hashicorptest.com"
 	node    = "${consul_node.compute.name}"
 	port    = 80
 	tags    = ["tag0", "tag1"]
   }
 
   resource "consul_node" "compute" {
-	name    = "compute-google"
-	address = "www.google.com"
+	name    = "compute-example"
+	address = "www.hashicorptest.com"
   }
 `
 const testAccConsulServiceConfigServiceID = `
-resource "consul_service" "google" {
-	name       = "google"
+resource "consul_service" "example" {
+	name       = "example"
 	service_id = "8ce84078-b32a-4039-bb68-17b13b7c2396"
 	node       = "${consul_node.compute.name}"
   }
 
   resource "consul_node" "compute" {
-	name    = "compute-google"
-	address = "www.google.com"
+	name    = "compute-example"
+	address = "www.hashicorptest.com"
   }
 `
