@@ -20,6 +20,7 @@ func TestAccConsulService_basic(t *testing.T) {
 				Config: testAccConsulServiceConfigBasic,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("consul_service.example", "id", "example"),
+					resource.TestCheckResourceAttr("consul_service.example", "service_id", "example"),
 					resource.TestCheckResourceAttr("consul_service.example", "address", "www.hashicorptest.com"),
 					resource.TestCheckResourceAttr("consul_service.example", "node", "compute-example"),
 					resource.TestCheckResourceAttr("consul_service.example", "port", "80"),

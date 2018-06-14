@@ -70,7 +70,7 @@ provider setup and the agent's default datacenter.
 
 The following attributes are exported:
 
-* `id` - The ID of the service.
+* `service_id` - The ID of the service.
 * `address` - The address of the service.
 * `node` - The node the service is registered on.
 * `name` - The name of the service.
