@@ -11,6 +11,8 @@ IMPROVEMENTS:
 
 NEW FEATURES:
 
+* New data source: `consul_agent_config`. This new datasource provides information similar to `consul_agent_self`,
+but is designed to only expose configuration that Consul will not change without versioning upstream. [GH-42]
 * New data source: `consul_key_prefix` corresponds to the existing resource of the same name, allowing config to access a set of keys with a common prefix as a Terraform map for more convenient access [GH-34]
 
 BUG FIXES:
