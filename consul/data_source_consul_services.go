@@ -21,9 +21,9 @@ const (
 	catalogServicesServiceTags = "tags"
 )
 
-func dataSourceConsulCatalogServices() *schema.Resource {
+func dataSourceConsulServices() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceConsulCatalogServicesRead,
+		Read: dataSourceConsulServicesRead,
 		Schema: map[string]*schema.Schema{
 			// Data Source Predicate(s)
 			catalogServicesDatacenter: &schema.Schema{
@@ -58,7 +58,7 @@ func dataSourceConsulCatalogServices() *schema.Resource {
 	}
 }
 
-func dataSourceConsulCatalogServicesRead(d *schema.ResourceData, meta interface{}) error {
+func dataSourceConsulServicesRead(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*consulapi.Client)
 
 	// Parse out data source filters to populate Consul's query options

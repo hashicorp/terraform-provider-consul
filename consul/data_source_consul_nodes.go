@@ -28,9 +28,9 @@ const (
 	catalogNodesSchemaTaggedWAN = "wan"
 )
 
-func dataSourceConsulCatalogNodes() *schema.Resource {
+func dataSourceConsulNodes() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceConsulCatalogNodesRead,
+		Read: dataSourceConsulNodesRead,
 		Schema: map[string]*schema.Schema{
 			// Filters
 			catalogNodesQueryOpts: schemaQueryOpts,
@@ -94,7 +94,7 @@ func dataSourceConsulCatalogNodes() *schema.Resource {
 	}
 }
 
-func dataSourceConsulCatalogNodesRead(d *schema.ResourceData, meta interface{}) error {
+func dataSourceConsulNodesRead(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*consulapi.Client)
 
 	// Parse out data source filters to populate Consul's query options

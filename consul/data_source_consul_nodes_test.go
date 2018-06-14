@@ -6,13 +6,13 @@ import (
 	"github.com/hashicorp/terraform/helper/resource"
 )
 
-func TestAccDataConsulCatalogNodes_basic(t *testing.T) {
+func TestAccDataConsulNodes_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
 			resource.TestStep{
-				Config: testAccDataConsulCatalogNodesConfig,
+				Config: testAccDataConsulNodesConfig,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDataSourceValue("data.consul_nodes.read", "nodes.#", "1"),
 					testAccCheckDataSourceValue("data.consul_nodes.read", "nodes.0.id", "<any>"),
@@ -23,13 +23,13 @@ func TestAccDataConsulCatalogNodes_basic(t *testing.T) {
 		},
 	})
 }
-func TestAccDataConsulCatalogNodes_alias(t *testing.T) {
+func TestAccDataConsulNodes_alias(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
 			resource.TestStep{
-				Config: testAccDataConsulCatalogNodesAlias,
+				Config: testAccDataConsulNodesAlias,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("data.consul_catalog_nodes.read", "nodes.#", "1"),
 				),
@@ -38,7 +38,7 @@ func TestAccDataConsulCatalogNodes_alias(t *testing.T) {
 	})
 }
 
-const testAccDataConsulCatalogNodesConfig = `
+const testAccDataConsulNodesConfig = `
 data "consul_nodes" "read" {
   query_options {
     allow_stale = true
@@ -49,6 +49,6 @@ data "consul_nodes" "read" {
   }
 }
 `
-const testAccDataConsulCatalogNodesAlias = `
+const testAccDataConsulNodesAlias = `
 data "consul_catalog_nodes" "read" {}
 `

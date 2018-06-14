@@ -6,13 +6,13 @@ import (
 	"github.com/hashicorp/terraform/helper/resource"
 )
 
-func TestAccDataConsulCatalogService_basic(t *testing.T) {
+func TestAccDataConsulService_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
 			resource.TestStep{
-				Config: testAccDataConsulCatalogServiceConfig,
+				Config: testAccDataConsulServiceConfig,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDataSourceValue("data.consul_service.read", "datacenter", "dc1"),
 					testAccCheckDataSourceValue("data.consul_service.read", "service.#", "1"),
@@ -36,13 +36,13 @@ func TestAccDataConsulCatalogService_basic(t *testing.T) {
 	})
 }
 
-func TestAccDataConsulCatalogService_filtered(t *testing.T) {
+func TestAccDataConsulService_filtered(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
 			resource.TestStep{
-				Config: testAccDataConsulCatalogServiceFilteredConfig,
+				Config: testAccDataConsulServiceFilteredConfig,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDataSourceValue("data.consul_service.read_f", "datacenter", "dc1"),
 					testAccCheckDataSourceValue("data.consul_service.read_f", "service.#", "1"),
@@ -61,13 +61,13 @@ func TestAccDataConsulCatalogService_filtered(t *testing.T) {
 	})
 }
 
-func TestAccDataConsulCatalogService_alias(t *testing.T) {
+func TestAccDataConsulService_alias(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
 			resource.TestStep{
-				Config: testAccDataConsulCatalogServiceAlias,
+				Config: testAccDataConsulServiceAlias,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("data.consul_catalog_service.read", "service.#", "1"),
 				),
@@ -76,7 +76,7 @@ func TestAccDataConsulCatalogService_alias(t *testing.T) {
 	})
 }
 
-const testAccDataConsulCatalogServiceConfig = `
+const testAccDataConsulServiceConfig = `
 data "consul_service" "read" {
   query_options {
     allow_stale = true
@@ -90,7 +90,7 @@ data "consul_service" "read" {
 }
 `
 
-const testAccDataConsulCatalogServiceFilteredConfig = `
+const testAccDataConsulServiceFilteredConfig = `
 resource "consul_node" "node" {
   address = "192.168.10.10"
   name    = "foobar_dummy"
@@ -131,7 +131,7 @@ data "consul_service" "read_f" {
 }
 `
 
-const testAccDataConsulCatalogServiceAlias = `
+const testAccDataConsulServiceAlias = `
 data "consul_catalog_service" "read" {
   name = "consul"
 }
