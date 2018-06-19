@@ -79,9 +79,9 @@ func Provider() terraform.ResourceProvider {
 				}, ""),
 			},
 		},
-		/*DataSourcesMap: map[string]*schema.Resource{
+		DataSourcesMap: map[string]*schema.Resource{
 			"consul-yaml_key_prefix_from_file": dataSourceConsulKeyPrefixFromFile(),
-		},*/
+		},
 
 		ResourcesMap: map[string]*schema.Resource{
 			"consul-yaml_key_prefix_from_file": resourceConsulKeyPrefixFromFile(),

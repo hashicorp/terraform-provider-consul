@@ -38,21 +38,37 @@ func resourceConsulKeyPrefixFromFile() *schema.Resource {
 				ForceNew: true,
 			},
 
-			"subkeys_file": {
+			/*"subkeys_file": {
 				Type:     schema.TypeString,
 				Required: true,
+				/*StateFunc: func(v interface{}) string {
+					return yamlhash(v.(string))
+				},
+			},*/
+			"subkeys_file": {
+				Type: schema.TypeList,
+				Elem: &schema.Schema{
+					Type: schema.TypeList,
+				},
+				StateFunc: func(v interface{}) []string {
+					yamlfile := string(v.([]string)[:0])
+					v = append(v.([]string), yamlhash(yamlfile))
+					return v
+				},
 			},
-
 			"subkeys": {
 				Type:     schema.TypeMap,
 				Optional: true,
 				Computed: true,
-				//Required:         true,
-				//DiffSuppressFunc: subkeysDiff,
-				Elem: &schema.Schema{
-					Type: schema.TypeString,
-				},
 			},
+			/*"yaml_hash": {
+				Type:     schema.TypeString,
+				Optional: true
+				Computed: true,
+				StateFunc: func(v interface{}) string {
+					return yamlhash(v.(string))
+				},
+			},*/
 		},
 	}
 }
@@ -139,6 +155,11 @@ func resourceConsulKeyPrefixCreateFile(d *schema.ResourceData, meta interface{})
 	d.Set("datacenter", dc)
 	d.Set("path_prefix", pathPrefix)
 	d.Set("subkeys", subKeys)
+	fileContent, err := ioutil.ReadFile(d.Get("subkeys_file").(string))
+	if err != nil {
+		return err
+	}
+	d.Set("yaml_hash", yamlhash(string(fileContent)))
 
 	for k, v := range subKeys {
 		fullPath := pathPrefix + k
@@ -156,23 +177,25 @@ func resourceConsulKeyPrefixUpdateFile(d *schema.ResourceData, meta interface{})
 	kv := client.KV()
 	token := d.Get("token").(string)
 	dc, err := getDC(d, client)
-	//d.Partial(true)
+	d.Partial(true)
 	if err != nil {
 		return err
 	}
-
-	llaves := d.Get("subkeys").(map[string]string)
+	panic("INSIDE UPDATE")
+	llaves := d.Get("subkeys").(map[string]interface{})
 
 	for key, value := range llaves {
 		log.Printf(
-			"[DEBUG] #### inside UPDATE func -  Key: -> %v", key, "Value: -> %v", value,
+			"[DEBUG] !!!!!! inside UPDATE func -  Key: -> %v | Value: -> %v", key, value,
 		)
 	}
-
+	currenthash := d.Get("yaml_hash")
 	keyClient := newKeyClient(kv, dc, token)
+	log.Printf("current hash: %v", currenthash)
 
 	pathPrefix := d.Id()
-	if d.HasChange("subkeys") {
+	if d.HasChange("yaml_hash") {
+		panic(fmt.Sprintf("INSIDE THE HAS CHANGE"))
 		o, n := d.GetChange("subkeys")
 		if o == nil {
 			o = map[string]interface{}{}
@@ -257,7 +280,12 @@ func resourceConsulKeyPrefixReadFile(d *schema.ResourceData, meta interface{}) e
 			"[DEBUG] #### inside READ func - Key: ->  %v Value: ->   %v", key, value,
 		)
 	}
-	//d.Set("subkeys", subKeys)
+	fileContent, err := ioutil.ReadFile(d.Get("subkeys_file").(string))
+	if err != nil {
+		return err
+	}
+	d.Set("yaml_hash", yamlhash(string(fileContent)))
+	d.Set("subkeys", subKeys)
 
 	// Store the datacenter on this resource, which can be helpful for reference
 	// in case it was read from the provider

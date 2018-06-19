@@ -101,8 +101,8 @@ func (c *keyClient) DeleteUnderPrefix(pathPrefix string) error {
 func subkeysDiff(k, old, new string, d *schema.ResourceData) bool {
 	equivalent := reflect.DeepEqual(old, new)
 	log.Printf(
-		"[DEBUG] XXXXXXXX inside the diff func old: %#v new: %#v",
-		old, new,
+		"[DEBUG] XXXXXXXX inside the diff func k: %#v old: %#v new: %#v",
+		k, old, new,
 	)
 	return equivalent
 }
