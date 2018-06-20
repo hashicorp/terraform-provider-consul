@@ -39,7 +39,7 @@ func resourceConsulCatalogEntry() *schema.Resource {
 			},
 
 			"node_meta": &schema.Schema{
-				Type: schema.TypeMap,
+				Type:     schema.TypeMap,
 				Optional: true,
 			},
 
