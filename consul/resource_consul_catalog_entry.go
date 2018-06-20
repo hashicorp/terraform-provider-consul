@@ -38,6 +38,11 @@ func resourceConsulCatalogEntry() *schema.Resource {
 				ForceNew: true,
 			},
 
+			"node_meta": &schema.Schema{
+				Type: schema.TypeMap,
+				Optional: true,
+			},
+
 			"service": &schema.Schema{
 				Type:     schema.TypeSet,
 				Optional: true,
@@ -140,6 +145,16 @@ func resourceConsulCatalogEntryCreate(d *schema.ResourceData, meta interface{}) 
 	address := d.Get("address").(string)
 	node := d.Get("node").(string)
 
+	var nodeMeta map[string]string
+	if v, ok := d.GetOk("node_meta"); ok {
+		nodeMeta = make(map[string]string, len(v.(map[string]interface{})))
+		for k, v := range v.(map[string]interface{}) {
+			if val, ok := v.(string); ok {
+				nodeMeta[k] = val
+			}
+		}
+	}
+
 	var serviceIDs []string
 	if service, ok := d.GetOk("service"); ok {
 		serviceList := service.(*schema.Set).List()
@@ -165,6 +180,7 @@ func resourceConsulCatalogEntryCreate(d *schema.ResourceData, meta interface{}) 
 				Address:    address,
 				Datacenter: dc,
 				Node:       node,
+				NodeMeta:   nodeMeta,
 				Service: &consulapi.AgentService{
 					Address: serviceData["address"].(string),
 					ID:      serviceID,

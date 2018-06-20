@@ -18,6 +18,10 @@ resource "consul_catalog_entry" "app" {
   address = "192.168.10.10"
   node    = "foobar"
 
+  node_meta = {
+    foo = "bar"
+  }
+
   service = {
     address = "127.0.0.1"
     id      = "redis1"
@@ -37,6 +41,9 @@ The following arguments are supported:
 
 * `node` - (Required) The name of the node being added to, or
   referenced in the catalog.
+
+* `node_meta` - (Optional) A map of key/value metadata pairs to assign 
+  to the entry.
 
 * `service` - (Optional) A service to optionally associated with
   the node. Supported values are documented below.
