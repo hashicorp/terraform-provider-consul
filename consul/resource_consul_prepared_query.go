@@ -17,11 +17,6 @@ func resourceConsulPreparedQuery() *schema.Resource {
 		SchemaVersion: 0,
 
 		Schema: map[string]*schema.Schema{
-			"id": &schema.Schema{
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-
 			"datacenter": &schema.Schema{
 				Type:     schema.TypeString,
 				Optional: true,

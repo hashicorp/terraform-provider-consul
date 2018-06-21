@@ -22,11 +22,6 @@ func resourceConsulAgentService() *schema.Resource {
 				ForceNew: true,
 			},
 
-			"id": &schema.Schema{
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-
 			"name": &schema.Schema{
 				Type:       schema.TypeString,
 				Required:   true,
@@ -128,7 +123,7 @@ func resourceConsulAgentServiceDelete(d *schema.ResourceData, meta interface{}) 
 	client := meta.(*consulapi.Client)
 	catalog := client.Agent()
 
-	id := d.Get("id").(string)
+	id := d.Id()
 
 	if err := catalog.ServiceDeregister(id); err != nil {
 		return fmt.Errorf("Failed to deregister service '%s' from Consul agent: %v", id, err)
