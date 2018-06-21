@@ -2,6 +2,7 @@ package consul
 
 import (
 	"fmt"
+	"regexp"
 	"testing"
 
 	consulapi "github.com/hashicorp/consul/api"
@@ -16,122 +17,163 @@ func TestAccConsulService_basic(t *testing.T) {
 		CheckDestroy: testAccCheckConsulServiceDestroy,
 		Steps: []resource.TestStep{
 			resource.TestStep{
-				Config: testAccConsulServiceConfig,
+				Config: testAccConsulServiceConfigBasic,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckConsulServiceExists(),
-					testAccCheckConsulServiceValue("consul_service.app", "address", "www.google.com"),
-					testAccCheckConsulServiceValue("consul_service.app", "id", "google"),
-					testAccCheckConsulServiceValue("consul_service.app", "service_id", "google"),
-					testAccCheckConsulServiceValue("consul_service.app", "name", "google"),
-					testAccCheckConsulServiceValue("consul_service.app", "port", "80"),
-					testAccCheckConsulServiceValue("consul_service.app", "tags.#", "2"),
-					testAccCheckConsulServiceValue("consul_service.app", "tags.0", "tag0"),
-					testAccCheckConsulServiceValue("consul_service.app", "tags.1", "tag1"),
+					resource.TestCheckResourceAttr("consul_service.example", "id", "example"),
+					resource.TestCheckResourceAttr("consul_service.example", "service_id", "example"),
+					resource.TestCheckResourceAttr("consul_service.example", "address", "www.hashicorptest.com"),
+					resource.TestCheckResourceAttr("consul_service.example", "node", "compute-example"),
+					resource.TestCheckResourceAttr("consul_service.example", "port", "80"),
+					resource.TestCheckResourceAttr("consul_service.example", "tags.#", "1"),
+					resource.TestCheckResourceAttr("consul_service.example", "tags.0", "tag0"),
 				),
 			},
 		},
 	})
 }
 
-func TestAccConsulService_extremove(t *testing.T) {
+func TestAccConsulService_basicModify(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() {},
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckConsulServiceDestroy,
 		Steps: []resource.TestStep{
 			resource.TestStep{
-				Config:             testAccConsulServiceConfig,
-				ExpectNonEmptyPlan: true,
+				Config: testAccConsulServiceConfigBasic,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckConsulServiceExists(),
-					testAccCheckConsulServiceValue("consul_service.app", "address", "www.google.com"),
-					testAccCheckConsulServiceValue("consul_service.app", "id", "google"),
-					testAccCheckConsulServiceValue("consul_service.app", "service_id", "google"),
-					testAccCheckConsulServiceValue("consul_service.app", "name", "google"),
-					testAccCheckConsulServiceValue("consul_service.app", "port", "80"),
-					testAccCheckConsulServiceValue("consul_service.app", "tags.#", "2"),
-					testAccCheckConsulServiceValue("consul_service.app", "tags.0", "tag0"),
-					testAccCheckConsulServiceValue("consul_service.app", "tags.1", "tag1"),
-					testAccCheckConsulServiceDeregister("google"),
+					resource.TestCheckResourceAttr("consul_service.example", "id", "example"),
+				),
+			},
+			resource.TestStep{
+				Config: testAccConsulServiceConfigBasicNewTags,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("consul_service.example", "tags.#", "2"),
+					resource.TestCheckResourceAttr("consul_service.example", "tags.0", "tag0"),
+					resource.TestCheckResourceAttr("consul_service.example", "tags.1", "tag1"),
+				),
+			},
+			resource.TestStep{
+				Config: testAccConsulServiceConfigBasicAddress,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("consul_service.example", "id", "example"),
+					resource.TestCheckResourceAttr("consul_service.example", "address", "lb.hashicorptest.com"),
+					resource.TestCheckResourceAttr("consul_service.example", "tags.#", "2"),
+					resource.TestCheckResourceAttr("consul_service.example", "tags.0", "tag0"),
+					resource.TestCheckResourceAttr("consul_service.example", "tags.1", "tag1"),
+					resource.TestCheckResourceAttr("consul_service.example", "port", "80"),
 				),
 			},
 		},
 	})
 }
 
+func TestAccConsulService_serviceID(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() {},
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckConsulServiceDestroy,
+		Steps: []resource.TestStep{
+			resource.TestStep{
+				Config: testAccConsulServiceConfigServiceID,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("consul_service.example", "id", "8ce84078-b32a-4039-bb68-17b13b7c2396"),
+					resource.TestCheckResourceAttr("consul_service.example", "service_id", "8ce84078-b32a-4039-bb68-17b13b7c2396"),
+					resource.TestCheckResourceAttr("consul_service.example", "address", "www.hashicorptest.com"),
+					resource.TestCheckResourceAttr("consul_service.example", "node", "compute-example"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccConsulService_nodeDoesNotExist(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() {},
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckConsulServiceDestroy,
+		Steps: []resource.TestStep{
+			resource.TestStep{
+				Config:      testAccConsulServiceConfigNoNode,
+				ExpectError: regexp.MustCompile(`Node does not exist: '*'`),
+			},
+		},
+	})
+}
+
 func testAccCheckConsulServiceDestroy(s *terraform.State) error {
-	agent := testAccProvider.Meta().(*consulapi.Client).Agent()
-	services, err := agent.Services()
+	client := testAccProvider.Meta().(*consulapi.Client)
+
+	qOpts := consulapi.QueryOptions{}
+	services, _, err := client.Catalog().Services(&qOpts)
 	if err != nil {
-		return fmt.Errorf("Could not retrieve services: %#v", err)
+		return fmt.Errorf("Failed to retrieve services: %v", err)
 	}
-	_, ok := services["google"]
-	if ok {
-		return fmt.Errorf("Service still exists: %#v", "google")
+
+	if len(services) > 1 {
+		return fmt.Errorf("Matching services still exsist: %v", services)
 	}
+
 	return nil
 }
 
-func testAccCheckConsulServiceDeregister(identifier string) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		agent := testAccProvider.Meta().(*consulapi.Client).Agent()
-		err := agent.ServiceDeregister(identifier)
-		if err != nil {
-			return fmt.Errorf("Could not deregister service: %#v", err)
-		}
-		services, err := agent.Services()
-		if err != nil {
-			return fmt.Errorf("Could not retrieve services: %#v", err)
-		}
-		_, ok := services[identifier]
-		if ok {
-			return fmt.Errorf("Service still exists: %#v", identifier)
-		}
-		return nil
-	}
+const testAccConsulServiceConfigNoNode = `
+resource "consul_service" "example" {
+	name = "example"
+	node = "external"
 }
+`
 
-func testAccCheckConsulServiceExists() resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		agent := testAccProvider.Meta().(*consulapi.Client).Agent()
-		services, err := agent.Services()
-		if err != nil {
-			return err
-		}
-		_, ok := services["google"]
-		if !ok {
-			return fmt.Errorf("Service does not exist: %#v", "google")
-		}
-		return nil
-	}
-}
+const testAccConsulServiceConfigBasic = `
+resource "consul_service" "example" {
+	name    = "example"
+	node    = "${consul_node.compute.name}"
+	port    = 80
+	tags    = ["tag0"]
+  }
 
-func testAccCheckConsulServiceValue(n, attr, val string) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		rn, ok := s.RootModule().Resources[n]
-		if !ok {
-			return fmt.Errorf("Resource not found")
-		}
-		out, ok := rn.Primary.Attributes[attr]
-		if !ok {
-			return fmt.Errorf("Attribute '%s' not found: %#v", attr, rn.Primary.Attributes)
-		}
-		if val != "<any>" && out != val {
-			return fmt.Errorf("Attribute '%s' value '%s' != '%s'", attr, out, val)
-		}
-		if val == "<any>" && out == "" {
-			return fmt.Errorf("Attribute '%s' value '%s'", attr, out)
-		}
-		return nil
-	}
-}
+  resource "consul_node" "compute" {
+	name    = "compute-example"
+	address = "www.hashicorptest.com"
+  }
+`
 
-const testAccConsulServiceConfig = `
-resource "consul_service" "app" {
-	address = "www.google.com"
-	service_id = "google"
-	name = "google"
-	port = 80
-	tags = ["tag0", "tag1"]
-}
+const testAccConsulServiceConfigBasicNewTags = `
+resource "consul_service" "example" {
+	name    = "example"
+	node    = "${consul_node.compute.name}"
+	port    = 80
+	tags    = ["tag0", "tag1"]
+  }
+
+  resource "consul_node" "compute" {
+	name    = "compute-example"
+	address = "www.hashicorptest.com"
+  }
+`
+
+const testAccConsulServiceConfigBasicAddress = `
+resource "consul_service" "example" {
+	name    = "example"
+	address = "lb.hashicorptest.com"
+	node    = "${consul_node.compute.name}"
+	port    = 80
+	tags    = ["tag0", "tag1"]
+  }
+
+  resource "consul_node" "compute" {
+	name    = "compute-example"
+	address = "www.hashicorptest.com"
+  }
+`
+const testAccConsulServiceConfigServiceID = `
+resource "consul_service" "example" {
+	name       = "example"
+	service_id = "8ce84078-b32a-4039-bb68-17b13b7c2396"
+	node       = "${consul_node.compute.name}"
+  }
+
+  resource "consul_node" "compute" {
+	name    = "compute-example"
+	address = "www.hashicorptest.com"
+  }
 `

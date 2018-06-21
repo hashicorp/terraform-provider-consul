@@ -9,10 +9,11 @@ import (
 
 func resourceConsulAgentService() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceConsulAgentServiceCreate,
-		Update: resourceConsulAgentServiceCreate,
-		Read:   resourceConsulAgentServiceRead,
-		Delete: resourceConsulAgentServiceDelete,
+		Create:             resourceConsulAgentServiceCreate,
+		Update:             resourceConsulAgentServiceCreate,
+		Read:               resourceConsulAgentServiceRead,
+		Delete:             resourceConsulAgentServiceDelete,
+		DeprecationMessage: "The consul_agent_service resource will be deprecated and removed in a future version. More information: https://github.com/terraform-providers/terraform-provider-consul/issues/46",
 
 		Schema: map[string]*schema.Schema{
 			"address": &schema.Schema{
@@ -20,11 +21,6 @@ func resourceConsulAgentService() *schema.Resource {
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
-			},
-
-			"id": &schema.Schema{
-				Type:     schema.TypeString,
-				Computed: true,
 			},
 
 			"name": &schema.Schema{
@@ -127,7 +123,7 @@ func resourceConsulAgentServiceDelete(d *schema.ResourceData, meta interface{}) 
 	client := meta.(*consulapi.Client)
 	catalog := client.Agent()
 
-	id := d.Get("id").(string)
+	id := d.Id()
 
 	if err := catalog.ServiceDeregister(id); err != nil {
 		return fmt.Errorf("Failed to deregister service '%s' from Consul agent: %v", id, err)

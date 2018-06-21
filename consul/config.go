@@ -3,12 +3,12 @@ package consul
 import (
 	"fmt"
 	"log"
-	"net/http"
 	"strings"
 
 	consulapi "github.com/hashicorp/consul/api"
 )
 
+// Config is configuration defined in the provider block
 type Config struct {
 	Datacenter    string `mapstructure:"datacenter"`
 	Address       string `mapstructure:"address"`
@@ -21,8 +21,7 @@ type Config struct {
 	InsecureHttps bool   `mapstructure:"insecure_https"`
 }
 
-// Client() returns a new client for accessing consul.
-//
+// Client returns a new client for accessing consul.
 func (c *Config) Client() (*consulapi.Client, error) {
 	config := consulapi.DefaultConfig()
 	if c.Datacenter != "" {
@@ -35,7 +34,7 @@ func (c *Config) Client() (*consulapi.Client, error) {
 		config.Scheme = c.Scheme
 	}
 
-	tlsConfig := &consulapi.TLSConfig{}
+	tlsConfig := consulapi.TLSConfig{}
 	tlsConfig.CAFile = c.CAFile
 	tlsConfig.CertFile = c.CertFile
 	tlsConfig.KeyFile = c.KeyFile
@@ -45,11 +44,12 @@ func (c *Config) Client() (*consulapi.Client, error) {
 		}
 		tlsConfig.InsecureSkipVerify = c.InsecureHttps
 	}
-	cc, err := consulapi.SetupTLSConfig(tlsConfig)
+
+	var err error
+	config.HttpClient, err = consulapi.NewHttpClient(config.Transport, tlsConfig)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("Failed to create http client: %s", err)
 	}
-	config.HttpClient.Transport.(*http.Transport).TLSClientConfig = cc
 
 	if c.HttpAuth != "" {
 		var username, password string
