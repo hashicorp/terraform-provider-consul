@@ -9,10 +9,11 @@ import (
 
 func resourceConsulAgentService() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceConsulAgentServiceCreate,
-		Update: resourceConsulAgentServiceCreate,
-		Read:   resourceConsulAgentServiceRead,
-		Delete: resourceConsulAgentServiceDelete,
+		Create:             resourceConsulAgentServiceCreate,
+		Update:             resourceConsulAgentServiceCreate,
+		Read:               resourceConsulAgentServiceRead,
+		Delete:             resourceConsulAgentServiceDelete,
+		DeprecationMessage: "The consul_agent_service resource will be deprecated and removed in a future version. More information: https://github.com/terraform-providers/terraform-provider-consul/issues/46",
 
 		Schema: map[string]*schema.Schema{
 			"address": &schema.Schema{
@@ -23,9 +24,8 @@ func resourceConsulAgentService() *schema.Resource {
 			},
 
 			"name": &schema.Schema{
-				Type:       schema.TypeString,
-				Required:   true,
-				Deprecated: "The consul_agent_service resource will be deprecated and removed in a future version. More information: https://github.com/terraform-providers/terraform-provider-consul/issues/46",
+				Type:     schema.TypeString,
+				Required: true,
 			},
 
 			"port": &schema.Schema{

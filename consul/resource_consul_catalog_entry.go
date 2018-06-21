@@ -13,17 +13,17 @@ import (
 
 func resourceConsulCatalogEntry() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceConsulCatalogEntryCreate,
-		Update: resourceConsulCatalogEntryCreate,
-		Read:   resourceConsulCatalogEntryRead,
-		Delete: resourceConsulCatalogEntryDelete,
+		Create:             resourceConsulCatalogEntryCreate,
+		Update:             resourceConsulCatalogEntryCreate,
+		Read:               resourceConsulCatalogEntryRead,
+		Delete:             resourceConsulCatalogEntryDelete,
+		DeprecationMessage: "The consul_catalog_entry resource will be deprecated and removed in a future version. More information: https://github.com/terraform-providers/terraform-provider-consul/issues/46",
 
 		Schema: map[string]*schema.Schema{
 			"address": &schema.Schema{
-				Type:       schema.TypeString,
-				Required:   true,
-				ForceNew:   true,
-				Deprecated: "The consul_catalog_entry resource will be deprecated and removed in a future version. More information: https://github.com/terraform-providers/terraform-provider-consul/issues/46",
+				Type:     schema.TypeString,
+				Required: true,
+				ForceNew: true,
 			},
 
 			"datacenter": &schema.Schema{
