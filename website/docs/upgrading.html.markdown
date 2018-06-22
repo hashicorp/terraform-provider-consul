@@ -68,15 +68,13 @@ new `consul_service` or `consul_node` resources in the Terraform
 configuration files.
 1. For a small number of resources, the first class [`state rm`](https://www.terraform.io/docs/commands/state/rm.html) and [`import`](https://www.terraform.io/docs/import/usage.html) commands can
 be used to first remove the old resource from the state, and then import it under the new resource
-name.
-
-After following these steps,  `terraform plan` should show no changes.
+name. The `node` attribute will need to be added to services.
 
 ### Modifications to consul_service
 
 The `consul_service` resource has been modified to use catalog APIs in place
 of service registration APIs for creating services in the Consul catalog. This should
-be a backwards compatible change, and create or read services as prior. It now replaces `consul_catalog_entry` (the `service {}` block) and `consul_agent_service`.
+be a functionally compatible change, and create or read services as prior. It now replaces `consul_catalog_entry` (the `service {}` block) and `consul_agent_service`. The `node` attribute is now required and the node must exist.
 
 ### Deprecation of consul_catalog_entry
 
@@ -94,4 +92,4 @@ View migration instructions [here][migrate_service].
 continue to work, but in the long term it may be deprecated and removed. This is to present
 a more consistent and intuitive naming convention for the resources.
 
-[migrate_service]: /docs/providers/consul/upgrading.html#migrating-to-consul_service-or-consul_node "Migrate to consul_service or consul_node"
+[migrate_service]: /docs/providers/consul/upgrading.html#migrating-to-consul_service-or-consul_node-resources "Migrate to consul_service or consul_node"
