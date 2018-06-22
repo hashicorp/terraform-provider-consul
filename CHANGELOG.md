@@ -2,9 +2,9 @@
 
 NOTES:
 
-* The `consul_catalog_entry` resource has been deprecated and will be removed in a future release. Please use the upgrade guide in the documentation to migrate to `consul_service` or `consul_node` as appropriate. [GH-49]
-* The `consul_agent_service` resource has been deprecated and will be removed in a future release. Please use the upgrade guide in the documentation to migrate to `consul_service`. [GH-49]
-* The `consul_agent_self` datasource has been deprecated and will be removed in a future release. Please use the upgrade guide in the documentation to migrate to `consul_agent_config` if applicable. [GH-49]
+* The `consul_catalog_entry` resource has been deprecated and will be removed in a future release. Please use the [upgrade guide in the documentation](https://www.terraform.io/docs/providers/consul/upgrading.html#upgrading-to-2-0-0) to migrate to `consul_service` or `consul_node` as appropriate. [GH-49]
+* The `consul_agent_service` resource has been deprecated and will be removed in a future release. Please use the [upgrade guide in the documentation](https://www.terraform.io/docs/providers/consul/upgrading.html#upgrading-to-2-0-0) to migrate to `consul_service`. [GH-49]
+* The `consul_agent_self` datasource has been deprecated and will be removed in a future release. Please use the [upgrade guide in the documentation](https://www.terraform.io/docs/providers/consul/upgrading.html#upgrading-to-2-0-0) to migrate to `consul_agent_config` if applicable. [GH-49]
 
 IMPROVEMENTS:
 
