@@ -1,16 +1,16 @@
-## 2.0.0 (Unreleased)
+## 2.0.0 (June 22, 2018)
 
 NOTES:
 
-* The `consul_catalog_entry` resource has been deprecated and will be removed in a future release. Please use the [upgrade guide in the documentation](https://www.terraform.io/docs/providers/consul/upgrading.html#upgrading-to-2-0-0) to migrate to `consul_service` or `consul_node` as appropriate. [GH-49]
-* The `consul_agent_service` resource has been deprecated and will be removed in a future release. Please use the [upgrade guide in the documentation](https://www.terraform.io/docs/providers/consul/upgrading.html#upgrading-to-2-0-0) to migrate to `consul_service`. [GH-49]
-* The `consul_agent_self` datasource has been deprecated and will be removed in a future release. Please use the [upgrade guide in the documentation](https://www.terraform.io/docs/providers/consul/upgrading.html#upgrading-to-2-0-0) to migrate to `consul_agent_config` if applicable. [GH-49]
+* The `consul_catalog_entry` resource has been deprecated and will be removed in a future release. Please use the [upgrade guide in the documentation](https://www.terraform.io/docs/providers/consul/upgrading.html#upgrading-to-2-0-0) to migrate to `consul_service` or `consul_node` as appropriate. ([#49](https://github.com/terraform-providers/terraform-provider-consul/issues/49))
+* The `consul_agent_service` resource has been deprecated and will be removed in a future release. Please use the [upgrade guide in the documentation](https://www.terraform.io/docs/providers/consul/upgrading.html#upgrading-to-2-0-0) to migrate to `consul_service`. ([#49](https://github.com/terraform-providers/terraform-provider-consul/issues/49))
+* The `consul_agent_self` datasource has been deprecated and will be removed in a future release. Please use the [upgrade guide in the documentation](https://www.terraform.io/docs/providers/consul/upgrading.html#upgrading-to-2-0-0) to migrate to `consul_agent_config` if applicable. ([#49](https://github.com/terraform-providers/terraform-provider-consul/issues/49))
 
 IMPROVEMENTS:
 
-* The `consul_service` resource has been modified to use the Consul catalog APIs. The `node` attribute is now required, and nodes that do not exist will not be created automatically. Please see the upgrade guide in the documentation for more detail. [GH-49]
-* `consul_catalog_*` data sources have been renamed to remove catalog, for clarity. Both will work going forward, with the catalog version potentially being deprecated on a future date. [GH-49]
-* The provider now uses the post-1.0 version of the Consul API. [GH-49]
+* The `consul_service` resource has been modified to use the Consul catalog APIs. The `node` attribute is now required, and nodes that do not exist will not be created automatically. Please see the upgrade guide in the documentation for more detail. ([#49](https://github.com/terraform-providers/terraform-provider-consul/issues/49))
+* `consul_catalog_*` data sources have been renamed to remove catalog, for clarity. Both will work going forward, with the catalog version potentially being deprecated on a future date. ([#49](https://github.com/terraform-providers/terraform-provider-consul/issues/49))
+* The provider now uses the post-1.0 version of the Consul API. ([#49](https://github.com/terraform-providers/terraform-provider-consul/issues/49))
 
 ## 1.1.0 (June 15, 2018)
 
