@@ -198,10 +198,15 @@ func resourceConsulKeyPrefixUpdateFile(d *schema.ResourceData, meta interface{})
 		if n == nil {
 			n = map[string]interface{}{}
 		}
-		om := o.(map[string]interface{})
+		//om := o.(map[string]interface{})
 		nm := n.(map[string]interface{})
 
-		for key, value := range om {
+		consulsubKeys, err := keyClient.GetUnderPrefix(pathPrefix)
+		if err != nil {
+			return err
+		}
+
+		for key, value := range consulsubKeys {
 			log.Printf(
 				"[DEBUG] #### inside UPDATE func - old Key: -> %v Value: -> %v", key, value,
 			)
@@ -213,7 +218,6 @@ func resourceConsulKeyPrefixUpdateFile(d *schema.ResourceData, meta interface{})
 			)
 		}
 
-		//panic("############################### INSIDE OF UPDATE FUNC - AFTER MAPS DIFF #####################")
 		// First we'll write all of the stuff in the "new map" nm,
 		// and then we'll delete any keys that appear in the "old map" om
 		// and do not also appear in nm. This ordering means that if a subkey
@@ -236,22 +240,13 @@ func resourceConsulKeyPrefixUpdateFile(d *schema.ResourceData, meta interface{})
 		}
 
 		// Remove deleted keys
-		for k, _ := range om {
+		for k, _ := range consulsubKeys {
 			if _, exists := nm[k]; exists {
-				for key, value := range om {
-					log.Printf(
-						"[DEBUG] #### inside UPDATE func [delete] - old Key: -> %v Value: -> %v", key, value,
-					)
-				}
-				log.Printf(
-					"[DEBUG] ####!! inside UPDATE func [delete] - old %v[%v]", nm, k,
-				)
 				continue
 			}
 			fullPath := pathPrefix + k
 			err := keyClient.Delete(fullPath)
 			log.Printf("[DEBUG] ########$ Deleting %s: ", fullPath)
-			panic("############ INSIDE DELETE FUNC")
 			if err != nil {
 				return fmt.Errorf("error while deleting %s: %s", fullPath, err)
 			}
@@ -271,34 +266,6 @@ func resourceConsulKeyPrefixUpdateFile(d *schema.ResourceData, meta interface{})
 	d.Set("datacenter", dc)
 	return nil
 }
-
-/*func resourceConsulKeyPrefixReadFile(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*consulapi.Client)
-	kv := client.KV()
-	token := d.Get("token").(string)
-	dc, err := getDC(d, client)
-	if err != nil {
-		return err
-	}
-
-	keyClient := newKeyClient(kv, dc, token)
-	pathPrefix := d.Id()
-	subKeys, err := keyClient.GetUnderPrefix(pathPrefix)
-	if err != nil {
-		return err
-	}
-	for key, value := range subKeys {
-		log.Printf(
-			"[DEBUG] #### inside READ func - Key: ->  %v Value: ->   %v", key, value,
-		)
-	}
-
-	// Store the datacenter on this resource, which can be helpful for reference
-	// in case it was read from the provider
-	d.Set("datacenter", dc)
-
-	return nil
-}*/
 
 func resourceConsulKeyPrefixReadFile(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*consulapi.Client)
