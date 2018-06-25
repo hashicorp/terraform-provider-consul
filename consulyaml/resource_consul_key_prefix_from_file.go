@@ -62,14 +62,6 @@ func resourceConsulKeyPrefixFromFile() *schema.Resource {
 					Type: schema.TypeString,
 				},
 			},
-			/*"yaml_hash": {
-				Type:     schema.TypeString,
-				Optional: true
-				Computed: true,
-				StateFunc: func(v interface{}) string {
-					return yamlhash(v.(string))
-				},
-			},*/
 		},
 	}
 }
@@ -191,35 +183,19 @@ func resourceConsulKeyPrefixUpdateFile(d *schema.ResourceData, meta interface{})
 
 	pathPrefix := d.Id()
 	if d.HasChange("subkeys_file") {
-		o, n := d.GetChange("subkeys")
-		if o == nil {
-			o = map[string]interface{}{}
-		}
+		n := d.Get("subkeys")
 		if n == nil {
 			n = map[string]interface{}{}
 		}
-		//om := o.(map[string]interface{})
 		nm := n.(map[string]interface{})
-
+		// Grabing subkeys from Consul
 		consulsubKeys, err := keyClient.GetUnderPrefix(pathPrefix)
 		if err != nil {
 			return err
 		}
 
-		for key, value := range consulsubKeys {
-			log.Printf(
-				"[DEBUG] #### inside UPDATE func - old Key: -> %v Value: -> %v", key, value,
-			)
-		}
-
-		for key, value := range nm {
-			log.Printf(
-				"[DEBUG] #### inside UPDATE func - new Key: ->  %v Value: -> %v", key, value,
-			)
-		}
-
 		// First we'll write all of the stuff in the "new map" nm,
-		// and then we'll delete any keys that appear in the "old map" om
+		// and then we'll delete any keys that appear in the "consulsubKeys map"
 		// and do not also appear in nm. This ordering means that if a subkey
 		// name is changed we will briefly have both the old and new names in
 		// Consul, as opposed to briefly having neither.
@@ -233,7 +209,7 @@ func resourceConsulKeyPrefixUpdateFile(d *schema.ResourceData, meta interface{})
 			v := vI.(string)
 			fullPath := pathPrefix + k
 			err := keyClient.Put(fullPath, v)
-			log.Printf("[DEBUG] ########$ Adding %s: ", fullPath)
+			log.Printf("Adding %s: ", fullPath)
 			if err != nil {
 				return fmt.Errorf("error while writing %s: %s", fullPath, err)
 			}
@@ -246,7 +222,6 @@ func resourceConsulKeyPrefixUpdateFile(d *schema.ResourceData, meta interface{})
 			}
 			fullPath := pathPrefix + k
 			err := keyClient.Delete(fullPath)
-			log.Printf("[DEBUG] ########$ Deleting %s: ", fullPath)
 			if err != nil {
 				return fmt.Errorf("error while deleting %s: %s", fullPath, err)
 			}
