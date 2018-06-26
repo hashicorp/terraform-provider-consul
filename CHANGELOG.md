@@ -2,7 +2,7 @@
 
 NEW FEATURES:
 
-* New resource: `consul_intention`. This provides management of intentions in Consul Connect, used for service authorization.[GH-53]
+* New resource: `consul_intention`. This provides management of intentions in Consul Connect, used for service authorization.  [GH-53]
 
 ## 2.0.0 (June 22, 2018)
 
