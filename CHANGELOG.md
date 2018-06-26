@@ -1,8 +1,8 @@
-## 2.1.0 (Unreleased)
+## 2.1.0 (June 26, 2018)
 
 NEW FEATURES:
 
-* New resource: `consul_intention`. This provides management of intentions in Consul Connect, used for service authorization.  [GH-53]
+* New resource: `consul_intention`. This provides management of intentions in Consul Connect, used for service authorization.  ([#53](https://github.com/terraform-providers/terraform-provider-consul/issues/53))
 
 ## 2.0.0 (June 22, 2018)
 
