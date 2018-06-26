@@ -307,13 +307,13 @@
 			"revisionTime": "2018-06-16T23:00:25Z"
 		},
 		{
-			"checksumSHA1": "cZw5u6BGWe3gjJxmXT6J0Tfn6Mw=",
+			"checksumSHA1": "o8h3dA25aCDTog2UJY2PrLYWx3E=",
 			"comment": "v0.6.3-28-g3215b87",
 			"path": "github.com/hashicorp/consul/api",
-			"revision": "5174058f0d2bda63fa5198ab96c33d9a909c58ed",
-			"revisionTime": "2018-05-11T18:57:42Z",
-			"version": "v1.1.0",
-			"versionExact": "v1.1.0"
+			"revision": "28141971f966e99916da2c5e461dd968746491cd",
+			"revisionTime": "2018-06-25T19:45:20Z",
+			"version": "v1.2.0",
+			"versionExact": "v1.2.0"
 		},
 		{
 			"checksumSHA1": "cdOCt0Yb+hdErz8NAQqayxPmRsY=",
@@ -591,12 +591,6 @@
 			"revisionTime": "2018-06-20T18:39:08Z"
 		},
 		{
-			"checksumSHA1": "kD1ayilNruf2cES1LDfNZjYRscQ=",
-			"path": "github.com/hashicorp/terraform/httpclient",
-			"revision": "c3267962dadf7c8e05e361b47399f242eb04d865",
-			"revisionTime": "2018-06-21T21:51:14Z"
-		},
-		{
 			"checksumSHA1": "Fzbv+N7hFXOtrR6E7ZcHT3jEE9s=",
 			"path": "github.com/hashicorp/terraform/helper/structure",
 			"revision": "c3267962dadf7c8e05e361b47399f242eb04d865",
@@ -607,6 +601,12 @@
 			"path": "github.com/hashicorp/terraform/helper/validation",
 			"revision": "ec998a21bc95366269fbd196e09d3a458bba8be7",
 			"revisionTime": "2018-06-20T18:39:08Z"
+		},
+		{
+			"checksumSHA1": "kD1ayilNruf2cES1LDfNZjYRscQ=",
+			"path": "github.com/hashicorp/terraform/httpclient",
+			"revision": "c3267962dadf7c8e05e361b47399f242eb04d865",
+			"revisionTime": "2018-06-21T21:51:14Z"
 		},
 		{
 			"checksumSHA1": "yFWmdS6yEJZpRJzUqd/mULqCYGk=",
