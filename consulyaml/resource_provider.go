@@ -80,11 +80,11 @@ func Provider() terraform.ResourceProvider {
 			},
 		},
 		DataSourcesMap: map[string]*schema.Resource{
-			"consul_yaml": dataSourceConsulKeyPrefixFromFile(),
+			"consul-yaml": dataSourceConsulKeyPrefixFromFile(),
 		},
 
 		ResourcesMap: map[string]*schema.Resource{
-			"consul_yaml": resourceConsulKeyPrefixFromFile(),
+			"consul-yaml": resourceConsulKeyPrefixFromFile(),
 		},
 
 		ConfigureFunc: providerConfigure,
