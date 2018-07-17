@@ -16,7 +16,25 @@ func TestAccConsulNode_basic(t *testing.T) {
 		CheckDestroy: testAccCheckConsulNodeDestroy,
 		Steps: []resource.TestStep{
 			resource.TestStep{
-				Config: testAccConsulNodeConfig,
+				Config: testAccConsulNodeConfigBasic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckConsulNodeExists(),
+					testAccCheckConsulNodeValue("consul_node.foo", "address", "127.0.0.1"),
+					testAccCheckConsulNodeValue("consul_node.foo", "name", "foo"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccConsulNode_nodeMeta(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() {},
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckConsulNodeDestroy,
+		Steps: []resource.TestStep{
+			resource.TestStep{
+				Config: testAccConsulNodeConfigNodeMeta,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConsulNodeExists(),
 					testAccCheckConsulNodeValue("consul_node.foo", "address", "127.0.0.1"),
@@ -82,7 +100,14 @@ func testAccCheckConsulNodeValue(n, attr, val string) resource.TestCheckFunc {
 	}
 }
 
-const testAccConsulNodeConfig = `
+const testAccConsulNodeConfigBasic = `
+resource "consul_node" "foo" {
+	name 	= "foo"
+	address = "127.0.0.1"
+}
+`
+
+const testAccConsulNodeConfigNodeMeta = `
 resource "consul_node" "foo" {
 	name 	= "foo"
 	address = "127.0.0.1"
