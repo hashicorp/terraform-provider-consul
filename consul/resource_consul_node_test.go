@@ -39,9 +39,22 @@ func TestAccConsulNode_nodeMeta(t *testing.T) {
 					testAccCheckConsulNodeExists(),
 					testAccCheckConsulNodeValue("consul_node.foo", "address", "127.0.0.1"),
 					testAccCheckConsulNodeValue("consul_node.foo", "name", "foo"),
+					testAccCheckConsulNodeValue("consul_node.foo", "node_meta.%", "3"),
+					testAccCheckConsulNodeValue("consul_node.foo", "node_meta.foo", "bar"),
+					testAccCheckConsulNodeValue("consul_node.foo", "node_meta.update", "this"),
+					testAccCheckConsulNodeValue("consul_node.foo", "node_meta.remove", "this"),
+				),
+			},
+			resource.TestStep{
+				Config: testAccConsulNodeConfigNodeMeta_Update,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckConsulNodeExists(),
+					testAccCheckConsulNodeValue("consul_node.foo", "address", "127.0.0.1"),
+					testAccCheckConsulNodeValue("consul_node.foo", "name", "foo"),
 					testAccCheckConsulNodeValue("consul_node.foo", "node_meta.%", "2"),
 					testAccCheckConsulNodeValue("consul_node.foo", "node_meta.foo", "bar"),
-					testAccCheckConsulNodeValue("consul_node.foo", "node_meta.baz", "bam"),
+					testAccCheckConsulNodeValue("consul_node.foo", "node_meta.update", "yes"),
+					testAccCheckConsulNodeValueRemoved("consul_node.foo", "node_meta.remove"),
 				),
 			},
 		},
@@ -100,6 +113,20 @@ func testAccCheckConsulNodeValue(n, attr, val string) resource.TestCheckFunc {
 	}
 }
 
+func testAccCheckConsulNodeValueRemoved(n, attr string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		rn, ok := s.RootModule().Resources[n]
+		if !ok {
+			return fmt.Errorf("Resource not found")
+		}
+		_, ok = rn.Primary.Attributes[attr]
+		if ok {
+			return fmt.Errorf("Attribute '%s' still present: %#v", attr, rn.Primary.Attributes)
+		}
+		return nil
+	}
+}
+
 const testAccConsulNodeConfigBasic = `
 resource "consul_node" "foo" {
 	name 	= "foo"
@@ -113,8 +140,21 @@ resource "consul_node" "foo" {
 	address = "127.0.0.1"
 
 	node_meta = {
-		foo = "bar"
-		baz = "bam"
+		foo    = "bar"
+		update = "this"
+		remove = "this"
+	}
+}
+`
+
+const testAccConsulNodeConfigNodeMeta_Update = `
+resource "consul_node" "foo" {
+	name 	= "foo"
+	address = "127.0.0.1"
+
+	node_meta = {
+		foo     = "bar"
+		update  = "yes"
 	}
 }
 `

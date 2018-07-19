@@ -37,7 +37,7 @@ func resourceConsulNode() *schema.Resource {
 			"node_meta": &schema.Schema{
 				Type:     schema.TypeMap,
 				Optional: true,
-				ForceNew: true,
+				ForceNew: false,
 			},
 
 			"token": &schema.Schema{
