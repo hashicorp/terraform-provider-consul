@@ -1,16 +1,13 @@
-Terraform Provider
+Terraform Consul provider with YAML support
 ==================
 
-- Website: https://www.terraform.io
-- [![Gitter chat](https://badges.gitter.im/hashicorp-terraform/Lobby.png)](https://gitter.im/hashicorp-terraform/Lobby)
-- Mailing list: [Google Groups](http://groups.google.com/group/terraform-tool)
+This provider is a fork of the [terraform-provider-consul](https://github.com/terraform-providers/terraform-provider-consul) provider. The consul-yaml provider allows managing consul keys using YAML instead of the the traditional HCL or JSON formats.
 
-<img src="https://cdn.rawgit.com/hashicorp/terraform-website/master/content/source/assets/images/logo-hashicorp.svg" width="600px">
 
 Maintainers
 -----------
 
-This provider plugin is maintained by the Terraform team at [HashiCorp](https://www.hashicorp.com/).
+This provider plugin is maintained by the ProdOps team at [Schoology](https://www.schoology.com/).
 
 Requirements
 ------------
@@ -21,17 +18,17 @@ Requirements
 Building The Provider
 ---------------------
 
-Clone repository to: `$GOPATH/src/github.com/schoology/terraform-provider-consul`
+Clone repository to: `$GOPATH/src/github.com/schoology/terraform-provider-consul-yaml`
 
 ```sh
 $ mkdir -p $GOPATH/src/github.com/schoology; cd $GOPATH/src/github.com/schoology
-$ git clone git@github.com:schoology/terraform-provider-consul
+$ git clone git@github.com:schoology/terraform-provider-consul-yaml
 ```
 
 Enter the provider directory and build the provider
 
 ```sh
-$ cd $GOPATH/src/github.com/schoology/terraform-provider-consul
+$ cd $GOPATH/src/github.com/schoology/terraform-provider-consul-yaml
 $ make build
 ```
 
@@ -45,7 +42,7 @@ To compile the provider, run `make build`. This will build the provider and put 
 ```sh
 $ make bin
 ...
-$ $GOPATH/bin/terraform-provider-consul
+$ $GOPATH/bin/terraform-provider-consul-yaml
 ...
 ```
 
