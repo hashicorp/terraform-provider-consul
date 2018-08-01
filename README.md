@@ -1,7 +1,7 @@
 Terraform Consul provider with YAML support
 ==================
 
-This provider is a fork of the [terraform-provider-consul](https://github.com/terraform-providers/terraform-provider-consul) provider. The consul-yaml provider allows managing consul keys using YAML instead of the the traditional HCL or JSON formats.
+This is a fork of the [terraform-provider-consul](https://github.com/terraform-providers/terraform-provider-consul) provider. The consul-yaml provider allows managing consul keys using YAML instead of the the traditional HCL or JSON formats.
 
 
 Maintainers
