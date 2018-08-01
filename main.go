@@ -1,8 +1,8 @@
 package main
 
 import (
-	"schoology/terraform-provider-consul-yaml/consulyaml"
 	"github.com/hashicorp/terraform/plugin"
+	"schoology/terraform-provider-consul-yaml/consulyaml"
 )
 
 func main() {

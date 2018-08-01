@@ -47,7 +47,13 @@ func resourceConsulKeyPrefixFromFile() *schema.Resource {
 					value := v.(string)
 					fileContent, err := ioutil.ReadFile(value)
 					if err != nil {
-						panic("Error Reading yaml file")
+						fmt.Printf("Error: YAML file -> %+v \n", value)
+						dir, err := os.Getwd()
+						if err != nil {
+							log.Fatal(err)
+						}
+						fmt.Println(dir)
+						panic("Error Reading yaml file ")
 					}
 					hashvalue := yamlhash(string(fileContent))
 					value += string(":") + hashvalue
