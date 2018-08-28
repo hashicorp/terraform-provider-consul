@@ -50,6 +50,14 @@ test-serv: fmtcheck
 	@docker pull "consul:$(CONSUL_VERSION)"
 	docker run --rm -p 127.0.0.1:8500:8500 "consul:$(CONSUL_VERSION)"
 
+test-serv-acl: fmtcheck
+	@docker pull "consul:$(CONSUL_VERSION)"
+	docker run --rm -p 127.0.0.1:8500:8500 \
+	    -e 'CONSUL_LOCAL_CONFIG={ \
+	        "acl_datacenter": "dc1",
+	        "acl_master_token": "6b0de9ab-6d95-4af8-a965-78ca35a67018" \
+	        }' "consul:$(CONSUL_VERSION)" agent -server -client=0.0.0.0 -bootstrap-expect=1
+
 website:
 ifeq (,$(wildcard $(GOPATH)/src/$(WEBSITE_REPO)))
 	echo "$(WEBSITE_REPO) not found in your GOPATH (necessary for layouts and assets), get-ting..."
