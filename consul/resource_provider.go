@@ -92,6 +92,7 @@ func Provider() terraform.ResourceProvider {
 		},
 
 		ResourcesMap: map[string]*schema.Resource{
+			"consul_acl":            resourceConsulACL(),
 			"consul_agent_service":  resourceConsulAgentService(),
 			"consul_catalog_entry":  resourceConsulCatalogEntry(),
 			"consul_keys":           resourceConsulKeys(),
