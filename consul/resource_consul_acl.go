@@ -16,6 +16,12 @@ func resourceConsulACL() *schema.Resource {
 		Delete: resourceConsulACLDelete,
 
 		Schema: map[string]*schema.Schema{
+			"uuid": {
+				Type:        schema.TypeString,
+				Required:    false,
+				Optional:    true,
+				Description: "The ACL ID.",
+			},
 			"name": {
 				Type:        schema.TypeString,
 				Required:    true,
@@ -36,6 +42,11 @@ func resourceConsulACL() *schema.Resource {
 				Optional:    false,
 				Description: "The ACL rules.",
 			},
+			"token": {
+				Type:        schema.TypeString,
+				Computed:    true,
+				Description: "The ACL token.",
+			},
 		},
 	}
 }
@@ -51,18 +62,24 @@ func resourceConsulACLCreate(d *schema.ResourceData, meta interface{}) error {
 		Rules: d.Get("rules").(string),
 	}
 
+	if d.Get("uuid") != "" {
+		aclEntry.ID = d.Get("uuid").(string)
+	}
+
 	if d.Get("type") == "management" {
 		aclEntry.Type = consulapi.ACLManagementType
 	}
 
-	id, _, err := client.ACL().Create(&aclEntry, nil)
+	token, _, err := client.ACL().Create(&aclEntry, nil)
 	if err != nil {
 		return fmt.Errorf("error creating ACL: %s", err)
 	}
 
-	log.Printf("[DEBUG] Created ACL %q", id)
+	log.Printf("[DEBUG] Created ACL %q", token)
 
-	d.SetId(id)
+	d.Set("token", token)
+
+	d.SetId(token)
 
 	return resourceConsulACLRead(d, meta)
 }
