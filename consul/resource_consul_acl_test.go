@@ -37,7 +37,7 @@ func TestAccConsulACL_basic(t *testing.T) {
 				Config: testResourceTokenConfig_basic(),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("consul_acl.test", "name", "test"),
-					resource.TestCheckResourceAttr("consul_acl.test", "type", "management"),
+					resource.TestCheckResourceAttr("consul_acl.test", "type", "client"),
 					resource.TestCheckResourceAttr("consul_acl.test", "rules", "node \"\" { policy = \"read\" }"),
 				),
 			},
@@ -49,7 +49,7 @@ func testResourceTokenConfig_basic() string {
 	return `
 resource "consul_acl" "test" {
 	name = "test"
-	type = "management"
+	type = "client"
 	rules = "node \"\" { policy = \"read\" }"
 }`
 }
@@ -63,6 +63,7 @@ func TestAccConsulACL_uuid(t *testing.T) {
 			{
 				Config: testResourceTokenConfig_uuid(),
 				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("consul_acl.test", "name", "test"),
 					resource.TestCheckResourceAttr("consul_acl.test", "uuid", "a49b6f0a-a939-4966-a7e7-c7177a103653"),
 					resource.TestCheckResourceAttr("consul_acl.test", "type", "client"),
 					resource.TestCheckResourceAttr("consul_acl.test", "rules", "node \"\" { policy = \"read\" }"),
@@ -79,5 +80,31 @@ resource "consul_acl" "test" {
 	name = "test"
 	type = "client"
 	rules = "node \"\" { policy = \"read\" }"
+}`
+}
+
+func TestAccConsulACL_management(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		Providers:    testAccProviders,
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckConsulACLDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testResourceTokenConfig_management(),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("consul_acl.test", "name", "test"),
+					resource.TestCheckResourceAttr("consul_acl.test", "type", "management"),
+					resource.TestCheckResourceAttr("consul_acl.test", "rules", ""),
+				),
+			},
+		},
+	})
+}
+
+func testResourceTokenConfig_management() string {
+	return `
+resource "consul_acl" "test" {
+	name = "test"
+	type = "management"
 }`
 }

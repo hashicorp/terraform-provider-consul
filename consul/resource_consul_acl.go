@@ -38,8 +38,8 @@ func resourceConsulACL() *schema.Resource {
 			},
 			"rules": {
 				Type:        schema.TypeString,
-				Required:    true,
-				Optional:    false,
+				Required:    false,
+				Optional:    true,
 				Description: "The ACL rules.",
 			},
 			"token": {
