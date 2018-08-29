@@ -20,6 +20,7 @@ func resourceConsulACL() *schema.Resource {
 				Type:        schema.TypeString,
 				Required:    false,
 				Optional:    true,
+				ForceNew:    true,
 				Description: "The ACL ID.",
 			},
 			"name": {
