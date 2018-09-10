@@ -49,7 +49,7 @@ data "consul_key_prefix" "web" {
 
 # Start our instance with the dynamic ami value
 resource "aws_instance" "web" {
-  ami = "${data.consul_key_prefix.web["app/launch_ami"]}"
+  ami = "${data.consul_key_prefix.web.subkeys["app/launch_ami"]}"
 
   # ...
 }
