@@ -26,6 +26,7 @@ type CatalogService struct {
 	ServicePort              int
 	ServiceEnableTagOverride bool
 	CreateIndex              uint64
+	Checks                   HealthChecks
 	ModifyIndex              uint64
 }
 
@@ -43,6 +44,7 @@ type CatalogRegistration struct {
 	Datacenter      string
 	Service         *AgentService
 	Check           *AgentCheck
+	Checks          HealthChecks
 	SkipNodeUpdate  bool
 }
 
