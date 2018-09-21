@@ -30,7 +30,7 @@ The following arguments are supported:
 * `name` - (Required) The name of the node being added to, or
   referenced in the catalog.
 
-* `node_meta` - (Optional, map) Key/value pairs that are associated with the node.
+* `meta` - (Optional, map) Key/value pairs that are associated with the node.
 
 ## Attributes Reference
 
@@ -38,4 +38,4 @@ The following attributes are exported:
 
 * `address` - The address of the service.
 * `name` - The name of the service.
-* `node_meta` - (Optional, map) Key/value pairs that are associated with the node.
+* `meta` - (Optional, map) Key/value pairs that are associated with the node.

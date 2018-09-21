@@ -34,7 +34,7 @@ func resourceConsulNode() *schema.Resource {
 				ForceNew: true,
 			},
 
-			"node_meta": &schema.Schema{
+			"meta": &schema.Schema{
 				Type:     schema.TypeMap,
 				Optional: true,
 				ForceNew: false,
@@ -79,7 +79,7 @@ func resourceConsulNodeCreate(d *schema.ResourceData, meta interface{}) error {
 		Node:       name,
 	}
 
-	if v, ok := d.GetOk("node_meta"); ok {
+	if v, ok := d.GetOk("meta"); ok {
 		nodeMeta := make(map[string]string)
 		for k, j := range v.(map[string]interface{}) {
 			nodeMeta[k] = j.(string)

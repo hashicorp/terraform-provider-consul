@@ -39,10 +39,10 @@ func TestAccConsulNode_nodeMeta(t *testing.T) {
 					testAccCheckConsulNodeExists(),
 					testAccCheckConsulNodeValue("consul_node.foo", "address", "127.0.0.1"),
 					testAccCheckConsulNodeValue("consul_node.foo", "name", "foo"),
-					testAccCheckConsulNodeValue("consul_node.foo", "node_meta.%", "3"),
-					testAccCheckConsulNodeValue("consul_node.foo", "node_meta.foo", "bar"),
-					testAccCheckConsulNodeValue("consul_node.foo", "node_meta.update", "this"),
-					testAccCheckConsulNodeValue("consul_node.foo", "node_meta.remove", "this"),
+					testAccCheckConsulNodeValue("consul_node.foo", "meta.%", "3"),
+					testAccCheckConsulNodeValue("consul_node.foo", "meta.foo", "bar"),
+					testAccCheckConsulNodeValue("consul_node.foo", "meta.update", "this"),
+					testAccCheckConsulNodeValue("consul_node.foo", "meta.remove", "this"),
 				),
 			},
 			resource.TestStep{
@@ -51,10 +51,10 @@ func TestAccConsulNode_nodeMeta(t *testing.T) {
 					testAccCheckConsulNodeExists(),
 					testAccCheckConsulNodeValue("consul_node.foo", "address", "127.0.0.1"),
 					testAccCheckConsulNodeValue("consul_node.foo", "name", "foo"),
-					testAccCheckConsulNodeValue("consul_node.foo", "node_meta.%", "2"),
-					testAccCheckConsulNodeValue("consul_node.foo", "node_meta.foo", "bar"),
-					testAccCheckConsulNodeValue("consul_node.foo", "node_meta.update", "yes"),
-					testAccCheckConsulNodeValueRemoved("consul_node.foo", "node_meta.remove"),
+					testAccCheckConsulNodeValue("consul_node.foo", "meta.%", "2"),
+					testAccCheckConsulNodeValue("consul_node.foo", "meta.foo", "bar"),
+					testAccCheckConsulNodeValue("consul_node.foo", "meta.update", "yes"),
+					testAccCheckConsulNodeValueRemoved("consul_node.foo", "meta.remove"),
 				),
 			},
 		},
@@ -139,7 +139,7 @@ resource "consul_node" "foo" {
 	name 	= "foo"
 	address = "127.0.0.1"
 
-	node_meta = {
+	meta = {
 		foo    = "bar"
 		update = "this"
 		remove = "this"
@@ -152,7 +152,7 @@ resource "consul_node" "foo" {
 	name 	= "foo"
 	address = "127.0.0.1"
 
-	node_meta = {
+	meta = {
 		foo     = "bar"
 		update  = "yes"
 	}
