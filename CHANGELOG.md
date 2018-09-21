@@ -1,4 +1,10 @@
 ## 2.2.0 (Unreleased)
+
+IMPROVEMENTS:
+
+* The `consul_node` resource now supports setting node metadata via the `meta` attribute. [GH-65]
+
+
 ## 2.1.0 (June 26, 2018)
 
 NEW FEATURES:
