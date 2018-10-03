@@ -1,8 +1,8 @@
-## 2.2.0 (Unreleased)
+## 2.2.0 (October 03, 2018)
 
 IMPROVEMENTS:
 
-* The `consul_node` resource now supports setting node metadata via the `meta` attribute. [GH-65]
+* The `consul_node` resource now supports setting node metadata via the `meta` attribute. ([#65](https://github.com/terraform-providers/terraform-provider-consul/issues/65))
 
 
 ## 2.1.0 (June 26, 2018)
