@@ -1,6 +1,7 @@
 package consul
 
 import (
+	"errors"
 	"fmt"
 
 	consulapi "github.com/hashicorp/consul/api"
@@ -14,6 +15,8 @@ const (
 	// ConsulSourceValue is its value.
 	consulSourceValue = "terraform"
 )
+
+var NoServiceRegistered error = errors.New("No service was found in consul catalog")
 
 func resourceConsulService() *schema.Resource {
 	return &schema.Resource{
@@ -233,7 +236,12 @@ func resourceConsulServiceRead(d *schema.ResourceData, meta interface{}) error {
 
 	service, err := retrieveService(client, name, id, node, dc)
 	if err != nil {
-		return err
+		if err == NoServiceRegistered {
+			d.SetId("")
+			return nil
+		} else {
+			return err
+		}
 	}
 
 	d.Set("address", service.ServiceAddress)
@@ -297,6 +305,10 @@ func retrieveService(client *consulapi.Client, name string, ident string, node s
 	services, _, err := client.Catalog().Service(name, "", &qOpts)
 	if err != nil {
 		return nil, err
+	}
+
+	if len(services) == 0 {
+		return nil, NoServiceRegistered
 	}
 
 	// Only one service with a given ID may be present per node

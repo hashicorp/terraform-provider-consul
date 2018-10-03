@@ -172,6 +172,11 @@ func resourceConsulIntentionRead(d *schema.ResourceData, meta interface{}) error
 		return fmt.Errorf("Failed to retrieve intention (dc: '%s'): %v", dc, err)
 	}
 
+	if intention == nil {
+		d.SetId("")
+		return nil
+	}
+
 	d.Set("source_name", intention.SourceName)
 	d.Set("destination_name", intention.DestinationName)
 	d.Set("description", intention.Description)

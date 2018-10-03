@@ -121,8 +121,13 @@ func resourceConsulNodeRead(d *schema.ResourceData, meta interface{}) error {
 	// Setup the operations using the datacenter
 	qOpts := consulapi.QueryOptions{Datacenter: dc}
 
-	if _, _, err := catalog.Node(name, &qOpts); err != nil {
+	n, _, err := catalog.Node(name, &qOpts)
+	if err != nil {
 		return fmt.Errorf("Failed to get name '%s' from Consul catalog: %v", name, err)
+	}
+
+	if n == nil {
+		d.SetId("")
 	}
 
 	return nil
