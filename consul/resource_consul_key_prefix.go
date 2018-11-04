@@ -93,7 +93,7 @@ func resourceConsulKeyPrefixCreate(d *schema.ResourceData, meta interface{}) err
 	// subsequent Read.
 	for k, v := range subKeys {
 		fullPath := pathPrefix + k
-		err := keyClient.Put(fullPath, v)
+		err := keyClient.Put(fullPath, v, 0)
 		if err != nil {
 			return fmt.Errorf("error while writing %s: %s", fullPath, err)
 		}
@@ -141,7 +141,7 @@ func resourceConsulKeyPrefixUpdate(d *schema.ResourceData, meta interface{}) err
 		for k, vI := range nm {
 			v := vI.(string)
 			fullPath := pathPrefix + k
-			err := keyClient.Put(fullPath, v)
+			err := keyClient.Put(fullPath, v, 0)
 			if err != nil {
 				return fmt.Errorf("error while writing %s: %s", fullPath, err)
 			}
