@@ -83,8 +83,9 @@ func resourceConsulCatalogEntry() *schema.Resource {
 			},
 
 			"token": &schema.Schema{
-				Type:     schema.TypeString,
-				Optional: true,
+				Type:      schema.TypeString,
+				Optional:  true,
+				Sensitive: true,
 			},
 		},
 	}

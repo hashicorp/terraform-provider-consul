@@ -66,8 +66,9 @@ func Provider() terraform.ResourceProvider {
 			},
 
 			"token": &schema.Schema{
-				Type:     schema.TypeString,
-				Optional: true,
+				Type:      schema.TypeString,
+				Optional:  true,
+				Sensitive: true,
 				DefaultFunc: schema.MultiEnvDefaultFunc([]string{
 					"CONSUL_TOKEN",
 					"CONSUL_HTTP_TOKEN",

@@ -18,8 +18,9 @@ func dataSourceConsulKeys() *schema.Resource {
 			},
 
 			"token": &schema.Schema{
-				Type:     schema.TypeString,
-				Optional: true,
+				Type:      schema.TypeString,
+				Optional:  true,
+				Sensitive: true,
 			},
 
 			"key": &schema.Schema{

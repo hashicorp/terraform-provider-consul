@@ -18,8 +18,9 @@ func dataSourceConsulKeyPrefix() *schema.Resource {
 			},
 
 			"token": &schema.Schema{
-				Type:     schema.TypeString,
-				Optional: true,
+				Type:      schema.TypeString,
+				Optional:  true,
+				Sensitive: true,
 			},
 
 			"path_prefix": &schema.Schema{
