@@ -7,6 +7,14 @@ import (
 	"github.com/hashicorp/terraform/helper/schema"
 )
 
+const (
+	// ConsulSourceKey is the name of the meta attribute used by Consul to
+	// record the origin of a service.
+	consulSourceKey = "external-source"
+	// ConsulSourceValue is its value.
+	consulSourceValue = "terraform"
+)
+
 func resourceConsulService() *schema.Resource {
 	return &schema.Resource{
 		Create: resourceConsulServiceCreate,
@@ -131,6 +139,10 @@ func resourceConsulServiceCreate(d *schema.ResourceData, meta interface{}) error
 		registration.Service.Tags = s
 	}
 
+	registration.Service.Meta = map[string]string{
+		consulSourceKey: consulSourceValue,
+	}
+
 	if _, err := catalog.Register(registration, &wOpts); err != nil {
 		return fmt.Errorf("Failed to register service (dc: '%s'): %v", dc, err)
 	}
@@ -194,6 +206,10 @@ func resourceConsulServiceUpdate(d *schema.ResourceData, meta interface{}) error
 			s[i] = raw.(string)
 		}
 		registration.Service.Tags = s
+	}
+
+	registration.Service.Meta = map[string]string{
+		consulSourceKey: consulSourceValue,
 	}
 
 	if _, err := catalog.Register(registration, &wOpts); err != nil {

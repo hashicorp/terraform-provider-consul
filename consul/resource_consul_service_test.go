@@ -26,6 +26,7 @@ func TestAccConsulService_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("consul_service.example", "port", "80"),
 					resource.TestCheckResourceAttr("consul_service.example", "tags.#", "1"),
 					resource.TestCheckResourceAttr("consul_service.example", "tags.0", "tag0"),
+					testAccConsulExternalSource,
 				),
 			},
 		},
@@ -98,6 +99,24 @@ func TestAccConsulService_nodeDoesNotExist(t *testing.T) {
 			},
 		},
 	})
+}
+
+func testAccConsulExternalSource(s *terraform.State) error {
+	client := testAccProvider.Meta().(*consulapi.Client)
+	qOpts := consulapi.QueryOptions{}
+
+	service, _, err := client.Catalog().Service("example", "", &qOpts)
+	if err != nil {
+		return fmt.Errorf("Failed to retrieve service: %v", err)
+	}
+
+	for _, s := range service {
+		source, ok := s.ServiceMeta["external-source"]
+		if !ok || source != "terraform" {
+			return fmt.Errorf("external-source not set")
+		}
+	}
+	return nil
 }
 
 func testAccCheckConsulServiceDestroy(s *terraform.State) error {
