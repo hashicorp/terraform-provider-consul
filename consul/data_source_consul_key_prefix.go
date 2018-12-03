@@ -103,9 +103,14 @@ func dataSourceConsulKeyPrefixRead(d *schema.ResourceData, meta interface{}) err
 	}
 
 	if len(keys) <= 0 {
-		subKeys, err := keyClient.GetUnderPrefix(pathPrefix)
+		pairs, err := keyClient.GetUnderPrefix(pathPrefix)
 		if err != nil {
 			return err
+		}
+		subKeys := map[string]string{}
+		for _, pair := range pairs {
+			subKey := pair.Key[len(pathPrefix):]
+			subKeys[subKey] = string(pair.Value)
 		}
 		d.Set("subkeys", subKeys)
 	}

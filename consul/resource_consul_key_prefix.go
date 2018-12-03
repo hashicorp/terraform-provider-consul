@@ -35,9 +35,33 @@ func resourceConsulKeyPrefix() *schema.Resource {
 
 			"subkeys": &schema.Schema{
 				Type:     schema.TypeMap,
-				Required: true,
+				Optional: true,
 				Elem: &schema.Schema{
 					Type: schema.TypeString,
+				},
+			},
+
+			"subkey": &schema.Schema{
+				Type:     schema.TypeSet,
+				Optional: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"path": &schema.Schema{
+							Type:     schema.TypeString,
+							Required: true,
+						},
+
+						"value": &schema.Schema{
+							Type:     schema.TypeString,
+							Required: true,
+						},
+
+						"flags": &schema.Schema{
+							Type:     schema.TypeInt,
+							Optional: true,
+							Default:  0,
+						},
+					},
 				},
 			},
 		},
@@ -55,23 +79,44 @@ func resourceConsulKeyPrefixCreate(d *schema.ResourceData, meta interface{}) err
 
 	keyClient := newKeyClient(kv, dc, token)
 
+	type subKey struct {
+		value string
+		flags int
+	}
+
 	pathPrefix := d.Get("path_prefix").(string)
-	subKeys := map[string]string{}
+	subKeys := map[string]subKey{}
 	for k, vI := range d.Get("subkeys").(map[string]interface{}) {
-		subKeys[k] = vI.(string)
+		subKeys[k] = subKey{value: vI.(string), flags: 0}
+	}
+
+	// Add independant `subkey` attritbutes
+	if subkeys, ok := d.GetOk("subkey"); ok {
+		subkeysList := subkeys.(*schema.Set).List()
+		for _, rawSubkey := range subkeysList {
+			subkeyData := rawSubkey.(map[string]interface{})
+			name := subkeyData["path"].(string)
+			value := subkeyData["value"].(string)
+			flags := subkeyData["flags"].(int)
+
+			subKeys[name] = subKey{
+				value: value,
+				flags: flags,
+			}
+		}
 	}
 
 	// To reduce the impact of mistakes, we will only "create" a prefix that
 	// is currently empty. This way we are less likely to accidentally
 	// conflict with other mechanisms managing the same prefix.
-	currentSubKeys, err := keyClient.GetUnderPrefix(pathPrefix)
+	currentKVPairs, err := keyClient.GetUnderPrefix(pathPrefix)
 	if err != nil {
 		return err
 	}
-	if len(currentSubKeys) > 0 {
+	if len(currentKVPairs) > 0 {
 		return fmt.Errorf(
 			"%d keys already exist under %s; delete them before managing this prefix with Terraform",
-			len(currentSubKeys), pathPrefix,
+			len(currentKVPairs), pathPrefix,
 		)
 	}
 
@@ -91,9 +136,9 @@ func resourceConsulKeyPrefixCreate(d *schema.ResourceData, meta interface{}) err
 	// that nothing should need deleting yet, as long as there isn't some
 	// other program racing us to write values... which we'll catch on a
 	// subsequent Read.
-	for k, v := range subKeys {
-		fullPath := pathPrefix + k
-		err := keyClient.Put(fullPath, v, 0)
+	for name, subkey := range subKeys {
+		fullPath := pathPrefix + name
+		err := keyClient.Put(fullPath, subkey.value, subkey.flags)
 		if err != nil {
 			return fmt.Errorf("error while writing %s: %s", fullPath, err)
 		}
@@ -148,7 +193,7 @@ func resourceConsulKeyPrefixUpdate(d *schema.ResourceData, meta interface{}) err
 		}
 
 		// Remove deleted keys
-		for k, _ := range om {
+		for k := range om {
 			if _, exists := nm[k]; exists {
 				continue
 			}
@@ -158,7 +203,52 @@ func resourceConsulKeyPrefixUpdate(d *schema.ResourceData, meta interface{}) err
 				return fmt.Errorf("error while deleting %s: %s", fullPath, err)
 			}
 		}
+	}
 
+	// Update and remove keys from `subkey` attribute
+	if d.HasChange("subkey") {
+		o, n := d.GetChange("subkey")
+		if o == nil {
+			o = &schema.Set{}
+		}
+		if n == nil {
+			n = &schema.Set{}
+		}
+		os := o.(*schema.Set)
+		ns := n.(*schema.Set)
+		nSubkeyList := ns.List()
+		oSubkeyList := os.List()
+
+		for _, rawSubkey := range nSubkeyList {
+			subkeyData := rawSubkey.(map[string]interface{})
+			name := subkeyData["path"].(string)
+			value := subkeyData["value"].(string)
+			flags := subkeyData["flags"].(int)
+
+			fullPath := pathPrefix + name
+			err := keyClient.Put(fullPath, value, flags)
+			if err != nil {
+				return fmt.Errorf("error while writing %s: %s", fullPath, err)
+			}
+		}
+
+		for _, rawSubkey := range oSubkeyList {
+			subkeyData := rawSubkey.(map[string]interface{})
+			name := subkeyData["path"].(string)
+
+			for _, rawNSubKey := range nSubkeyList {
+				nSubkeyData := rawNSubKey.(map[string]interface{})
+				if name == nSubkeyData["path"].(string) {
+					continue
+				}
+			}
+
+			fullPath := pathPrefix + name
+			err := keyClient.Delete(fullPath)
+			if err != nil {
+				return fmt.Errorf("error while deleting %s: %s", fullPath, err)
+			}
+		}
 	}
 
 	// Store the datacenter on this resource, which can be helpful for reference
@@ -181,12 +271,55 @@ func resourceConsulKeyPrefixRead(d *schema.ResourceData, meta interface{}) error
 
 	pathPrefix := d.Id()
 
-	subKeys, err := keyClient.GetUnderPrefix(pathPrefix)
+	pairs, err := keyClient.GetUnderPrefix(pathPrefix)
 	if err != nil {
 		return err
 	}
 
-	d.Set("subkeys", subKeys)
+	subKeys := make(map[string]string)
+	if subKeySet, ok := d.GetOk("subkey"); ok {
+		subkeyList := subKeySet.(*schema.Set).List()
+		// We need to split subkeys fetched between the subkey and subkeys attributes:
+		//   - everything whose path matches a given subkey goes in subkeySet
+		//   - everything else goes into the subkeys attribute
+		for _, pair := range pairs {
+			name := pair.Key[len(pathPrefix):]
+			value := string(pair.Value)
+			flags := int(pair.Flags)
+			isSubkey := false
+
+			for _, rawSubkey := range subkeyList {
+				subkeyData := rawSubkey.(map[string]interface{})
+				if name == subkeyData["path"] {
+					isSubkey = true
+					subkey := map[string]interface{}{
+						"path":  name,
+						"value": value,
+						"flags": flags,
+					}
+					subKeySet.(*schema.Set).Add(subkey)
+					break
+				}
+			}
+
+			if !isSubkey {
+				subKeys[name] = string(value)
+			}
+		}
+		d.Set("subkey", subKeySet)
+	} else {
+		for _, pair := range pairs {
+			name := pair.Key[len(pathPrefix):]
+			value := string(pair.Value)
+			subKeys[name] = value
+		}
+	}
+	if err := d.Set("subkeys", subKeys); err != nil {
+		return err
+	}
+	if err := d.Set("subkeys", subKeys); err != nil {
+		return err
+	}
 
 	// Store the datacenter on this resource, which can be helpful for reference
 	// in case it was read from the provider

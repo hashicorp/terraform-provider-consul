@@ -46,7 +46,7 @@ func (c *keyClient) Get(path string) (string, int, error) {
 	return value, flags, nil
 }
 
-func (c *keyClient) GetUnderPrefix(pathPrefix string) (map[string]string, error) {
+func (c *keyClient) GetUnderPrefix(pathPrefix string) (consulapi.KVPairs, error) {
 	log.Printf(
 		"[DEBUG] Listing keys under '%s' in %s",
 		pathPrefix, c.qOpts.Datacenter,
@@ -57,12 +57,7 @@ func (c *keyClient) GetUnderPrefix(pathPrefix string) (map[string]string, error)
 			"Failed to list Consul keys under prefix '%s': %s", pathPrefix, err,
 		)
 	}
-	value := map[string]string{}
-	for _, pair := range pairs {
-		subKey := pair.Key[len(pathPrefix):]
-		value[subKey] = string(pair.Value)
-	}
-	return value, nil
+	return pairs, nil
 }
 
 func (c *keyClient) Put(path, value string, flags int) error {

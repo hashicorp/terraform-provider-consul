@@ -47,9 +47,15 @@ resource "consul_key_prefix" "myapp_config" {
     "database/hostname" = "${aws_db_instance.app.address}"
     "database/port"     = "${aws_db_instance.app.port}"
     "database/username" = "${aws_db_instance.app.username}"
-    "database/password" = "${aws_db_instance.app.password}"
     "database/name"     = "${aws_db_instance.app.name}"
   }
+
+  subkey {
+    path  = "database/password"
+    value = "${aws_db_instance.app.password}"
+    flags = 2
+  }
+
 }
 ```
 
@@ -67,10 +73,23 @@ The following arguments are supported:
   that will be managed by this resource instance. In most cases this will
   end with a slash, to manage a "folder" of keys.
 
-* `subkeys` - (Required) A mapping from subkey name (which will be appended
+* `subkeys` - (Optional) A mapping from subkey name (which will be appended
   to the given `path_prefix`) to the value that should be stored at that key.
   Use slashes, as shown in the above example, to create "sub-folders" under
   the given path prefix.
+
+* `subkey` - (Optional) A subkey to add. Supported values documented below.
+  Multiple blocks supported.
+
+The `subkey` block supports the following:
+
+* `path` - (Required) This is the path (which will be appended to the given
+  `path_prefix`) in Consul that should be written to.
+
+* `value` - (Required) The value to write to the given path.
+
+* `flags` - (Optional) An [unsigned integer value](https://www.consul.io/api/kv.html#flags-1)
+  to attach to the key (defaults to 0).
 
 ## Attributes Reference
 
