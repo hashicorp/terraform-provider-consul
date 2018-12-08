@@ -2,7 +2,6 @@ package consul
 
 import (
 	"fmt"
-	"github.com/hashicorp/go-uuid"
 	"testing"
 
 	consulapi "github.com/hashicorp/consul/api"
@@ -29,32 +28,35 @@ func testAccCheckConsulACLAgentTokenDestroy(s *terraform.State) error {
 }
 
 func TestAccConsulACLAgentToken_basic(t *testing.T) {
-	token, _ := uuid.GenerateUUID()
 	resource.Test(t, resource.TestCase{
 		Providers:    testAccProviders,
 		PreCheck:     func() { testAccPreCheck(t) },
 		CheckDestroy: testAccCheckConsulACLAgentTokenDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testResourceACLAgentTokenConfig_basic(token),
+				Config: testResourceACLAgentTokenConfig_basic(),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("consul_acl_agent_token.test", "token", token),
+					resource.TestCheckResourceAttr("consul_acl_agent_token.test", "description", "test"),
+					resource.TestCheckResourceAttr("consul_acl_agent_token.test", "policies.#", "1"),
+					resource.TestCheckResourceAttr("consul_acl_agent_token.test", "local", "true"),
+					resource.TestCheckResourceAttrSet("consul_acl_agent_token.test", "token"),
 				),
 			},
 		},
 	})
 }
 
-func testResourceACLAgentTokenConfig_basic(token string) string {
-	return fmt.Sprintf(`
-resource "consul_acl" "test" {
-	uuid = "%s"
-	name = "Agent Token"
-	type = "client"
-	rules = "node \"\" { policy = \"write\" } service \"\" { policy = \"read\" }"
+func testResourceACLAgentTokenConfig_basic() string {
+	return `
+resource "consul_acl_policy" "test" {
+	name = "test"
+	rules = "node_prefix \"\" { policy = \"write\" } service_prefix \"\" { policy = \"read\" }"
+	datacenters = [ "dc1" ]
 }
 
 resource "consul_acl_agent_token" "test" {
-	token = "${consul_acl.test.token}"
-}`, token)
+	description = "test"
+	policies = ["${consul_acl_policy.test.name}"]
+	local = true
+}`
 }

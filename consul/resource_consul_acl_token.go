@@ -4,16 +4,15 @@ import (
 	"fmt"
 	consulapi "github.com/hashicorp/consul/api"
 	"github.com/hashicorp/terraform/helper/schema"
-
 	"log"
 )
 
-func resourceConsulACLAgentToken() *schema.Resource {
+func resourceConsulACLToken() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceConsulACLAgentTokenCreate,
-		Read:   resourceConsulACLAgentTokenRead,
-		Update: resourceConsulACLAgentTokenUpdate,
-		Delete: resourceConsulACLAgentTokenDelete,
+		Create: resourceConsulACLTokenCreate,
+		Read:   resourceConsulACLTokenRead,
+		Update: resourceConsulACLTokenUpdate,
+		Delete: resourceConsulACLTokenDelete,
 
 		Schema: map[string]*schema.Schema{
 			"description": {
@@ -48,10 +47,10 @@ func resourceConsulACLAgentToken() *schema.Resource {
 	}
 }
 
-func resourceConsulACLAgentTokenCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceConsulACLTokenCreate(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*consulapi.Client)
 
-	log.Printf("[DEBUG] Creating ACL agent token")
+	log.Printf("[DEBUG] Creating ACL token")
 
 	aclToken := consulapi.ACLToken{
 		Description: d.Get("description").(string),
@@ -72,32 +71,32 @@ func resourceConsulACLAgentTokenCreate(d *schema.ResourceData, meta interface{})
 
 	token, _, err := client.ACL().TokenCreate(&aclToken, nil)
 	if err != nil {
-		return fmt.Errorf("error creating ACL agent token: %s", err)
+		return fmt.Errorf("error creating ACL token: %s", err)
 	}
 
-	log.Printf("[DEBUG] Created ACL agent token %q", token.AccessorID)
+	log.Printf("[DEBUG] Created ACL token %q", token.AccessorID)
 
 	d.Set("token", token.SecretID)
 
 	d.SetId(token.AccessorID)
 
-	return resourceConsulACLAgentTokenRead(d, meta)
+	return resourceConsulACLTokenRead(d, meta)
 }
 
-func resourceConsulACLAgentTokenRead(d *schema.ResourceData, meta interface{}) error {
+func resourceConsulACLTokenRead(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*consulapi.Client)
 
 	id := d.Id()
-	log.Printf("[DEBUG] Reading ACL agent token %q", id)
+	log.Printf("[DEBUG] Reading ACL token %q", id)
 
 	aclToken, _, err := client.ACL().TokenRead(id, nil)
 	if err != nil {
-		log.Printf("[WARN] ACL agent token not found, removing from state")
+		log.Printf("[WARN] ACL token not found, removing from state")
 		d.SetId("")
 		return nil
 	}
 
-	log.Printf("[DEBUG] Read ACL agent token %q", id)
+	log.Printf("[DEBUG] Read ACL token %q", id)
 
 	d.Set("description", aclToken.Description)
 
@@ -112,7 +111,7 @@ func resourceConsulACLAgentTokenRead(d *schema.ResourceData, meta interface{}) e
 	return nil
 }
 
-func resourceConsulACLAgentTokenUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceConsulACLTokenUpdate(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*consulapi.Client)
 
 	id := d.Id()
@@ -143,6 +142,17 @@ func resourceConsulACLAgentTokenUpdate(d *schema.ResourceData, meta interface{})
 	return resourceConsulACLTokenRead(d, meta)
 }
 
-func resourceConsulACLAgentTokenDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceConsulACLTokenDelete(d *schema.ResourceData, meta interface{}) error {
+	client := meta.(*consulapi.Client)
+
+	id := d.Id()
+
+	log.Printf("[DEBUG] Deleting ACL token %q", id)
+	_, err := client.ACL().TokenDelete(id, nil)
+	if err != nil {
+		return fmt.Errorf("error deleting ACL token %q: %s", id, err)
+	}
+	log.Printf("[DEBUG] Deleted ACL token %q", id)
+
 	return nil
 }

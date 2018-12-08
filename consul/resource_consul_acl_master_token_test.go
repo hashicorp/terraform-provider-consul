@@ -14,6 +14,9 @@ func TestAccConsulACLMasterToken_basic(t *testing.T) {
 			{
 				Config: testResourceACLMasterTokenConfig_basic(),
 				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("consul_acl_master_token.test", "description", "Bootstrap Token (Global Management)"),
+					resource.TestCheckResourceAttr("consul_acl_master_token.test", "policies.#", "1"),
+					resource.TestCheckResourceAttr("consul_acl_master_token.test", "local", "false"),
 					resource.TestCheckResourceAttrSet("consul_acl_master_token.test", "token"),
 				),
 			},

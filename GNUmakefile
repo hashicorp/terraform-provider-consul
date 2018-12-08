@@ -53,13 +53,13 @@ test-serv: fmtcheck
 test-serv-acl-with-bootstrap: fmtcheck
 	@docker pull "consul:$(CONSUL_VERSION)"
 	docker run --rm -p 127.0.0.1:8500:8500 \
-	    -e 'CONSUL_LOCAL_CONFIG={ "acl_datacenter": "dc1", "acl_master_token": "6b0de9ab-6d95-4af8-a965-78ca35a67018" }' \
+	    -e 'CONSUL_LOCAL_CONFIG={ "acl": { "enabled": true, "tokens": { "master": "6b0de9ab-6d95-4af8-a965-78ca35a67018" } } }' \
 		"consul:$(CONSUL_VERSION)" agent -server -client=0.0.0.0 -bootstrap-expect=1
 
 test-serv-acl-without-bootstrap: fmtcheck
 	@docker pull "consul:$(CONSUL_VERSION)"
 	docker run --rm -p 127.0.0.1:8500:8500 \
-		-e 'CONSUL_LOCAL_CONFIG={ "acl_datacenter": "dc1" }' \
+		-e 'CONSUL_LOCAL_CONFIG={ "acl": { "enabled": true } }' \
 		"consul:$(CONSUL_VERSION)" agent -server -client=0.0.0.0 -bootstrap-expect=1
 
 website:

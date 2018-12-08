@@ -14,6 +14,24 @@ func resourceConsulACLMasterToken() *schema.Resource {
 		Delete: resourceConsulACLMasterTokenDelete,
 
 		Schema: map[string]*schema.Schema{
+			"description": {
+				Type:        schema.TypeString,
+				Computed:    true,
+				Description: "The token description.",
+			},
+			"policies": {
+				Type:     schema.TypeSet,
+				Computed: true,
+				Elem: &schema.Schema{
+					Type: schema.TypeString,
+				},
+				Description: "List of policies.",
+			},
+			"local": {
+				Type:        schema.TypeBool,
+				Computed:    true,
+				Description: "Flag to set the token local to the current datacenter.",
+			},
 			"token": {
 				Type:        schema.TypeString,
 				Computed:    true,
@@ -28,16 +46,25 @@ func resourceConsulACLMasterTokenCreate(d *schema.ResourceData, meta interface{}
 
 	log.Printf("[DEBUG] Creating ACL master token")
 
-	token, _, err := client.ACL().Bootstrap()
+	aclToken, _, err := client.ACL().Bootstrap()
 	if err != nil {
 		return fmt.Errorf("error creating ACL master token: %s", err)
 	}
 
-	log.Printf("[DEBUG] Created ACL master token %q", token)
+	log.Printf("[DEBUG] Created ACL master token %q", aclToken.AccessorID)
 
-	d.Set("token", token)
+	d.Set("description", aclToken.Description)
 
-	d.SetId(token)
+	policies := make([]string, 0, len(aclToken.Policies))
+	for _, policyLink := range aclToken.Policies {
+		policies = append(policies, policyLink.Name)
+	}
+
+	d.Set("policies", policies)
+	d.Set("local", aclToken.Local)
+	d.Set("token", aclToken.SecretID)
+
+	d.SetId(aclToken.AccessorID)
 
 	return resourceConsulACLMasterTokenRead(d, meta)
 }

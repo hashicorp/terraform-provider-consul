@@ -92,7 +92,8 @@ func Provider() terraform.ResourceProvider {
 		},
 
 		ResourcesMap: map[string]*schema.Resource{
-			"consul_acl":              resourceConsulACL(),
+			"consul_acl_policy":       resourceConsulACLPolicy(),
+			"consul_acl_token":        resourceConsulACLToken(),
 			"consul_acl_agent_token":  resourceConsulACLAgentToken(),
 			"consul_acl_master_token": resourceConsulACLMasterToken(),
 			"consul_agent_service":    resourceConsulAgentService(),
