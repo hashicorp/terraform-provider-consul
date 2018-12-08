@@ -44,8 +44,6 @@ func resourceConsulACLAgentTokenCreate(d *schema.ResourceData, meta interface{})
 		}
 	}
 
-	client.Agent().UpdateACLAgentToken(token, nil)
-
 	_, err := client.Agent().UpdateACLAgentToken(token, nil)
 	if err != nil {
 		return fmt.Errorf("error creating ACL agent token: %s", err)
@@ -54,6 +52,7 @@ func resourceConsulACLAgentTokenCreate(d *schema.ResourceData, meta interface{})
 	log.Printf("[DEBUG] Created ACL agent token %q", token)
 
 	d.Set("token", token)
+
 	d.SetId(token)
 
 	return resourceConsulACLAgentTokenRead(d, meta)
