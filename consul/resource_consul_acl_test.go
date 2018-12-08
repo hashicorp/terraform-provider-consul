@@ -16,11 +16,11 @@ func testAccCheckConsulACLDestroy(s *terraform.State) error {
 		if rs.Type != "consul_acl" {
 			continue
 		}
-		secret, _, err := client.ACL().Info(rs.Primary.ID, nil)
+		aclEntry, _, err := client.ACL().Info(rs.Primary.ID, nil)
 		if err != nil {
 			return err
 		}
-		if secret != nil {
+		if aclEntry != nil {
 			return fmt.Errorf("ACL %q still exists", rs.Primary.ID)
 		}
 	}
@@ -34,18 +34,19 @@ func TestAccConsulACL_basic(t *testing.T) {
 		CheckDestroy: testAccCheckConsulACLDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testResourceTokenConfig_basic(),
+				Config: testResourceACLConfig_basic(),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("consul_acl.test", "name", "test"),
 					resource.TestCheckResourceAttr("consul_acl.test", "type", "client"),
 					resource.TestCheckResourceAttr("consul_acl.test", "rules", "node \"\" { policy = \"read\" }"),
+					resource.TestCheckResourceAttrSet("consul_acl.test", "token"),
 				),
 			},
 		},
 	})
 }
 
-func testResourceTokenConfig_basic() string {
+func testResourceACLConfig_basic() string {
 	return `
 resource "consul_acl" "test" {
 	name = "test"
@@ -61,7 +62,7 @@ func TestAccConsulACL_uuid(t *testing.T) {
 		CheckDestroy: testAccCheckConsulACLDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testResourceTokenConfig_uuid(),
+				Config: testResourceACLConfig_uuid(),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("consul_acl.test", "name", "test"),
 					resource.TestCheckResourceAttr("consul_acl.test", "uuid", "a49b6f0a-a939-4966-a7e7-c7177a103653"),
@@ -73,7 +74,7 @@ func TestAccConsulACL_uuid(t *testing.T) {
 	})
 }
 
-func testResourceTokenConfig_uuid() string {
+func testResourceACLConfig_uuid() string {
 	return `
 resource "consul_acl" "test" {
 	uuid = "a49b6f0a-a939-4966-a7e7-c7177a103653"
@@ -90,7 +91,7 @@ func TestAccConsulACL_management(t *testing.T) {
 		CheckDestroy: testAccCheckConsulACLDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testResourceTokenConfig_management(),
+				Config: testResourceACLConfig_management(),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("consul_acl.test", "name", "test"),
 					resource.TestCheckResourceAttr("consul_acl.test", "type", "management"),
@@ -101,7 +102,7 @@ func TestAccConsulACL_management(t *testing.T) {
 	})
 }
 
-func testResourceTokenConfig_management() string {
+func testResourceACLConfig_management() string {
 	return `
 resource "consul_acl" "test" {
 	name = "test"
