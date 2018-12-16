@@ -13,6 +13,9 @@ func resourceConsulKeyPrefix() *schema.Resource {
 		Update: resourceConsulKeyPrefixUpdate,
 		Read:   resourceConsulKeyPrefixRead,
 		Delete: resourceConsulKeyPrefixDelete,
+		Importer: &schema.ResourceImporter{
+			State: schema.ImportStatePassthrough,
+		},
 
 		Schema: map[string]*schema.Schema{
 			"datacenter": &schema.Schema{
