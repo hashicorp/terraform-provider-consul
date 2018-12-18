@@ -41,7 +41,10 @@ func resourceConsulACLToken() *schema.Resource {
 }
 
 func resourceConsulACLTokenCreate(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*consulapi.Client)
+	client, err := meta.(*Config).Client()
+	if err != nil {
+		return err
+	}
 
 	log.Printf("[DEBUG] Creating ACL token")
 
@@ -75,7 +78,10 @@ func resourceConsulACLTokenCreate(d *schema.ResourceData, meta interface{}) erro
 }
 
 func resourceConsulACLTokenRead(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*consulapi.Client)
+	client, err := meta.(*Config).Client()
+	if err != nil {
+		return err
+	}
 
 	id := d.Id()
 	log.Printf("[DEBUG] Reading ACL token %q", id)
@@ -139,12 +145,15 @@ func resourceConsulACLTokenUpdate(d *schema.ResourceData, meta interface{}) erro
 }
 
 func resourceConsulACLTokenDelete(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*consulapi.Client)
+	client, err := meta.(*Config).Client()
+	if err != nil {
+		return err
+	}
 
 	id := d.Id()
 
 	log.Printf("[DEBUG] Deleting ACL token %q", id)
-	_, err := client.ACL().TokenDelete(id, nil)
+	_, err = client.ACL().TokenDelete(id, nil)
 	if err != nil {
 		return fmt.Errorf("error deleting ACL token %q: %s", id, err)
 	}

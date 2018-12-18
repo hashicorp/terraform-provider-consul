@@ -46,7 +46,7 @@ The following arguments are supported:
   the node. Supported values are documented below.
 
 * `datacenter` - (Optional) The datacenter to use. This overrides the
-  datacenter in the provider setup and the agent's default datacenter.
+  agent's default datacenter and the datacenter in the provider setup.
 
 * `token` - (Optional) ACL token.
 

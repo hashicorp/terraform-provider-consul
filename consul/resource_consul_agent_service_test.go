@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"testing"
 
-	consulapi "github.com/hashicorp/consul/api"
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/terraform"
 )
@@ -33,7 +32,11 @@ func TestAccConsulAgentService_basic(t *testing.T) {
 }
 
 func testAccCheckConsulAgentServiceDestroy(s *terraform.State) error {
-	agent := testAccProvider.Meta().(*consulapi.Client).Agent()
+	client, err := testAccProvider.Meta().(*Config).Client()
+	if err != nil {
+		return err
+	}
+	agent := client.Agent()
 	services, err := agent.Services()
 	if err != nil {
 		return fmt.Errorf("Could not retrieve services: %#v", err)
@@ -47,7 +50,11 @@ func testAccCheckConsulAgentServiceDestroy(s *terraform.State) error {
 
 func testAccCheckConsulAgentServiceExists() resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		agent := testAccProvider.Meta().(*consulapi.Client).Agent()
+		client, err := testAccProvider.Meta().(*Config).Client()
+		if err != nil {
+			return err
+		}
+		agent := client.Agent()
 		services, err := agent.Services()
 		if err != nil {
 			return err

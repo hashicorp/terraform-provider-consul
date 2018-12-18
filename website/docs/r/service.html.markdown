@@ -101,8 +101,8 @@ of the `name` attribute.
 * `tags` - (Optional, set of strings) A list of values that are opaque to Consul,
   but can be used to distinguish between services or nodes.
 
-* `datacenter` - (Optional) The datacenter to use. This overrides the datacenter in the
-provider setup and the agent's default datacenter.
+* `datacenter` - (Optional) The datacenter to use. This overrides the
+  agent's default datacenter and the datacenter in the provider setup.
 
 
 The following attributes are available for each health-check:

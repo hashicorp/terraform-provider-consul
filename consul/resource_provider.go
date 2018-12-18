@@ -118,11 +118,16 @@ func Provider() terraform.ResourceProvider {
 }
 
 func providerConfigure(d *schema.ResourceData) (interface{}, error) {
-	var config Config
+	var config *Config
 	configRaw := d.Get("").(map[string]interface{})
 	if err := mapstructure.Decode(configRaw, &config); err != nil {
 		return nil, err
 	}
 	log.Printf("[INFO] Initializing Consul client")
-	return config.Client()
+	if _, err := config.Client(); err != nil {
+		// The provider must error if the configuration is incorrect. We must
+		// check this here.
+		return nil, err
+	}
+	return config, nil
 }

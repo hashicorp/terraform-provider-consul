@@ -3,7 +3,6 @@ package consul
 import (
 	"fmt"
 
-	consulapi "github.com/hashicorp/consul/api"
 	"github.com/hashicorp/errwrap"
 	"github.com/hashicorp/terraform/helper/schema"
 )
@@ -95,10 +94,13 @@ func dataSourceConsulNodes() *schema.Resource {
 }
 
 func dataSourceConsulNodesRead(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*consulapi.Client)
+	client, err := meta.(*Config).Client()
+	if err != nil {
+		return err
+	}
 
 	// Parse out data source filters to populate Consul's query options
-	queryOpts, err := getQueryOpts(d, client)
+	queryOpts, err := getQueryOpts(d, client, meta)
 	if err != nil {
 		return errwrap.Wrapf("unable to get query options for fetching catalog nodes: {{err}}", err)
 	}

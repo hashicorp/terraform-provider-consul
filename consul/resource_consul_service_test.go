@@ -150,7 +150,10 @@ func TestAccConsulService_nodeDoesNotExist(t *testing.T) {
 }
 
 func testAccConsulExternalSource(s *terraform.State) error {
-	client := testAccProvider.Meta().(*consulapi.Client)
+	client, err := testAccProvider.Meta().(*Config).Client()
+	if err != nil {
+		return nil
+	}
 	qOpts := consulapi.QueryOptions{}
 
 	service, _, err := client.Catalog().Service("example", "", &qOpts)
@@ -168,7 +171,10 @@ func testAccConsulExternalSource(s *terraform.State) error {
 }
 
 func testAccCheckConsulServiceDestroy(s *terraform.State) error {
-	client := testAccProvider.Meta().(*consulapi.Client)
+	client, err := testAccProvider.Meta().(*Config).Client()
+	if err != nil {
+		return nil
+	}
 
 	qOpts := consulapi.QueryOptions{}
 	services, _, err := client.Catalog().Services(&qOpts)
@@ -185,13 +191,17 @@ func testAccCheckConsulServiceDestroy(s *terraform.State) error {
 
 func testAccRemoveConsulService(t *testing.T) func() {
 	return func() {
-		catalog := testAccProvider.Meta().(*consulapi.Client).Catalog()
+		client, err := testAccProvider.Meta().(*Config).Client()
+		if err != nil {
+			t.Fatal(err)
+		}
+		catalog := client.Catalog()
 		wOpts := &consulapi.WriteOptions{}
 		dereg := &consulapi.CatalogDeregistration{
 			Node:      "compute-example",
 			ServiceID: "example",
 		}
-		_, err := catalog.Deregister(dereg, wOpts)
+		_, err = catalog.Deregister(dereg, wOpts)
 		if err != nil {
 			t.Errorf("err: %v", err)
 		}

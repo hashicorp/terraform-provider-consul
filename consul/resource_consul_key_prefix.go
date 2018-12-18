@@ -3,7 +3,6 @@ package consul
 import (
 	"fmt"
 
-	consulapi "github.com/hashicorp/consul/api"
 	"github.com/hashicorp/terraform/helper/schema"
 )
 
@@ -73,10 +72,13 @@ func resourceConsulKeyPrefix() *schema.Resource {
 }
 
 func resourceConsulKeyPrefixCreate(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*consulapi.Client)
+	client, err := meta.(*Config).Client()
+	if err != nil {
+		return err
+	}
 	kv := client.KV()
 	token := d.Get("token").(string)
-	dc, err := getDC(d, client)
+	dc, err := getDC(d, client, meta)
 	if err != nil {
 		return err
 	}
@@ -152,10 +154,13 @@ func resourceConsulKeyPrefixCreate(d *schema.ResourceData, meta interface{}) err
 }
 
 func resourceConsulKeyPrefixUpdate(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*consulapi.Client)
+	client, err := meta.(*Config).Client()
+	if err != nil {
+		return err
+	}
 	kv := client.KV()
 	token := d.Get("token").(string)
-	dc, err := getDC(d, client)
+	dc, err := getDC(d, client, meta)
 	if err != nil {
 		return err
 	}
@@ -263,10 +268,13 @@ func resourceConsulKeyPrefixUpdate(d *schema.ResourceData, meta interface{}) err
 }
 
 func resourceConsulKeyPrefixRead(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*consulapi.Client)
+	client, err := meta.(*Config).Client()
+	if err != nil {
+		return err
+	}
 	kv := client.KV()
 	token := d.Get("token").(string)
-	dc, err := getDC(d, client)
+	dc, err := getDC(d, client, meta)
 	if err != nil {
 		return err
 	}
@@ -333,10 +341,13 @@ func resourceConsulKeyPrefixRead(d *schema.ResourceData, meta interface{}) error
 }
 
 func resourceConsulKeyPrefixDelete(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*consulapi.Client)
+	client, err := meta.(*Config).Client()
+	if err != nil {
+		return err
+	}
 	kv := client.KV()
 	token := d.Get("token").(string)
-	dc, err := getDC(d, client)
+	dc, err := getDC(d, client, meta)
 	if err != nil {
 		return err
 	}

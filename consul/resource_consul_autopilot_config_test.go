@@ -63,7 +63,11 @@ func TestAccConsulAutopilotConfig_parseduration(t *testing.T) {
 // when destroying the consul_autopilot_config resource, the configuration
 // should not be changed
 func testFinalConfiguration(s *terraform.State) error {
-	operator := testAccProvider.Meta().(*consulapi.Client).Operator()
+	client, err := testAccProvider.Meta().(*Config).Client()
+	if err != nil {
+		return err
+	}
+	operator := client.Operator()
 	qOpts := &consulapi.QueryOptions{}
 	config, err := operator.AutopilotGetConfiguration(qOpts)
 	if err != nil {

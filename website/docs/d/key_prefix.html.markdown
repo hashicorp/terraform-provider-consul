@@ -60,7 +60,7 @@ resource "aws_instance" "web" {
 The following arguments are supported:
 
 * `datacenter` - (Optional) The datacenter to use. This overrides the
-  datacenter in the provider setup and the agent's default datacenter.
+  agent's default datacenter and the datacenter in the provider setup.
 
 * `token` - (Optional) The ACL token to use. This overrides the
   token that the agent provides by default.

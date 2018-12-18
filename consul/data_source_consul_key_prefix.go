@@ -1,7 +1,6 @@
 package consul
 
 import (
-	consulapi "github.com/hashicorp/consul/api"
 	"github.com/hashicorp/terraform/helper/schema"
 )
 
@@ -68,10 +67,13 @@ func dataSourceConsulKeyPrefix() *schema.Resource {
 }
 
 func dataSourceConsulKeyPrefixRead(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*consulapi.Client)
+	client, err := meta.(*Config).Client()
+	if err != nil {
+		return err
+	}
 	kv := client.KV()
 	token := d.Get("token").(string)
-	dc, err := getDC(d, client)
+	dc, err := getDC(d, client, meta)
 	if err != nil {
 		return err
 	}

@@ -122,7 +122,10 @@ func resourceConsulPreparedQuery() *schema.Resource {
 }
 
 func resourceConsulPreparedQueryCreate(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*consulapi.Client)
+	client, err := meta.(*Config).Client()
+	if err != nil {
+		return err
+	}
 	wo := &consulapi.WriteOptions{
 		Datacenter: d.Get("datacenter").(string),
 		Token:      d.Get("token").(string),
@@ -140,7 +143,10 @@ func resourceConsulPreparedQueryCreate(d *schema.ResourceData, meta interface{})
 }
 
 func resourceConsulPreparedQueryUpdate(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*consulapi.Client)
+	client, err := meta.(*Config).Client()
+	if err != nil {
+		return err
+	}
 	wo := &consulapi.WriteOptions{
 		Datacenter: d.Get("datacenter").(string),
 		Token:      d.Get("token").(string),
@@ -156,7 +162,10 @@ func resourceConsulPreparedQueryUpdate(d *schema.ResourceData, meta interface{})
 }
 
 func resourceConsulPreparedQueryRead(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*consulapi.Client)
+	client, err := meta.(*Config).Client()
+	if err != nil {
+		return err
+	}
 	qo := &consulapi.QueryOptions{
 		Datacenter: d.Get("datacenter").(string),
 		Token:      d.Get("token").(string),
@@ -206,7 +215,10 @@ func resourceConsulPreparedQueryRead(d *schema.ResourceData, meta interface{}) e
 }
 
 func resourceConsulPreparedQueryDelete(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*consulapi.Client)
+	client, err := meta.(*Config).Client()
+	if err != nil {
+		return err
+	}
 	writeOpts := &consulapi.WriteOptions{
 		Datacenter: d.Get("datacenter").(string),
 		Token:      d.Get("token").(string),

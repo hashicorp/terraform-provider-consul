@@ -50,7 +50,10 @@ func resourceConsulIntention() *schema.Resource {
 }
 
 func resourceConsulIntentionCreate(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*consulapi.Client)
+	client, err := meta.(*Config).Client()
+	if err != nil {
+		return err
+	}
 	connect := client.Connect()
 
 	sourceName := d.Get("source_name").(string)
@@ -104,7 +107,10 @@ func resourceConsulIntentionCreate(d *schema.ResourceData, meta interface{}) err
 }
 
 func resourceConsulIntentionUpdate(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*consulapi.Client)
+	client, err := meta.(*Config).Client()
+	if err != nil {
+		return err
+	}
 	connect := client.Connect()
 
 	sourceName := d.Get("source_name").(string)
@@ -156,7 +162,10 @@ func resourceConsulIntentionUpdate(d *schema.ResourceData, meta interface{}) err
 }
 
 func resourceConsulIntentionRead(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*consulapi.Client)
+	client, err := meta.(*Config).Client()
+	if err != nil {
+		return err
+	}
 	connect := client.Connect()
 
 	dc := ""
@@ -187,7 +196,10 @@ func resourceConsulIntentionRead(d *schema.ResourceData, meta interface{}) error
 }
 
 func resourceConsulIntentionDelete(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*consulapi.Client)
+	client, err := meta.(*Config).Client()
+	if err != nil {
+		return err
+	}
 	connect := client.Connect()
 	id := d.Id()
 

@@ -58,7 +58,10 @@ func TestAccConsulIntention_badAction(t *testing.T) {
 }
 
 func testAccCheckConsulIntentionDestroy(s *terraform.State) error {
-	client := testAccProvider.Meta().(*consulapi.Client)
+	client, err := testAccProvider.Meta().(*Config).Client()
+	if err != nil {
+		return err
+	}
 
 	qOpts := consulapi.QueryOptions{}
 	intentions, _, err := client.Connect().Intentions(&qOpts)
@@ -75,7 +78,11 @@ func testAccCheckConsulIntentionDestroy(s *terraform.State) error {
 
 func testAccRemoveConsulIntention(t *testing.T) func() {
 	return func() {
-		connect := testAccProvider.Meta().(*consulapi.Client).Connect()
+		client, err := testAccProvider.Meta().(*Config).Client()
+		if err != nil {
+			t.Fatal(err)
+		}
+		connect := client.Connect()
 		qOpts := &consulapi.QueryOptions{}
 		iM := &consulapi.IntentionMatch{
 			By:    consulapi.IntentionMatchSource,
@@ -84,12 +91,12 @@ func testAccRemoveConsulIntention(t *testing.T) func() {
 
 		resp, _, err := connect.IntentionMatch(iM, qOpts)
 		if err != nil {
-			t.Errorf("Failed to retrieve intentions by match err: %v", err)
+			t.Fatalf("Failed to retrieve intentions by match err: %v", err)
 		}
 
 		intentions, hasMatch := resp["api"]
 		if !hasMatch {
-			t.Errorf("No intention with source api was found")
+			t.Fatalf("No intention with source api was found")
 		}
 
 		var iid string
