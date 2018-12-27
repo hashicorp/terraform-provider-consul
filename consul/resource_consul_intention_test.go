@@ -27,6 +27,14 @@ func TestAccConsulIntention_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("consul_intention.example", "meta.baz", "bat"),
 				),
 			},
+			resource.TestStep{
+				PreConfig: deleteIntention(t),
+				Config:    testAccConsulIntentionConfigBasic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("consul_intention.example", "source_name", "api"),
+					resource.TestCheckResourceAttr("consul_intention.example", "destination_name", "db"),
+				),
+			},
 		},
 	})
 }
@@ -43,6 +51,29 @@ func TestAccConsulIntention_badAction(t *testing.T) {
 			},
 		},
 	})
+}
+
+func deleteIntention(t *testing.T) func() {
+	return func() {
+		connect := testAccProvider.Meta().(*consulapi.Client).Connect()
+		match := &consulapi.IntentionMatch{
+			By:    consulapi.IntentionMatchSource,
+			Names: []string{"api"},
+		}
+		qOpts := &consulapi.QueryOptions{}
+		intentions, _, err := connect.IntentionMatch(match, qOpts)
+		if err != nil {
+			t.Fatalf("err: %v", err)
+		}
+		if len(intentions) != 1 {
+			t.Fatalf("Should found 1 intention (%v found)", len(intentions))
+		}
+		wOpts := &consulapi.WriteOptions{}
+		_, err = connect.IntentionDelete(intentions["api"][0].ID, wOpts)
+		if err != nil {
+			t.Fatalf("err: %v", err)
+		}
+	}
 }
 
 func testAccCheckConsulIntentionDestroy(s *terraform.State) error {
