@@ -30,19 +30,8 @@ func TestAccConsulService_basic(t *testing.T) {
 				),
 			},
 			resource.TestStep{
-				PreConfig: func() {
-					catalog := testAccProvider.Meta().(*consulapi.Client).Catalog()
-					wOpts := &consulapi.WriteOptions{}
-					dereg := &consulapi.CatalogDeregistration{
-						Node:      "comput-example",
-						ServiceID: "example",
-					}
-					_, err := catalog.Deregister(dereg, wOpts)
-					if err != nil {
-						t.Errorf("err: %v", err)
-					}
-				},
-				Config: testAccConsulServiceConfigBasic,
+				PreConfig: testAccRemoveConsulService(t),
+				Config:    testAccConsulServiceConfigBasic,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("consul_service.example", "id", "example"),
 					resource.TestCheckResourceAttr("consul_service.example", "service_id", "example"),
@@ -158,6 +147,21 @@ func testAccCheckConsulServiceDestroy(s *terraform.State) error {
 	}
 
 	return nil
+}
+
+func testAccRemoveConsulService(t *testing.T) func() {
+	return func() {
+		catalog := testAccProvider.Meta().(*consulapi.Client).Catalog()
+		wOpts := &consulapi.WriteOptions{}
+		dereg := &consulapi.CatalogDeregistration{
+			Node:      "comput-example",
+			ServiceID: "example",
+		}
+		_, err := catalog.Deregister(dereg, wOpts)
+		if err != nil {
+			t.Errorf("err: %v", err)
+		}
+	}
 }
 
 const testAccConsulServiceConfigNoNode = `
