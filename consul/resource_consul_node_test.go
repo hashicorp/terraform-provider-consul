@@ -15,7 +15,7 @@ func TestAccConsulNode_basic(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckConsulNodeDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccConsulNodeConfigBasic,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConsulNodeExists(),
@@ -33,7 +33,7 @@ func TestAccConsulNode_nodeMeta(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckConsulNodeDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccConsulNodeConfigNodeMeta,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConsulNodeExists(),
@@ -45,7 +45,7 @@ func TestAccConsulNode_nodeMeta(t *testing.T) {
 					testAccCheckConsulNodeValue("consul_node.foo", "meta.remove", "this"),
 				),
 			},
-			resource.TestStep{
+			{
 				Config: testAccConsulNodeConfigNodeMeta_Update,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConsulNodeExists(),
