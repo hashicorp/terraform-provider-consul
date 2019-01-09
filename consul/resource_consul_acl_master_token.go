@@ -36,6 +36,7 @@ func resourceConsulACLMasterToken() *schema.Resource {
 				Type:        schema.TypeString,
 				Computed:    true,
 				Description: "The ACL master token.",
+				Sensitive:   true,
 			},
 		},
 	}

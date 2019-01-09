@@ -43,6 +43,7 @@ func resourceConsulACLAgentToken() *schema.Resource {
 				Type:        schema.TypeString,
 				Computed:    true,
 				Description: "The token.",
+				Sensitive:   true,
 			},
 		},
 	}
