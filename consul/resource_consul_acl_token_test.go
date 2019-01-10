@@ -4,13 +4,15 @@ import (
 	"fmt"
 	"testing"
 
-	consulapi "github.com/hashicorp/consul/api"
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/terraform"
 )
 
 func testAccCheckConsulACLTokenDestroy(s *terraform.State) error {
-	client := testAccProvider.Meta().(*consulapi.Client)
+	client, err := getMasterClient()
+	if err != nil {
+		return err
+	}
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "consul_acl" {
@@ -34,7 +36,7 @@ func TestAccConsulACLToken_basic(t *testing.T) {
 		CheckDestroy: testAccCheckConsulACLTokenDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testResourceACLTokenConfig_basic(),
+				Config: testResourceACLTokenConfigBasic,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("consul_acl_token.test", "description", "test"),
 					resource.TestCheckResourceAttr("consul_acl_token.test", "policies.#", "1"),
@@ -46,8 +48,7 @@ func TestAccConsulACLToken_basic(t *testing.T) {
 	})
 }
 
-func testResourceACLTokenConfig_basic() string {
-	return `
+const testResourceACLTokenConfigBasic = testAccMasterProviderConfiguration + `
 resource "consul_acl_policy" "test" {
 	name = "test"
 	rules = "node \"\" { policy = \"read\" }"
@@ -59,4 +60,3 @@ resource "consul_acl_token" "test" {
 	policies = ["${consul_acl_policy.test.name}"]
 	local = true
 }`
-}

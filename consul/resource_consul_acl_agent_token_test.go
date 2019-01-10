@@ -4,13 +4,15 @@ import (
 	"fmt"
 	"testing"
 
-	consulapi "github.com/hashicorp/consul/api"
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/terraform"
 )
 
 func testAccCheckConsulACLAgentTokenDestroy(s *terraform.State) error {
-	client := testAccProvider.Meta().(*consulapi.Client)
+	client, err := getMasterClient()
+	if err != nil {
+		return err
+	}
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "consul_acl_agent_token" {
@@ -34,7 +36,7 @@ func TestAccConsulACLAgentToken_basic(t *testing.T) {
 		CheckDestroy: testAccCheckConsulACLAgentTokenDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testResourceACLAgentTokenConfig_basic(),
+				Config: testResourceACLAgentTokenConfigBasic,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("consul_acl_agent_token.test", "description", "test"),
 					resource.TestCheckResourceAttr("consul_acl_agent_token.test", "policies.#", "1"),
@@ -46,8 +48,7 @@ func TestAccConsulACLAgentToken_basic(t *testing.T) {
 	})
 }
 
-func testResourceACLAgentTokenConfig_basic() string {
-	return `
+const testResourceACLAgentTokenConfigBasic = testAccMasterProviderConfiguration + `
 resource "consul_acl_policy" "test" {
 	name = "test"
 	rules = "node_prefix \"\" { policy = \"write\" } service_prefix \"\" { policy = \"read\" }"
@@ -59,4 +60,3 @@ resource "consul_acl_agent_token" "test" {
 	policies = ["${consul_acl_policy.test.name}"]
 	local = true
 }`
-}

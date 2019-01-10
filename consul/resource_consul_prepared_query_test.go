@@ -64,21 +64,24 @@ func TestAccConsulPreparedQuery_basic(t *testing.T) {
 	})
 }
 
-func checkPreparedQueryExists(s *terraform.State) bool {
+func checkPreparedQueryExists(s *terraform.State, client *consulapi.Client) bool {
 	rn, ok := s.RootModule().Resources["consul_prepared_query.foo"]
 	if !ok {
 		return false
 	}
 	id := rn.Primary.ID
 
-	client := testAccProvider.Meta().(*consulapi.Client).PreparedQuery()
 	opts := &consulapi.QueryOptions{Datacenter: "dc1"}
-	pq, _, err := client.Get(id, opts)
+	pq, _, err := client.PreparedQuery().Get(id, opts)
 	return err == nil && pq != nil
 }
 
 func testAccCheckConsulPreparedQueryDestroy(s *terraform.State) error {
-	if checkPreparedQueryExists(s) {
+	client, err := getMasterClient()
+	if err != nil {
+		return err
+	}
+	if checkPreparedQueryExists(s, client) {
 		return fmt.Errorf("Prepared query 'foo' still exists")
 	}
 	return nil
@@ -86,7 +89,11 @@ func testAccCheckConsulPreparedQueryDestroy(s *terraform.State) error {
 
 func testAccCheckConsulPreparedQueryExists() resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		if !checkPreparedQueryExists(s) {
+		client, err := getMasterClient()
+		if err != nil {
+			return err
+		}
+		if !checkPreparedQueryExists(s, client) {
 			return fmt.Errorf("Prepared query 'foo' does not exist")
 		}
 		return nil
@@ -110,10 +117,9 @@ func testAccCheckConsulPreparedQueryAttrValue(attr, val string) resource.TestChe
 	}
 }
 
-const testAccConsulPreparedQueryConfig = `
+const testAccConsulPreparedQueryConfig = testAccMasterProviderConfiguration + `
 resource "consul_prepared_query" "foo" {
 	name = "foo"
-	token = "client-token"
 	stored_token = "pq-token"
 	service = "redis"
 	tags = ["prod"]
@@ -136,10 +142,9 @@ resource "consul_prepared_query" "foo" {
 }
 `
 
-const testAccConsulPreparedQueryConfigUpdate1 = `
+const testAccConsulPreparedQueryConfigUpdate1 = testAccMasterProviderConfiguration + `
 resource "consul_prepared_query" "foo" {
 	name = "baz"
-	token = "client-token"
 	stored_token = "pq-token-updated"
 	service = "memcached"
 	tags = ["prod","sup"]
@@ -162,10 +167,9 @@ resource "consul_prepared_query" "foo" {
 }
 `
 
-const testAccConsulPreparedQueryConfigUpdate2 = `
+const testAccConsulPreparedQueryConfigUpdate2 = testAccMasterProviderConfiguration + `
 resource "consul_prepared_query" "foo" {
 	name = "baz"
 	service = "memcached"
-	token = "client-token"
 }
 `

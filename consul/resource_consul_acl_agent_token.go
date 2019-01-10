@@ -2,10 +2,10 @@ package consul
 
 import (
 	"fmt"
+	"log"
+
 	consulapi "github.com/hashicorp/consul/api"
 	"github.com/hashicorp/terraform/helper/schema"
-
-	"log"
 )
 
 func resourceConsulACLAgentToken() *schema.Resource {

@@ -4,13 +4,15 @@ import (
 	"fmt"
 	"testing"
 
-	consulapi "github.com/hashicorp/consul/api"
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/terraform"
 )
 
 func testAccCheckConsulACLPolicyDestroy(s *terraform.State) error {
-	client := testAccProvider.Meta().(*consulapi.Client)
+	client, err := getMasterClient()
+	if err != nil {
+		return err
+	}
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "consul_acl" {
@@ -34,7 +36,7 @@ func TestAccConsulACLPolicy_basic(t *testing.T) {
 		CheckDestroy: testAccCheckConsulACLPolicyDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testResourceACLPolicyConfig_basic(),
+				Config: testResourceACLPolicyConfigBasic,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("consul_acl_policy.test", "name", "test"),
 					resource.TestCheckResourceAttr("consul_acl_policy.test", "rules", "node_prefix \"\" { policy = \"read\" }"),
@@ -45,11 +47,9 @@ func TestAccConsulACLPolicy_basic(t *testing.T) {
 	})
 }
 
-func testResourceACLPolicyConfig_basic() string {
-	return `
+const testResourceACLPolicyConfigBasic = testAccMasterProviderConfiguration + `
 resource "consul_acl_policy" "test" {
 	name = "test"
 	rules = "node_prefix \"\" { policy = \"read\" }"
 	datacenters = [ "dc1" ]
 }`
-}
