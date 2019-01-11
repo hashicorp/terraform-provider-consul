@@ -117,7 +117,7 @@ func resourceConsulACLAgentTokenUpdate(d *schema.ResourceData, meta interface{})
 	client := meta.(*consulapi.Client)
 
 	id := d.Id()
-	log.Printf("[DEBUG] Updating ACL token %q", id)
+	log.Printf("[DEBUG] Updating ACL agent token %q", id)
 
 	aclToken := consulapi.ACLToken{
 		AccessorID:  id,
@@ -137,13 +137,24 @@ func resourceConsulACLAgentTokenUpdate(d *schema.ResourceData, meta interface{})
 
 	_, _, err := client.ACL().TokenUpdate(&aclToken, nil)
 	if err != nil {
-		return fmt.Errorf("error updating ACL token %q: %s", id, err)
+		return fmt.Errorf("error updating ACL agent token %q: %s", id, err)
 	}
-	log.Printf("[DEBUG] Updated ACL token %q", id)
+	log.Printf("[DEBUG] Updated ACL agent token %q", id)
 
 	return resourceConsulACLTokenRead(d, meta)
 }
 
 func resourceConsulACLAgentTokenDelete(d *schema.ResourceData, meta interface{}) error {
+	client := meta.(*consulapi.Client)
+
+	id := d.Id()
+
+	log.Printf("[DEBUG] Deleting ACL agent token %q", id)
+	_, err := client.ACL().TokenDelete(id, nil)
+	if err != nil {
+		return fmt.Errorf("error deleting ACL agent token %q: %s", id, err)
+	}
+	log.Printf("[DEBUG] Deleted ACL agent token %q", id)
+
 	return nil
 }
