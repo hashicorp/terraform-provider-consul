@@ -71,6 +71,23 @@ func resourceConsulACLMasterTokenCreate(d *schema.ResourceData, meta interface{}
 }
 
 func resourceConsulACLMasterTokenRead(d *schema.ResourceData, meta interface{}) error {
+	client := meta.(*consulapi.Client)
+
+	id := d.Id()
+	log.Printf("[DEBUG] Reading ACL master token %q", id)
+
+	q := consulapi.QueryOptions{
+		Token: d.Get("token").(string),
+	}
+	_, _, err := client.ACL().TokenRead(id, &q)
+	if err != nil {
+		log.Printf("[WARN] ACL token not found, removing from state")
+		d.SetId("")
+		return nil
+	}
+
+	log.Printf("[DEBUG] Read ACL token %q", id)
+
 	return nil
 }
 
