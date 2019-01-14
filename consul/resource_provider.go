@@ -92,14 +92,15 @@ func Provider() terraform.ResourceProvider {
 		},
 
 		ResourcesMap: map[string]*schema.Resource{
-			"consul_agent_service":  resourceConsulAgentService(),
-			"consul_catalog_entry":  resourceConsulCatalogEntry(),
-			"consul_keys":           resourceConsulKeys(),
-			"consul_key_prefix":     resourceConsulKeyPrefix(),
-			"consul_node":           resourceConsulNode(),
-			"consul_prepared_query": resourceConsulPreparedQuery(),
-			"consul_service":        resourceConsulService(),
-			"consul_intention":      resourceConsulIntention(),
+			"consul_agent_service":    resourceConsulAgentService(),
+			"consul_catalog_entry":    resourceConsulCatalogEntry(),
+			"consul_keys":             resourceConsulKeys(),
+			"consul_key_prefix":       resourceConsulKeyPrefix(),
+			"consul_node":             resourceConsulNode(),
+			"consul_prepared_query":   resourceConsulPreparedQuery(),
+			"consul_autopilot_config": resourceConsulAutopilotConfig(),
+			"consul_service":          resourceConsulService(),
+			"consul_intention":        resourceConsulIntention(),
 		},
 
 		ConfigureFunc: providerConfigure,
