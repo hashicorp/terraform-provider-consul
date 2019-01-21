@@ -49,7 +49,6 @@ test-compile:
 test-serv: fmtcheck
 	@docker pull "consul:$(CONSUL_VERSION)"
 	docker run --rm -p 127.0.0.1:8500:8500 \
-	-e CONSUL_LOCAL_CONFIG=$(shell cat consul_test_default.json | sed "s/\"/\\\"/g") \
 	"consul:$(CONSUL_VERSION)"
 
 test-serv-acl: fmtcheck
