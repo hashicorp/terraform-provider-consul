@@ -1,4 +1,10 @@
 ## 2.3.0 (Unreleased)
+
+BUG FIXES:
+
+* `consul_intention`, `consul_node` and `consul_service` now correctly re-creates
+resources deleted out-of-band ([#81](https://github.com/terraform-providers/terraform-provider-consul/issues/81) and [!69](https://github.com/terraform-providers/terraform-provider-consul/pull/69)).
+
 ## 2.2.0 (October 03, 2018)
 
 IMPROVEMENTS:
