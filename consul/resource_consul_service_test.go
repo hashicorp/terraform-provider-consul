@@ -29,6 +29,20 @@ func TestAccConsulService_basic(t *testing.T) {
 					testAccConsulExternalSource,
 				),
 			},
+			resource.TestStep{
+				PreConfig: testAccRemoveConsulService(t),
+				Config:    testAccConsulServiceConfigBasic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("consul_service.example", "id", "example"),
+					resource.TestCheckResourceAttr("consul_service.example", "service_id", "example"),
+					resource.TestCheckResourceAttr("consul_service.example", "address", "www.hashicorptest.com"),
+					resource.TestCheckResourceAttr("consul_service.example", "node", "compute-example"),
+					resource.TestCheckResourceAttr("consul_service.example", "port", "80"),
+					resource.TestCheckResourceAttr("consul_service.example", "tags.#", "1"),
+					resource.TestCheckResourceAttr("consul_service.example", "tags.0", "tag0"),
+					testAccConsulExternalSource,
+				),
+			},
 		},
 	})
 }
@@ -133,6 +147,21 @@ func testAccCheckConsulServiceDestroy(s *terraform.State) error {
 	}
 
 	return nil
+}
+
+func testAccRemoveConsulService(t *testing.T) func() {
+	return func() {
+		catalog := testAccProvider.Meta().(*consulapi.Client).Catalog()
+		wOpts := &consulapi.WriteOptions{}
+		dereg := &consulapi.CatalogDeregistration{
+			Node:      "comput-example",
+			ServiceID: "example",
+		}
+		_, err := catalog.Deregister(dereg, wOpts)
+		if err != nil {
+			t.Errorf("err: %v", err)
+		}
+	}
 }
 
 const testAccConsulServiceConfigNoNode = `

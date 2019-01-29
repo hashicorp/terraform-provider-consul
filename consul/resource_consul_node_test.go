@@ -23,6 +23,15 @@ func TestAccConsulNode_basic(t *testing.T) {
 					testAccCheckConsulNodeValue("consul_node.foo", "name", "foo"),
 				),
 			},
+			resource.TestStep{
+				PreConfig: testAccRemoveConsulNode(t),
+				Config:    testAccConsulNodeConfigBasic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckConsulNodeExists(),
+					testAccCheckConsulNodeValue("consul_node.foo", "address", "127.0.0.1"),
+					testAccCheckConsulNodeValue("consul_node.foo", "name", "foo"),
+				),
+			},
 		},
 	})
 }
@@ -124,6 +133,20 @@ func testAccCheckConsulNodeValueRemoved(n, attr string) resource.TestCheckFunc {
 			return fmt.Errorf("Attribute '%s' still present: %#v", attr, rn.Primary.Attributes)
 		}
 		return nil
+	}
+}
+
+func testAccRemoveConsulNode(t *testing.T) func() {
+	return func() {
+		catalog := testAccProvider.Meta().(*consulapi.Client).Catalog()
+		wOpts := &consulapi.WriteOptions{}
+		dereg := &consulapi.CatalogDeregistration{
+			Node: "foo",
+		}
+		_, err := catalog.Deregister(dereg, wOpts)
+		if err != nil {
+			t.Errorf("err: %v", err)
+		}
 	}
 }
 
