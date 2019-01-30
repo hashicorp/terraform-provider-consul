@@ -39,7 +39,7 @@ func TestAccDataConsulServiceHealth(t *testing.T) {
 					testAccCheckDataSourceValue("data.consul_service_health.consul", "nodes.0.service_port", "8300"),
 					testAccCheckDataSourceValue("data.consul_service_health.consul", "nodes.0.service_meta.%", "0"),
 
-					testAccCheckDataSourceValue("data.consul_service_health.consul", "nodes.0.checks.#", "0"),
+					testAccCheckDataSourceValue("data.consul_service_health.consul", "nodes.0.checks.#", "1"),
 				),
 			},
 		},

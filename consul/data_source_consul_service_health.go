@@ -265,6 +265,7 @@ func dataSourceConsulServiceHealthRead(d *schema.ResourceData, meta interface{})
 
 			c = append(c, check)
 		}
+		m[serviceHealthChecks] = c
 		l = append(l, m)
 	}
 
