@@ -16,7 +16,7 @@ func TestAccConsulService_basic(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckConsulServiceDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccConsulServiceConfigBasic,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("consul_service.example", "id", "example"),
@@ -53,13 +53,13 @@ func TestAccConsulService_basicModify(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckConsulServiceDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccConsulServiceConfigBasic,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("consul_service.example", "id", "example"),
 				),
 			},
-			resource.TestStep{
+			{
 				Config: testAccConsulServiceConfigBasicNewTags,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("consul_service.example", "tags.#", "2"),
@@ -67,7 +67,7 @@ func TestAccConsulService_basicModify(t *testing.T) {
 					resource.TestCheckResourceAttr("consul_service.example", "tags.1", "tag1"),
 				),
 			},
-			resource.TestStep{
+			{
 				Config: testAccConsulServiceConfigBasicAddress,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("consul_service.example", "id", "example"),
@@ -88,7 +88,7 @@ func TestAccConsulService_serviceID(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckConsulServiceDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccConsulServiceConfigServiceID,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("consul_service.example", "id", "8ce84078-b32a-4039-bb68-17b13b7c2396"),
@@ -107,7 +107,7 @@ func TestAccConsulService_nodeDoesNotExist(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckConsulServiceDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config:      testAccConsulServiceConfigNoNode,
 				ExpectError: regexp.MustCompile(`Node does not exist: '*'`),
 			},

@@ -16,7 +16,7 @@ func TestAccConsulIntention_basic(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckConsulIntentionDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccConsulIntentionConfigBasic,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("consul_intention.example", "source_name", "api"),
@@ -49,7 +49,7 @@ func TestAccConsulIntention_badAction(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckConsulIntentionDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config:      testAccConsulIntentionConfigBadAction,
 				ExpectError: regexp.MustCompile("expected action to be one of"),
 			},
