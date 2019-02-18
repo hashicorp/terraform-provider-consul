@@ -44,22 +44,39 @@ server can trail the leader. Defaults to 250.
 healthy and stable before being promoted to a full, voting member. Defaults to
 `"10s"`.
 
-* `redundancy_zone_tag` - (Optional) The [redundancy zone](https://www.consul.io/docs/guides/autopilot.html#redundancy-zones) tag to use. Consul will try to keep one voting server by zone to take advantage of isolated failure domains. Defaults to an empty string.
+* `redundancy_zone_tag` - (Optional) The [redundancy zone](https://www.consul.io/docs/guides/autopilot.html#redundancy-zones)
+tag to use. Consul will try to keep one voting server by zone to take advantage
+of isolated failure domains. Defaults to an empty string.
 
-* `disable_upgrade_migration` - (Optional) Whether to disable [upgrade migrations](https://www.consul.io/docs/guides/autopilot.html#redundancy-zones) Defaults to false.
+* `disable_upgrade_migration` - (Optional) Whether to disable [upgrade migrations](https://www.consul.io/docs/guides/autopilot.html#redundancy-zones).
+Defaults to false.
 
-* `upgrade_version_tag` - (Optional) The tag to override the version information used during a migration. Defaults to an empty string.
+* `upgrade_version_tag` - (Optional) The tag to override the version information
+used during a migration. Defaults to an empty string.
 
 
 ## Attributes Reference
 
 The following attributes are exported:
 
-* `datacenter`
-* `cleanup_dead_servers`
-* `last_contact_threshold`
-* `max_trailing_logs`
-* `server_stabilization_time`
-* `redundancy_zone_tag`
-* `disable_upgrade_migration`
-* `upgrade_version_tag`
+* `datacenter` - The datacenter used.
+
+* `cleanup_dead_servers` - Whether to remove failing servers.
+
+* `last_contact_threshold` - The time after which a server is considered as
+unhealthy and will be removed.
+
+* `max_trailing_logs` - The maximum number of Raft log entries a server can trail
+the leader.
+
+* `server_stabilization_time` - The period to wait for a server to be healthy and
+stable before being promoted to a full, voting member.
+
+* `redundancy_zone_tag` - The [redundancy zone](https://www.consul.io/docs/guides/autopilot.html#redundancy-zones)
+tag used. Consul will try to keep one voting server by zone to take advantage of
+isolated failure domains.
+
+* `disable_upgrade_migration` - Whether to disable [upgrade migrations](https://www.consul.io/docs/guides/autopilot.html#redundancy-zones).
+
+* `upgrade_version_tag` - The tag to override the version information used during
+a migration.
