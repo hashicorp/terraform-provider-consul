@@ -8,17 +8,6 @@ import (
 	"github.com/hashicorp/terraform/helper/schema"
 )
 
-const (
-	consulAutopilotConfigDatacenter              = "datacenter"
-	consulAutopilotConfigCleanupDeadServers      = "cleanup_dead_servers"
-	consulAutopilotConfigLastContactThreshold    = "last_contact_threshold"
-	consulAutopilotConfigMaxTrailingLogs         = "max_trailing_logs"
-	consulAutopilotConfigServerStabilizationTime = "server_stabilization_time"
-	consulAutopilotConfigRedundancyZoneTag       = "redundancy_zone_tag"
-	consulAutopilotConfigDisableUpgradeMigration = "disable_upgrade_migration"
-	consulAutopilotConfigUpgradeVersionTag       = "upgrade_version_tag"
-)
-
 func resourceConsulAutopilotConfig() *schema.Resource {
 	return &schema.Resource{
 		Create: resourceConsulAutopilotConfigCreate,
@@ -27,41 +16,41 @@ func resourceConsulAutopilotConfig() *schema.Resource {
 		Delete: resourceConsulAutopilotConfigDelete,
 
 		Schema: map[string]*schema.Schema{
-			consulAutopilotConfigDatacenter: &schema.Schema{
+			"datacenter": &schema.Schema{
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-			consulAutopilotConfigCleanupDeadServers: &schema.Schema{
+			"cleanup_dead_servers": &schema.Schema{
 				Type:     schema.TypeBool,
 				Optional: true,
 				Default:  true,
 			},
-			consulAutopilotConfigLastContactThreshold: &schema.Schema{
+			"last_contact_threshold": &schema.Schema{
 				Type:     schema.TypeString,
 				Optional: true,
 				Default:  "200ms",
 			},
-			consulAutopilotConfigMaxTrailingLogs: &schema.Schema{
+			"max_trailing_logs": &schema.Schema{
 				Type:     schema.TypeInt,
 				Optional: true,
 				Default:  250,
 			},
-			consulAutopilotConfigServerStabilizationTime: &schema.Schema{
+			"server_stabilization_time": &schema.Schema{
 				Type:     schema.TypeString,
 				Optional: true,
 				Default:  "10s",
 			},
-			consulAutopilotConfigRedundancyZoneTag: &schema.Schema{
+			"redundancy_zone_tag": &schema.Schema{
 				Type:     schema.TypeString,
 				Optional: true,
 				Default:  "",
 			},
-			consulAutopilotConfigDisableUpgradeMigration: {
+			"disable_upgrade_migration": {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Default:  false,
 			},
-			consulAutopilotConfigUpgradeVersionTag: {
+			"upgrade_version_tag": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Default:  "",
@@ -89,23 +78,23 @@ func resourceConsulAutopilotConfigUpdate(d *schema.ResourceData, meta interface{
 		}
 	}
 
-	lastContactThreshold, err := time.ParseDuration(d.Get(consulAutopilotConfigLastContactThreshold).(string))
+	lastContactThreshold, err := time.ParseDuration(d.Get("last_contact_threshold").(string))
 	if err != nil {
-		return fmt.Errorf("Could not parse '%v': %v", consulAutopilotConfigLastContactThreshold, err)
+		return fmt.Errorf("Could not parse '%v': %v", "last_contact_threshold", err)
 	}
-	serverStabilizationTime, err := time.ParseDuration(d.Get(consulAutopilotConfigServerStabilizationTime).(string))
+	serverStabilizationTime, err := time.ParseDuration(d.Get("server_stabilization_time").(string))
 	if err != nil {
-		return fmt.Errorf("Could not parse '%v': %v", consulAutopilotConfigServerStabilizationTime, err)
+		return fmt.Errorf("Could not parse '%v': %v", "server_stabilization_time", err)
 	}
 
 	config := &consulapi.AutopilotConfiguration{
-		CleanupDeadServers:      d.Get(consulAutopilotConfigCleanupDeadServers).(bool),
+		CleanupDeadServers:      d.Get("cleanup_dead_servers").(bool),
 		LastContactThreshold:    consulapi.NewReadableDuration(lastContactThreshold),
-		MaxTrailingLogs:         uint64(d.Get(consulAutopilotConfigMaxTrailingLogs).(int)),
+		MaxTrailingLogs:         uint64(d.Get("max_trailing_logs").(int)),
 		ServerStabilizationTime: consulapi.NewReadableDuration(serverStabilizationTime),
-		RedundancyZoneTag:       d.Get(consulAutopilotConfigRedundancyZoneTag).(string),
-		DisableUpgradeMigration: d.Get(consulAutopilotConfigDisableUpgradeMigration).(bool),
-		UpgradeVersionTag:       d.Get(consulAutopilotConfigUpgradeVersionTag).(string),
+		RedundancyZoneTag:       d.Get("redundancy_zone_tag").(string),
+		DisableUpgradeMigration: d.Get("disable_upgrade_migration").(bool),
+		UpgradeVersionTag:       d.Get("upgrade_version_tag").(string),
 	}
 	wOpts := &consulapi.WriteOptions{
 		Datacenter: dc,
@@ -134,13 +123,13 @@ func resourceConsulAutopilotConfigRead(d *schema.ResourceData, meta interface{})
 
 	d.SetId(fmt.Sprintf("consul-autopilot-%s", dc))
 
-	d.Set(consulAutopilotConfigCleanupDeadServers, config.CleanupDeadServers)
-	d.Set(consulAutopilotConfigLastContactThreshold, config.LastContactThreshold)
-	d.Set(consulAutopilotConfigMaxTrailingLogs, config.MaxTrailingLogs)
-	d.Set(consulAutopilotConfigServerStabilizationTime, config.ServerStabilizationTime)
-	d.Set(consulAutopilotConfigRedundancyZoneTag, config.RedundancyZoneTag)
-	d.Set(consulAutopilotConfigDisableUpgradeMigration, config.DisableUpgradeMigration)
-	d.Set(consulAutopilotConfigUpgradeVersionTag, config.UpgradeVersionTag)
+	d.Set("cleanup_dead_servers", config.CleanupDeadServers)
+	d.Set("last_contact_threshold", config.LastContactThreshold)
+	d.Set("max_trailing_logs", config.MaxTrailingLogs)
+	d.Set("server_stabilization_time", config.ServerStabilizationTime)
+	d.Set("redundancy_zone_tag", config.RedundancyZoneTag)
+	d.Set("disable_upgrade_migration", config.DisableUpgradeMigration)
+	d.Set("upgrade_version_tag", config.UpgradeVersionTag)
 
 	return nil
 }
