@@ -8,94 +8,75 @@ import (
 	"github.com/hashicorp/terraform/helper/schema"
 )
 
-const (
-	autopilotHealthDatacenter        = "datacenter"
-	autopilotHealthHealthy           = "healthy"
-	autopilotHealthFailureTolerance  = "failure_tolerance"
-	autopilotHealthServers           = "servers"
-	autopilotHealthServerID          = "id"
-	autopilotHealthServerName        = "name"
-	autopilotHealthServerAddress     = "address"
-	autopilotHealthServerSerfStatus  = "serf_status"
-	autopilotHealthServerVersion     = "version"
-	autopilotHealthServerLeader      = "leader"
-	autopilotHealthServerLastContact = "last_contact"
-	autopilotHealthServerLastTerm    = "last_term"
-	autopilotHealthServerLastIndex   = "last_index"
-	autopilotHealthServerHealthy     = "healthy"
-	autopilotHealthServerVoter       = "voter"
-	autopilotHealthServerStableSince = "stable_since"
-)
-
 func dataSourceConsulAutopilotHealth() *schema.Resource {
 	return &schema.Resource{
 		Read: dataSourceConsulAutopilotHealthRead,
 		Schema: map[string]*schema.Schema{
 			// Filters
-			autopilotHealthDatacenter: &schema.Schema{
+			"datacenter": &schema.Schema{
 				Optional: true,
 				Type:     schema.TypeString,
 			},
 
 			// Out parameters
-			autopilotHealthHealthy: &schema.Schema{
+			"healthy": &schema.Schema{
 				Computed: true,
 				Type:     schema.TypeBool,
 			},
-			autopilotHealthFailureTolerance: &schema.Schema{
+			"failure_tolerance": &schema.Schema{
 				Computed: true,
 				Type:     schema.TypeInt,
 			},
-			autopilotHealthServers: &schema.Schema{
+			"servers": &schema.Schema{
 				Computed: true,
 				Type:     schema.TypeList,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						autopilotHealthServerID: &schema.Schema{
+						"id": &schema.Schema{
 							Computed: true,
 							Type:     schema.TypeString,
 						},
-						autopilotHealthServerName: &schema.Schema{
+						"name": &schema.Schema{
 							Computed: true,
 							Type:     schema.TypeString,
 						},
-						autopilotHealthServerAddress: &schema.Schema{
+						"address": &schema.Schema{
 							Computed: true,
 							Type:     schema.TypeString,
 						},
-						autopilotHealthServerSerfStatus: &schema.Schema{
+						"serf_status": &schema.Schema{
 							Computed: true,
 							Type:     schema.TypeString,
 						},
-						autopilotHealthServerVersion: &schema.Schema{
+						"version": &schema.Schema{
 							Computed: true,
 							Type:     schema.TypeString,
 						},
-						autopilotHealthServerLeader: &schema.Schema{
+						"leader": &schema.Schema{
 							Computed: true,
 							Type:     schema.TypeBool,
 						},
-						autopilotHealthServerLastContact: &schema.Schema{
+						"last_contact": &schema.Schema{
 							Computed: true,
 							Type:     schema.TypeString,
 						},
-						autopilotHealthServerLastTerm: &schema.Schema{
+						"last_term": &schema.Schema{
 							Computed: true,
 							Type:     schema.TypeInt,
 						},
-						autopilotHealthServerLastIndex: &schema.Schema{
+						"last_index": &schema.Schema{
 							Computed: true,
 							Type:     schema.TypeInt,
 						},
-						autopilotHealthServerHealthy: &schema.Schema{
+						"healthy": &schema.Schema{
 							Computed: true,
 							Type:     schema.TypeBool,
 						},
-						autopilotHealthServerVoter: &schema.Schema{
+						"voter": &schema.Schema{
 							Computed: true,
 							Type:     schema.TypeBool,
 						},
-						autopilotHealthServerStableSince: &schema.Schema{
+						"stable_since": &schema.Schema{
 							Computed: true,
 							Type:     schema.TypeString,
 						},
@@ -111,7 +92,7 @@ func dataSourceConsulAutopilotHealthRead(d *schema.ResourceData, meta interface{
 	operator := client.Operator()
 
 	queryOpts, err := getQueryOpts(d, client)
-	if datacenter, ok := d.GetOk(autopilotHealthDatacenter); ok {
+	if datacenter, ok := d.GetOk("datacenter"); ok {
 		queryOpts.Datacenter = datacenter.(string)
 	}
 
@@ -129,18 +110,18 @@ func dataSourceConsulAutopilotHealthRead(d *schema.ResourceData, meta interface{
 	for _, server := range health.Servers {
 		h := make(map[string]interface{}, 12)
 
-		h[autopilotHealthServerID] = server.ID
-		h[autopilotHealthServerName] = server.Name
-		h[autopilotHealthServerAddress] = server.Address
-		h[autopilotHealthServerSerfStatus] = server.SerfStatus
-		h[autopilotHealthServerVersion] = server.Version
-		h[autopilotHealthServerLeader] = server.Leader
-		h[autopilotHealthServerLastContact] = server.LastContact.String()
-		h[autopilotHealthServerLastTerm] = server.LastTerm
-		h[autopilotHealthServerLastIndex] = server.LastIndex
-		h[autopilotHealthServerHealthy] = server.Healthy
-		h[autopilotHealthServerVoter] = server.Voter
-		h[autopilotHealthServerStableSince] = server.StableSince.String()
+		h["id"] = server.ID
+		h["name"] = server.Name
+		h["address"] = server.Address
+		h["serf_status"] = server.SerfStatus
+		h["version"] = server.Version
+		h["leader"] = server.Leader
+		h["last_contact"] = server.LastContact.String()
+		h["last_term"] = server.LastTerm
+		h["last_index"] = server.LastIndex
+		h["healthy"] = server.Healthy
+		h["voter"] = server.Voter
+		h["stable_since"] = server.StableSince.String()
 
 		serversHealth = append(serversHealth, h)
 	}
