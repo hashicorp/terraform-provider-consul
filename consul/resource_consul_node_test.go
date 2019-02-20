@@ -23,7 +23,7 @@ func TestAccConsulNode_basic(t *testing.T) {
 					testAccCheckConsulNodeValue("consul_node.foo", "name", "foo"),
 				),
 			},
-			resource.TestStep{
+			{
 				PreConfig: testAccRemoveConsulNode(t),
 				Config:    testAccConsulNodeConfigBasic,
 				Check: resource.ComposeTestCheckFunc(
