@@ -119,15 +119,17 @@ func (t *DestroyEdgeTransformer) Transform(g *Graph) error {
 		return &NodeApplyableProvider{NodeAbstractProvider: a}
 	}
 	steps := []GraphTransformer{
-		// Add the local values
-		&LocalTransformer{Module: t.Module},
-
 		// Add outputs and metadata
 		&OutputTransformer{Module: t.Module},
 		&AttachResourceConfigTransformer{Module: t.Module},
 		&AttachStateTransformer{State: t.State},
 
-		TransformProviders(nil, providerFn, t.Module),
+		// Add providers since they can affect destroy order as well
+		&MissingProviderTransformer{AllowAny: true, Concrete: providerFn},
+		&ProviderTransformer{},
+		&DisableProviderTransformer{},
+		&ParentProviderTransformer{},
+		&AttachProviderConfigTransformer{Module: t.Module},
 
 		// Add all the variables. We can depend on resources through
 		// variables due to module parameters, and we need to properly

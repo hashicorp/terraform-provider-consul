@@ -5,8 +5,6 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/hashicorp/terraform/tfdiags"
-
 	"github.com/hashicorp/hil/ast"
 )
 
@@ -16,21 +14,6 @@ import (
 // variables can come from: user variables, resources, etc.
 type InterpolatedVariable interface {
 	FullKey() string
-	SourceRange() tfdiags.SourceRange
-}
-
-// varRange can be embedded into an InterpolatedVariable implementation to
-// implement the SourceRange method.
-type varRange struct {
-	rng tfdiags.SourceRange
-}
-
-func (r varRange) SourceRange() tfdiags.SourceRange {
-	return r.rng
-}
-
-func makeVarRange(rng tfdiags.SourceRange) varRange {
-	return varRange{rng}
 }
 
 // CountVariable is a variable for referencing information about
@@ -38,7 +21,6 @@ func makeVarRange(rng tfdiags.SourceRange) varRange {
 type CountVariable struct {
 	Type CountValueType
 	key  string
-	varRange
 }
 
 // CountValueType is the type of the count variable that is referenced.
@@ -55,7 +37,6 @@ type ModuleVariable struct {
 	Name  string
 	Field string
 	key   string
-	varRange
 }
 
 // A PathVariable is a variable that references path information about the
@@ -63,7 +44,6 @@ type ModuleVariable struct {
 type PathVariable struct {
 	Type PathValueType
 	key  string
-	varRange
 }
 
 type PathValueType byte
@@ -87,7 +67,6 @@ type ResourceVariable struct {
 	Index int  // Index for multi-variable: aws_instance.foo.1.id == 1
 
 	key string
-	varRange
 }
 
 // SelfVariable is a variable that is referencing the same resource
@@ -96,7 +75,6 @@ type SelfVariable struct {
 	Field string
 
 	key string
-	varRange
 }
 
 // SimpleVariable is an unprefixed variable, which can show up when users have
@@ -104,7 +82,6 @@ type SelfVariable struct {
 // internally. The template_file resource is an example of this.
 type SimpleVariable struct {
 	Key string
-	varRange
 }
 
 // TerraformVariable is a "terraform."-prefixed variable used to access
@@ -112,7 +89,6 @@ type SimpleVariable struct {
 type TerraformVariable struct {
 	Field string
 	key   string
-	varRange
 }
 
 // A UserVariable is a variable that is referencing a user variable
@@ -123,14 +99,6 @@ type UserVariable struct {
 	Elem string
 
 	key string
-	varRange
-}
-
-// A LocalVariable is a variable that references a local value defined within
-// the current module, via a "locals" block. This looks like "${local.foo}".
-type LocalVariable struct {
-	Name string
-	varRange
 }
 
 func NewInterpolatedVariable(v string) (InterpolatedVariable, error) {
@@ -144,8 +112,6 @@ func NewInterpolatedVariable(v string) (InterpolatedVariable, error) {
 		return NewTerraformVariable(v)
 	} else if strings.HasPrefix(v, "var.") {
 		return NewUserVariable(v)
-	} else if strings.HasPrefix(v, "local.") {
-		return NewLocalVariable(v)
 	} else if strings.HasPrefix(v, "module.") {
 		return NewModuleVariable(v)
 	} else if !strings.ContainsRune(v, '.') {
@@ -310,7 +276,7 @@ func (v *SelfVariable) GoString() string {
 }
 
 func NewSimpleVariable(key string) (*SimpleVariable, error) {
-	return &SimpleVariable{Key: key}, nil
+	return &SimpleVariable{key}, nil
 }
 
 func (v *SimpleVariable) FullKey() string {
@@ -362,25 +328,6 @@ func (v *UserVariable) FullKey() string {
 }
 
 func (v *UserVariable) GoString() string {
-	return fmt.Sprintf("*%#v", *v)
-}
-
-func NewLocalVariable(key string) (*LocalVariable, error) {
-	name := key[len("local."):]
-	if idx := strings.Index(name, "."); idx > -1 {
-		return nil, fmt.Errorf("Can't use dot (.) attribute access in local.%s; use square bracket indexing", name)
-	}
-
-	return &LocalVariable{
-		Name: name,
-	}, nil
-}
-
-func (v *LocalVariable) FullKey() string {
-	return fmt.Sprintf("local.%s", v.Name)
-}
-
-func (v *LocalVariable) GoString() string {
 	return fmt.Sprintf("*%#v", *v)
 }
 

@@ -27,7 +27,6 @@ func (n *NodePlannableResource) DynamicExpand(ctx EvalContext) (*Graph, error) {
 	concreteResource := func(a *NodeAbstractResource) dag.Vertex {
 		// Add the config and state since we don't do that via transforms
 		a.Config = n.Config
-		a.ResolvedProvider = n.ResolvedProvider
 
 		return &NodePlannableResourceInstance{
 			NodeAbstractResource: a,
@@ -38,7 +37,6 @@ func (n *NodePlannableResource) DynamicExpand(ctx EvalContext) (*Graph, error) {
 	concreteResourceOrphan := func(a *NodeAbstractResource) dag.Vertex {
 		// Add the config and state since we don't do that via transforms
 		a.Config = n.Config
-		a.ResolvedProvider = n.ResolvedProvider
 
 		return &NodePlannableResourceOrphan{
 			NodeAbstractResource: a,

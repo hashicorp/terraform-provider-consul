@@ -2,7 +2,6 @@ package terraform
 
 import (
 	"fmt"
-	"strings"
 
 	"github.com/hashicorp/terraform/config"
 	"github.com/hashicorp/terraform/dag"
@@ -25,22 +24,13 @@ type NodeAbstractProvider struct {
 	Config *config.ProviderConfig
 }
 
-func ResolveProviderName(name string, path []string) string {
-	if strings.Contains(name, "provider.") {
-		// already resolved
-		return name
-	}
-
-	name = fmt.Sprintf("provider.%s", name)
-	if len(path) >= 1 {
-		name = fmt.Sprintf("%s.%s", modulePrefixStr(path), name)
-	}
-
-	return name
-}
-
 func (n *NodeAbstractProvider) Name() string {
-	return ResolveProviderName(n.NameValue, n.PathValue)
+	result := fmt.Sprintf("provider.%s", n.NameValue)
+	if len(n.PathValue) > 1 {
+		result = fmt.Sprintf("%s.%s", modulePrefixStr(n.PathValue), result)
+	}
+
+	return result
 }
 
 // GraphNodeSubPath
@@ -70,12 +60,12 @@ func (n *NodeAbstractProvider) ProviderName() string {
 }
 
 // GraphNodeProvider
-func (n *NodeAbstractProvider) ProviderConfig() *config.ProviderConfig {
+func (n *NodeAbstractProvider) ProviderConfig() *config.RawConfig {
 	if n.Config == nil {
 		return nil
 	}
 
-	return n.Config
+	return n.Config.RawConfig
 }
 
 // GraphNodeAttachProvider

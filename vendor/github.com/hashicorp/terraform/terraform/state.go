@@ -9,7 +9,6 @@ import (
 	"io"
 	"io/ioutil"
 	"log"
-	"os"
 	"reflect"
 	"sort"
 	"strconv"
@@ -17,12 +16,10 @@ import (
 	"sync"
 
 	"github.com/hashicorp/go-multierror"
-	"github.com/hashicorp/go-uuid"
 	"github.com/hashicorp/go-version"
 	"github.com/hashicorp/terraform/config"
 	"github.com/mitchellh/copystructure"
-
-	tfversion "github.com/hashicorp/terraform/version"
+	"github.com/satori/go.uuid"
 )
 
 const (
@@ -667,7 +664,7 @@ func (s *State) FromFutureTerraform() bool {
 	}
 
 	v := version.Must(version.NewVersion(s.TFVersion))
-	return tfversion.SemVer.LessThan(v)
+	return SemVersion.LessThan(v)
 }
 
 func (s *State) Init() {
@@ -707,11 +704,7 @@ func (s *State) EnsureHasLineage() {
 
 func (s *State) ensureHasLineage() {
 	if s.Lineage == "" {
-		lineage, err := uuid.GenerateUUID()
-		if err != nil {
-			panic(fmt.Errorf("Failed to generate lineage: %v", err))
-		}
-		s.Lineage = lineage
+		s.Lineage = uuid.NewV4().String()
 		log.Printf("[DEBUG] New state was assigned lineage %q\n", s.Lineage)
 	} else {
 		log.Printf("[TRACE] Preserving existing state lineage %q\n", s.Lineage)
@@ -984,10 +977,6 @@ type ModuleState struct {
 	// always disjoint, so the path represents amodule tree
 	Path []string `json:"path"`
 
-	// Locals are kept only transiently in-memory, because we can always
-	// re-compute them.
-	Locals map[string]interface{} `json:"-"`
-
 	// Outputs declared by the module and maintained for each module
 	// even though only the root module technically needs to be kept.
 	// This allows operators to inspect values at the boundaries.
@@ -1094,7 +1083,7 @@ func (m *ModuleState) Orphans(c *config.Config) []string {
 	defer m.Unlock()
 
 	keys := make(map[string]struct{})
-	for k := range m.Resources {
+	for k, _ := range m.Resources {
 		keys[k] = struct{}{}
 	}
 
@@ -1102,7 +1091,7 @@ func (m *ModuleState) Orphans(c *config.Config) []string {
 		for _, r := range c.Resources {
 			delete(keys, r.Id())
 
-			for k := range keys {
+			for k, _ := range keys {
 				if strings.HasPrefix(k, r.Id()+".") {
 					delete(keys, k)
 				}
@@ -1111,32 +1100,7 @@ func (m *ModuleState) Orphans(c *config.Config) []string {
 	}
 
 	result := make([]string, 0, len(keys))
-	for k := range keys {
-		result = append(result, k)
-	}
-
-	return result
-}
-
-// RemovedOutputs returns a list of outputs that are in the State but aren't
-// present in the configuration itself.
-func (m *ModuleState) RemovedOutputs(c *config.Config) []string {
-	m.Lock()
-	defer m.Unlock()
-
-	keys := make(map[string]struct{})
-	for k := range m.Outputs {
-		keys[k] = struct{}{}
-	}
-
-	if c != nil {
-		for _, o := range c.Outputs {
-			delete(keys, o.Name)
-		}
-	}
-
-	result := make([]string, 0, len(keys))
-	for k := range keys {
+	for k, _ := range keys {
 		result = append(result, k)
 	}
 
@@ -1342,10 +1306,6 @@ func (m *ModuleState) String() string {
 	}
 
 	return buf.String()
-}
-
-func (m *ModuleState) Empty() bool {
-	return len(m.Locals) == 0 && len(m.Outputs) == 0 && len(m.Resources) == 0
 }
 
 // ResourceStateKey is a structured representation of the key used for the
@@ -1721,20 +1681,7 @@ func (s *InstanceState) Equal(other *InstanceState) bool {
 		// We only do the deep check if both are non-nil. If one is nil
 		// we treat it as equal since their lengths are both zero (check
 		// above).
-		//
-		// Since this can contain numeric values that may change types during
-		// serialization, let's compare the serialized values.
-		sMeta, err := json.Marshal(s.Meta)
-		if err != nil {
-			// marshaling primitives shouldn't ever error out
-			panic(err)
-		}
-		otherMeta, err := json.Marshal(other.Meta)
-		if err != nil {
-			panic(err)
-		}
-
-		if !bytes.Equal(sMeta, otherMeta) {
+		if !reflect.DeepEqual(s.Meta, other.Meta) {
 			return false
 		}
 	}
@@ -1877,19 +1824,11 @@ var ErrNoState = errors.New("no state")
 // ReadState reads a state structure out of a reader in the format that
 // was written by WriteState.
 func ReadState(src io.Reader) (*State, error) {
-	// check for a nil file specifically, since that produces a platform
-	// specific error if we try to use it in a bufio.Reader.
-	if f, ok := src.(*os.File); ok && f == nil {
-		return nil, ErrNoState
-	}
-
 	buf := bufio.NewReader(src)
-
 	if _, err := buf.Peek(1); err != nil {
-		if err == io.EOF {
-			return nil, ErrNoState
-		}
-		return nil, err
+		// the error is either io.EOF or "invalid argument", and both are from
+		// an empty state.
+		return nil, ErrNoState
 	}
 
 	if err := testForV0State(buf); err != nil {
@@ -1952,7 +1891,7 @@ func ReadState(src io.Reader) (*State, error) {
 		result = v3State
 	default:
 		return nil, fmt.Errorf("Terraform %s does not support state version %d, please update.",
-			tfversion.SemVer.String(), versionIdentifier.Version)
+			SemVersion.String(), versionIdentifier.Version)
 	}
 
 	// If we reached this place we must have a result set
@@ -1996,7 +1935,7 @@ func ReadStateV2(jsonBytes []byte) (*State, error) {
 	// version that we don't understand
 	if state.Version > StateVersion {
 		return nil, fmt.Errorf("Terraform %s does not support state version %d, please update.",
-			tfversion.SemVer.String(), state.Version)
+			SemVersion.String(), state.Version)
 	}
 
 	// Make sure the version is semantic
@@ -2031,7 +1970,7 @@ func ReadStateV3(jsonBytes []byte) (*State, error) {
 	// version that we don't understand
 	if state.Version > StateVersion {
 		return nil, fmt.Errorf("Terraform %s does not support state version %d, please update.",
-			tfversion.SemVer.String(), state.Version)
+			SemVersion.String(), state.Version)
 	}
 
 	// Make sure the version is semantic
@@ -2187,19 +2126,6 @@ func (s moduleStateSort) Swap(i, j int) {
 	s[i], s[j] = s[j], s[i]
 }
 
-// StateCompatible returns an error if the state is not compatible with the
-// current version of terraform.
-func CheckStateVersion(state *State) error {
-	if state == nil {
-		return nil
-	}
-
-	if state.FromFutureTerraform() {
-		return fmt.Errorf(stateInvalidTerraformVersionErr, state.TFVersion)
-	}
-	return nil
-}
-
 const stateValidateErrMultiModule = `
 Multiple modules with the same path: %s
 
@@ -2207,12 +2133,4 @@ This means that there are multiple entries in the "modules" field
 in your state file that point to the same module. This will cause Terraform
 to behave in unexpected and error prone ways and is invalid. Please back up
 and modify your state file manually to resolve this.
-`
-
-const stateInvalidTerraformVersionErr = `
-Terraform doesn't allow running any operations against a state
-that was written by a future Terraform version. The state is
-reporting it is written by Terraform '%s'
-
-Please run at least that version of Terraform to continue.
 `

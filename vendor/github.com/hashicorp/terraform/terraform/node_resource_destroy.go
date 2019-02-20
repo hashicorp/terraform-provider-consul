@@ -102,9 +102,8 @@ func (n *NodeDestroyResource) DynamicExpand(ctx EvalContext) (*Graph, error) {
 
 	// We want deposed resources in the state to be destroyed
 	steps = append(steps, &DeposedTransformer{
-		State:            state,
-		View:             n.Addr.stateId(),
-		ResolvedProvider: n.ResolvedProvider,
+		State: state,
+		View:  n.Addr.stateId(),
 	})
 
 	// Target
@@ -149,9 +148,7 @@ func (n *NodeDestroyResource) EvalTree() EvalNode {
 	// Get our state
 	rs := n.ResourceState
 	if rs == nil {
-		rs = &ResourceState{
-			Provider: n.ResolvedProvider,
-		}
+		rs = &ResourceState{}
 	}
 
 	var diffApply *InstanceDiff
@@ -191,7 +188,7 @@ func (n *NodeDestroyResource) EvalTree() EvalNode {
 				&EvalInstanceInfo{Info: info},
 
 				&EvalGetProvider{
-					Name:   n.ResolvedProvider,
+					Name:   n.ProvidedBy()[0],
 					Output: &provider,
 				},
 				&EvalReadState{
@@ -275,7 +272,7 @@ func (n *NodeDestroyResource) EvalTree() EvalNode {
 				&EvalWriteState{
 					Name:         stateId,
 					ResourceType: n.Addr.Type,
-					Provider:     n.ResolvedProvider,
+					Provider:     rs.Provider,
 					Dependencies: rs.Dependencies,
 					State:        &state,
 				},

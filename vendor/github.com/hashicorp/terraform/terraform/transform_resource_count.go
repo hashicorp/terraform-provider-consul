@@ -37,9 +37,7 @@ func (t *ResourceCountTransformer) Transform(g *Graph) error {
 		addr.Index = index
 
 		// Build the abstract node and the concrete one
-		abstract := &NodeAbstractResource{
-			Addr: addr,
-		}
+		abstract := &NodeAbstractResource{Addr: addr}
 		var node dag.Vertex = abstract
 		if f := t.Concrete; f != nil {
 			node = f(abstract)

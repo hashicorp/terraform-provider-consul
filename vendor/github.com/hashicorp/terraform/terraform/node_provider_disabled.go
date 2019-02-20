@@ -20,7 +20,7 @@ func (n *NodeDisabledProvider) EvalTree() EvalNode {
 	var resourceConfig *ResourceConfig
 	return &EvalSequence{
 		Nodes: []EvalNode{
-			&EvalInterpolateProvider{
+			&EvalInterpolate{
 				Config: n.ProviderConfig(),
 				Output: &resourceConfig,
 			},
@@ -28,6 +28,10 @@ func (n *NodeDisabledProvider) EvalTree() EvalNode {
 				Provider: n.ProviderName(),
 				Config:   &resourceConfig,
 				Output:   &resourceConfig,
+			},
+			&EvalSetProviderConfig{
+				Provider: n.ProviderName(),
+				Config:   &resourceConfig,
 			},
 		},
 	}

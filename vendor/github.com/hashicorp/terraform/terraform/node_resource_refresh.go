@@ -30,7 +30,6 @@ func (n *NodeRefreshableManagedResource) DynamicExpand(ctx EvalContext) (*Graph,
 	concreteResource := func(a *NodeAbstractResource) dag.Vertex {
 		// Add the config and state since we don't do that via transforms
 		a.Config = n.Config
-		a.ResolvedProvider = n.ResolvedProvider
 
 		return &NodeRefreshableManagedResourceInstance{
 			NodeAbstractResource: a,
@@ -150,7 +149,7 @@ func (n *NodeRefreshableManagedResourceInstance) evalTreeManagedResource() EvalN
 	return &EvalSequence{
 		Nodes: []EvalNode{
 			&EvalGetProvider{
-				Name:   n.ResolvedProvider,
+				Name:   n.ProvidedBy()[0],
 				Output: &provider,
 			},
 			&EvalReadState{
@@ -166,7 +165,7 @@ func (n *NodeRefreshableManagedResourceInstance) evalTreeManagedResource() EvalN
 			&EvalWriteState{
 				Name:         stateId,
 				ResourceType: n.ResourceState.Type,
-				Provider:     n.ResolvedProvider,
+				Provider:     n.ResourceState.Provider,
 				Dependencies: n.ResourceState.Dependencies,
 				State:        &state,
 			},
@@ -213,21 +212,15 @@ func (n *NodeRefreshableManagedResourceInstance) evalTreeManagedResourceNoState(
 	// Determine the dependencies for the state.
 	stateDeps := n.StateReferences()
 
-	// n.Config can be nil if the config and state don't match
-	var raw *config.RawConfig
-	if n.Config != nil {
-		raw = n.Config.RawConfig.Copy()
-	}
-
 	return &EvalSequence{
 		Nodes: []EvalNode{
 			&EvalInterpolate{
-				Config:   raw,
+				Config:   n.Config.RawConfig.Copy(),
 				Resource: resource,
 				Output:   &resourceConfig,
 			},
 			&EvalGetProvider{
-				Name:   n.ResolvedProvider,
+				Name:   n.ProvidedBy()[0],
 				Output: &provider,
 			},
 			// Re-run validation to catch any errors we missed, e.g. type
@@ -257,7 +250,7 @@ func (n *NodeRefreshableManagedResourceInstance) evalTreeManagedResourceNoState(
 			&EvalWriteState{
 				Name:         stateID,
 				ResourceType: n.Config.Type,
-				Provider:     n.ResolvedProvider,
+				Provider:     n.Config.Provider,
 				Dependencies: stateDeps,
 				State:        &state,
 			},

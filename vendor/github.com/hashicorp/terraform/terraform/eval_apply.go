@@ -112,7 +112,7 @@ func (n *EvalApplyPre) Eval(ctx EvalContext) (interface{}, error) {
 	}
 	state.init()
 
-	if resourceHasUserVisibleApply(n.Info) {
+	{
 		// Call post-apply hook
 		err := ctx.Hook(func(h Hook) (HookAction, error) {
 			return h.PreApply(n.Info, state, diff)
@@ -136,7 +136,7 @@ type EvalApplyPost struct {
 func (n *EvalApplyPost) Eval(ctx EvalContext) (interface{}, error) {
 	state := *n.State
 
-	if resourceHasUserVisibleApply(n.Info) {
+	{
 		// Call post-apply hook
 		err := ctx.Hook(func(h Hook) (HookAction, error) {
 			return h.PostApply(n.Info, state, *n.Error)
@@ -147,22 +147,6 @@ func (n *EvalApplyPost) Eval(ctx EvalContext) (interface{}, error) {
 	}
 
 	return nil, *n.Error
-}
-
-// resourceHasUserVisibleApply returns true if the given resource is one where
-// apply actions should be exposed to the user.
-//
-// Certain resources do apply actions only as an implementation detail, so
-// these should not be advertised to code outside of this package.
-func resourceHasUserVisibleApply(info *InstanceInfo) bool {
-	addr := info.ResourceAddress()
-
-	// Only managed resources have user-visible apply actions.
-	// In particular, this excludes data resources since we "apply" these
-	// only as an implementation detail of removing them from state when
-	// they are destroyed. (When reading, they don't get here at all because
-	// we present them as "Refresh" actions.)
-	return addr.Mode == config.ManagedResourceMode
 }
 
 // EvalApplyProvisioners is an EvalNode implementation that executes
@@ -227,8 +211,11 @@ func (n *EvalApplyProvisioners) Eval(ctx EvalContext) (interface{}, error) {
 			state.Tainted = true
 		}
 
-		*n.Error = multierror.Append(*n.Error, err)
-		return nil, err
+		if n.Error != nil {
+			*n.Error = multierror.Append(*n.Error, err)
+		} else {
+			return nil, err
+		}
 	}
 
 	{

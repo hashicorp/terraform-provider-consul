@@ -1,13 +1,14 @@
 package terraform
 
 import (
-	"github.com/hashicorp/terraform/httpclient"
+	"fmt"
+	"runtime"
 )
 
+// The standard Terraform User-Agent format
+const UserAgent = "Terraform %s (%s)"
+
 // Generate a UserAgent string
-//
-// Deprecated: Use httpclient.UserAgentString if you are setting your
-// own User-Agent header.
 func UserAgentString() string {
-	return httpclient.UserAgentString()
+	return fmt.Sprintf(UserAgent, VersionString(), runtime.Version())
 }

@@ -23,12 +23,6 @@ const (
 	DiffUpdate
 	DiffDestroy
 	DiffDestroyCreate
-
-	// DiffRefresh is only used in the UI for displaying diffs.
-	// Managed resource reads never appear in plan, and when data source
-	// reads appear they are represented as DiffCreate in core before
-	// transforming to DiffRefresh in the UI layer.
-	DiffRefresh // TODO: Actually use DiffRefresh in core too, for less confusion
 )
 
 // multiVal matches the index key to a flatmapped set, list or map
@@ -837,14 +831,7 @@ func (d *InstanceDiff) Same(d2 *InstanceDiff) (bool, string) {
 			}
 		}
 
-		// We don't compare the values because we can't currently actually
-		// guarantee to generate the same value two two diffs created from
-		// the same state+config: we have some pesky interpolation functions
-		// that do not behave as pure functions (uuid, timestamp) and so they
-		// can be different each time a diff is produced.
-		// FIXME: Re-organize our config handling so that we don't re-evaluate
-		// expressions when we produce a second comparison diff during
-		// apply (for EvalCompareDiff).
+		// TODO: check for the same value if not computed
 	}
 
 	// Check for leftover attributes

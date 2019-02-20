@@ -11,13 +11,11 @@ import (
 	"reflect"
 	"regexp"
 	"strings"
-	"syscall"
 	"testing"
 
 	"github.com/davecgh/go-spew/spew"
-	"github.com/hashicorp/errwrap"
+	"github.com/hashicorp/go-getter"
 	"github.com/hashicorp/go-multierror"
-	"github.com/hashicorp/logutils"
 	"github.com/hashicorp/terraform/config/module"
 	"github.com/hashicorp/terraform/helper/logging"
 	"github.com/hashicorp/terraform/terraform"
@@ -188,10 +186,6 @@ type TestCheckFunc func(*terraform.State) error
 // ImportStateCheckFunc is the check function for ImportState tests
 type ImportStateCheckFunc func([]*terraform.InstanceState) error
 
-// ImportStateIdFunc is an ID generation function to help with complex ID
-// generation for ImportState tests.
-type ImportStateIdFunc func(*terraform.State) (string, error)
-
 // TestCase is a single acceptance test case used to test the apply/destroy
 // lifecycle of a resource in a specific configuration.
 //
@@ -310,18 +304,9 @@ type TestStep struct {
 	// no-op plans
 	PlanOnly bool
 
-	// PreventDiskCleanup can be set to true for testing terraform modules which
-	// require access to disk at runtime. Note that this will leave files in the
-	// temp folder
-	PreventDiskCleanup bool
-
 	// PreventPostDestroyRefresh can be set to true for cases where data sources
 	// are tested alongside real resources
 	PreventPostDestroyRefresh bool
-
-	// SkipFunc is called before applying config, but after PreConfig
-	// This is useful for defining test steps with platform-dependent checks
-	SkipFunc func() (bool, error)
 
 	//---------------------------------------------------------------
 	// ImportState testing
@@ -344,12 +329,6 @@ type TestStep struct {
 	// the unset ImportStateId field.
 	ImportStateIdPrefix string
 
-	// ImportStateIdFunc is a function that can be used to dynamically generate
-	// the ID for the ImportState tests. It is sent the state, which can be
-	// checked to derive the attributes necessary and generate the string in the
-	// desired format.
-	ImportStateIdFunc ImportStateIdFunc
-
 	// ImportStateCheck checks the results of ImportState. It should be
 	// used to verify that the resulting value of ImportState has the
 	// proper resources, IDs, and attributes.
@@ -364,49 +343,6 @@ type TestStep struct {
 	// be refreshed and don't matter.
 	ImportStateVerify       bool
 	ImportStateVerifyIgnore []string
-}
-
-// Set to a file mask in sprintf format where %s is test name
-const EnvLogPathMask = "TF_LOG_PATH_MASK"
-
-func LogOutput(t TestT) (logOutput io.Writer, err error) {
-	logOutput = ioutil.Discard
-
-	logLevel := logging.LogLevel()
-	if logLevel == "" {
-		return
-	}
-
-	logOutput = os.Stderr
-
-	if logPath := os.Getenv(logging.EnvLogFile); logPath != "" {
-		var err error
-		logOutput, err = os.OpenFile(logPath, syscall.O_CREAT|syscall.O_RDWR|syscall.O_APPEND, 0666)
-		if err != nil {
-			return nil, err
-		}
-	}
-
-	if logPathMask := os.Getenv(EnvLogPathMask); logPathMask != "" {
-		// Escape special characters which may appear if we have subtests
-		testName := strings.Replace(t.Name(), "/", "__", -1)
-
-		logPath := fmt.Sprintf(logPathMask, testName)
-		var err error
-		logOutput, err = os.OpenFile(logPath, syscall.O_CREAT|syscall.O_RDWR|syscall.O_APPEND, 0666)
-		if err != nil {
-			return nil, err
-		}
-	}
-
-	// This was the default since the beginning
-	logOutput = &logutils.LevelFilter{
-		Levels:   logging.ValidLevels,
-		MinLevel: logutils.LogLevel(logLevel),
-		Writer:   logOutput,
-	}
-
-	return
 }
 
 // Test performs an acceptance test on a resource.
@@ -430,7 +366,7 @@ func Test(t TestT, c TestCase) {
 		return
 	}
 
-	logWriter, err := LogOutput(t)
+	logWriter, err := logging.LogOutput()
 	if err != nil {
 		t.Error(fmt.Errorf("error setting up logging: %s", err))
 	}
@@ -462,18 +398,7 @@ func Test(t TestT, c TestCase) {
 	errored := false
 	for i, step := range c.Steps {
 		var err error
-		log.Printf("[DEBUG] Test: Executing step %d", i)
-
-		if step.SkipFunc != nil {
-			skip, err := step.SkipFunc()
-			if err != nil {
-				t.Fatal(err)
-			}
-			if skip {
-				log.Printf("[WARN] Skipping step %d", i)
-				continue
-			}
-		}
+		log.Printf("[WARN] Test: Executing step %d", i)
 
 		if step.Config == "" && !step.ImportState {
 			err = fmt.Errorf(
@@ -491,15 +416,6 @@ func Test(t TestT, c TestCase) {
 			} else {
 				state, err = testStepConfig(opts, state, step)
 			}
-		}
-
-		// If we expected an error, but did not get one, fail
-		if err == nil && step.ExpectError != nil {
-			errored = true
-			t.Error(fmt.Sprintf(
-				"Step %d, no error received, but expected a match to:\n\n%s\n\n",
-				i, step.ExpectError))
-			break
 		}
 
 		// If there was an error, exit
@@ -569,7 +485,6 @@ func Test(t TestT, c TestCase) {
 			Config:                    lastStep.Config,
 			Check:                     c.CheckDestroy,
 			Destroy:                   true,
-			PreventDiskCleanup:        lastStep.PreventDiskCleanup,
 			PreventPostDestroyRefresh: c.PreventPostDestroyRefresh,
 		}
 
@@ -678,12 +593,18 @@ func testIDOnlyRefresh(c TestCase, opts terraform.ContextOpts, step TestStep, r 
 	if err != nil {
 		return err
 	}
-	if diags := ctx.Validate(); len(diags) > 0 {
-		if diags.HasErrors() {
-			return errwrap.Wrapf("config is invalid: {{err}}", diags.Err())
+	if ws, es := ctx.Validate(); len(ws) > 0 || len(es) > 0 {
+		if len(es) > 0 {
+			estrs := make([]string, len(es))
+			for i, e := range es {
+				estrs[i] = e.Error()
+			}
+			return fmt.Errorf(
+				"Configuration is invalid.\n\nWarnings: %#v\n\nErrors: %#v",
+				ws, estrs)
 		}
 
-		log.Printf("[WARN] Config warnings:\n%s", diags.Err().Error())
+		log.Printf("[WARN] Config warnings: %#v", ws)
 	}
 
 	// Refresh!
@@ -736,7 +657,9 @@ func testIDOnlyRefresh(c TestCase, opts terraform.ContextOpts, step TestStep, r 
 	return nil
 }
 
-func testModule(opts terraform.ContextOpts, step TestStep) (*module.Tree, error) {
+func testModule(
+	opts terraform.ContextOpts,
+	step TestStep) (*module.Tree, error) {
 	if step.PreConfig != nil {
 		step.PreConfig()
 	}
@@ -746,12 +669,7 @@ func testModule(opts terraform.ContextOpts, step TestStep) (*module.Tree, error)
 		return nil, fmt.Errorf(
 			"Error creating temporary directory for config: %s", err)
 	}
-
-	if step.PreventDiskCleanup {
-		log.Printf("[INFO] Skipping defer os.RemoveAll call")
-	} else {
-		defer os.RemoveAll(cfgPath)
-	}
+	defer os.RemoveAll(cfgPath)
 
 	// Write the configuration
 	cfgF, err := os.Create(filepath.Join(cfgPath, "main.tf"))
@@ -775,11 +693,10 @@ func testModule(opts terraform.ContextOpts, step TestStep) (*module.Tree, error)
 	}
 
 	// Load the modules
-	modStorage := &module.Storage{
+	modStorage := &getter.FolderStorage{
 		StorageDir: filepath.Join(cfgPath, ".tfmodules"),
-		Mode:       module.GetModeGet,
 	}
-	err = mod.Load(modStorage)
+	err = mod.Load(modStorage, module.GetModeGet)
 	if err != nil {
 		return nil, fmt.Errorf("Error downloading modules: %s", err)
 	}
@@ -854,29 +771,12 @@ func TestCheckResourceAttrSet(name, key string) TestCheckFunc {
 			return err
 		}
 
-		return testCheckResourceAttrSet(is, name, key)
-	}
-}
-
-// TestCheckModuleResourceAttrSet - as per TestCheckResourceAttrSet but with
-// support for non-root modules
-func TestCheckModuleResourceAttrSet(mp []string, name string, key string) TestCheckFunc {
-	return func(s *terraform.State) error {
-		is, err := modulePathPrimaryInstanceState(s, mp, name)
-		if err != nil {
-			return err
+		if val, ok := is.Attributes[key]; ok && val != "" {
+			return nil
 		}
 
-		return testCheckResourceAttrSet(is, name, key)
-	}
-}
-
-func testCheckResourceAttrSet(is *terraform.InstanceState, name string, key string) error {
-	if val, ok := is.Attributes[key]; !ok || val == "" {
 		return fmt.Errorf("%s: Attribute '%s' expected to be set", name, key)
 	}
-
-	return nil
 }
 
 // TestCheckResourceAttr is a TestCheckFunc which validates
@@ -888,37 +788,21 @@ func TestCheckResourceAttr(name, key, value string) TestCheckFunc {
 			return err
 		}
 
-		return testCheckResourceAttr(is, name, key, value)
-	}
-}
+		if v, ok := is.Attributes[key]; !ok || v != value {
+			if !ok {
+				return fmt.Errorf("%s: Attribute '%s' not found", name, key)
+			}
 
-// TestCheckModuleResourceAttr - as per TestCheckResourceAttr but with
-// support for non-root modules
-func TestCheckModuleResourceAttr(mp []string, name string, key string, value string) TestCheckFunc {
-	return func(s *terraform.State) error {
-		is, err := modulePathPrimaryInstanceState(s, mp, name)
-		if err != nil {
-			return err
+			return fmt.Errorf(
+				"%s: Attribute '%s' expected %#v, got %#v",
+				name,
+				key,
+				value,
+				v)
 		}
 
-		return testCheckResourceAttr(is, name, key, value)
+		return nil
 	}
-}
-
-func testCheckResourceAttr(is *terraform.InstanceState, name string, key string, value string) error {
-	if v, ok := is.Attributes[key]; !ok || v != value {
-		if !ok {
-			return fmt.Errorf("%s: Attribute '%s' not found", name, key)
-		}
-
-		return fmt.Errorf(
-			"%s: Attribute '%s' expected %#v, got %#v",
-			name,
-			key,
-			value,
-			v)
-	}
-	return nil
 }
 
 // TestCheckNoResourceAttr is a TestCheckFunc which ensures that
@@ -930,29 +814,12 @@ func TestCheckNoResourceAttr(name, key string) TestCheckFunc {
 			return err
 		}
 
-		return testCheckNoResourceAttr(is, name, key)
-	}
-}
-
-// TestCheckModuleNoResourceAttr - as per TestCheckNoResourceAttr but with
-// support for non-root modules
-func TestCheckModuleNoResourceAttr(mp []string, name string, key string) TestCheckFunc {
-	return func(s *terraform.State) error {
-		is, err := modulePathPrimaryInstanceState(s, mp, name)
-		if err != nil {
-			return err
+		if _, ok := is.Attributes[key]; ok {
+			return fmt.Errorf("%s: Attribute '%s' found when not expected", name, key)
 		}
 
-		return testCheckNoResourceAttr(is, name, key)
+		return nil
 	}
-}
-
-func testCheckNoResourceAttr(is *terraform.InstanceState, name string, key string) error {
-	if _, ok := is.Attributes[key]; ok {
-		return fmt.Errorf("%s: Attribute '%s' found when not expected", name, key)
-	}
-
-	return nil
 }
 
 // TestMatchResourceAttr is a TestCheckFunc which checks that the value
@@ -964,34 +831,17 @@ func TestMatchResourceAttr(name, key string, r *regexp.Regexp) TestCheckFunc {
 			return err
 		}
 
-		return testMatchResourceAttr(is, name, key, r)
-	}
-}
-
-// TestModuleMatchResourceAttr - as per TestMatchResourceAttr but with
-// support for non-root modules
-func TestModuleMatchResourceAttr(mp []string, name string, key string, r *regexp.Regexp) TestCheckFunc {
-	return func(s *terraform.State) error {
-		is, err := modulePathPrimaryInstanceState(s, mp, name)
-		if err != nil {
-			return err
+		if !r.MatchString(is.Attributes[key]) {
+			return fmt.Errorf(
+				"%s: Attribute '%s' didn't match %q, got %#v",
+				name,
+				key,
+				r.String(),
+				is.Attributes[key])
 		}
 
-		return testMatchResourceAttr(is, name, key, r)
+		return nil
 	}
-}
-
-func testMatchResourceAttr(is *terraform.InstanceState, name string, key string, r *regexp.Regexp) error {
-	if !r.MatchString(is.Attributes[key]) {
-		return fmt.Errorf(
-			"%s: Attribute '%s' didn't match %q, got %#v",
-			name,
-			key,
-			r.String(),
-			is.Attributes[key])
-	}
-
-	return nil
 }
 
 // TestCheckResourceAttrPtr is like TestCheckResourceAttr except the
@@ -1003,14 +853,6 @@ func TestCheckResourceAttrPtr(name string, key string, value *string) TestCheckF
 	}
 }
 
-// TestCheckModuleResourceAttrPtr - as per TestCheckResourceAttrPtr but with
-// support for non-root modules
-func TestCheckModuleResourceAttrPtr(mp []string, name string, key string, value *string) TestCheckFunc {
-	return func(s *terraform.State) error {
-		return TestCheckModuleResourceAttr(mp, name, key, *value)(s)
-	}
-}
-
 // TestCheckResourceAttrPair is a TestCheckFunc which validates that the values
 // in state for a pair of name/key combinations are equal.
 func TestCheckResourceAttrPair(nameFirst, keyFirst, nameSecond, keySecond string) TestCheckFunc {
@@ -1019,55 +861,31 @@ func TestCheckResourceAttrPair(nameFirst, keyFirst, nameSecond, keySecond string
 		if err != nil {
 			return err
 		}
+		vFirst, ok := isFirst.Attributes[keyFirst]
+		if !ok {
+			return fmt.Errorf("%s: Attribute '%s' not found", nameFirst, keyFirst)
+		}
 
 		isSecond, err := primaryInstanceState(s, nameSecond)
 		if err != nil {
 			return err
 		}
-
-		return testCheckResourceAttrPair(isFirst, nameFirst, keyFirst, isSecond, nameSecond, keySecond)
-	}
-}
-
-// TestCheckModuleResourceAttrPair - as per TestCheckResourceAttrPair but with
-// support for non-root modules
-func TestCheckModuleResourceAttrPair(mpFirst []string, nameFirst string, keyFirst string, mpSecond []string, nameSecond string, keySecond string) TestCheckFunc {
-	return func(s *terraform.State) error {
-		isFirst, err := modulePathPrimaryInstanceState(s, mpFirst, nameFirst)
-		if err != nil {
-			return err
+		vSecond, ok := isSecond.Attributes[keySecond]
+		if !ok {
+			return fmt.Errorf("%s: Attribute '%s' not found", nameSecond, keySecond)
 		}
 
-		isSecond, err := modulePathPrimaryInstanceState(s, mpSecond, nameSecond)
-		if err != nil {
-			return err
+		if vFirst != vSecond {
+			return fmt.Errorf(
+				"%s: Attribute '%s' expected %#v, got %#v",
+				nameFirst,
+				keyFirst,
+				vSecond,
+				vFirst)
 		}
 
-		return testCheckResourceAttrPair(isFirst, nameFirst, keyFirst, isSecond, nameSecond, keySecond)
+		return nil
 	}
-}
-
-func testCheckResourceAttrPair(isFirst *terraform.InstanceState, nameFirst string, keyFirst string, isSecond *terraform.InstanceState, nameSecond string, keySecond string) error {
-	vFirst, ok := isFirst.Attributes[keyFirst]
-	if !ok {
-		return fmt.Errorf("%s: Attribute '%s' not found", nameFirst, keyFirst)
-	}
-
-	vSecond, ok := isSecond.Attributes[keySecond]
-	if !ok {
-		return fmt.Errorf("%s: Attribute '%s' not found", nameSecond, keySecond)
-	}
-
-	if vFirst != vSecond {
-		return fmt.Errorf(
-			"%s: Attribute '%s' expected %#v, got %#v",
-			nameFirst,
-			keyFirst,
-			vSecond,
-			vFirst)
-	}
-
-	return nil
 }
 
 // TestCheckOutput checks an output in the Terraform configuration
@@ -1118,42 +936,23 @@ type TestT interface {
 	Error(args ...interface{})
 	Fatal(args ...interface{})
 	Skip(args ...interface{})
-	Name() string
 }
 
 // This is set to true by unit tests to alter some behavior
 var testTesting = false
 
-// modulePrimaryInstanceState returns the instance state for the given resource
-// name in a ModuleState
-func modulePrimaryInstanceState(s *terraform.State, ms *terraform.ModuleState, name string) (*terraform.InstanceState, error) {
+// primaryInstanceState returns the primary instance state for the given resource name.
+func primaryInstanceState(s *terraform.State, name string) (*terraform.InstanceState, error) {
+	ms := s.RootModule()
 	rs, ok := ms.Resources[name]
 	if !ok {
-		return nil, fmt.Errorf("Not found: %s in %s", name, ms.Path)
+		return nil, fmt.Errorf("Not found: %s", name)
 	}
 
 	is := rs.Primary
 	if is == nil {
-		return nil, fmt.Errorf("No primary instance: %s in %s", name, ms.Path)
+		return nil, fmt.Errorf("No primary instance: %s", name)
 	}
 
 	return is, nil
-}
-
-// modulePathPrimaryInstanceState returns the primary instance state for the
-// given resource name in a given module path.
-func modulePathPrimaryInstanceState(s *terraform.State, mp []string, name string) (*terraform.InstanceState, error) {
-	ms := s.ModuleByPath(mp)
-	if ms == nil {
-		return nil, fmt.Errorf("No module found at: %s", mp)
-	}
-
-	return modulePrimaryInstanceState(s, ms, name)
-}
-
-// primaryInstanceState returns the primary instance state for the given
-// resource name in the root module.
-func primaryInstanceState(s *terraform.State, name string) (*terraform.InstanceState, error) {
-	ms := s.RootModule()
-	return modulePrimaryInstanceState(s, ms, name)
 }

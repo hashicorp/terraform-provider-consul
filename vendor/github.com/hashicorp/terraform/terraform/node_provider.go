@@ -7,5 +7,5 @@ type NodeApplyableProvider struct {
 
 // GraphNodeEvalable
 func (n *NodeApplyableProvider) EvalTree() EvalNode {
-	return ProviderEvalTree(n, n.ProviderConfig())
+	return ProviderEvalTree(n.NameValue, n.ProviderConfig())
 }
