@@ -27,7 +27,7 @@ func TestAccConsulIntention_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("consul_intention.example", "meta.baz", "bat"),
 				),
 			},
-			resource.TestStep{
+			{
 				PreConfig: testAccRemoveConsulIntention(t),
 				Config:    testAccConsulIntentionConfigBasic,
 				Check: resource.ComposeTestCheckFunc(

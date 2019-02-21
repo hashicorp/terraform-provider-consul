@@ -29,7 +29,7 @@ func TestAccConsulService_basic(t *testing.T) {
 					testAccConsulExternalSource,
 				),
 			},
-			resource.TestStep{
+			{
 				PreConfig: testAccRemoveConsulService(t),
 				Config:    testAccConsulServiceConfigBasic,
 				Check: resource.ComposeTestCheckFunc(
