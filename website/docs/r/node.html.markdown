@@ -30,6 +30,8 @@ The following arguments are supported:
 * `name` - (Required) The name of the node being added to, or
   referenced in the catalog.
 
+* `datacenter` - (Optional) The datacenter to use. Defaults to that of the agent.
+
 * `meta` - (Optional, map) Key/value pairs that are associated with the node.
 
 ## Attributes Reference

@@ -1,6 +1,7 @@
 package consul
 
 import (
+	"errors"
 	"fmt"
 
 	consulapi "github.com/hashicorp/consul/api"
@@ -15,6 +16,8 @@ const (
 	consulSourceValue = "terraform"
 )
 
+var NoServiceRegistered error = errors.New("No service was found in consul catalog")
+
 func resourceConsulService() *schema.Resource {
 	return &schema.Resource{
 		Create: resourceConsulServiceCreate,
@@ -23,44 +26,44 @@ func resourceConsulService() *schema.Resource {
 		Delete: resourceConsulServiceDelete,
 
 		Schema: map[string]*schema.Schema{
-			"address": &schema.Schema{
+			"address": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
 
-			"service_id": &schema.Schema{
+			"service_id": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
 
-			"name": &schema.Schema{
+			"name": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
 
-			"node": &schema.Schema{
+			"node": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
 
-			"datacenter": &schema.Schema{
+			"datacenter": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
 
-			"port": &schema.Schema{
+			"port": {
 				Type:     schema.TypeInt,
 				Optional: true,
 			},
 
-			"tags": &schema.Schema{
+			"tags": {
 				Type:     schema.TypeList,
 				Optional: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
@@ -233,7 +236,12 @@ func resourceConsulServiceRead(d *schema.ResourceData, meta interface{}) error {
 
 	service, err := retrieveService(client, name, id, node, dc)
 	if err != nil {
-		return err
+		if err == NoServiceRegistered {
+			d.SetId("")
+			return nil
+		} else {
+			return err
+		}
 	}
 
 	d.Set("address", service.ServiceAddress)
@@ -297,6 +305,10 @@ func retrieveService(client *consulapi.Client, name string, ident string, node s
 	services, _, err := client.Catalog().Service(name, "", &qOpts)
 	if err != nil {
 		return nil, err
+	}
+
+	if len(services) == 0 {
+		return nil, NoServiceRegistered
 	}
 
 	// Only one service with a given ID may be present per node

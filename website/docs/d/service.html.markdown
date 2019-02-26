@@ -1,6 +1,6 @@
 ---
 layout: "consul"
-page_title: "Consul: consul_catalog_service"
+page_title: "Consul: consul_service"
 sidebar_current: "docs-consul-data-source-service"
 description: |-
   Provides details about a specific Consul service

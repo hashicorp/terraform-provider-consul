@@ -12,12 +12,12 @@ import (
 func Provider() terraform.ResourceProvider {
 	return &schema.Provider{
 		Schema: map[string]*schema.Schema{
-			"datacenter": &schema.Schema{
+			"datacenter": {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
 
-			"address": &schema.Schema{
+			"address": {
 				Type:     schema.TypeString,
 				Optional: true,
 				DefaultFunc: schema.MultiEnvDefaultFunc([]string{
@@ -26,7 +26,7 @@ func Provider() terraform.ResourceProvider {
 				}, "localhost:8500"),
 			},
 
-			"scheme": &schema.Schema{
+			"scheme": {
 				Type:     schema.TypeString,
 				Optional: true,
 				DefaultFunc: schema.MultiEnvDefaultFunc([]string{
@@ -35,43 +35,43 @@ func Provider() terraform.ResourceProvider {
 				}, "http"),
 			},
 
-			"http_auth": &schema.Schema{
+			"http_auth": {
 				Type:        schema.TypeString,
 				Optional:    true,
 				DefaultFunc: schema.EnvDefaultFunc("CONSUL_HTTP_AUTH", ""),
 			},
 
-			"ca_file": &schema.Schema{
+			"ca_file": {
 				Type:        schema.TypeString,
 				Optional:    true,
 				DefaultFunc: schema.EnvDefaultFunc("CONSUL_CA_FILE", ""),
 			},
 
-			"cert_file": &schema.Schema{
+			"cert_file": {
 				Type:        schema.TypeString,
 				Optional:    true,
 				DefaultFunc: schema.EnvDefaultFunc("CONSUL_CERT_FILE", ""),
 			},
 
-			"key_file": &schema.Schema{
+			"key_file": {
 				Type:        schema.TypeString,
 				Optional:    true,
 				DefaultFunc: schema.EnvDefaultFunc("CONSUL_KEY_FILE", ""),
 			},
 
-			"ca_path": &schema.Schema{
+			"ca_path": {
 				Type:        schema.TypeString,
 				Optional:    true,
 				DefaultFunc: schema.EnvDefaultFunc("CONSUL_CAPATH", ""),
 			},
 
-			"insecure_https": &schema.Schema{
+			"insecure_https": {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Default:  false,
 			},
 
-			"token": &schema.Schema{
+			"token": {
 				Type:     schema.TypeString,
 				Optional: true,
 				DefaultFunc: schema.MultiEnvDefaultFunc([]string{
@@ -82,13 +82,14 @@ func Provider() terraform.ResourceProvider {
 		},
 
 		DataSourcesMap: map[string]*schema.Resource{
-			"consul_agent_self":   dataSourceConsulAgentSelf(),
-			"consul_agent_config": dataSourceConsulAgentConfig(),
-			"consul_nodes":        dataSourceConsulNodes(),
-			"consul_service":      dataSourceConsulService(),
-			"consul_services":     dataSourceConsulServices(),
-			"consul_keys":         dataSourceConsulKeys(),
-			"consul_key_prefix":   dataSourceConsulKeyPrefix(),
+			"consul_agent_self":       dataSourceConsulAgentSelf(),
+			"consul_agent_config":     dataSourceConsulAgentConfig(),
+			"consul_autopilot_health": dataSourceConsulAutopilotHealth(),
+			"consul_nodes":            dataSourceConsulNodes(),
+			"consul_service":          dataSourceConsulService(),
+			"consul_services":         dataSourceConsulServices(),
+			"consul_keys":             dataSourceConsulKeys(),
+			"consul_key_prefix":       dataSourceConsulKeyPrefix(),
 
 			// Aliases to limit the impact of rename of catalog
 			// datasources

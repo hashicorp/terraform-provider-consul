@@ -11,7 +11,7 @@ func TestAccDataConsulNodes_basic(t *testing.T) {
 		PreCheck:  func() { testAccPreCheck(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccDataConsulNodesConfig,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDataSourceValue("data.consul_nodes.read", "nodes.#", "1"),
@@ -28,7 +28,7 @@ func TestAccDataConsulNodes_alias(t *testing.T) {
 		PreCheck:  func() { testAccPreCheck(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccDataConsulNodesAlias,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("data.consul_catalog_nodes.read", "nodes.#", "1"),
