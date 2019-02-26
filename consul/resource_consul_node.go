@@ -15,32 +15,32 @@ func resourceConsulNode() *schema.Resource {
 		Delete: resourceConsulNodeDelete,
 
 		Schema: map[string]*schema.Schema{
-			"address": &schema.Schema{
+			"address": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
 
-			"datacenter": &schema.Schema{
+			"datacenter": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
 
-			"name": &schema.Schema{
+			"name": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
 
-			"meta": &schema.Schema{
+			"meta": {
 				Type:     schema.TypeMap,
 				Optional: true,
 				ForceNew: false,
 			},
 
-			"token": &schema.Schema{
+			"token": {
 				Type:      schema.TypeString,
 				Optional:  true,
 				Sensitive: true,
@@ -122,8 +122,13 @@ func resourceConsulNodeRead(d *schema.ResourceData, meta interface{}) error {
 	// Setup the operations using the datacenter
 	qOpts := consulapi.QueryOptions{Datacenter: dc}
 
-	if _, _, err := catalog.Node(name, &qOpts); err != nil {
+	n, _, err := catalog.Node(name, &qOpts)
+	if err != nil {
 		return fmt.Errorf("Failed to get name '%s' from Consul catalog: %v", name, err)
+	}
+
+	if n == nil {
+		d.SetId("")
 	}
 
 	return nil

@@ -21,8 +21,8 @@ from the agent specified in the `provider`.
 ```hcl
 data "consul_agent_config" "remote_agent" {}
 
-output "info" {
-  consul_version = "${data.consul_agent_config.version}"
+output "consul_version" {
+  value = "${data.consul_agent_config.remote_agent.version}"
 }
 ```
 
