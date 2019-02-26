@@ -26,7 +26,7 @@ func dataSourceConsulServices() *schema.Resource {
 		Read: dataSourceConsulServicesRead,
 		Schema: map[string]*schema.Schema{
 			// Data Source Predicate(s)
-			catalogServicesDatacenter: &schema.Schema{
+			catalogServicesDatacenter: {
 				// Used in the query, must be stored and force a refresh if the value
 				// changes.
 				Computed: true,
@@ -36,17 +36,17 @@ func dataSourceConsulServices() *schema.Resource {
 			catalogNodesQueryOpts: schemaQueryOpts,
 
 			// Out parameters
-			catalogServicesNames: &schema.Schema{
+			catalogServicesNames: {
 				Type:     schema.TypeList,
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			catalogServicesServices: &schema.Schema{
+			catalogServicesServices: {
 				Computed: true,
 				Type:     schema.TypeMap,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						catalogServiceServiceTags: &schema.Schema{
+						catalogServiceServiceTags: {
 							Type:     schema.TypeList,
 							Computed: true,
 							Elem:     &schema.Schema{Type: schema.TypeString},

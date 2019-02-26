@@ -36,51 +36,51 @@ func dataSourceConsulNodes() *schema.Resource {
 			catalogNodesQueryOpts: schemaQueryOpts,
 
 			// Out parameters
-			catalogNodesDatacenter: &schema.Schema{
+			catalogNodesDatacenter: {
 				Computed: true,
 				Type:     schema.TypeString,
 			},
-			catalogNodesNodeIDs: &schema.Schema{
+			catalogNodesNodeIDs: {
 				Computed: true,
 				Type:     schema.TypeList,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			catalogNodesNodeNames: &schema.Schema{
+			catalogNodesNodeNames: {
 				Computed: true,
 				Type:     schema.TypeList,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			catalogNodesElem: &schema.Schema{
+			catalogNodesElem: {
 				Computed: true,
 				Type:     schema.TypeList,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						catalogNodesNodeID: &schema.Schema{
+						catalogNodesNodeID: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						catalogNodesNodeName: &schema.Schema{
+						catalogNodesNodeName: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						catalogNodesNodeAddress: &schema.Schema{
+						catalogNodesNodeAddress: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						catalogNodesNodeMeta: &schema.Schema{
+						catalogNodesNodeMeta: {
 							Type:     schema.TypeMap,
 							Computed: true,
 						},
-						catalogNodesNodeTaggedAddresses: &schema.Schema{
+						catalogNodesNodeTaggedAddresses: {
 							Type:     schema.TypeMap,
 							Computed: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									catalogNodesSchemaTaggedLAN: &schema.Schema{
+									catalogNodesSchemaTaggedLAN: {
 										Type:     schema.TypeString,
 										Computed: true,
 									},
-									catalogNodesSchemaTaggedWAN: &schema.Schema{
+									catalogNodesSchemaTaggedWAN: {
 										Type:     schema.TypeString,
 										Computed: true,
 									},
