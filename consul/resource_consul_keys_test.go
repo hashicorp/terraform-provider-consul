@@ -22,7 +22,7 @@ func TestAccConsulKeys_basic(t *testing.T) {
 					testAccCheckConsulKeysValue("consul_keys.app", "enabled", "true"),
 					testAccCheckConsulKeysValue("consul_keys.app", "set", "acceptance"),
 					testAccCheckConsulKeysValue("consul_keys.app", "remove_one", "hello"),
-					testAccCheckConsulKeysFlags("test/set", 0),
+					resource.TestCheckResourceAttr("consul_keys.app", "key.4258512057.flags", "0"),
 				),
 			},
 			{
@@ -32,7 +32,6 @@ func TestAccConsulKeys_basic(t *testing.T) {
 					testAccCheckConsulKeysValue("consul_keys.app", "enabled", "true"),
 					testAccCheckConsulKeysValue("consul_keys.app", "set", "acceptanceUpdated"),
 					testAccCheckConsulKeysRemoved("consul_keys.app", "remove_one"),
-					testAccCheckConsulKeysFlags("test/set", 64),
 				),
 			},
 		},
