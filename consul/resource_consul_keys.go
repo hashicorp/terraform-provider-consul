@@ -53,6 +53,12 @@ func resourceConsulKeys() *schema.Resource {
 							Computed: true,
 						},
 
+						"flags": {
+							Type:     schema.TypeInt,
+							Optional: true,
+							Default:  0,
+						},
+
 						"default": {
 							Type:     schema.TypeString,
 							Optional: true,
@@ -98,7 +104,9 @@ func resourceConsulKeysCreate(d *schema.ResourceData, meta interface{}) error {
 			continue
 		}
 
-		if err := keyClient.Put(path, value); err != nil {
+		flags := sub["flags"].(int)
+
+		if err := keyClient.Put(path, value, flags); err != nil {
 			return err
 		}
 	}
@@ -159,7 +167,9 @@ func resourceConsulKeysUpdate(d *schema.ResourceData, meta interface{}) error {
 				continue
 			}
 
-			if err := keyClient.Put(path, value); err != nil {
+			flags := sub["flags"].(int)
+
+			if err := keyClient.Put(path, value, flags); err != nil {
 				return err
 			}
 			addedPaths[path] = true
@@ -215,10 +225,11 @@ func resourceConsulKeysRead(d *schema.ResourceData, meta interface{}) error {
 			return err
 		}
 
-		value, err := keyClient.Get(path)
+		value, flags, err := keyClient.Get(path)
 		if err != nil {
 			return err
 		}
+		sub["flags"] = flags
 
 		value = attributeValue(sub, value)
 		if key != "" {

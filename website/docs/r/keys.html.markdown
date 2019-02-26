@@ -52,6 +52,9 @@ The `key` block supports the following:
 
 * `value` - (Required) The value to write to the given path.
 
+* `flags` - (Optional) An [unsigned integer value](https://www.consul.io/api/kv.html#flags-1)
+  to attach to the key (defaults to 0).
+
 * `delete` - (Optional) If true, then the key will be deleted when
   either its configuration block is removed from the configuration or
   the entire resource is destroyed. Otherwise, it will be left in Consul.

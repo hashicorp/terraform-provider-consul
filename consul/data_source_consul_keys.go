@@ -73,7 +73,7 @@ func dataSourceConsulKeysRead(d *schema.ResourceData, meta interface{}) error {
 			return err
 		}
 
-		value, err := keyClient.Get(path)
+		value, _, err := keyClient.Get(path)
 		if err != nil {
 			return err
 		}
