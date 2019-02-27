@@ -33,8 +33,9 @@ func resourceConsulPreparedQuery() *schema.Resource {
 			},
 
 			"token": {
-				Type:     schema.TypeString,
-				Optional: true,
+				Type:      schema.TypeString,
+				Optional:  true,
+				Sensitive: true,
 			},
 
 			"stored_token": {

@@ -114,6 +114,38 @@ func TestResourceProvider_ConfigureTLSInsecureHttpsMismatch(t *testing.T) {
 	}
 }
 
+func TestResourceProvider_tokenIsSensitive(t *testing.T) {
+	rp := Provider()
+
+	for _, resource := range rp.Resources() {
+		schema, err := rp.GetSchema(&terraform.ProviderSchemaRequest{
+			ResourceTypes: []string{resource.Name},
+		})
+		if err != nil {
+			t.Fatalf("err: %v", err)
+		}
+		if token, ok := schema.ResourceTypes[resource.Name].Attributes["token"]; ok {
+			if !token.Sensitive {
+				t.Fatalf("token should be marked as sensitive for %v", resource.Name)
+			}
+		}
+	}
+
+	for _, datasource := range rp.DataSources() {
+		schema, err := rp.GetSchema(&terraform.ProviderSchemaRequest{
+			DataSources: []string{datasource.Name},
+		})
+		if err != nil {
+			t.Fatalf("err: %v", err)
+		}
+		if token, ok := schema.DataSources[datasource.Name].Attributes["token"]; ok {
+			if !token.Sensitive {
+				t.Fatalf("token should be marked as sensitive for %v", datasource.Name)
+			}
+		}
+	}
+}
+
 func testAccPreCheck(t *testing.T) {
 	if v := os.Getenv("CONSUL_HTTP_ADDR"); v != "" {
 		return
