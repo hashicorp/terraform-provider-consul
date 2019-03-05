@@ -240,7 +240,7 @@ func resourceConsulServiceCreate(d *schema.ResourceData, meta interface{}) error
 
 	checks, err := parseChecks(node, name, d)
 	if err != nil {
-		return fmt.Errorf("Failed to fecth health-checks: %v", err)
+		return fmt.Errorf("Failed to fetch health-checks: %v", err)
 	}
 	registration.Checks = checks
 
