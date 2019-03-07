@@ -23,7 +23,8 @@ managing a set of related keys.
 To avoid accidentally clobbering matching data that existed in Consul before
 a `consul_key_prefix` resource was created, creation of a key prefix instance
 will fail if any matching keys are already present in the key/value store.
-If any conflicting data is present, you must first delete it manually.
+If any conflicting data is present, you must first delete it manually or
+explicitly import the prefix.
 
 ~> **Warning** After this resource is instantiated, Terraform takes control
 over *all* keys with the given path prefix, and will remove any matching keys
@@ -96,3 +97,12 @@ The `subkey` block supports the following:
 The following attributes are exported:
 
 * `datacenter` - The datacenter the keys are being read/written to.
+
+## Import
+
+`consul_key_prefix` can be imported. This is useful when the path already and
+you know all keys in path must be removed.
+
+```
+$ terraform import consul_key_prefix.myapp_config myapp/config/
+```
