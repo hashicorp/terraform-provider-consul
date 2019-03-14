@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/hashicorp/errwrap"
+
 	consulapi "github.com/hashicorp/consul/api"
 	"github.com/hashicorp/terraform/helper/schema"
 )
@@ -120,13 +122,27 @@ func resourceConsulAutopilotConfigRead(d *schema.ResourceData, meta interface{})
 
 	d.SetId(fmt.Sprintf("consul-autopilot-%s", dc))
 
-	d.Set("cleanup_dead_servers", config.CleanupDeadServers)
-	d.Set("last_contact_threshold", config.LastContactThreshold)
-	d.Set("max_trailing_logs", config.MaxTrailingLogs)
-	d.Set("server_stabilization_time", config.ServerStabilizationTime)
-	d.Set("redundancy_zone_tag", config.RedundancyZoneTag)
-	d.Set("disable_upgrade_migration", config.DisableUpgradeMigration)
-	d.Set("upgrade_version_tag", config.UpgradeVersionTag)
+	if err = d.Set("cleanup_dead_servers", config.CleanupDeadServers); err != nil {
+		return errwrap.Wrapf("Unable to store cleanup_dead_servers: {{err}}", err)
+	}
+	if err = d.Set("last_contact_threshold", config.LastContactThreshold.String()); err != nil {
+		return errwrap.Wrapf("Unable to store last_contact_threshold: {{err}}", err)
+	}
+	if err = d.Set("max_trailing_logs", config.MaxTrailingLogs); err != nil {
+		return errwrap.Wrapf("Unable to store max_trailing_logs: {{err}}", err)
+	}
+	if err = d.Set("server_stabilization_time", config.ServerStabilizationTime.String()); err != nil {
+		return errwrap.Wrapf("Unable to store server_stabilization_time: {{err}}", err)
+	}
+	if err = d.Set("redundancy_zone_tag", config.RedundancyZoneTag); err != nil {
+		return errwrap.Wrapf("Unable to store redundancy_zone_tag: {{err}}", err)
+	}
+	if err = d.Set("disable_upgrade_migration", config.DisableUpgradeMigration); err != nil {
+		return errwrap.Wrapf("Unable to store disable_upgrade_migration: {{err}}", err)
+	}
+	if err = d.Set("upgrade_version_tag", config.UpgradeVersionTag); err != nil {
+		return errwrap.Wrapf("Unable to store upgrade_version_tag: {{err}}", err)
+	}
 
 	return nil
 }
