@@ -67,15 +67,9 @@ func resourceConsulAutopilotConfigUpdate(d *schema.ResourceData, meta interface{
 	client := meta.(*consulapi.Client)
 	operator := client.Operator()
 
-	var dc string
-	if v, ok := d.GetOk("datacenter"); ok {
-		dc = v.(string)
-	} else {
-		var err error
-		dc, err = getDC(d, client)
-		if err != nil {
-			return err
-		}
+	dc, err := getDC(d, client)
+	if err != nil {
+		return err
 	}
 
 	lastContactThreshold, err := time.ParseDuration(d.Get("last_contact_threshold").(string))
@@ -111,7 +105,10 @@ func resourceConsulAutopilotConfigRead(d *schema.ResourceData, meta interface{})
 	client := meta.(*consulapi.Client)
 	operator := client.Operator()
 
-	dc := "dc1"
+	dc, err := getDC(d, client)
+	if err != nil {
+		return err
+	}
 
 	qOpts := &consulapi.QueryOptions{
 		Datacenter: dc,
