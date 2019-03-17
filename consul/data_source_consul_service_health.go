@@ -7,180 +7,169 @@ import (
 	"github.com/hashicorp/terraform/helper/schema"
 )
 
-const (
-	serviceHealthService    = "service"
-	serviceHealthDatacenter = "datacenter"
-	serviceHealthNear       = "near"
-	serviceHealthTag        = "tag"
-	serviceHealthNodeMeta   = "node_meta"
-	serviceHealthPassing    = "passing"
-
-	serviceHealthNodes               = "nodes"
-	serviceHealthNodeID              = "node_id"
-	serviceHealthNodeName            = "node_name"
-	serviceHealthNodeAddress         = "node_address"
-	serviceHealthNodeDatacenter      = "node_datacenter"
-	serviceHealthNodeTaggedAddresses = "node_tagged_addresses"
-
-	serviceHealthServiceID      = "service_id"
-	serviceHealthServiceName    = "service_name"
-	serviceHealthServiceTags    = "service_tags"
-	serviceHealthServiceAddress = "service_address"
-	serviceHealthServiceMeta    = "service_meta"
-	serviceHealthServicePort    = "service_port"
-
-	serviceHealthChecks           = "checks"
-	serviceHealthCheckNode        = "node"
-	serviceHealthCheckID          = "check_id"
-	serviceHealthCheckName        = "name"
-	serviceHealthCheckStatus      = "status"
-	serviceHealthCheckNotes       = "notes"
-	serviceHealthCheckOutput      = "output"
-	serviceHealthCheckServiceID   = "service_id"
-	serviceHealthCheckServiceName = "service_name"
-	serviceHealthCheckServiceTags = "service_tags"
-)
-
 func dataSourceConsulServiceHealth() *schema.Resource {
 	return &schema.Resource{
 		Read: dataSourceConsulServiceHealthRead,
 		Schema: map[string]*schema.Schema{
 			// Filter parameters
-			serviceHealthService: &schema.Schema{
+			"datacenter": &schema.Schema{
+				Optional: true,
+				Type:     schema.TypeString,
+				ForceNew: true,
+			},
+			"name": &schema.Schema{
 				Required: true,
 				Type:     schema.TypeString,
 				ForceNew: true,
 			},
-			serviceHealthDatacenter: &schema.Schema{
+			"near": &schema.Schema{
 				Optional: true,
 				Type:     schema.TypeString,
 				ForceNew: true,
 			},
-			serviceHealthNear: &schema.Schema{
+			"tag": &schema.Schema{
 				Optional: true,
 				Type:     schema.TypeString,
 				ForceNew: true,
 			},
-			serviceHealthTag: &schema.Schema{
-				Optional: true,
-				Type:     schema.TypeString,
-				ForceNew: true,
-			},
-			serviceHealthNodeMeta: &schema.Schema{
+			"node_meta": &schema.Schema{
 				Optional: true,
 				Type:     schema.TypeMap,
 				ForceNew: true,
 			},
-			serviceHealthPassing: &schema.Schema{
+			"passing": &schema.Schema{
 				Optional: true,
 				Type:     schema.TypeBool,
 				ForceNew: true,
+				Default:  true,
 			},
 
 			// Out parameters
-			serviceHealthNodes: &schema.Schema{
+			"results": &schema.Schema{
 				Computed: true,
 				Type:     schema.TypeList,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						serviceHealthNodeID: &schema.Schema{
-							Computed: true,
-							Type:     schema.TypeString,
-						},
-						serviceHealthNodeName: &schema.Schema{
-							Computed: true,
-							Type:     schema.TypeString,
-						},
-						serviceHealthNodeAddress: &schema.Schema{
-							Computed: true,
-							Type:     schema.TypeString,
-						},
-						serviceHealthNodeDatacenter: &schema.Schema{
-							Computed: true,
-							Type:     schema.TypeString,
-						},
-						serviceHealthNodeTaggedAddresses: &schema.Schema{
-							Computed: true,
-							Type:     schema.TypeMap,
-							Elem: &schema.Schema{
-								Type: schema.TypeString,
-							},
-						},
-						serviceHealthNodeMeta: &schema.Schema{
-							Computed: true,
-							Type:     schema.TypeMap,
-							Elem: &schema.Schema{
-								Type: schema.TypeString,
-							},
-						},
-						serviceHealthServiceID: &schema.Schema{
-							Computed: true,
-							Type:     schema.TypeString,
-						},
-						serviceHealthServiceName: &schema.Schema{
-							Computed: true,
-							Type:     schema.TypeString,
-						},
-						serviceHealthServiceTags: &schema.Schema{
+						"node": &schema.Schema{
 							Computed: true,
 							Type:     schema.TypeList,
-							Elem: &schema.Schema{
-								Type: schema.TypeString,
+							MaxItems: 1,
+							// TODO(remi): set AsSingle when releasing
+							// a version for Terraform 0.12
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"id": &schema.Schema{
+										Computed: true,
+										Type:     schema.TypeString,
+									},
+									"name": &schema.Schema{
+										Computed: true,
+										Type:     schema.TypeString,
+									},
+									"address": &schema.Schema{
+										Computed: true,
+										Type:     schema.TypeString,
+									},
+									"datacenter": &schema.Schema{
+										Computed: true,
+										Type:     schema.TypeString,
+									},
+									"tagged_addresses": &schema.Schema{
+										Computed: true,
+										Type:     schema.TypeMap,
+										Elem: &schema.Schema{
+											Type: schema.TypeString,
+										},
+									},
+									"meta": &schema.Schema{
+										Computed: true,
+										Type:     schema.TypeMap,
+										Elem: &schema.Schema{
+											Type: schema.TypeString,
+										},
+									},
+								},
 							},
 						},
-						serviceHealthServiceAddress: &schema.Schema{
+						"service": &schema.Schema{
 							Computed: true,
-							Type:     schema.TypeString,
-						},
-						serviceHealthServiceMeta: &schema.Schema{
-							Computed: true,
-							Type:     schema.TypeMap,
-							Elem: &schema.Schema{
-								Type: schema.TypeString,
+							Type:     schema.TypeList,
+							MaxItems: 1,
+							// TODO(remi): set AsSingle when releasing
+							// a version for Terraform 0.12
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"id": &schema.Schema{
+										Computed: true,
+										Type:     schema.TypeString,
+									},
+									"name": &schema.Schema{
+										Computed: true,
+										Type:     schema.TypeString,
+									},
+									"tags": &schema.Schema{
+										Computed: true,
+										Type:     schema.TypeList,
+										Elem: &schema.Schema{
+											Type: schema.TypeString,
+										},
+									},
+									"address": &schema.Schema{
+										Computed: true,
+										Type:     schema.TypeString,
+									},
+									"meta": &schema.Schema{
+										Computed: true,
+										Type:     schema.TypeMap,
+										Elem: &schema.Schema{
+											Type: schema.TypeString,
+										},
+									},
+									"port": &schema.Schema{
+										Computed: true,
+										Type:     schema.TypeInt,
+									},
+								},
 							},
 						},
-						serviceHealthServicePort: &schema.Schema{
-							Computed: true,
-							Type:     schema.TypeInt,
-						},
-						serviceHealthChecks: &schema.Schema{
+						"checks": &schema.Schema{
 							Computed: true,
 							Type:     schema.TypeList,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									serviceHealthCheckNode: &schema.Schema{
+									"node": &schema.Schema{
 										Computed: true,
 										Type:     schema.TypeString,
 									},
-									serviceHealthCheckID: &schema.Schema{
+									"id": &schema.Schema{
 										Computed: true,
 										Type:     schema.TypeString,
 									},
-									serviceHealthCheckName: &schema.Schema{
+									"name": &schema.Schema{
 										Computed: true,
 										Type:     schema.TypeString,
 									},
-									serviceHealthCheckStatus: &schema.Schema{
+									"status": &schema.Schema{
 										Computed: true,
 										Type:     schema.TypeString,
 									},
-									serviceHealthCheckNotes: &schema.Schema{
+									"notes": &schema.Schema{
 										Computed: true,
 										Type:     schema.TypeString,
 									},
-									serviceHealthCheckOutput: &schema.Schema{
+									"output": &schema.Schema{
 										Computed: true,
 										Type:     schema.TypeString,
 									},
-									serviceHealthCheckServiceID: &schema.Schema{
+									"service_id": &schema.Schema{
 										Computed: true,
 										Type:     schema.TypeString,
 									},
-									serviceHealthCheckServiceName: &schema.Schema{
+									"service_name": &schema.Schema{
 										Computed: true,
 										Type:     schema.TypeString,
 									},
-									serviceHealthCheckServiceTags: &schema.Schema{
+									"service_tags": &schema.Schema{
 										Computed: true,
 										Type:     schema.TypeList,
 										Elem: &schema.Schema{
@@ -201,13 +190,13 @@ func dataSourceConsulServiceHealthRead(d *schema.ResourceData, meta interface{})
 	client := meta.(*consulapi.Client)
 	health := client.Health()
 
-	serviceName := d.Get(serviceHealthService).(string)
-	serviceTag := d.Get(serviceHealthTag).(string)
-	passingOnly := d.Get(serviceHealthPassing).(bool)
-	near := d.Get(serviceHealthNear).(string)
-	nodeMeta := d.Get(serviceHealthNodeMeta).(map[string]interface{})
+	serviceName := d.Get("name").(string)
+	serviceTag := d.Get("tag").(string)
+	passingOnly := d.Get("passing").(bool)
+	near := d.Get("near").(string)
+	nodeMeta := d.Get("node_meta").(map[string]interface{})
 
-	dc := d.Get(serviceHealthDatacenter).(string)
+	dc := d.Get("datacenter").(string)
 	if dc == "" {
 		var err error
 		dc, err = getDC(d, client)
@@ -231,52 +220,74 @@ func dataSourceConsulServiceHealthRead(d *schema.ResourceData, meta interface{})
 		return fmt.Errorf("Failed to retrieve service health: %v", err)
 	}
 
-	l := make([]interface{}, 0, len(serviceEntries))
+	results := make([]interface{}, 0, len(serviceEntries))
 	for _, serviceEntry := range serviceEntries {
-		m := make(map[string]interface{}, 6+4)
+		m := make(map[string]interface{})
 
-		m[serviceHealthNodeID] = serviceEntry.Node.ID
-		m[serviceHealthNodeName] = serviceEntry.Node.Node
-		m[serviceHealthNodeAddress] = serviceEntry.Node.Address
-		m[serviceHealthNodeDatacenter] = serviceEntry.Node.Datacenter
-		m[serviceHealthNodeTaggedAddresses] = serviceEntry.Node.TaggedAddresses
-		m[serviceHealthNodeMeta] = serviceEntry.Node.Meta
+		node := make(map[string]interface{})
+		node["id"] = serviceEntry.Node.ID
+		node["name"] = serviceEntry.Node.Node
+		node["address"] = serviceEntry.Node.Address
+		node["datacenter"] = serviceEntry.Node.Datacenter
+		node["tagged_addresses"] = serviceEntry.Node.TaggedAddresses
+		node["meta"] = serviceEntry.Node.Meta
 
-		m[serviceHealthServiceID] = serviceEntry.Service.ID
-		m[serviceHealthServiceName] = serviceEntry.Service.Service
-		m[serviceHealthServiceAddress] = serviceEntry.Service.Address
-		m[serviceHealthServicePort] = serviceEntry.Service.Port
-		m[serviceHealthServiceTags] = serviceEntry.Service.Tags
-		m[serviceHealthServiceMeta] = serviceEntry.Service.Meta
+		m["node"] = []map[string]interface{}{
+			node,
+		}
 
-		c := make([]interface{}, 0, len(serviceEntry.Checks))
+		service := make(map[string]interface{})
+		service["id"] = serviceEntry.Service.ID
+		service["name"] = serviceEntry.Service.Service
+		service["address"] = serviceEntry.Service.Address
+		service["port"] = serviceEntry.Service.Port
+		service["tags"] = serviceEntry.Service.Tags
+		service["meta"] = serviceEntry.Service.Meta
+
+		m["service"] = []map[string]interface{}{
+			service,
+		}
+
+		checks := make([]interface{}, 0, len(serviceEntry.Checks))
 		for _, healthCheck := range serviceEntry.Checks {
 			check := make(map[string]interface{}, 8)
 
-			check[serviceHealthCheckNode] = healthCheck.Node
-			check[serviceHealthCheckID] = healthCheck.CheckID
-			check[serviceHealthCheckName] = healthCheck.Name
-			check[serviceHealthCheckStatus] = healthCheck.Status
-			check[serviceHealthCheckNotes] = healthCheck.Notes
-			check[serviceHealthCheckOutput] = healthCheck.Output
-			check[serviceHealthCheckServiceID] = healthCheck.ServiceID
-			check[serviceHealthCheckServiceName] = healthCheck.ServiceName
-			check[serviceHealthCheckServiceTags] = healthCheck.ServiceTags
+			check["node"] = healthCheck.Node
+			check["id"] = healthCheck.CheckID
+			check["name"] = healthCheck.Name
+			check["status"] = healthCheck.Status
+			check["notes"] = healthCheck.Notes
+			check["output"] = healthCheck.Output
+			check["service_id"] = healthCheck.ServiceID
+			check["service_name"] = healthCheck.ServiceName
+			check["service_tags"] = healthCheck.ServiceTags
 
-			c = append(c, check)
+			checks = append(checks, check)
 		}
-		m[serviceHealthChecks] = c
-		l = append(l, m)
+		m["checks"] = checks
+		results = append(results, m)
 	}
 
 	const idKeyFmt = "service-health-%s-%q-%q"
 	d.SetId(fmt.Sprintf(idKeyFmt, dc, serviceName, serviceTag))
-	d.Set(serviceHealthDatacenter, dc)
-	d.Set(serviceHealthNear, near)
-	d.Set(serviceHealthTag, serviceTag)
-	d.Set(serviceHealthNodeMeta, nodeMeta)
-	d.Set(serviceHealthPassing, passingOnly)
-	d.Set(serviceHealthNodes, l)
+	if err = d.Set("datacenter", dc); err != nil {
+		return fmt.Errorf("Failed to set 'datacenter': %s", err)
+	}
+	if err = d.Set("near", near); err != nil {
+		return fmt.Errorf("Failed to set 'near': %s", err)
+	}
+	if err = d.Set("tag", serviceTag); err != nil {
+		return fmt.Errorf("Failed to set 'tag': %s", err)
+	}
+	if err = d.Set("node_meta", nodeMeta); err != nil {
+		return fmt.Errorf("Failed to set 'node_meta': %s", err)
+	}
+	if err = d.Set("passing", passingOnly); err != nil {
+		return fmt.Errorf("Failed to set 'passing': %s", err)
+	}
+	if err = d.Set("results", results); err != nil {
+		return fmt.Errorf("Failed to set 'results': %s", err)
+	}
 
 	return nil
 }
