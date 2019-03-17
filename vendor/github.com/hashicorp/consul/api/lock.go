@@ -181,12 +181,11 @@ WAIT:
 	// Handle the one-shot mode.
 	if l.opts.LockTryOnce && attempts > 0 {
 		elapsed := time.Since(start)
-		if elapsed > l.opts.LockWaitTime {
+		if elapsed > qOpts.WaitTime {
 			return nil, nil
 		}
 
-		// Query wait time should not exceed the lock wait time
-		qOpts.WaitTime = l.opts.LockWaitTime - elapsed
+		qOpts.WaitTime -= elapsed
 	}
 	attempts++
 

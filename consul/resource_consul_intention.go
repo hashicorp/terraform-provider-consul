@@ -16,17 +16,17 @@ func resourceConsulIntention() *schema.Resource {
 		Delete: resourceConsulIntentionDelete,
 
 		Schema: map[string]*schema.Schema{
-			"source_name": &schema.Schema{
+			"source_name": {
 				Type:     schema.TypeString,
 				Required: true,
 			},
 
-			"destination_name": &schema.Schema{
+			"destination_name": {
 				Type:     schema.TypeString,
 				Required: true,
 			},
 
-			"action": &schema.Schema{
+			"action": {
 				Type:     schema.TypeString,
 				Required: true,
 				ValidateFunc: validation.StringInSlice([]string{
@@ -35,12 +35,12 @@ func resourceConsulIntention() *schema.Resource {
 				}, true),
 			},
 
-			"description": &schema.Schema{
+			"description": {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
 
-			"meta": &schema.Schema{
+			"meta": {
 				Type:     schema.TypeMap,
 				Optional: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
@@ -170,6 +170,11 @@ func resourceConsulIntentionRead(d *schema.ResourceData, meta interface{}) error
 	intention, _, err := connect.IntentionGet(id, &qOpts)
 	if err != nil {
 		return fmt.Errorf("Failed to retrieve intention (dc: '%s'): %v", dc, err)
+	}
+
+	if intention == nil {
+		d.SetId("")
+		return nil
 	}
 
 	d.Set("source_name", intention.SourceName)

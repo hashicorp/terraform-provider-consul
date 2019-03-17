@@ -11,37 +11,37 @@ func dataSourceConsulAgentConfig() *schema.Resource {
 		Read: dataSourceConsulAgentConfigRead,
 
 		Schema: map[string]*schema.Schema{
-			"datacenter": &schema.Schema{
+			"datacenter": {
 				Type:        schema.TypeString,
 				Description: "The datacenter the agent is running in",
 				Computed:    true,
 			},
 
-			"node_id": &schema.Schema{
+			"node_id": {
 				Type:        schema.TypeString,
 				Description: "The ID of the node the agent is running on",
 				Computed:    true,
 			},
 
-			"node_name": &schema.Schema{
+			"node_name": {
 				Type:        schema.TypeString,
 				Description: "The name of the node the agent is running on",
 				Computed:    true,
 			},
 
-			"server": &schema.Schema{
+			"server": {
 				Type:        schema.TypeBool,
 				Description: "If the agent is a server or not",
 				Computed:    true,
 			},
 
-			"revision": &schema.Schema{
+			"revision": {
 				Type:        schema.TypeString,
 				Description: "The VCS revision of the build of Consul that is running",
 				Computed:    true,
 			},
 
-			"version": &schema.Schema{
+			"version": {
 				Type:        schema.TypeString,
 				Description: "The version of the build of Consul that is running",
 				Computed:    true,

@@ -10,39 +10,40 @@ func dataSourceConsulKeyPrefix() *schema.Resource {
 		Read: dataSourceConsulKeyPrefixRead,
 
 		Schema: map[string]*schema.Schema{
-			"datacenter": &schema.Schema{
+			"datacenter": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
 
-			"token": &schema.Schema{
-				Type:     schema.TypeString,
-				Optional: true,
+			"token": {
+				Type:      schema.TypeString,
+				Optional:  true,
+				Sensitive: true,
 			},
 
-			"path_prefix": &schema.Schema{
+			"path_prefix": {
 				Type:     schema.TypeString,
 				Required: true,
 			},
 
-			"subkey": &schema.Schema{
+			"subkey": {
 				Type:     schema.TypeSet,
 				Optional: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"name": &schema.Schema{
+						"name": {
 							Type:     schema.TypeString,
 							Required: true,
 						},
 
-						"path": &schema.Schema{
+						"path": {
 							Type:     schema.TypeString,
 							Required: true,
 						},
 
-						"default": &schema.Schema{
+						"default": {
 							Type:     schema.TypeString,
 							Optional: true,
 						},
@@ -50,12 +51,12 @@ func dataSourceConsulKeyPrefix() *schema.Resource {
 				},
 			},
 
-			"var": &schema.Schema{
+			"var": {
 				Type:     schema.TypeMap,
 				Computed: true,
 			},
 
-			"subkeys": &schema.Schema{
+			"subkeys": {
 				Type:     schema.TypeMap,
 				Computed: true,
 				Elem: &schema.Schema{
@@ -89,7 +90,7 @@ func dataSourceConsulKeyPrefixRead(d *schema.ResourceData, meta interface{}) err
 		}
 
 		fullPath := pathPrefix + path
-		value, err := keyClient.Get(fullPath)
+		value, _, err := keyClient.Get(fullPath)
 		if err != nil {
 			return err
 		}
@@ -103,9 +104,14 @@ func dataSourceConsulKeyPrefixRead(d *schema.ResourceData, meta interface{}) err
 	}
 
 	if len(keys) <= 0 {
-		subKeys, err := keyClient.GetUnderPrefix(pathPrefix)
+		pairs, err := keyClient.GetUnderPrefix(pathPrefix)
 		if err != nil {
 			return err
+		}
+		subKeys := map[string]string{}
+		for _, pair := range pairs {
+			subKey := pair.Key[len(pathPrefix):]
+			subKeys[subKey] = string(pair.Value)
 		}
 		d.Set("subkeys", subKeys)
 	}
