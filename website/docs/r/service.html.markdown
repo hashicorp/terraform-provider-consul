@@ -60,11 +60,49 @@ of the `name` attribute.
 
 * `port` - (Optional, int) The port of the service.
 
+* `external` - (Optional, boolean) Whether to register this service as an
+  external service. This can be useful when using [Consul External Service Monitor](https://github.com/hashicorp/consul-esm)
+
+* `checks` - (Optional, list of checks) Health-checks to register to monitor the
+  service. The list of attributes for each health-check is detailled below.
+
 * `tags` - (Optional, set of strings) A list of values that are opaque to Consul,
   but can be used to distinguish between services or nodes.
 
 * `datacenter` - (Optional) The datacenter to use. This overrides the datacenter in the
 provider setup and the agent's default datacenter.
+
+
+The following attributes are available for each health-check:
+
+* `check_id` - (Optional, string) An ID, *unique per agent*. Will default to *name*
+  if not set.
+* `name` - (Required) The name of the health-check.
+* `notes` - (Optional, string) An opaque field meant to hold human readable text.
+* `status` - (Optional, string) The initial health-check status. Defaults
+  to `critical`.
+* `definition` - (Required) The definition of the health-check. The list of
+  attributes is given below.
+
+The following attributes are available for the `definition` of each health-check:
+
+* `tcp` - (Optional, string) The TCP address and port to connect to for a TCP check.
+* `http` - (Optional, string) The HTTP endpoint to call for an HTTP check.
+* `header` - (Optional, set of headers) The headers to send for an HTTP check.
+  The attributes of each header is given below.
+* `tls_skip_verify` - (Optional, boolean) Whether to deactivate certificate
+  verification for HTTP health-checks. Defaults to `false`.
+* `method` - (Optional, string) The method to use for HTTP health-checks. Defaults
+  to `GET`.
+* `interval` - (Required, string) The interval to wait between each health-check
+  invocation.
+* `timeout` - (Required, string) The timeout value for HTTP checks.
+* `deregister_critical_service_after` - (Required, string) The time after which
+  the service is automatically deregistered when in the `critical` state.
+
+Each `header` must have the following attributes:
+* `name` - (Required, string) The name of the header.
+* `value` - (Required, list of strings) The header's list of values.
 
 ## Attributes Reference
 
