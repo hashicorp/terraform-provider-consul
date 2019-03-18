@@ -110,7 +110,7 @@ func testAccCheckConsulServiceDestroy(s *terraform.State) error {
 	}
 
 	if len(services) > 1 {
-		return fmt.Errorf("Matching services still exsist: %v", services)
+		return fmt.Errorf("Matching services still exist: %v", services)
 	}
 
 	return nil
@@ -132,11 +132,18 @@ func TestAccConsulServiceCheck(t *testing.T) {
 					resource.TestCheckResourceAttr("consul_service.example", "check.0.name", "Redis health check"),
 					resource.TestCheckResourceAttr("consul_service.example", "check.0.notes", "Script based health check"),
 					resource.TestCheckResourceAttr("consul_service.example", "check.0.status", "passing"),
-					resource.TestCheckResourceAttr("consul_service.example", "check.0.definition.http", "https://www.hashicorptest.com"),
-					resource.TestCheckResourceAttr("consul_service.example", "check.0.definition.interval", "5s"),
-					resource.TestCheckResourceAttr("consul_service.example", "check.0.definition.timeout", "1s"),
-					resource.TestCheckResourceAttr("consul_service.example", "check.0.definition.deregister_critical_service_after", "30s"),
-					resource.TestCheckResourceAttr("consul_service.no-deregister", "check.0.definition.deregister_critical_service_after", ""),
+					resource.TestCheckResourceAttr("consul_service.example", "check.0.definition.0.http", "https://www.hashicorptest.com"),
+					resource.TestCheckResourceAttr("consul_service.example", "check.0.definition.0.interval", "5s"),
+					resource.TestCheckResourceAttr("consul_service.example", "check.0.definition.0.timeout", "1s"),
+					resource.TestCheckResourceAttr("consul_service.example", "check.0.definition.0.deregister_critical_service_after", "30s"),
+					resource.TestCheckResourceAttr("consul_service.example", "check.0.definition.0.header.#", "2"),
+					resource.TestCheckResourceAttr("consul_service.example", "check.0.definition.0.header.344754333.name", "bar"),
+					resource.TestCheckResourceAttr("consul_service.example", "check.0.definition.0.header.344754333.value.#", "1"),
+					resource.TestCheckResourceAttr("consul_service.example", "check.0.definition.0.header.344754333.value.0", "test"),
+					resource.TestCheckResourceAttr("consul_service.example", "check.0.definition.0.header.2976766922.name", "foo"),
+					resource.TestCheckResourceAttr("consul_service.example", "check.0.definition.0.header.2976766922.value.#", "1"),
+					resource.TestCheckResourceAttr("consul_service.example", "check.0.definition.0.header.2976766922.value.0", "test"),
+					resource.TestCheckResourceAttr("consul_service.no-deregister", "check.0.definition.0.deregister_critical_service_after", "30s"),
 				),
 			},
 		},
@@ -169,12 +176,19 @@ resource "consul_service" "example" {
 
 		definition {
 		  http = "https://www.hashicorptest.com"
+
+		  header {
+			name = "foo"
+			value = ["test"]
+		  }
+
+		  header {
+			name = "bar"
+			value = ["test"]
+		  }
+
 		  tls_skip_verify = false
 		  method = "PUT"
-		//   header {
-		// 	  key = "User-Agent"
-		// 	  value = "Health-Check"
-		//   }
 		  interval = "5s"
 		  timeout = "1s"
 		  deregister_critical_service_after = "30s"
@@ -222,7 +236,6 @@ resource "consul_service" "no-deregister" {
 		  http = "https://www.google.com"
 		  interval = "5s"
 		  timeout = "1s"
-		  deregister_critical_service_after = ""
 		}
 	}
 }

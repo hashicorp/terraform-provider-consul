@@ -5,8 +5,23 @@ import (
 	"time"
 
 	consulapi "github.com/hashicorp/consul/api"
+	"github.com/hashicorp/errwrap"
 	"github.com/hashicorp/terraform/helper/schema"
 )
+
+var headerResource = &schema.Resource{
+	Schema: map[string]*schema.Schema{
+		"name": &schema.Schema{
+			Type:     schema.TypeString,
+			Required: true,
+		},
+		"value": &schema.Schema{
+			Type:     schema.TypeList,
+			Required: true,
+			Elem:     &schema.Schema{Type: schema.TypeString},
+		},
+	},
+}
 
 func resourceConsulService() *schema.Resource {
 	return &schema.Resource{
@@ -88,11 +103,13 @@ func resourceConsulService() *schema.Resource {
 						"status": &schema.Schema{
 							Type:     schema.TypeString,
 							Optional: true,
+							Default:  "critical",
 						},
 
 						"definition": &schema.Schema{
-							Type:     schema.TypeMap,
+							Type:     schema.TypeList,
 							Required: true,
+							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"tcp": &schema.Schema{
@@ -105,6 +122,12 @@ func resourceConsulService() *schema.Resource {
 										Optional: true,
 									},
 
+									"header": &schema.Schema{
+										Type:     schema.TypeSet,
+										Optional: true,
+										Elem:     headerResource,
+									},
+
 									"tls_skip_verify": &schema.Schema{
 										Type:     schema.TypeBool,
 										Optional: true,
@@ -115,24 +138,6 @@ func resourceConsulService() *schema.Resource {
 										Type:     schema.TypeString,
 										Optional: true,
 										Default:  "GET",
-									},
-
-									"header": &schema.Schema{
-										Type:     schema.TypeSet,
-										Optional: true,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												"key": &schema.Schema{
-													Type:     schema.TypeString,
-													Required: true,
-												},
-
-												"value": &schema.Schema{
-													Type:     schema.TypeString,
-													Required: true,
-												},
-											},
-										},
 									},
 
 									"interval": &schema.Schema{
@@ -148,7 +153,7 @@ func resourceConsulService() *schema.Resource {
 									"deregister_critical_service_after": &schema.Schema{
 										Type:     schema.TypeString,
 										Optional: true,
-										Default:  "",
+										Default:  "30s",
 									},
 								},
 							},
@@ -376,15 +381,36 @@ func resourceConsulServiceRead(d *schema.ResourceData, meta interface{}) error {
 		definition["http"] = check.Definition.HTTP
 		definition["tls_skip_verify"] = check.Definition.TLSSkipVerify
 		definition["method"] = check.Definition.Method
-		// definition["header"] = check.Definition.Header
-		definition["interval"] = check.Definition.Interval
-		definition["timeout"] = check.Definition.Timeout
-		definition["deregister_critical_service_after"] = check.Definition.DeregisterCriticalServiceAfter
-		m["definition"] = definition
+		definition["interval"] = check.Definition.Interval.String()
+		definition["timeout"] = check.Definition.Timeout.String()
+		definition["deregister_critical_service_after"] = check.Definition.DeregisterCriticalServiceAfter.String()
+		headers := make([]interface{}, 0)
+		for name, value := range check.Definition.Header {
+			header := make(map[string]interface{})
+			header["name"] = name
+
+			valueInterface := make([]interface{}, 0)
+			for _, v := range value {
+				valueInterface = append(valueInterface, v)
+			}
+
+			header["value"] = valueInterface
+			headers = append(headers, header)
+		}
+
+		// Setting a Set in a List does not work correctly
+		// see https://github.com/hashicorp/terraform/issues/16331 for details
+		definition["header"] = schema.NewSet(
+			schema.HashResource(headerResource),
+			headers,
+		)
+
+		m["definition"] = []interface{}{definition}
 		checks = append(checks, m)
 	}
-	d.Set("checks", checks)
-
+	if err := d.Set("check", checks); err != nil {
+		return errwrap.Wrapf("Unable to store checks: {{err}}", err)
+	}
 	return nil
 }
 
@@ -461,9 +487,14 @@ func parseChecks(node string, name string, d *schema.ResourceData) ([]*consulapi
 		if !ok {
 			return nil, fmt.Errorf("Failed to unroll: %#v", raw)
 		}
-		definition, ok := sub["definition"].(map[string]interface{})
+		def, ok := sub["definition"].([]interface{})
 		if !ok {
-			return nil, fmt.Errorf("Failed to unroll: %#v", raw)
+			return nil, fmt.Errorf("Failed to unroll check definition: %#v", sub)
+		}
+		definition := def[0].(map[string]interface{})
+		headers, err := parseHeaders(definition)
+		if err != nil {
+			return nil, err
 		}
 		interval, err := time.ParseDuration(definition["interval"].(string))
 		if err != nil {
@@ -474,32 +505,22 @@ func parseChecks(node string, name string, d *schema.ResourceData) ([]*consulapi
 			return nil, fmt.Errorf("Failed to parse timeout: %#v", timeout)
 		}
 
-		if definition["tcp"] != nil && definition["http"] != nil {
+		tcp := definition["tcp"].(string)
+		http := definition["http"].(string)
+		if tcp != "" && http != "" {
 			return nil, fmt.Errorf("You cannot set both tcp and http in the same check")
 		}
-
-		var tcp string
-		if definition["tcp"] != nil {
-			tcp = definition["tcp"].(string)
-		}
-
-		var http string
-		if definition["http"] != nil {
-			http = definition["http"].(string)
-		}
-		// var header map[string][]string
-		// header = make(map[string][]string, 0)
 		var tlsSkipVerify bool
 		if definition["tls_skip_verify"] != nil {
-			tlsSkipVerify = definition["tls_skip_verify"].(string) == "true"
+			tlsSkipVerify = definition["tls_skip_verify"].(bool)
 		}
 		var method string
 		if definition["method"] != nil {
 			method = definition["method"].(string)
 		}
 		healthCheck := &consulapi.HealthCheckDefinition{
-			HTTP: http,
-			// Header:        header,
+			HTTP:          http,
+			Header:        headers,
 			Method:        method,
 			TLSSkipVerify: tlsSkipVerify,
 			TCP:           tcp,
@@ -532,4 +553,17 @@ func parseChecks(node string, name string, d *schema.ResourceData) ([]*consulapi
 	}
 
 	return s, nil
+}
+
+func parseHeaders(definition map[string]interface{}) (map[string][]string, error) {
+	headers := make(map[string][]string, 0)
+	header := definition["header"].(*schema.Set).List()
+	for _, h := range header {
+		name := h.(map[string]interface{})["name"].(string)
+		value := h.(map[string]interface{})["value"]
+		for _, v := range value.([]interface{}) {
+			headers[name] = append(headers[name], v.(string))
+		}
+	}
+	return headers, nil
 }
