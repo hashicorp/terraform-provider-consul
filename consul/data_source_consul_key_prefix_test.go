@@ -13,7 +13,7 @@ func TestAccDataConsulKeyPrefix_basic(t *testing.T) {
 		PreCheck:  func() { testAccPreCheck(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccDataConsulKeyPrefixConfig,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConsulKeyPrefixAttribute("data.consul_key_prefix.read", "var.read1", "written1"),

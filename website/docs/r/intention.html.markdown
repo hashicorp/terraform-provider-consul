@@ -33,7 +33,7 @@ Referencing a known service via a datasource:
 ```hcl
 resource "consul_intention" "database" {
   source_name      = "api"
-  destination_name = "${consul_catalog_service.pg.name}"
+  destination_name = "${consul_service.pg.name}"
   action           = "allow"
 }
 

@@ -20,16 +20,18 @@ func TestAccConsulKeyPrefix_basic(t *testing.T) {
 			testAccCheckConsulKeyPrefixKeyAbsent("bread"),
 		),
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccConsulKeyPrefixConfig,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckConsulKeyPrefixKeyValue("cheese", "chevre"),
-					testAccCheckConsulKeyPrefixKeyValue("bread", "baguette"),
+					testAccCheckConsulKeyPrefixKeyValue("cheese", "chevre", 0),
+					testAccCheckConsulKeyPrefixKeyValue("bread", "baguette", 0),
+					testAccCheckConsulKeyPrefixKeyValue("condiment/first", "tomato", 2),
+					testAccCheckConsulKeyPrefixKeyValue("condiment/second", "salad", 4),
 					testAccCheckConsulKeyPrefixKeyAbsent("species"),
 					testAccCheckConsulKeyPrefixKeyAbsent("meat"),
 				),
 			},
-			resource.TestStep{
+			{
 				Config:             testAccConsulKeyPrefixConfig,
 				ExpectNonEmptyPlan: true,
 				Check: resource.ComposeTestCheckFunc(
@@ -39,16 +41,18 @@ func TestAccConsulKeyPrefix_basic(t *testing.T) {
 					testAccAddConsulKeyPrefixRogue("species", "gorilla"),
 				),
 			},
-			resource.TestStep{
+			{
 				Config: testAccConsulKeyPrefixConfig_Update,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckConsulKeyPrefixKeyValue("meat", "ham"),
-					testAccCheckConsulKeyPrefixKeyValue("bread", "batard"),
+					testAccCheckConsulKeyPrefixKeyValue("meat", "ham", 0),
+					testAccCheckConsulKeyPrefixKeyValue("bread", "batard", 0),
+					testAccCheckConsulKeyPrefixKeyAbsent("condiment/first"),
+					testAccCheckConsulKeyPrefixKeyAbsent("condiment/second"),
 					testAccCheckConsulKeyPrefixKeyAbsent("cheese"),
 					testAccCheckConsulKeyPrefixKeyAbsent("species"),
 				),
 			},
-			resource.TestStep{
+			{
 				Config:             testAccConsulKeyPrefixConfig_Update,
 				ExpectNonEmptyPlan: true,
 				Check: resource.ComposeTestCheckFunc(
@@ -104,7 +108,7 @@ func testAccAddConsulKeyPrefixRogue(name, value string) resource.TestCheckFunc {
 	}
 }
 
-func testAccCheckConsulKeyPrefixKeyValue(name, value string) resource.TestCheckFunc {
+func testAccCheckConsulKeyPrefixKeyValue(name, value string, flags uint64) resource.TestCheckFunc {
 	fullName := "prefix_test/" + name
 	return func(s *terraform.State) error {
 		kv := testAccProvider.Meta().(*consulapi.Client).KV()
@@ -119,6 +123,9 @@ func testAccCheckConsulKeyPrefixKeyValue(name, value string) resource.TestCheckF
 		if string(pair.Value) != value {
 			return fmt.Errorf("key %v has value %v; want %v", fullName, pair.Value, value)
 		}
+		if pair.Flags != flags {
+			return fmt.Errorf("key %v has flags %v; want %v", fullName, pair.Flags, flags)
+		}
 		return nil
 	}
 }
@@ -132,7 +139,19 @@ resource "consul_key_prefix" "app" {
     subkeys = {
         cheese = "chevre"
         bread = "baguette"
-    }
+	}
+
+	subkey {
+		path  = "condiment/first"
+		value = "tomato"
+		flags = 2
+	}
+
+	subkey {
+		path  = "condiment/second"
+		value = "salad"
+		flags = 4
+	}
 }
 `
 

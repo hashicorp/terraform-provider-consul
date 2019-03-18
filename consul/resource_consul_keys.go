@@ -19,46 +19,53 @@ func resourceConsulKeys() *schema.Resource {
 		MigrateState:  resourceConsulKeysMigrateState,
 
 		Schema: map[string]*schema.Schema{
-			"datacenter": &schema.Schema{
+			"datacenter": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
 
-			"token": &schema.Schema{
-				Type:     schema.TypeString,
-				Optional: true,
+			"token": {
+				Type:      schema.TypeString,
+				Optional:  true,
+				Sensitive: true,
 			},
 
-			"key": &schema.Schema{
+			"key": {
 				Type:     schema.TypeSet,
 				Optional: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"name": &schema.Schema{
+						"name": {
 							Type:       schema.TypeString,
 							Optional:   true,
 							Deprecated: "Using consul_keys resource to *read* is deprecated; please use consul_keys data source instead",
 						},
 
-						"path": &schema.Schema{
+						"path": {
 							Type:     schema.TypeString,
 							Required: true,
 						},
 
-						"value": &schema.Schema{
+						"value": {
 							Type:     schema.TypeString,
 							Optional: true,
 							Computed: true,
 						},
 
-						"default": &schema.Schema{
+						"flags": {
+							Type:     schema.TypeInt,
+							Optional: true,
+							Default:  0,
+						},
+
+						"default": {
 							Type:     schema.TypeString,
 							Optional: true,
 						},
 
-						"delete": &schema.Schema{
+						"delete": {
 							Type:     schema.TypeBool,
 							Optional: true,
 							Default:  false,
@@ -67,7 +74,7 @@ func resourceConsulKeys() *schema.Resource {
 				},
 			},
 
-			"var": &schema.Schema{
+			"var": {
 				Type:     schema.TypeMap,
 				Computed: true,
 			},
@@ -98,7 +105,9 @@ func resourceConsulKeysCreate(d *schema.ResourceData, meta interface{}) error {
 			continue
 		}
 
-		if err := keyClient.Put(path, value); err != nil {
+		flags := sub["flags"].(int)
+
+		if err := keyClient.Put(path, value, flags); err != nil {
 			return err
 		}
 	}
@@ -159,7 +168,9 @@ func resourceConsulKeysUpdate(d *schema.ResourceData, meta interface{}) error {
 				continue
 			}
 
-			if err := keyClient.Put(path, value); err != nil {
+			flags := sub["flags"].(int)
+
+			if err := keyClient.Put(path, value, flags); err != nil {
 				return err
 			}
 			addedPaths[path] = true
@@ -215,10 +226,11 @@ func resourceConsulKeysRead(d *schema.ResourceData, meta interface{}) error {
 			return err
 		}
 
-		value, err := keyClient.Get(path)
+		value, flags, err := keyClient.Get(path)
 		if err != nil {
 			return err
 		}
+		sub["flags"] = flags
 
 		value = attributeValue(sub, value)
 		if key != "" {

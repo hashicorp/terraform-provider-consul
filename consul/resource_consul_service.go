@@ -1,6 +1,7 @@
 package consul
 
 import (
+	"errors"
 	"fmt"
 	"time"
 
@@ -23,6 +24,16 @@ var headerResource = &schema.Resource{
 	},
 }
 
+const (
+	// ConsulSourceKey is the name of the meta attribute used by Consul to
+	// record the origin of a service.
+	consulSourceKey = "external-source"
+	// ConsulSourceValue is its value.
+	consulSourceValue = "terraform"
+)
+
+var NoServiceRegistered error = errors.New("No service was found in consul catalog")
+
 func resourceConsulService() *schema.Resource {
 	return &schema.Resource{
 		Create: resourceConsulServiceCreate,
@@ -31,126 +42,126 @@ func resourceConsulService() *schema.Resource {
 		Delete: resourceConsulServiceDelete,
 
 		Schema: map[string]*schema.Schema{
-			"address": &schema.Schema{
+			"address": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
 
-			"service_id": &schema.Schema{
+			"service_id": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
 
-			"name": &schema.Schema{
+			"name": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
 
-			"node": &schema.Schema{
+			"node": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
 
-			"datacenter": &schema.Schema{
+			"datacenter": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
 
-			"external": &schema.Schema{
+			"external": {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Default:  false,
 			},
 
-			"port": &schema.Schema{
+			"port": {
 				Type:     schema.TypeInt,
 				Optional: true,
 			},
 
-			"tags": &schema.Schema{
+			"tags": {
 				Type:     schema.TypeList,
 				Optional: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
 
-			"check": &schema.Schema{
+			"check": {
 				Type:     schema.TypeList,
 				Optional: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"check_id": &schema.Schema{
+						"check_id": {
 							Type:     schema.TypeString,
 							Optional: true,
 						},
 
-						"name": &schema.Schema{
+						"name": {
 							Type:     schema.TypeString,
 							Required: true,
 						},
 
-						"notes": &schema.Schema{
+						"notes": {
 							Type:     schema.TypeString,
 							Optional: true,
 						},
 
-						"status": &schema.Schema{
+						"status": {
 							Type:     schema.TypeString,
 							Optional: true,
 							Default:  "critical",
 						},
 
-						"definition": &schema.Schema{
+						"definition": {
 							Type:     schema.TypeList,
 							Required: true,
 							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"tcp": &schema.Schema{
+									"tcp": {
 										Type:     schema.TypeString,
 										Optional: true,
 									},
 
-									"http": &schema.Schema{
+									"http": {
 										Type:     schema.TypeString,
 										Optional: true,
 									},
 
-									"header": &schema.Schema{
+									"header": {
 										Type:     schema.TypeSet,
 										Optional: true,
 										Elem:     headerResource,
 									},
 
-									"tls_skip_verify": &schema.Schema{
+									"tls_skip_verify": {
 										Type:     schema.TypeBool,
 										Optional: true,
 										Default:  false,
 									},
 
-									"method": &schema.Schema{
+									"method": {
 										Type:     schema.TypeString,
 										Optional: true,
 										Default:  "GET",
 									},
 
-									"interval": &schema.Schema{
+									"interval": {
 										Type:     schema.TypeString,
 										Required: true,
 									},
 
-									"timeout": &schema.Schema{
+									"timeout": {
 										Type:     schema.TypeString,
 										Required: true,
 									},
 
-									"deregister_critical_service_after": &schema.Schema{
+									"deregister_critical_service_after": {
 										Type:     schema.TypeString,
 										Optional: true,
 										Default:  "30s",
@@ -248,6 +259,9 @@ func resourceConsulServiceCreate(d *schema.ResourceData, meta interface{}) error
 		return fmt.Errorf("Failed to fetch health-checks: %v", err)
 	}
 	registration.Checks = checks
+	registration.Service.Meta = map[string]string{
+		consulSourceKey: consulSourceValue,
+	}
 
 	if _, err := catalog.Register(registration, &wOpts); err != nil {
 		return fmt.Errorf("Failed to register service (dc: '%s'): %v", dc, err)
@@ -327,6 +341,9 @@ func resourceConsulServiceUpdate(d *schema.ResourceData, meta interface{}) error
 		return fmt.Errorf("Failed to fetch health-checks: %v", err)
 	}
 	registration.Checks = checks
+	registration.Service.Meta = map[string]string{
+		consulSourceKey: consulSourceValue,
+	}
 
 	if _, err := catalog.Register(registration, &wOpts); err != nil {
 		return fmt.Errorf("Failed to update service (dc: '%s'): %v", dc, err)
@@ -349,7 +366,12 @@ func resourceConsulServiceRead(d *schema.ResourceData, meta interface{}) error {
 
 	service, err := retrieveService(client, name, id, node, dc)
 	if err != nil {
-		return err
+		if err == NoServiceRegistered {
+			d.SetId("")
+			return nil
+		} else {
+			return err
+		}
 	}
 
 	d.Set("address", service.ServiceAddress)
@@ -460,6 +482,10 @@ func retrieveService(client *consulapi.Client, name string, ident string, node s
 	services, _, err := client.Catalog().Service(name, "", &qOpts)
 	if err != nil {
 		return nil, err
+	}
+
+	if len(services) == 0 {
+		return nil, NoServiceRegistered
 	}
 
 	// Only one service with a given ID may be present per node

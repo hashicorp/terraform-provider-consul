@@ -23,42 +23,42 @@ var schemaQueryOpts = &schema.Schema{
 	Type:     schema.TypeSet,
 	Elem: &schema.Resource{
 		Schema: map[string]*schema.Schema{
-			queryOptAllowStale: &schema.Schema{
+			queryOptAllowStale: {
 				Optional: true,
 				Default:  true,
 				Type:     schema.TypeBool,
 			},
-			queryOptDatacenter: &schema.Schema{
+			queryOptDatacenter: {
 				// Optional because we'll pull the default from the local agent if it's
 				// not specified, but we can query remote data centers as a result.
 				Optional: true,
 				Type:     schema.TypeString,
 			},
-			queryOptNear: &schema.Schema{
+			queryOptNear: {
 				Optional: true,
 				Type:     schema.TypeString,
 			},
-			queryOptNodeMeta: &schema.Schema{
+			queryOptNodeMeta: {
 				Optional: true,
 				Type:     schema.TypeMap,
 			},
-			queryOptRequireConsistent: &schema.Schema{
+			queryOptRequireConsistent: {
 				Optional: true,
 				Default:  false,
 				Type:     schema.TypeBool,
 			},
-			queryOptToken: &schema.Schema{
+			queryOptToken: {
 				Optional: true,
 				Type:     schema.TypeString,
 			},
-			queryOptWaitIndex: &schema.Schema{
+			queryOptWaitIndex: {
 				Optional: true,
 				Type:     schema.TypeInt,
 				ValidateFunc: makeValidationFunc(queryOptWaitIndex, []interface{}{
 					validateIntMin(0),
 				}),
 			},
-			queryOptWaitTime: &schema.Schema{
+			queryOptWaitTime: {
 				Optional: true,
 				Type:     schema.TypeString,
 				ValidateFunc: makeValidationFunc(queryOptWaitTime, []interface{}{

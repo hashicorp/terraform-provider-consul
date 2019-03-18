@@ -15,12 +15,55 @@ func TestAccConsulNode_basic(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckConsulNodeDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
-				Config: testAccConsulNodeConfig,
+			{
+				Config: testAccConsulNodeConfigBasic,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConsulNodeExists(),
-					testAccCheckConsulNodeValue("consul_catalog_entry.foo", "address", "127.0.0.1"),
-					testAccCheckConsulNodeValue("consul_catalog_entry.foo", "node", "foo"),
+					testAccCheckConsulNodeValue("consul_node.foo", "address", "127.0.0.1"),
+					testAccCheckConsulNodeValue("consul_node.foo", "name", "foo"),
+				),
+			},
+			{
+				PreConfig: testAccRemoveConsulNode(t),
+				Config:    testAccConsulNodeConfigBasic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckConsulNodeExists(),
+					testAccCheckConsulNodeValue("consul_node.foo", "address", "127.0.0.1"),
+					testAccCheckConsulNodeValue("consul_node.foo", "name", "foo"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccConsulNode_nodeMeta(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() {},
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckConsulNodeDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccConsulNodeConfigNodeMeta,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckConsulNodeExists(),
+					testAccCheckConsulNodeValue("consul_node.foo", "address", "127.0.0.1"),
+					testAccCheckConsulNodeValue("consul_node.foo", "name", "foo"),
+					testAccCheckConsulNodeValue("consul_node.foo", "meta.%", "3"),
+					testAccCheckConsulNodeValue("consul_node.foo", "meta.foo", "bar"),
+					testAccCheckConsulNodeValue("consul_node.foo", "meta.update", "this"),
+					testAccCheckConsulNodeValue("consul_node.foo", "meta.remove", "this"),
+				),
+			},
+			{
+				Config: testAccConsulNodeConfigNodeMeta_Update,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckConsulNodeExists(),
+					testAccCheckConsulNodeValue("consul_node.foo", "address", "127.0.0.1"),
+					testAccCheckConsulNodeValue("consul_node.foo", "name", "foo"),
+					testAccCheckConsulNodeValue("consul_node.foo", "meta.%", "2"),
+					testAccCheckConsulNodeValue("consul_node.foo", "meta.foo", "bar"),
+					testAccCheckConsulNodeValue("consul_node.foo", "meta.update", "yes"),
+					testAccCheckConsulNodeValueRemoved("consul_node.foo", "meta.remove"),
 				),
 			},
 		},
@@ -79,9 +122,62 @@ func testAccCheckConsulNodeValue(n, attr, val string) resource.TestCheckFunc {
 	}
 }
 
-const testAccConsulNodeConfig = `
-resource "consul_catalog_entry" "foo" {
+func testAccCheckConsulNodeValueRemoved(n, attr string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		rn, ok := s.RootModule().Resources[n]
+		if !ok {
+			return fmt.Errorf("Resource not found")
+		}
+		_, ok = rn.Primary.Attributes[attr]
+		if ok {
+			return fmt.Errorf("Attribute '%s' still present: %#v", attr, rn.Primary.Attributes)
+		}
+		return nil
+	}
+}
+
+func testAccRemoveConsulNode(t *testing.T) func() {
+	return func() {
+		catalog := testAccProvider.Meta().(*consulapi.Client).Catalog()
+		wOpts := &consulapi.WriteOptions{}
+		dereg := &consulapi.CatalogDeregistration{
+			Node: "foo",
+		}
+		_, err := catalog.Deregister(dereg, wOpts)
+		if err != nil {
+			t.Errorf("err: %v", err)
+		}
+	}
+}
+
+const testAccConsulNodeConfigBasic = `
+resource "consul_node" "foo" {
+	name 	= "foo"
 	address = "127.0.0.1"
-	node = "foo"
+}
+`
+
+const testAccConsulNodeConfigNodeMeta = `
+resource "consul_node" "foo" {
+	name 	= "foo"
+	address = "127.0.0.1"
+
+	meta = {
+		foo    = "bar"
+		update = "this"
+		remove = "this"
+	}
+}
+`
+
+const testAccConsulNodeConfigNodeMeta_Update = `
+resource "consul_node" "foo" {
+	name 	= "foo"
+	address = "127.0.0.1"
+
+	meta = {
+		foo     = "bar"
+		update  = "yes"
+	}
 }
 `

@@ -26,23 +26,27 @@ func newKeyClient(realClient *consulapi.KV, dc, token string) *keyClient {
 	}
 }
 
-func (c *keyClient) Get(path string) (string, error) {
+func (c *keyClient) Get(path string) (string, int, error) {
 	log.Printf(
 		"[DEBUG] Reading key '%s' in %s",
 		path, c.qOpts.Datacenter,
 	)
 	pair, _, err := c.client.Get(path, c.qOpts)
 	if err != nil {
-		return "", fmt.Errorf("Failed to read Consul key '%s': %s", path, err)
+		return "", 0, fmt.Errorf("Failed to read Consul key '%s': %s", path, err)
 	}
 	value := ""
 	if pair != nil {
 		value = string(pair.Value)
 	}
-	return value, nil
+	flags := 0
+	if pair != nil {
+		flags = int(pair.Flags)
+	}
+	return value, flags, nil
 }
 
-func (c *keyClient) GetUnderPrefix(pathPrefix string) (map[string]string, error) {
+func (c *keyClient) GetUnderPrefix(pathPrefix string) (consulapi.KVPairs, error) {
 	log.Printf(
 		"[DEBUG] Listing keys under '%s' in %s",
 		pathPrefix, c.qOpts.Datacenter,
@@ -53,20 +57,15 @@ func (c *keyClient) GetUnderPrefix(pathPrefix string) (map[string]string, error)
 			"Failed to list Consul keys under prefix '%s': %s", pathPrefix, err,
 		)
 	}
-	value := map[string]string{}
-	for _, pair := range pairs {
-		subKey := pair.Key[len(pathPrefix):]
-		value[subKey] = string(pair.Value)
-	}
-	return value, nil
+	return pairs, nil
 }
 
-func (c *keyClient) Put(path, value string) error {
+func (c *keyClient) Put(path, value string, flags int) error {
 	log.Printf(
 		"[DEBUG] Setting key '%s' to '%v' in %s",
 		path, value, c.wOpts.Datacenter,
 	)
-	pair := consulapi.KVPair{Key: path, Value: []byte(value)}
+	pair := consulapi.KVPair{Key: path, Value: []byte(value), Flags: uint64(flags)}
 	if _, err := c.client.Put(&pair, c.wOpts); err != nil {
 		return fmt.Errorf("Failed to write Consul key '%s': %s", path, err)
 	}
