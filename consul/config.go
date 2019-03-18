@@ -18,6 +18,7 @@ type Config struct {
 	CAFile        string `mapstructure:"ca_file"`
 	CertFile      string `mapstructure:"cert_file"`
 	KeyFile       string `mapstructure:"key_file"`
+	CAPath        string `mapstructure:"ca_path"`
 	InsecureHttps bool   `mapstructure:"insecure_https"`
 }
 
@@ -38,6 +39,7 @@ func (c *Config) Client() (*consulapi.Client, error) {
 	tlsConfig.CAFile = c.CAFile
 	tlsConfig.CertFile = c.CertFile
 	tlsConfig.KeyFile = c.KeyFile
+	tlsConfig.CAPath = c.CAPath
 	if c.InsecureHttps {
 		if config.Scheme != "https" {
 			return nil, fmt.Errorf("insecure_https is meant to be used when scheme is https")
