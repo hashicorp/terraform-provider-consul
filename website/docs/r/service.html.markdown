@@ -44,6 +44,42 @@ resource "consul_service" "google" {
 }
 ```
 
+Register an health-check:
+
+```hcl
+resource "consul_service" "redis" {
+	name = "redis"
+	node = "redis"
+	port = 6379
+
+	check {
+		check_id = "service:redis1"
+		name = "Redis health check"
+		status = "passing"
+
+		definition {
+		  http = "https://www.hashicorptest.com"
+
+		  header {
+			  name = "foo"
+			  value = ["test"]
+		  }
+
+		  header {
+			  name = "bar"
+			  value = ["test"]
+		  }
+
+		  tls_skip_verify = false
+		  method = "PUT"
+		  interval = "5s"
+		  timeout = "1s"
+		  deregister_critical_service_after = "30s"
+		}
+	}
+}
+```
+
 ## Argument Reference
 
 The following arguments are supported:
