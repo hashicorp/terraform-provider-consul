@@ -116,58 +116,48 @@ func resourceConsulService() *schema.Resource {
 							Optional: true,
 							Default:  "critical",
 						},
+						"tcp": {
+							Type:     schema.TypeString,
+							Optional: true,
+						},
 
-						"definition": {
-							Type:     schema.TypeList,
+						"http": {
+							Type:     schema.TypeString,
+							Optional: true,
+						},
+
+						"header": {
+							Type:     schema.TypeSet,
+							Optional: true,
+							Elem:     headerResource,
+						},
+
+						"tls_skip_verify": {
+							Type:     schema.TypeBool,
+							Optional: true,
+							Default:  false,
+						},
+
+						"method": {
+							Type:     schema.TypeString,
+							Optional: true,
+							Default:  "GET",
+						},
+
+						"interval": {
+							Type:     schema.TypeString,
 							Required: true,
-							MaxItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"tcp": {
-										Type:     schema.TypeString,
-										Optional: true,
-									},
+						},
 
-									"http": {
-										Type:     schema.TypeString,
-										Optional: true,
-									},
+						"timeout": {
+							Type:     schema.TypeString,
+							Required: true,
+						},
 
-									"header": {
-										Type:     schema.TypeSet,
-										Optional: true,
-										Elem:     headerResource,
-									},
-
-									"tls_skip_verify": {
-										Type:     schema.TypeBool,
-										Optional: true,
-										Default:  false,
-									},
-
-									"method": {
-										Type:     schema.TypeString,
-										Optional: true,
-										Default:  "GET",
-									},
-
-									"interval": {
-										Type:     schema.TypeString,
-										Required: true,
-									},
-
-									"timeout": {
-										Type:     schema.TypeString,
-										Required: true,
-									},
-
-									"deregister_critical_service_after": {
-										Type:     schema.TypeString,
-										Optional: true,
-										Default:  "30s",
-									},
-								},
-							},
+						"deregister_critical_service_after": {
+							Type:     schema.TypeString,
+							Optional: true,
+							Default:  "30s",
 						},
 					},
 				},
@@ -416,14 +406,13 @@ func resourceConsulServiceRead(d *schema.ResourceData, meta interface{}) error {
 		m["name"] = check.Name
 		m["notes"] = check.Notes
 		m["status"] = check.Status
-		definition := make(map[string]interface{})
-		definition["tcp"] = check.Definition.TCP
-		definition["http"] = check.Definition.HTTP
-		definition["tls_skip_verify"] = check.Definition.TLSSkipVerify
-		definition["method"] = check.Definition.Method
-		definition["interval"] = check.Definition.Interval.String()
-		definition["timeout"] = check.Definition.Timeout.String()
-		definition["deregister_critical_service_after"] = check.Definition.DeregisterCriticalServiceAfter.String()
+		m["tcp"] = check.Definition.TCP
+		m["http"] = check.Definition.HTTP
+		m["tls_skip_verify"] = check.Definition.TLSSkipVerify
+		m["method"] = check.Definition.Method
+		m["interval"] = check.Definition.Interval.String()
+		m["timeout"] = check.Definition.Timeout.String()
+		m["deregister_critical_service_after"] = check.Definition.DeregisterCriticalServiceAfter.String()
 		headers := make([]interface{}, 0)
 		for name, value := range check.Definition.Header {
 			header := make(map[string]interface{})
@@ -440,12 +429,11 @@ func resourceConsulServiceRead(d *schema.ResourceData, meta interface{}) error {
 
 		// Setting a Set in a List does not work correctly
 		// see https://github.com/hashicorp/terraform/issues/16331 for details
-		definition["header"] = schema.NewSet(
+		m["header"] = schema.NewSet(
 			schema.HashResource(headerResource),
 			headers,
 		)
 
-		m["definition"] = []interface{}{definition}
 		checks = append(checks, m)
 	}
 	if err := d.Set("check", checks); err != nil {
@@ -527,42 +515,37 @@ func parseChecks(node string, name string, d *schema.ResourceData) ([]*consulapi
 	s := []*consulapi.HealthCheck{}
 	s = make([]*consulapi.HealthCheck, len(checks))
 	for i, raw := range checks {
-		sub, ok := raw.(map[string]interface{})
+		check, ok := raw.(map[string]interface{})
 		if !ok {
 			return nil, fmt.Errorf("Failed to unroll: %#v", raw)
 		}
-		def, ok := sub["definition"].([]interface{})
-		if !ok {
-			return nil, fmt.Errorf("Failed to unroll check definition: %#v", sub)
-		}
-		definition := def[0].(map[string]interface{})
-		headers, err := parseHeaders(definition)
+		headers, err := parseHeaders(check)
 		if err != nil {
 			return nil, err
 		}
-		interval, err := time.ParseDuration(definition["interval"].(string))
+		interval, err := time.ParseDuration(check["interval"].(string))
 		if err != nil {
 			return nil, fmt.Errorf("Failed to parse interval: %#v", interval)
 		}
-		timeout, err := time.ParseDuration(definition["timeout"].(string))
+		timeout, err := time.ParseDuration(check["timeout"].(string))
 		if err != nil {
 			return nil, fmt.Errorf("Failed to parse timeout: %#v", timeout)
 		}
 
-		tcp := definition["tcp"].(string)
-		http := definition["http"].(string)
+		tcp := check["tcp"].(string)
+		http := check["http"].(string)
 		if tcp != "" && http != "" {
 			return nil, fmt.Errorf("You cannot set both tcp and http in the same check")
 		}
 		var tlsSkipVerify bool
-		if definition["tls_skip_verify"] != nil {
-			tlsSkipVerify = definition["tls_skip_verify"].(bool)
+		if check["tls_skip_verify"] != nil {
+			tlsSkipVerify = check["tls_skip_verify"].(bool)
 		}
 		var method string
-		if definition["method"] != nil {
-			method = definition["method"].(string)
+		if check["method"] != nil {
+			method = check["method"].(string)
 		}
-		healthCheck := &consulapi.HealthCheckDefinition{
+		healthCheck := consulapi.HealthCheckDefinition{
 			HTTP:          http,
 			Header:        headers,
 			Method:        method,
@@ -572,10 +555,10 @@ func parseChecks(node string, name string, d *schema.ResourceData) ([]*consulapi
 			Timeout:       *consulapi.NewReadableDuration(timeout),
 		}
 		var deregisterCriticalServiceAfter string
-		if definition["deregister_critical_service_after"] == nil {
+		if check["deregister_critical_service_after"] == nil {
 			deregisterCriticalServiceAfter = ""
 		} else {
-			deregisterCriticalServiceAfter = definition["deregister_critical_service_after"].(string)
+			deregisterCriticalServiceAfter = check["deregister_critical_service_after"].(string)
 		}
 		if deregisterCriticalServiceAfter != "" {
 			deregisterCriticalServiceAfter, err := time.ParseDuration(deregisterCriticalServiceAfter)
@@ -588,20 +571,20 @@ func parseChecks(node string, name string, d *schema.ResourceData) ([]*consulapi
 		s[i] = &consulapi.HealthCheck{
 			Node:       node,
 			ServiceID:  name,
-			CheckID:    sub["check_id"].(string),
-			Name:       sub["name"].(string),
-			Notes:      sub["notes"].(string),
-			Status:     sub["status"].(string),
-			Definition: *healthCheck,
+			CheckID:    check["check_id"].(string),
+			Name:       check["name"].(string),
+			Notes:      check["notes"].(string),
+			Status:     check["status"].(string),
+			Definition: healthCheck,
 		}
 	}
 
 	return s, nil
 }
 
-func parseHeaders(definition map[string]interface{}) (map[string][]string, error) {
+func parseHeaders(check map[string]interface{}) (map[string][]string, error) {
 	headers := make(map[string][]string, 0)
-	header := definition["header"].(*schema.Set).List()
+	header := check["header"].(*schema.Set).List()
 	for _, h := range header {
 		name := h.(map[string]interface{})["name"].(string)
 		value := h.(map[string]interface{})["value"]

@@ -48,35 +48,31 @@ Register an health-check:
 
 ```hcl
 resource "consul_service" "redis" {
-	name = "redis"
-	node = "redis"
-	port = 6379
+  name = "redis"
+  node = "redis"
+  port = 6379
 
-	check {
-		check_id = "service:redis1"
-		name = "Redis health check"
-		status = "passing"
+  check {
+	check_id                          = "service:redis1"
+	name                              = "Redis health check"
+	status                            = "passing"
+	http                              = "https://www.hashicorptest.com"
+	tls_skip_verify                   = false
+	method                            = "PUT"
+	interval                          = "5s"
+	timeout                           = "1s"
+	deregister_critical_service_after = "30s"
 
-		definition {
-		  http = "https://www.hashicorptest.com"
-
-		  header {
-			  name = "foo"
-			  value = ["test"]
-		  }
-
-		  header {
-			  name = "bar"
-			  value = ["test"]
-		  }
-
-		  tls_skip_verify = false
-		  method = "PUT"
-		  interval = "5s"
-		  timeout = "1s"
-		  deregister_critical_service_after = "30s"
-		}
+	header {
+	  name  = "foo"
+	  value = ["test"]
 	}
+
+	header {
+	  name  = "bar"
+	  value = ["test"]
+	}
+  }
 }
 ```
 
@@ -117,11 +113,6 @@ The following attributes are available for each health-check:
 * `notes` - (Optional, string) An opaque field meant to hold human readable text.
 * `status` - (Optional, string) The initial health-check status. Defaults
   to `critical`.
-* `definition` - (Required) The definition of the health-check. The list of
-  attributes is given below.
-
-The following attributes are available for the `definition` of each health-check:
-
 * `tcp` - (Optional, string) The TCP address and port to connect to for a TCP check.
 * `http` - (Optional, string) The HTTP endpoint to call for an HTTP check.
 * `header` - (Optional, set of headers) The headers to send for an HTTP check.
@@ -150,3 +141,6 @@ The following attributes are exported:
 * `name` - The name of the service.
 * `port` - The port of the service.
 * `tags` - The tags of the service.
+* `external` - Whether this is an external service.
+* `checks` - The list of health-checks associated with the service.
+* `datacenter` - The datacenter of the service.

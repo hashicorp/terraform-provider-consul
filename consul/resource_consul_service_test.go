@@ -117,18 +117,18 @@ func TestAccConsulServiceCheck(t *testing.T) {
 					resource.TestCheckResourceAttr("consul_service.example", "check.0.name", "Redis health check"),
 					resource.TestCheckResourceAttr("consul_service.example", "check.0.notes", "Script based health check"),
 					resource.TestCheckResourceAttr("consul_service.example", "check.0.status", "passing"),
-					resource.TestCheckResourceAttr("consul_service.example", "check.0.definition.0.http", "https://www.hashicorptest.com"),
-					resource.TestCheckResourceAttr("consul_service.example", "check.0.definition.0.interval", "5s"),
-					resource.TestCheckResourceAttr("consul_service.example", "check.0.definition.0.timeout", "1s"),
-					resource.TestCheckResourceAttr("consul_service.example", "check.0.definition.0.deregister_critical_service_after", "30s"),
-					resource.TestCheckResourceAttr("consul_service.example", "check.0.definition.0.header.#", "2"),
-					resource.TestCheckResourceAttr("consul_service.example", "check.0.definition.0.header.344754333.name", "bar"),
-					resource.TestCheckResourceAttr("consul_service.example", "check.0.definition.0.header.344754333.value.#", "1"),
-					resource.TestCheckResourceAttr("consul_service.example", "check.0.definition.0.header.344754333.value.0", "test"),
-					resource.TestCheckResourceAttr("consul_service.example", "check.0.definition.0.header.2976766922.name", "foo"),
-					resource.TestCheckResourceAttr("consul_service.example", "check.0.definition.0.header.2976766922.value.#", "1"),
-					resource.TestCheckResourceAttr("consul_service.example", "check.0.definition.0.header.2976766922.value.0", "test"),
-					resource.TestCheckResourceAttr("consul_service.no-deregister", "check.0.definition.0.deregister_critical_service_after", "30s"),
+					resource.TestCheckResourceAttr("consul_service.example", "check.0.http", "https://www.hashicorptest.com"),
+					resource.TestCheckResourceAttr("consul_service.example", "check.0.interval", "5s"),
+					resource.TestCheckResourceAttr("consul_service.example", "check.0.timeout", "1s"),
+					resource.TestCheckResourceAttr("consul_service.example", "check.0.deregister_critical_service_after", "30s"),
+					resource.TestCheckResourceAttr("consul_service.example", "check.0.header.#", "2"),
+					resource.TestCheckResourceAttr("consul_service.example", "check.0.header.344754333.name", "bar"),
+					resource.TestCheckResourceAttr("consul_service.example", "check.0.header.344754333.value.#", "1"),
+					resource.TestCheckResourceAttr("consul_service.example", "check.0.header.344754333.value.0", "test"),
+					resource.TestCheckResourceAttr("consul_service.example", "check.0.header.2976766922.name", "foo"),
+					resource.TestCheckResourceAttr("consul_service.example", "check.0.header.2976766922.value.#", "1"),
+					resource.TestCheckResourceAttr("consul_service.example", "check.0.header.2976766922.value.0", "test"),
+					resource.TestCheckResourceAttr("consul_service.no-deregister", "check.0.deregister_critical_service_after", "30s"),
 				),
 			},
 		},
@@ -221,25 +221,21 @@ resource "consul_service" "example" {
 		name = "Redis health check"
 		notes = "Script based health check"
 		status = "passing"
+		http = "https://www.hashicorptest.com"
+		tls_skip_verify = false
+		method = "PUT"
+		interval = "5s"
+		timeout = "1s"
+		deregister_critical_service_after = "30s"
 
-		definition {
-		  http = "https://www.hashicorptest.com"
+		header {
+		  name = "foo"
+		  value = ["test"]
+		}
 
-		  header {
-			name = "foo"
-			value = ["test"]
-		  }
-
-		  header {
-			name = "bar"
-			value = ["test"]
-		  }
-
-		  tls_skip_verify = false
-		  method = "PUT"
-		  interval = "5s"
-		  timeout = "1s"
-		  deregister_critical_service_after = "30s"
+		header {
+		  name = "bar"
+		  value = ["test"]
 		}
 	}
 }
@@ -259,13 +255,10 @@ resource "consul_service" "external" {
 		check_id = "service:redis1"
 		name = "Redis health check"
 		notes = "Script based health check"
-
-		definition {
-		  http = "https://www.google.com"
-		  interval = "5s"
-		  timeout = "1s"
-		  deregister_critical_service_after = "30s"
-		}
+		http = "https://www.google.com"
+		interval = "5s"
+		timeout = "1s"
+		deregister_critical_service_after = "30s"
 	}
 }
 
@@ -279,12 +272,9 @@ resource "consul_service" "no-deregister" {
 		check_id = "service:redis1"
 		name = "Redis health check"
 		notes = "Script based health check"
-
-		definition {
-		  http = "https://www.google.com"
-		  interval = "5s"
-		  timeout = "1s"
-		}
+		http = "https://www.google.com"
+		interval = "5s"
+		timeout = "1s"
 	}
 }
 `
