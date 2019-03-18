@@ -374,21 +374,39 @@ func resourceConsulServiceRead(d *schema.ResourceData, meta interface{}) error {
 		}
 	}
 
-	d.Set("address", service.ServiceAddress)
-	d.Set("service_id", service.ServiceID)
-	d.Set("datacenter", service.Datacenter)
-	d.Set("name", service.ServiceName)
-	d.Set("port", service.ServicePort)
+	if err = d.Set("address", service.ServiceAddress); err != nil {
+		return fmt.Errorf("Failed to store 'address': %s", err)
+	}
+	if err = d.Set("service_id", service.ServiceID); err != nil {
+		return fmt.Errorf("Failed to store 'service_id': %s", err)
+	}
+	if err = d.Set("datacenter", service.Datacenter); err != nil {
+		return fmt.Errorf("Failed to store 'datacenter': %s", err)
+	}
+	if err = d.Set("name", service.ServiceName); err != nil {
+		return fmt.Errorf("Failed to store 'name': %s", err)
+	}
+	if err = d.Set("port", service.ServicePort); err != nil {
+		return fmt.Errorf("Failed to store 'port': %s", err)
+	}
 	tags := make([]string, 0, len(service.ServiceTags))
 	for _, tag := range service.ServiceTags {
 		tags = append(tags, tag)
 	}
-	d.Set("tags", tags)
-	d.Set("node", service.Node)
+	if err = d.Set("tags", tags); err != nil {
+		return fmt.Errorf("Failed to store 'tags': %s", err)
+	}
+	if err = d.Set("node", service.Node); err != nil {
+		return fmt.Errorf("Failed to store 'node': %s", err)
+	}
 	if externalNode, present := service.NodeMeta["external-node"]; present && externalNode == "true" {
-		d.Set("external", true)
+		if err = d.Set("external", true); err != nil {
+			return fmt.Errorf("Failed to store 'external': %s", err)
+		}
 	} else {
-		d.Set("external", false)
+		if err = d.Set("external", false); err != nil {
+			return fmt.Errorf("Failed to store 'external': %s", err)
+		}
 	}
 
 	checks := make([]map[string]interface{}, 0)
