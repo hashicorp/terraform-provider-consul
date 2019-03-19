@@ -101,6 +101,40 @@ func TestAccConsulService_serviceID(t *testing.T) {
 	})
 }
 
+func TestAccConsulServiceCheck(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() {},
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckConsulServiceDestroy,
+		Steps: []resource.TestStep{
+			resource.TestStep{
+				Config: testAccConsulServiceCheck,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("consul_service.example", "name", "example"),
+					resource.TestCheckResourceAttr("consul_service.example", "port", "80"),
+					resource.TestCheckResourceAttr("consul_service.example", "check.#", "1"),
+					resource.TestCheckResourceAttr("consul_service.example", "check.0.check_id", "service:redis1"),
+					resource.TestCheckResourceAttr("consul_service.example", "check.0.name", "Redis health check"),
+					resource.TestCheckResourceAttr("consul_service.example", "check.0.notes", "Script based health check"),
+					resource.TestCheckResourceAttr("consul_service.example", "check.0.status", "passing"),
+					resource.TestCheckResourceAttr("consul_service.example", "check.0.http", "https://www.hashicorptest.com"),
+					resource.TestCheckResourceAttr("consul_service.example", "check.0.interval", "5s"),
+					resource.TestCheckResourceAttr("consul_service.example", "check.0.timeout", "1s"),
+					resource.TestCheckResourceAttr("consul_service.example", "check.0.deregister_critical_service_after", "30s"),
+					resource.TestCheckResourceAttr("consul_service.example", "check.0.header.#", "2"),
+					resource.TestCheckResourceAttr("consul_service.example", "check.0.header.344754333.name", "bar"),
+					resource.TestCheckResourceAttr("consul_service.example", "check.0.header.344754333.value.#", "1"),
+					resource.TestCheckResourceAttr("consul_service.example", "check.0.header.344754333.value.0", "test"),
+					resource.TestCheckResourceAttr("consul_service.example", "check.0.header.2976766922.name", "foo"),
+					resource.TestCheckResourceAttr("consul_service.example", "check.0.header.2976766922.value.#", "1"),
+					resource.TestCheckResourceAttr("consul_service.example", "check.0.header.2976766922.value.0", "test"),
+					resource.TestCheckResourceAttr("consul_service.no-deregister", "check.0.deregister_critical_service_after", "30s"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccConsulService_nodeDoesNotExist(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() {},
@@ -143,7 +177,7 @@ func testAccCheckConsulServiceDestroy(s *terraform.State) error {
 	}
 
 	if len(services) > 1 {
-		return fmt.Errorf("Matching services still exsist: %v", services)
+		return fmt.Errorf("Matching services still exist: %v", services)
 	}
 
 	return nil
@@ -168,6 +202,80 @@ const testAccConsulServiceConfigNoNode = `
 resource "consul_service" "example" {
 	name = "example"
 	node = "external"
+}
+`
+
+const testAccConsulServiceCheck = `
+resource "consul_node" "compute" {
+	name    = "compute-example"
+	address = "www.hashicorptest.com"
+}
+
+resource "consul_service" "example" {
+	name = "example"
+	node = "${consul_node.compute.name}"
+	port = 80
+
+	check {
+		check_id = "service:redis1"
+		name = "Redis health check"
+		notes = "Script based health check"
+		status = "passing"
+		http = "https://www.hashicorptest.com"
+		tls_skip_verify = false
+		method = "PUT"
+		interval = "5s"
+		timeout = "1s"
+		deregister_critical_service_after = "30s"
+
+		header {
+		  name = "foo"
+		  value = ["test"]
+		}
+
+		header {
+		  name = "bar"
+		  value = ["test"]
+		}
+	}
+}
+
+resource "consul_node" "external" {
+	name    = "external-example"
+	address = "www.hashicorptest.com"
+}
+
+resource "consul_service" "external" {
+	name     = "example-external"
+	node     = "${consul_node.external.name}"
+	external = true
+	port     = 80
+
+	check {
+		check_id = "service:redis1"
+		name = "Redis health check"
+		notes = "Script based health check"
+		http = "https://www.google.com"
+		interval = "5s"
+		timeout = "1s"
+		deregister_critical_service_after = "30s"
+	}
+}
+
+resource "consul_service" "no-deregister" {
+	name     = "example-external"
+	node     = "${consul_node.external.name}"
+	external = true
+	port     = 80
+
+	check {
+		check_id = "service:redis1"
+		name = "Redis health check"
+		notes = "Script based health check"
+		http = "https://www.google.com"
+		interval = "5s"
+		timeout = "1s"
+	}
 }
 `
 

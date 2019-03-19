@@ -3,7 +3,7 @@ module github.com/terraform-providers/terraform-provider-consul
 require (
 	github.com/blang/semver v3.5.1+incompatible // indirect
 	github.com/golang/glog v0.0.0-20160126235308-23def4e6c14b // indirect
-	github.com/hashicorp/consul v1.2.0
+	github.com/hashicorp/consul v1.4.2
 	github.com/hashicorp/errwrap v1.0.0
 	github.com/hashicorp/go-getter v0.0.0-20180425224130-3f60ec5cfbb2 // indirect
 	github.com/hashicorp/go-hclog v0.0.0-20180402200405-69ff559dc25f // indirect

@@ -3,10 +3,26 @@ package consul
 import (
 	"errors"
 	"fmt"
+	"time"
 
 	consulapi "github.com/hashicorp/consul/api"
+	"github.com/hashicorp/errwrap"
 	"github.com/hashicorp/terraform/helper/schema"
 )
+
+var headerResource = &schema.Resource{
+	Schema: map[string]*schema.Schema{
+		"name": &schema.Schema{
+			Type:     schema.TypeString,
+			Required: true,
+		},
+		"value": &schema.Schema{
+			Type:     schema.TypeList,
+			Required: true,
+			Elem:     &schema.Schema{Type: schema.TypeString},
+		},
+	},
+}
 
 const (
 	// ConsulSourceKey is the name of the meta attribute used by Consul to
@@ -58,6 +74,12 @@ func resourceConsulService() *schema.Resource {
 				ForceNew: true,
 			},
 
+			"external": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  false,
+			},
+
 			"port": {
 				Type:     schema.TypeInt,
 				Optional: true,
@@ -67,6 +89,78 @@ func resourceConsulService() *schema.Resource {
 				Type:     schema.TypeList,
 				Optional: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
+			},
+
+			"check": {
+				Type:     schema.TypeList,
+				Optional: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"check_id": {
+							Type:     schema.TypeString,
+							Optional: true,
+						},
+
+						"name": {
+							Type:     schema.TypeString,
+							Required: true,
+						},
+
+						"notes": {
+							Type:     schema.TypeString,
+							Optional: true,
+						},
+
+						"status": {
+							Type:     schema.TypeString,
+							Optional: true,
+							Default:  "critical",
+						},
+						"tcp": {
+							Type:     schema.TypeString,
+							Optional: true,
+						},
+
+						"http": {
+							Type:     schema.TypeString,
+							Optional: true,
+						},
+
+						"header": {
+							Type:     schema.TypeSet,
+							Optional: true,
+							Elem:     headerResource,
+						},
+
+						"tls_skip_verify": {
+							Type:     schema.TypeBool,
+							Optional: true,
+							Default:  false,
+						},
+
+						"method": {
+							Type:     schema.TypeString,
+							Optional: true,
+							Default:  "GET",
+						},
+
+						"interval": {
+							Type:     schema.TypeString,
+							Required: true,
+						},
+
+						"timeout": {
+							Type:     schema.TypeString,
+							Required: true,
+						},
+
+						"deregister_critical_service_after": {
+							Type:     schema.TypeString,
+							Optional: true,
+							Default:  "30s",
+						},
+					},
+				},
 			},
 		},
 	}
@@ -142,6 +236,19 @@ func resourceConsulServiceCreate(d *schema.ResourceData, meta interface{}) error
 		registration.Service.Tags = s
 	}
 
+	var nodeMeta map[string]string
+	nodeMeta = make(map[string]string)
+	if d.Get("external").(bool) {
+		nodeMeta["external-node"] = "true"
+		nodeMeta["external-probe"] = "true"
+	}
+	registration.NodeMeta = nodeMeta
+
+	checks, err := parseChecks(node, name, d)
+	if err != nil {
+		return fmt.Errorf("Failed to fetch health-checks: %v", err)
+	}
+	registration.Checks = checks
 	registration.Service.Meta = map[string]string{
 		consulSourceKey: consulSourceValue,
 	}
@@ -211,6 +318,19 @@ func resourceConsulServiceUpdate(d *schema.ResourceData, meta interface{}) error
 		registration.Service.Tags = s
 	}
 
+	var nodeMeta map[string]string
+	nodeMeta = make(map[string]string)
+	if d.Get("external").(bool) {
+		nodeMeta["external-node"] = "true"
+		nodeMeta["external-probe"] = "true"
+	}
+	registration.NodeMeta = nodeMeta
+
+	checks, err := parseChecks(node, name, d)
+	if err != nil {
+		return fmt.Errorf("Failed to fetch health-checks: %v", err)
+	}
+	registration.Checks = checks
 	registration.Service.Meta = map[string]string{
 		consulSourceKey: consulSourceValue,
 	}
@@ -244,18 +364,81 @@ func resourceConsulServiceRead(d *schema.ResourceData, meta interface{}) error {
 		}
 	}
 
-	d.Set("address", service.ServiceAddress)
-	d.Set("service_id", service.ServiceID)
-	d.Set("datacenter", service.Datacenter)
-	d.Set("name", service.ServiceName)
-	d.Set("port", service.ServicePort)
+	if err = d.Set("address", service.ServiceAddress); err != nil {
+		return fmt.Errorf("Failed to store 'address': %s", err)
+	}
+	if err = d.Set("service_id", service.ServiceID); err != nil {
+		return fmt.Errorf("Failed to store 'service_id': %s", err)
+	}
+	if err = d.Set("datacenter", service.Datacenter); err != nil {
+		return fmt.Errorf("Failed to store 'datacenter': %s", err)
+	}
+	if err = d.Set("name", service.ServiceName); err != nil {
+		return fmt.Errorf("Failed to store 'name': %s", err)
+	}
+	if err = d.Set("port", service.ServicePort); err != nil {
+		return fmt.Errorf("Failed to store 'port': %s", err)
+	}
 	tags := make([]string, 0, len(service.ServiceTags))
 	for _, tag := range service.ServiceTags {
 		tags = append(tags, tag)
 	}
-	d.Set("tags", tags)
-	d.Set("node", service.Node)
+	if err = d.Set("tags", tags); err != nil {
+		return fmt.Errorf("Failed to store 'tags': %s", err)
+	}
+	if err = d.Set("node", service.Node); err != nil {
+		return fmt.Errorf("Failed to store 'node': %s", err)
+	}
+	if externalNode, present := service.NodeMeta["external-node"]; present && externalNode == "true" {
+		if err = d.Set("external", true); err != nil {
+			return fmt.Errorf("Failed to store 'external': %s", err)
+		}
+	} else {
+		if err = d.Set("external", false); err != nil {
+			return fmt.Errorf("Failed to store 'external': %s", err)
+		}
+	}
 
+	checks := make([]map[string]interface{}, 0)
+	for _, check := range service.Checks {
+		m := make(map[string]interface{})
+		m["check_id"] = check.CheckID
+		m["name"] = check.Name
+		m["notes"] = check.Notes
+		m["status"] = check.Status
+		m["tcp"] = check.Definition.TCP
+		m["http"] = check.Definition.HTTP
+		m["tls_skip_verify"] = check.Definition.TLSSkipVerify
+		m["method"] = check.Definition.Method
+		m["interval"] = check.Definition.Interval.String()
+		m["timeout"] = check.Definition.Timeout.String()
+		m["deregister_critical_service_after"] = check.Definition.DeregisterCriticalServiceAfter.String()
+		headers := make([]interface{}, 0)
+		for name, value := range check.Definition.Header {
+			header := make(map[string]interface{})
+			header["name"] = name
+
+			valueInterface := make([]interface{}, 0)
+			for _, v := range value {
+				valueInterface = append(valueInterface, v)
+			}
+
+			header["value"] = valueInterface
+			headers = append(headers, header)
+		}
+
+		// Setting a Set in a List does not work correctly
+		// see https://github.com/hashicorp/terraform/issues/16331 for details
+		m["header"] = schema.NewSet(
+			schema.HashResource(headerResource),
+			headers,
+		)
+
+		checks = append(checks, m)
+	}
+	if err := d.Set("check", checks); err != nil {
+		return errwrap.Wrapf("Unable to store checks: {{err}}", err)
+	}
 	return nil
 }
 
@@ -314,9 +497,100 @@ func retrieveService(client *consulapi.Client, name string, ident string, node s
 	// Only one service with a given ID may be present per node
 	for _, s := range services {
 		if (s.ServiceID == ident) && (s.Node == node) {
+			healthChecks, _, err := client.Health().Checks(name, &qOpts)
+			if err != nil {
+				return nil, fmt.Errorf("Failed to fetch health-checks: %v", err)
+			}
+			s.Checks = healthChecks
 			return s, nil
 		}
 	}
 
 	return nil, fmt.Errorf("Failed to retrieve service: '%s', services: %v", name, len(services))
+}
+
+func parseChecks(node string, name string, d *schema.ResourceData) ([]*consulapi.HealthCheck, error) {
+	// Get health checks definition
+	checks := d.Get("check").([]interface{})
+	s := []*consulapi.HealthCheck{}
+	s = make([]*consulapi.HealthCheck, len(checks))
+	for i, raw := range checks {
+		check, ok := raw.(map[string]interface{})
+		if !ok {
+			return nil, fmt.Errorf("Failed to unroll: %#v", raw)
+		}
+		headers, err := parseHeaders(check)
+		if err != nil {
+			return nil, err
+		}
+		interval, err := time.ParseDuration(check["interval"].(string))
+		if err != nil {
+			return nil, fmt.Errorf("Failed to parse interval: %#v", interval)
+		}
+		timeout, err := time.ParseDuration(check["timeout"].(string))
+		if err != nil {
+			return nil, fmt.Errorf("Failed to parse timeout: %#v", timeout)
+		}
+
+		tcp := check["tcp"].(string)
+		http := check["http"].(string)
+		if tcp != "" && http != "" {
+			return nil, fmt.Errorf("You cannot set both tcp and http in the same check")
+		}
+		var tlsSkipVerify bool
+		if check["tls_skip_verify"] != nil {
+			tlsSkipVerify = check["tls_skip_verify"].(bool)
+		}
+		var method string
+		if check["method"] != nil {
+			method = check["method"].(string)
+		}
+		healthCheck := consulapi.HealthCheckDefinition{
+			HTTP:          http,
+			Header:        headers,
+			Method:        method,
+			TLSSkipVerify: tlsSkipVerify,
+			TCP:           tcp,
+			Interval:      *consulapi.NewReadableDuration(interval),
+			Timeout:       *consulapi.NewReadableDuration(timeout),
+		}
+		var deregisterCriticalServiceAfter string
+		if check["deregister_critical_service_after"] == nil {
+			deregisterCriticalServiceAfter = ""
+		} else {
+			deregisterCriticalServiceAfter = check["deregister_critical_service_after"].(string)
+		}
+		if deregisterCriticalServiceAfter != "" {
+			deregisterCriticalServiceAfter, err := time.ParseDuration(deregisterCriticalServiceAfter)
+			if err != nil {
+				return nil, fmt.Errorf("Failed to parse deregister_critical_service_after: %#v", deregisterCriticalServiceAfter)
+			}
+			healthCheck.DeregisterCriticalServiceAfter = *consulapi.NewReadableDuration(deregisterCriticalServiceAfter)
+		}
+
+		s[i] = &consulapi.HealthCheck{
+			Node:       node,
+			ServiceID:  name,
+			CheckID:    check["check_id"].(string),
+			Name:       check["name"].(string),
+			Notes:      check["notes"].(string),
+			Status:     check["status"].(string),
+			Definition: healthCheck,
+		}
+	}
+
+	return s, nil
+}
+
+func parseHeaders(check map[string]interface{}) (map[string][]string, error) {
+	headers := make(map[string][]string, 0)
+	header := check["header"].(*schema.Set).List()
+	for _, h := range header {
+		name := h.(map[string]interface{})["name"].(string)
+		value := h.(map[string]interface{})["value"]
+		for _, v := range value.([]interface{}) {
+			headers[name] = append(headers[name], v.(string))
+		}
+	}
+	return headers, nil
 }
