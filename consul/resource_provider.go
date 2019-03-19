@@ -59,6 +59,12 @@ func Provider() terraform.ResourceProvider {
 				DefaultFunc: schema.EnvDefaultFunc("CONSUL_KEY_FILE", ""),
 			},
 
+			"ca_path": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				DefaultFunc: schema.EnvDefaultFunc("CONSUL_CAPATH", ""),
+			},
+
 			"insecure_https": {
 				Type:     schema.TypeBool,
 				Optional: true,

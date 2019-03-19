@@ -72,6 +72,26 @@ func TestResourceProvider_ConfigureTLS(t *testing.T) {
 	}
 }
 
+func TestResourceProvider_CAPath(t *testing.T) {
+	rp := Provider()
+
+	raw := map[string]interface{}{
+		"address": "demo.consul.io:90",
+		"ca_path": "test-fixtures/capath",
+		"scheme":  "https",
+	}
+
+	rawConfig, err := config.NewRawConfig(raw)
+	if err != nil {
+		t.Fatalf("err: %s", err)
+	}
+
+	err = rp.Configure(terraform.NewResourceConfig(rawConfig))
+	if err != nil {
+		t.Fatalf("err: %s", err)
+	}
+}
+
 func TestResourceProvider_ConfigureTLSInsecureHttps(t *testing.T) {
 	rp := Provider()
 

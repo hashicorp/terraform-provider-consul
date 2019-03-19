@@ -13,6 +13,9 @@ func resourceConsulPreparedQuery() *schema.Resource {
 		Update: resourceConsulPreparedQueryUpdate,
 		Read:   resourceConsulPreparedQueryRead,
 		Delete: resourceConsulPreparedQueryDelete,
+		Importer: &schema.ResourceImporter{
+			State: schema.ImportStatePassthrough,
+		},
 
 		SchemaVersion: 0,
 

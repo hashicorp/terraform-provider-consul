@@ -64,6 +64,41 @@ func TestAccConsulPreparedQuery_basic(t *testing.T) {
 	})
 }
 
+func TestAccConsulPreparedQuery_import(t *testing.T) {
+	checkFn := func(s []*terraform.InstanceState) error {
+		// Expect, 1 resource in state, and route count to be 1
+		if len(s) != 1 {
+			return fmt.Errorf("bad state: %s", s)
+		}
+		v, ok := s[0].Attributes["name"]
+		if !ok || v != "foo" {
+			return fmt.Errorf("bad name: %s", s)
+		}
+		v, ok = s[0].Attributes["stored_token"]
+		if !ok || v != "pq-token" {
+			return fmt.Errorf("bad stored_token: %s", s)
+		}
+
+		return nil
+	}
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckConsulPreparedQueryDestroy,
+		Steps: []resource.TestStep{
+			resource.TestStep{
+				Config: testAccConsulPreparedQueryConfig,
+			},
+			resource.TestStep{
+				ResourceName:     "consul_prepared_query.foo",
+				ImportState:      true,
+				ImportStateCheck: checkFn,
+			},
+		},
+	})
+}
+
 func checkPreparedQueryExists(s *terraform.State) bool {
 	rn, ok := s.RootModule().Resources["consul_prepared_query.foo"]
 	if !ok {

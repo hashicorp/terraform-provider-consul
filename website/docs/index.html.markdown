@@ -59,9 +59,10 @@ The following arguments are supported:
 * `ca_file` - (Optional) A path to a PEM-encoded certificate authority used to verify the remote agent's certificate.
 * `cert_file` - (Optional) A path to a PEM-encoded certificate provided to the remote agent; requires use of `key_file`.
 * `key_file`- (Optional) A path to a PEM-encoded private key, required if `cert_file` is specified.
+* `ca_path` - (Optional) A path to a directory of PEM-encoded certificate authority files to use to check the authenticity of client and server connections. Can also be specified with the `CONSUL_CAPATH` environment variable.
 * `insecure_https`- (Optional) Boolean value to disable SSL certificate verification; setting this value to true is not recommended for production use. Only use this with scheme set to "https".
 
 ## Environment Variables
 
-All environment variables prefixed with `CONSUL_HTTP` listed in the [Consul environment variables](https://www.consul.io/docs/commands/index.html#environment-variables) 
+All environment variables prefixed with `CONSUL_HTTP` listed in the [Consul environment variables](https://www.consul.io/docs/commands/index.html#environment-variables)
 documentation are supported by the Terraform provider.
