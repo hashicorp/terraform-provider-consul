@@ -12,7 +12,7 @@ import (
 
 func TestAccConsulService_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() {},
+		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckConsulServiceDestroy,
 		Steps: []resource.TestStep{
@@ -49,7 +49,7 @@ func TestAccConsulService_basic(t *testing.T) {
 
 func TestAccConsulService_basicModify(t *testing.T) {
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() {},
+		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckConsulServiceDestroy,
 		Steps: []resource.TestStep{
@@ -84,7 +84,7 @@ func TestAccConsulService_basicModify(t *testing.T) {
 
 func TestAccConsulService_serviceID(t *testing.T) {
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() {},
+		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckConsulServiceDestroy,
 		Steps: []resource.TestStep{
@@ -103,7 +103,7 @@ func TestAccConsulService_serviceID(t *testing.T) {
 
 func TestAccConsulServiceCheck(t *testing.T) {
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() {},
+		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckConsulServiceDestroy,
 		Steps: []resource.TestStep{
@@ -130,6 +130,20 @@ func TestAccConsulServiceCheck(t *testing.T) {
 					resource.TestCheckResourceAttr("consul_service.example", "check.0.header.2976766922.value.0", "test"),
 					resource.TestCheckResourceAttr("consul_service.no-deregister", "check.0.deregister_critical_service_after", "30s"),
 				),
+			},
+		},
+	})
+}
+
+// When the same service is defined on multiple nodes, the health-checks must
+// be associated to the correct instance.
+func TestAccDataConsulServiceSameServiceMultipleNodes(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:  func() { testAccPreCheck(t) },
+		Providers: testAccProviders,
+		Steps: []resource.TestStep{
+			resource.TestStep{
+				Config: testAccDataConsulServiceSameServiceMultipleNodes,
 			},
 		},
 	})
@@ -333,3 +347,72 @@ resource "consul_service" "example" {
 	address = "www.hashicorptest.com"
   }
 `
+
+const testAccDataConsulServiceSameServiceMultipleNodes = `
+resource "consul_node" "compute1" {
+  name    = "compute-google1"
+  address = "www.google.com"
+}
+
+resource "consul_service" "google1" {
+  name    = "google"
+  node    = "${consul_node.compute1.name}"
+  port    = 80
+  tags    = ["tag0"]
+
+  check {
+    check_id                          = "service:redis1"
+    name                              = "Redis health check"
+    status                            = "passing"
+    http                              = "https://www.hashicorptest.com"
+    tls_skip_verify                   = false
+    method                            = "PUT"
+    interval                          = "5s"
+    timeout                           = "1s"
+    deregister_critical_service_after = "30s"
+
+    header {
+      name  = "foo"
+      value = ["test"]
+    }
+
+    header {
+      name  = "bar"
+      value = ["test"]
+    }
+  }
+}
+
+resource "consul_node" "compute2" {
+  name    = "compute-google2"
+  address = "www.google.com"
+}
+
+resource "consul_service" "google2" {
+  name    = "google"
+  node    = "${consul_node.compute2.name}"
+  port    = 80
+  tags    = ["tag0"]
+
+  check {
+    check_id                          = "service:redis1"
+    name                              = "Redis health check"
+    status                            = "critical"
+    http                              = "https://www.hashicorptest.com"
+    tls_skip_verify                   = false
+    method                            = "PUT"
+    interval                          = "5s"
+    timeout                           = "1s"
+    deregister_critical_service_after = "30s"
+
+    header {
+      name  = "foo"
+      value = ["test"]
+    }
+
+    header {
+      name  = "bar"
+      value = ["test"]
+    }
+  }
+}`
