@@ -56,6 +56,35 @@ func TestAccDataConsulServiceHealth(t *testing.T) {
 	})
 }
 
+func TestAccDataConsulServiceHealthPassing(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:  func() { testAccPreCheck(t) },
+		Providers: testAccProviders,
+		Steps: []resource.TestStep{
+			resource.TestStep{
+				Config: testAccDataConsulServiceHealthPassingSetup,
+				Check:  resource.ComposeTestCheckFunc(),
+			},
+			resource.TestStep{
+				Config: testAccDataConsulServiceHealthPassingFalse,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDataSourceValue("data.consul_service_health.google", "name", "google"),
+					testAccCheckDataSourceValue("data.consul_service_health.google", "passing", "false"),
+					testAccCheckDataSourceValue("data.consul_service_health.google", "results.#", "2"),
+				),
+			},
+			resource.TestStep{
+				Config: testAccDataConsulServiceHealthPassingTrue,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDataSourceValue("data.consul_service_health.google", "name", "google"),
+					testAccCheckDataSourceValue("data.consul_service_health.google", "passing", "true"),
+					testAccCheckDataSourceValue("data.consul_service_health.google", "results.#", "1"),
+				),
+			},
+		},
+	})
+}
+
 const testAccDataConsulServiceHealth = `
 data "consul_service_health" "consul" {
 	name = "consul"
@@ -64,5 +93,86 @@ data "consul_service_health" "consul" {
 		// Consul development server has this node meta information
 		consul-network-segment = ""
 	}
+}
+`
+
+const testAccDataConsulServiceHealthPassingSetup = `
+resource "consul_node" "compute1" {
+  name    = "compute-google1"
+  address = "www.google.com"
+}
+
+resource "consul_service" "google1" {
+  name    = "google"
+  node    = "${consul_node.compute1.name}"
+  port    = 80
+  tags    = ["tag0"]
+
+  check {
+    check_id                          = "service:redis1"
+    name                              = "Redis health check"
+    status                            = "passing"
+    http                              = "https://www.hashicorptest.com"
+    tls_skip_verify                   = false
+    method                            = "PUT"
+    interval                          = "5s"
+    timeout                           = "1s"
+    deregister_critical_service_after = "30s"
+
+    header {
+      name  = "foo"
+      value = ["test"]
+    }
+
+    header {
+      name  = "bar"
+      value = ["test"]
+    }
+  }
+}
+
+resource "consul_node" "compute2" {
+  name    = "compute-google2"
+  address = "www.google.com"
+}
+
+resource "consul_service" "google2" {
+  name    = "google"
+  node    = "${consul_node.compute2.name}"
+  port    = 80
+  tags    = ["tag0"]
+
+  check {
+    check_id                          = "service:redis1"
+    name                              = "Redis health check"
+    status                            = "critical"
+    http                              = "https://www.hashicorptest.com"
+    tls_skip_verify                   = false
+    method                            = "PUT"
+    interval                          = "5s"
+    timeout                           = "1s"
+    deregister_critical_service_after = "30s"
+
+    header {
+      name  = "foo"
+      value = ["test"]
+    }
+
+    header {
+      name  = "bar"
+      value = ["test"]
+    }
+  }
+}`
+
+const testAccDataConsulServiceHealthPassingFalse = testAccDataConsulServiceHealthPassingSetup + `
+data "consul_service_health" "google" {
+  name    = "google"
+  passing = "false"
+}
+`
+const testAccDataConsulServiceHealthPassingTrue = testAccDataConsulServiceHealthPassingSetup + `
+data "consul_service_health" "google" {
+  name = "google"
 }
 `
