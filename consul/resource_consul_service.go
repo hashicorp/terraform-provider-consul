@@ -497,11 +497,18 @@ func retrieveService(client *consulapi.Client, name string, ident string, node s
 	// Only one service with a given ID may be present per node
 	for _, s := range services {
 		if (s.ServiceID == ident) && (s.Node == node) {
+			// Fetch health-checks for this service
 			healthChecks, _, err := client.Health().Checks(name, &qOpts)
 			if err != nil {
 				return nil, fmt.Errorf("Failed to fetch health-checks: %v", err)
 			}
-			s.Checks = healthChecks
+			// Filter the checks that correspond to this specific service instance
+			s.Checks = make([]*consulapi.HealthCheck, 0)
+			for _, h := range healthChecks {
+				if h.Node == node {
+					s.Checks = append(s.Checks, h)
+				}
+			}
 			return s, nil
 		}
 	}
