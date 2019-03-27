@@ -18,13 +18,11 @@ func resourceConsulACLToken() *schema.Resource {
 		Schema: map[string]*schema.Schema{
 			"description": {
 				Type:        schema.TypeString,
-				Required:    false,
 				Optional:    true,
 				Description: "The token description.",
 			},
 			"policies": {
 				Type:     schema.TypeSet,
-				Required: false,
 				Optional: true,
 				ForceNew: true,
 				Elem: &schema.Schema{
@@ -34,15 +32,14 @@ func resourceConsulACLToken() *schema.Resource {
 			},
 			"local": {
 				Type:        schema.TypeBool,
-				Required:    false,
 				Optional:    true,
 				Default:     false,
 				Description: "Flag to set the token local to the current datacenter.",
 			},
 			"token": {
 				Type:        schema.TypeString,
-				Computed:    true,
 				Description: "The token.",
+				Computed:    true,
 				Sensitive:   true,
 			},
 		},
