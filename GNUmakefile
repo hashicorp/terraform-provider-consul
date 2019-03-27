@@ -46,7 +46,10 @@ test-compile:
 
 test-serv: fmtcheck
 	@docker pull "consul:$(CONSUL_VERSION)"
-	docker run --rm -p 127.0.0.1:8500:8500 "consul:$(CONSUL_VERSION)"
+	docker run --rm -p 127.0.0.1:8500:8500 \
+		-v $(PWD)/:/consul/config \
+		-v $(PWD)/:/consul/data/ \
+		"consul:$(CONSUL_VERSION)"
 
 website:
 ifeq (,$(wildcard $(GOPATH)/src/$(WEBSITE_REPO)))
