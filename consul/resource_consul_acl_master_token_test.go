@@ -39,11 +39,9 @@ func resetACL(t *testing.T) {
 }
 
 func TestAccConsulACLMasterToken_basic(t *testing.T) {
-	resetACL(t)
-
 	resource.Test(t, resource.TestCase{
 		Providers: testAccProviders,
-		PreCheck:  func() { testAccPreCheck(t) },
+		PreCheck:  func() { testAccPreCheck(t); resetACL(t) },
 		Steps: []resource.TestStep{
 			{
 				Config: testResourceACLMasterTokenConfigBasic,
