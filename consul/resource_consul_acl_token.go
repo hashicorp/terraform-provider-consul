@@ -2,9 +2,10 @@ package consul
 
 import (
 	"fmt"
+	"log"
+
 	consulapi "github.com/hashicorp/consul/api"
 	"github.com/hashicorp/terraform/helper/schema"
-	"log"
 )
 
 func resourceConsulACLToken() *schema.Resource {
@@ -42,6 +43,7 @@ func resourceConsulACLToken() *schema.Resource {
 				Type:        schema.TypeString,
 				Computed:    true,
 				Description: "The token.",
+				Sensitive:   true,
 			},
 		},
 	}
