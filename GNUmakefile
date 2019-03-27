@@ -46,20 +46,7 @@ test-compile:
 
 test-serv: fmtcheck
 	@docker pull "consul:$(CONSUL_VERSION)"
-	docker run --rm -p 127.0.0.1:8500:8500 \
-	"consul:$(CONSUL_VERSION)"
-
-test-serv-acl: fmtcheck
-	@docker pull "consul:$(CONSUL_VERSION)"
-	docker run --rm -p 127.0.0.1:8500:8500 \
-	    -e CONSUL_LOCAL_CONFIG=$(shell cat consul_test_acl.json | sed "s/\"/\\\"/g") \
-	    "consul:$(CONSUL_VERSION)" agent -server -dev
-
-test-serv-acl-bootstrap: fmtcheck
-	@docker pull "consul:$(CONSUL_VERSION)"
-	docker run --rm -p 127.0.0.1:8500:8500 \
-	    -e CONSUL_LOCAL_CONFIG="$(shell cat consul_test_acl_bootstrap.json | sed "s/\"/\\\\\"/g")" \
-	    "consul:$(CONSUL_VERSION)" agent -server -bootstrap-expect 1 -advertise {{GetPrivateIP}} -client 0.0.0.0
+	docker run --rm -p 127.0.0.1:8500:8500 "consul:$(CONSUL_VERSION)"
 
 website:
 ifeq (,$(wildcard $(GOPATH)/src/$(WEBSITE_REPO)))
