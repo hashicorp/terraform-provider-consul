@@ -2,10 +2,11 @@ package consul
 
 import (
 	"fmt"
-	consulapi "github.com/hashicorp/consul/api"
-	"github.com/hashicorp/terraform/helper/schema"
 	"log"
 	"strings"
+
+	consulapi "github.com/hashicorp/consul/api"
+	"github.com/hashicorp/terraform/helper/schema"
 )
 
 func resourceConsulACLMasterToken() *schema.Resource {
@@ -55,16 +56,24 @@ func resourceConsulACLMasterTokenCreate(d *schema.ResourceData, meta interface{}
 
 	log.Printf("[DEBUG] Created ACL master token %q", aclToken.AccessorID)
 
-	d.Set("description", aclToken.Description)
+	if err = d.Set("description", aclToken.Description); err != nil {
+		return fmt.Errorf("Error while setting 'description': %s", err)
+	}
 
 	policies := make([]string, 0, len(aclToken.Policies))
 	for _, policyLink := range aclToken.Policies {
 		policies = append(policies, policyLink.Name)
 	}
 
-	d.Set("policies", policies)
-	d.Set("local", aclToken.Local)
-	d.Set("token", aclToken.SecretID)
+	if err = d.Set("policies", policies); err != nil {
+		return fmt.Errorf("Error while setting 'policies': %s", err)
+	}
+	if err = d.Set("local", aclToken.Local); err != nil {
+		return fmt.Errorf("Error while setting 'local': %s", err)
+	}
+	if err = d.Set("token", aclToken.SecretID); err != nil {
+		return fmt.Errorf("Error while setting 'token': %s", err)
+	}
 
 	d.SetId(aclToken.AccessorID)
 

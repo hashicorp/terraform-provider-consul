@@ -78,7 +78,9 @@ func resourceConsulACLAgentTokenCreate(d *schema.ResourceData, meta interface{})
 
 	log.Printf("[DEBUG] Created ACL agent token %q", token.AccessorID)
 
-	d.Set("token", token.SecretID)
+	if err = d.Set("token", token.SecretID); err != nil {
+		return fmt.Errorf("Error while setting 'token': %s", err)
+	}
 
 	d.SetId(token.AccessorID)
 
@@ -100,15 +102,21 @@ func resourceConsulACLAgentTokenRead(d *schema.ResourceData, meta interface{}) e
 
 	log.Printf("[DEBUG] Read ACL agent token %q", id)
 
-	d.Set("description", aclToken.Description)
+	if err = d.Set("description", aclToken.Description); err != nil {
+		return fmt.Errorf("Error while setting 'description': %s", err)
+	}
 
 	policies := make([]string, 0, len(aclToken.Policies))
 	for _, policyLink := range aclToken.Policies {
 		policies = append(policies, policyLink.Name)
 	}
 
-	d.Set("policies", policies)
-	d.Set("local", aclToken.Local)
+	if err = d.Set("policies", policies); err != nil {
+		return fmt.Errorf("Error while setting 'policies': %s", err)
+	}
+	if err = d.Set("local", aclToken.Local); err != nil {
+		return fmt.Errorf("Error while setting 'local': %s", err)
+	}
 
 	return nil
 }

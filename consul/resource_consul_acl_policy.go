@@ -92,16 +92,24 @@ func resourceConsulACLPolicyRead(d *schema.ResourceData, meta interface{}) error
 
 	log.Printf("[DEBUG] Read ACL policy %q", id)
 
-	d.Set("name", aclPolicy.Name)
-	d.Set("description", aclPolicy.Description)
-	d.Set("rules", aclPolicy.Rules)
+	if err = d.Set("name", aclPolicy.Name); err != nil {
+		return fmt.Errorf("Error while setting 'name': %s", err)
+	}
+	if err = d.Set("description", aclPolicy.Description); err != nil {
+		return fmt.Errorf("Error while setting 'description': %s", err)
+	}
+	if err = d.Set("rules", aclPolicy.Rules); err != nil {
+		return fmt.Errorf("Error while setting 'rules': %s", err)
+	}
 
 	datacenters := make([]string, 0, len(aclPolicy.Datacenters))
 	for _, datacenter := range aclPolicy.Datacenters {
 		datacenters = append(datacenters, datacenter)
 	}
 
-	d.Set("datacenters", datacenters)
+	if err = d.Set("datacenters", datacenters); err != nil {
+		return fmt.Errorf("Error while setting 'datacenters': %s", err)
+	}
 
 	return nil
 }
