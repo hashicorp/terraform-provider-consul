@@ -152,7 +152,7 @@ func testAccCheckConsulPreparedQueryAttrValue(attr, val string) resource.TestChe
 	}
 }
 
-const testAccConsulPreparedQueryConfig = testAccMasterProviderConfiguration + `
+const testAccConsulPreparedQueryConfig = `
 resource "consul_prepared_query" "foo" {
 	name = "foo"
 	stored_token = "pq-token"
@@ -177,7 +177,7 @@ resource "consul_prepared_query" "foo" {
 }
 `
 
-const testAccConsulPreparedQueryConfigUpdate1 = testAccMasterProviderConfiguration + `
+const testAccConsulPreparedQueryConfigUpdate1 = `
 resource "consul_prepared_query" "foo" {
 	name = "baz"
 	stored_token = "pq-token-updated"
@@ -202,7 +202,7 @@ resource "consul_prepared_query" "foo" {
 }
 `
 
-const testAccConsulPreparedQueryConfigUpdate2 = testAccMasterProviderConfiguration + `
+const testAccConsulPreparedQueryConfigUpdate2 = `
 resource "consul_prepared_query" "foo" {
 	name = "baz"
 	service = "memcached"

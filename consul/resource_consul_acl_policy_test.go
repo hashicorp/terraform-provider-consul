@@ -47,7 +47,7 @@ func TestAccConsulACLPolicy_basic(t *testing.T) {
 	})
 }
 
-const testResourceACLPolicyConfigBasic = testAccMasterProviderConfiguration + `
+const testResourceACLPolicyConfigBasic = `
 resource "consul_acl_policy" "test" {
 	name = "test"
 	rules = "node_prefix \"\" { policy = \"read\" }"

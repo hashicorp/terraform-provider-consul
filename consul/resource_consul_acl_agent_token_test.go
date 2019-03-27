@@ -48,7 +48,7 @@ func TestAccConsulACLAgentToken_basic(t *testing.T) {
 	})
 }
 
-const testResourceACLAgentTokenConfigBasic = testAccMasterProviderConfiguration + `
+const testResourceACLAgentTokenConfigBasic = `
 resource "consul_acl_policy" "test" {
 	name = "test"
 	rules = "node_prefix \"\" { policy = \"write\" } service_prefix \"\" { policy = \"read\" }"
