@@ -20,57 +20,57 @@ func resourceConsulCatalogEntry() *schema.Resource {
 		DeprecationMessage: "The consul_catalog_entry resource will be deprecated and removed in a future version. More information: https://github.com/terraform-providers/terraform-provider-consul/issues/46",
 
 		Schema: map[string]*schema.Schema{
-			"address": &schema.Schema{
+			"address": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
 
-			"datacenter": &schema.Schema{
+			"datacenter": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
 
-			"node": &schema.Schema{
+			"node": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
 
-			"service": &schema.Schema{
+			"service": {
 				Type:     schema.TypeSet,
 				Optional: true,
 				ForceNew: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"address": &schema.Schema{
+						"address": {
 							Type:     schema.TypeString,
 							Optional: true,
 							ForceNew: true,
 						},
 
-						"id": &schema.Schema{
+						"id": {
 							Type:     schema.TypeString,
 							Optional: true,
 							Computed: true,
 							ForceNew: true,
 						},
 
-						"name": &schema.Schema{
+						"name": {
 							Type:     schema.TypeString,
 							Required: true,
 							ForceNew: true,
 						},
 
-						"port": &schema.Schema{
+						"port": {
 							Type:     schema.TypeInt,
 							Optional: true,
 							ForceNew: true,
 						},
 
-						"tags": &schema.Schema{
+						"tags": {
 							Type:     schema.TypeSet,
 							Optional: true,
 							ForceNew: true,
@@ -82,9 +82,10 @@ func resourceConsulCatalogEntry() *schema.Resource {
 				Set: resourceConsulCatalogEntryServicesHash,
 			},
 
-			"token": &schema.Schema{
-				Type:     schema.TypeString,
-				Optional: true,
+			"token": {
+				Type:      schema.TypeString,
+				Optional:  true,
+				Sensitive: true,
 			},
 		},
 	}

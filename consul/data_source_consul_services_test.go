@@ -11,7 +11,7 @@ func TestAccDataConsulServices_basic(t *testing.T) {
 		PreCheck:  func() { testAccPreCheck(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccDataConsulCatalogServicesConfig,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDataSourceValue("data.consul_services.read", "datacenter", "dc1"),
@@ -28,7 +28,7 @@ func TestAccDataConsulCatalogServices_alias(t *testing.T) {
 		PreCheck:  func() { testAccPreCheck(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccDataConsulCatalogServicesConfig,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("data.consul_services.read", "services.%", "1"),

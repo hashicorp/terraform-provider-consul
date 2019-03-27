@@ -37,91 +37,91 @@ func dataSourceConsulService() *schema.Resource {
 		Read: dataSourceConsulServiceRead,
 		Schema: map[string]*schema.Schema{
 			// Data Source Predicate(s)
-			catalogServiceDatacenter: &schema.Schema{
+			catalogServiceDatacenter: {
 				// Used in the query, must be stored and force a refresh if the value
 				// changes.
 				Optional: true,
 				Type:     schema.TypeString,
 				ForceNew: true,
 			},
-			catalogServiceTag: &schema.Schema{
+			catalogServiceTag: {
 				// Used in the query, must be stored and force a refresh if the value
 				// changes.
 				Optional: true,
 				Type:     schema.TypeString,
 				ForceNew: true,
 			},
-			catalogServiceName: &schema.Schema{
+			catalogServiceName: {
 				Required: true,
 				Type:     schema.TypeString,
 			},
 			catalogNodesQueryOpts: schemaQueryOpts,
 
 			// Out parameters
-			catalogServiceElem: &schema.Schema{
+			catalogServiceElem: {
 				Computed: true,
 				Type:     schema.TypeList,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						catalogServiceCreateIndex: &schema.Schema{
+						catalogServiceCreateIndex: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						catalogServiceNodeAddress: &schema.Schema{
+						catalogServiceNodeAddress: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						catalogServiceNodeID: &schema.Schema{
+						catalogServiceNodeID: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						catalogServiceModifyIndex: &schema.Schema{
+						catalogServiceModifyIndex: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						catalogServiceNodeName: &schema.Schema{
+						catalogServiceNodeName: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						catalogServiceNodeMeta: &schema.Schema{
+						catalogServiceNodeMeta: {
 							Type:     schema.TypeMap,
 							Computed: true,
 						},
-						catalogServiceServiceAddress: &schema.Schema{
+						catalogServiceServiceAddress: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						catalogServiceServiceEnableTagOverride: &schema.Schema{
+						catalogServiceServiceEnableTagOverride: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						catalogServiceServiceID: &schema.Schema{
+						catalogServiceServiceID: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						catalogServiceServiceName: &schema.Schema{
+						catalogServiceServiceName: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						catalogServiceServicePort: &schema.Schema{
+						catalogServiceServicePort: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						catalogServiceServiceTags: &schema.Schema{
+						catalogServiceServiceTags: {
 							Type:     schema.TypeList,
 							Computed: true,
 							Elem:     &schema.Schema{Type: schema.TypeString},
 						},
-						catalogServiceTaggedAddresses: &schema.Schema{
+						catalogServiceTaggedAddresses: {
 							Type:     schema.TypeMap,
 							Computed: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									catalogNodesSchemaTaggedLAN: &schema.Schema{
+									catalogNodesSchemaTaggedLAN: {
 										Type:     schema.TypeString,
 										Computed: true,
 									},
-									catalogNodesSchemaTaggedWAN: &schema.Schema{
+									catalogNodesSchemaTaggedWAN: {
 										Type:     schema.TypeString,
 										Computed: true,
 									},

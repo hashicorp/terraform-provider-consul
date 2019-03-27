@@ -15,16 +15,17 @@ func TestAccConsulKeys_basic(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckConsulKeysDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccConsulKeysConfig,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConsulKeysExists(),
 					testAccCheckConsulKeysValue("consul_keys.app", "enabled", "true"),
 					testAccCheckConsulKeysValue("consul_keys.app", "set", "acceptance"),
 					testAccCheckConsulKeysValue("consul_keys.app", "remove_one", "hello"),
+					resource.TestCheckResourceAttr("consul_keys.app", "key.4258512057.flags", "0"),
 				),
 			},
-			resource.TestStep{
+			{
 				Config: testAccConsulKeysConfig_Update,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConsulKeysExists(),
@@ -35,6 +36,24 @@ func TestAccConsulKeys_basic(t *testing.T) {
 			},
 		},
 	})
+}
+
+func testAccCheckConsulKeysFlags(path string, flags int) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		kv := testAccProvider.Meta().(*consulapi.Client).KV()
+		opts := &consulapi.QueryOptions{Datacenter: "dc1"}
+		pair, _, err := kv.Get(path, opts)
+		if err != nil {
+			return err
+		}
+		if pair == nil {
+			return fmt.Errorf("Key '%v' does not exist", path)
+		}
+		if int(pair.Flags) != flags {
+			return fmt.Errorf("Wrong flags for '%v': %v != %v", path, int(pair.Flags), flags)
+		}
+		return nil
+	}
 }
 
 func testAccCheckConsulKeysDestroy(s *terraform.State) error {
@@ -134,6 +153,7 @@ resource "consul_keys" "app" {
 		name = "set"
 		path = "test/set"
 		value = "acceptanceUpdated"
+		flags = 64
 		delete = true
 	}
 }

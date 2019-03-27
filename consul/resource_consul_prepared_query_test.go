@@ -15,7 +15,7 @@ func TestAccConsulPreparedQuery_basic(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckConsulPreparedQueryDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccConsulPreparedQueryConfig,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConsulPreparedQueryExists(),
@@ -32,7 +32,7 @@ func TestAccConsulPreparedQuery_basic(t *testing.T) {
 					testAccCheckConsulPreparedQueryAttrValue("dns.0.ttl", "8m"),
 				),
 			},
-			resource.TestStep{
+			{
 				Config: testAccConsulPreparedQueryConfigUpdate1,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConsulPreparedQueryExists(),
@@ -48,7 +48,7 @@ func TestAccConsulPreparedQuery_basic(t *testing.T) {
 					testAccCheckConsulPreparedQueryAttrValue("dns.0.ttl", "16m"),
 				),
 			},
-			resource.TestStep{
+			{
 				Config: testAccConsulPreparedQueryConfigUpdate2,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConsulPreparedQueryExists(),
@@ -59,6 +59,41 @@ func TestAccConsulPreparedQuery_basic(t *testing.T) {
 					testAccCheckConsulPreparedQueryAttrValue("template.#", "0"),
 					testAccCheckConsulPreparedQueryAttrValue("dns.#", "0"),
 				),
+			},
+		},
+	})
+}
+
+func TestAccConsulPreparedQuery_import(t *testing.T) {
+	checkFn := func(s []*terraform.InstanceState) error {
+		// Expect, 1 resource in state, and route count to be 1
+		if len(s) != 1 {
+			return fmt.Errorf("bad state: %s", s)
+		}
+		v, ok := s[0].Attributes["name"]
+		if !ok || v != "foo" {
+			return fmt.Errorf("bad name: %s", s)
+		}
+		v, ok = s[0].Attributes["stored_token"]
+		if !ok || v != "pq-token" {
+			return fmt.Errorf("bad stored_token: %s", s)
+		}
+
+		return nil
+	}
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckConsulPreparedQueryDestroy,
+		Steps: []resource.TestStep{
+			resource.TestStep{
+				Config: testAccConsulPreparedQueryConfig,
+			},
+			resource.TestStep{
+				ResourceName:     "consul_prepared_query.foo",
+				ImportState:      true,
+				ImportStateCheck: checkFn,
 			},
 		},
 	})

@@ -1,6 +1,6 @@
 ---
 layout: "consul"
-page_title: "Consul: consul_catalog_service"
+page_title: "Consul: consul_service"
 sidebar_current: "docs-consul-data-source-service"
 description: |-
   Provides details about a specific Consul service
@@ -21,12 +21,9 @@ source, which provides a summary of the current Consul services.
 
 ```hcl
 data "consul_service" "read-consul-dc1" {
-  query_options {
+    name = "consul"
     # Optional parameter: implicitly uses the current datacenter of the agent
     datacenter = "dc1"
-  }
-
-  name = "consul"
 }
 
 # Set the description to a whitespace delimited list of the node names
