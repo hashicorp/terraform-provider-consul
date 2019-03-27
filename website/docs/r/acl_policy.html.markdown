@@ -14,9 +14,13 @@ The `consul_acl_policy` resource writes an ACL policy into Consul.
 
 ```hcl
 resource "consul_acl_policy" "test" {
-  name = "my_policy"
-  rules = "node_prefix \"\" { policy = \"read\" }"
-  datacenters = [ "dc1" ]
+  name        = "my_policy"
+  datacenters = ["dc1"]
+  rules       = <<RULE
+    node_prefix "" {
+      policy = "read"
+    }
+    RULE
 }
 ```
 
@@ -25,11 +29,8 @@ resource "consul_acl_policy" "test" {
 The following arguments are supported:
 
 * `name` - (Required) The name of the policy.
-
 * `description` - (Optional) The description of the policy.
-
 * `rules` - (Required) The rules of the policy.
-
 * `datacenters` - (Optional) The datacenters of the policy.
 
 ## Attributes Reference
@@ -37,3 +38,7 @@ The following arguments are supported:
 The following attributes are exported:
 
 * `id` - The ID of the policy.
+* `name` - The name of the policy.
+* `description` - The description of the policy.
+* `rules` - The rules of the policy.
+* `datacenters` - The datacenters of the policy.
