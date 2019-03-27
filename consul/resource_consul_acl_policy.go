@@ -19,24 +19,20 @@ func resourceConsulACLPolicy() *schema.Resource {
 			"name": {
 				Type:        schema.TypeString,
 				Required:    true,
-				Optional:    false,
 				Description: "The ACL policy name.",
 			},
 			"description": {
 				Type:        schema.TypeString,
-				Required:    false,
 				Optional:    true,
 				Description: "The ACL policy description.",
 			},
 			"rules": {
 				Type:        schema.TypeString,
 				Required:    true,
-				Optional:    false,
 				Description: "The ACL policy rules.",
 			},
 			"datacenters": {
 				Type:        schema.TypeSet,
-				Required:    false,
 				Optional:    true,
 				Description: "The ACL policy datacenters.",
 				Elem:        &schema.Schema{Type: schema.TypeString},

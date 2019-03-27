@@ -43,6 +43,18 @@ func TestAccConsulACLPolicy_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("consul_acl_policy.test", "datacenters.#", "1"),
 				),
 			},
+			{
+				Config: testResourceACLPolicyConfigBasicUpdate,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("consul_acl_policy.test", "name", "test"),
+					resource.TestCheckResourceAttr("consul_acl_policy.test", "rules", "node_prefix \"\" { policy = \"write\" }"),
+					resource.TestCheckResourceAttr("consul_acl_policy.test", "datacenters.#", "1"),
+				),
+			},
+			{
+				Config:  testResourceACLPolicyConfigBasicUpdate,
+				Destroy: true,
+			},
 		},
 	})
 }
@@ -51,5 +63,12 @@ const testResourceACLPolicyConfigBasic = `
 resource "consul_acl_policy" "test" {
 	name = "test"
 	rules = "node_prefix \"\" { policy = \"read\" }"
+	datacenters = [ "dc1" ]
+}`
+
+const testResourceACLPolicyConfigBasicUpdate = `
+resource "consul_acl_policy" "test" {
+	name = "test"
+	rules = "node_prefix \"\" { policy = \"write\" }"
 	datacenters = [ "dc1" ]
 }`
