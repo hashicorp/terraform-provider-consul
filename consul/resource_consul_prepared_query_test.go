@@ -99,7 +99,8 @@ func TestAccConsulPreparedQuery_import(t *testing.T) {
 	})
 }
 
-func checkPreparedQueryExists(s *terraform.State, client *consulapi.Client) bool {
+func checkPreparedQueryExists(s *terraform.State) bool {
+	client := testAccProvider.Meta().(*consulapi.Client)
 	rn, ok := s.RootModule().Resources["consul_prepared_query.foo"]
 	if !ok {
 		return false
@@ -112,11 +113,7 @@ func checkPreparedQueryExists(s *terraform.State, client *consulapi.Client) bool
 }
 
 func testAccCheckConsulPreparedQueryDestroy(s *terraform.State) error {
-	client, err := getMasterClient()
-	if err != nil {
-		return err
-	}
-	if checkPreparedQueryExists(s, client) {
+	if checkPreparedQueryExists(s) {
 		return fmt.Errorf("Prepared query 'foo' still exists")
 	}
 	return nil
@@ -124,11 +121,7 @@ func testAccCheckConsulPreparedQueryDestroy(s *terraform.State) error {
 
 func testAccCheckConsulPreparedQueryExists() resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		client, err := getMasterClient()
-		if err != nil {
-			return err
-		}
-		if !checkPreparedQueryExists(s, client) {
+		if !checkPreparedQueryExists(s) {
 			return fmt.Errorf("Prepared query 'foo' does not exist")
 		}
 		return nil

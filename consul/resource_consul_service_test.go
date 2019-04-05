@@ -151,9 +151,7 @@ func TestAccConsulService_nodeDoesNotExist(t *testing.T) {
 
 func testAccConsulExternalSource(s *terraform.State) error {
 	client := testAccProvider.Meta().(*consulapi.Client)
-	qOpts := consulapi.QueryOptions{
-		Token: "master-token",
-	}
+	qOpts := consulapi.QueryOptions{}
 
 	service, _, err := client.Catalog().Service("example", "", &qOpts)
 	if err != nil {
@@ -188,9 +186,7 @@ func testAccCheckConsulServiceDestroy(s *terraform.State) error {
 func testAccRemoveConsulService(t *testing.T) func() {
 	return func() {
 		catalog := testAccProvider.Meta().(*consulapi.Client).Catalog()
-		wOpts := &consulapi.WriteOptions{
-			Token: "master-token",
-		}
+		wOpts := &consulapi.WriteOptions{}
 		dereg := &consulapi.CatalogDeregistration{
 			Node:      "compute-example",
 			ServiceID: "example",

@@ -1,11 +1,9 @@
 package consul
 
 import (
-	"fmt"
 	"os"
 	"testing"
 
-	consulapi "github.com/hashicorp/consul/api"
 	"github.com/hashicorp/terraform/config"
 	"github.com/hashicorp/terraform/helper/schema"
 	"github.com/hashicorp/terraform/terraform"
@@ -14,47 +12,10 @@ import (
 var testAccProviders map[string]terraform.ResourceProvider
 var testAccProvider *schema.Provider
 
-// The providers and configuration used to test permissions
-var testAccMasterProviders map[string]terraform.ResourceProvider
-var testAccMasterProvider *schema.Provider
-
-const masterToken = "master-token"
-
-func getMasterClient() (*consulapi.Client, error) {
-	rp, err := testAccMasterProviderFactory()
-	client := rp.Meta().(*consulapi.Client)
-	return client, err
-}
-
-func testAccMasterProviderFactory() (*schema.Provider, error) {
-	testAccMasterProvider = Provider().(*schema.Provider)
-	raw := map[string]interface{}{
-		"token": masterToken,
-	}
-	rawConfig, err := config.NewRawConfig(raw)
-	if err != nil {
-		return nil, err
-	}
-
-	err = testAccMasterProvider.Configure(terraform.NewResourceConfig(rawConfig))
-	if err != nil {
-		return nil, err
-	}
-	return testAccMasterProvider, nil
-}
-
 func init() {
 	testAccProvider = Provider().(*schema.Provider)
 	testAccProviders = map[string]terraform.ResourceProvider{
 		"consul": testAccProvider,
-	}
-
-	testAccMasterProvider, err := testAccMasterProviderFactory()
-	if err != nil {
-		panic(fmt.Sprintf("err: %s", err))
-	}
-	testAccMasterProviders = map[string]terraform.ResourceProvider{
-		"consul": testAccMasterProvider,
 	}
 }
 
