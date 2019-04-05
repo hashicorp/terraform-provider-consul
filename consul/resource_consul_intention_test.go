@@ -119,7 +119,7 @@ resource "consul_intention" "example" {
 	action           = "allow"
 
 	description = "something about example"
-	meta {
+	meta = {
 		foo            = "bar"
 		baz            = "bat"
 		is_tf_acc_test = "yes"

@@ -146,7 +146,7 @@ const testAccConsulCatalogEntryConfig = `
 resource "consul_catalog_entry" "app" {
 	address = "127.0.0.1"
 	node = "bastion"
-	service = {
+	service {
 		address = "www.google.com"
 		id = "google1"
 		name = "google"
