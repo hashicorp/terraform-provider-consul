@@ -25,9 +25,6 @@ website/node_modules
 *.iml
 
 website/vendor
-acl-bootstrap-reset
-node-id
-proxy
 
 # Test exclusions
 !command/test-fixtures/**/*.tfstate

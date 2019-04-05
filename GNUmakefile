@@ -47,8 +47,7 @@ test-compile:
 test-serv: fmtcheck
 	@docker pull "consul:$(CONSUL_VERSION)"
 	docker run --rm -p 127.0.0.1:8500:8500 \
-		-v $(PWD)/:/consul/config \
-		-v $(PWD)/:/consul/data/ \
+		-v $(PWD)/consul_test.hcl:/consul/config/consul_test.hcl:ro \
 		"consul:$(CONSUL_VERSION)"
 
 website:
