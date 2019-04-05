@@ -36,12 +36,6 @@ func resourceConsulACLToken() *schema.Resource {
 				Default:     false,
 				Description: "Flag to set the token local to the current datacenter.",
 			},
-			"token": {
-				Type:        schema.TypeString,
-				Description: "The token.",
-				Computed:    true,
-				Sensitive:   true,
-			},
 		},
 	}
 }
@@ -74,10 +68,6 @@ func resourceConsulACLTokenCreate(d *schema.ResourceData, meta interface{}) erro
 	}
 
 	log.Printf("[DEBUG] Created ACL token %q", token.AccessorID)
-
-	if err = d.Set("token", token.SecretID); err != nil {
-		return fmt.Errorf("Error while setting 'token': %s", err)
-	}
 
 	d.SetId(token.AccessorID)
 
@@ -126,7 +116,6 @@ func resourceConsulACLTokenUpdate(d *schema.ResourceData, meta interface{}) erro
 
 	aclToken := consulapi.ACLToken{
 		AccessorID:  id,
-		SecretID:    d.Get("token").(string),
 		Description: d.Get("description").(string),
 		Local:       d.Get("local").(bool),
 	}
