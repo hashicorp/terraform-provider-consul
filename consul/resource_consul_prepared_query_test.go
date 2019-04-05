@@ -100,15 +100,15 @@ func TestAccConsulPreparedQuery_import(t *testing.T) {
 }
 
 func checkPreparedQueryExists(s *terraform.State) bool {
-	client := testAccProvider.Meta().(*consulapi.Client)
 	rn, ok := s.RootModule().Resources["consul_prepared_query.foo"]
 	if !ok {
 		return false
 	}
 	id := rn.Primary.ID
 
+	client := testAccProvider.Meta().(*consulapi.Client).PreparedQuery()
 	opts := &consulapi.QueryOptions{Datacenter: "dc1"}
-	pq, _, err := client.PreparedQuery().Get(id, opts)
+	pq, _, err := client.Get(id, opts)
 	return err == nil && pq != nil
 }
 
