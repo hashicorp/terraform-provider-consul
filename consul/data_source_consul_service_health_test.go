@@ -140,7 +140,7 @@ resource "consul_service" "google2" {
   name    = "google"
   node    = "${consul_node.compute2.name}"
   port    = 80
-  tags    = ["tag0"]
+  tags    = ["tag1"]
 
   check {
     check_id                          = "service:redis1"
@@ -168,11 +168,13 @@ resource "consul_service" "google2" {
 const testAccDataConsulServiceHealthPassingFalse = testAccDataConsulServiceHealthPassingSetup + `
 data "consul_service_health" "google" {
   name    = "google"
-  passing = "false"
+	passing = false
+	// wait_for = "10s"
 }
 `
 const testAccDataConsulServiceHealthPassingTrue = testAccDataConsulServiceHealthPassingSetup + `
 data "consul_service_health" "google" {
-  name = "google"
+	name     = "google"
+	// wait_for = "10s"
 }
 `

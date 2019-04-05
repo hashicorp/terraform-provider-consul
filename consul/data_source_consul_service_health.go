@@ -2,6 +2,10 @@ package consul
 
 import (
 	"fmt"
+	"log"
+	"time"
+
+	"github.com/hashicorp/terraform/helper/resource"
 
 	consulapi "github.com/hashicorp/consul/api"
 	"github.com/hashicorp/terraform/helper/schema"
@@ -15,33 +19,38 @@ func dataSourceConsulServiceHealth() *schema.Resource {
 			"datacenter": &schema.Schema{
 				Optional: true,
 				Type:     schema.TypeString,
-				ForceNew: true,
+				// ForceNew: true,
 			},
 			"name": &schema.Schema{
 				Required: true,
 				Type:     schema.TypeString,
-				ForceNew: true,
+				// ForceNew: true,
 			},
 			"near": &schema.Schema{
 				Optional: true,
 				Type:     schema.TypeString,
-				ForceNew: true,
+				// ForceNew: true,
 			},
 			"tag": &schema.Schema{
 				Optional: true,
 				Type:     schema.TypeString,
-				ForceNew: true,
+				// ForceNew: true,
 			},
 			"node_meta": &schema.Schema{
 				Optional: true,
 				Type:     schema.TypeMap,
-				ForceNew: true,
+				// ForceNew: true,
 			},
 			"passing": &schema.Schema{
 				Optional: true,
 				Type:     schema.TypeBool,
-				ForceNew: true,
-				Default:  true,
+				// ForceNew: true,
+				Default: true,
+			},
+			"wait_for": &schema.Schema{
+				Optional: true,
+				Type:     schema.TypeString,
+				// ForceNew: true,
 			},
 
 			// Out parameters
@@ -215,9 +224,34 @@ func dataSourceConsulServiceHealthRead(d *schema.ResourceData, meta interface{})
 		NodeMeta:   queryNodeMeta,
 		Datacenter: dc,
 	}
-	serviceEntries, _, err := health.Service(serviceName, serviceTag, passingOnly, qOps)
-	if err != nil {
-		return fmt.Errorf("Failed to retrieve service health: %v", err)
+	var err error
+	var serviceEntries []*consulapi.ServiceEntry
+	if d.Get("wait_for").(string) == "" || !passingOnly {
+		log.Printf("[INFO] Fetching health information for service '%s'", serviceName)
+		serviceEntries, _, err = health.Service(serviceName, serviceTag, passingOnly, qOps)
+		if err != nil {
+			return fmt.Errorf("Failed to retrieve service health: %v", err)
+		}
+	} else {
+		waitFor, err := time.ParseDuration(d.Get("wait_for").(string))
+		if err != nil {
+			return fmt.Errorf("Could not parse 'wait_for': %s", err)
+		}
+		log.Printf("[INFO] Fetching health information for service '%s' for %s", serviceName, waitFor)
+		err = resource.Retry(waitFor, func() *resource.RetryError {
+
+			serviceEntries, _, err = health.Service(serviceName, serviceTag, passingOnly, qOps)
+			if err != nil {
+				return resource.RetryableError(fmt.Errorf("Failed to retrieve service health: %v", err))
+			}
+			if len(serviceEntries) == 0 {
+				return resource.RetryableError(fmt.Errorf("No healthy service found"))
+			}
+			return nil
+		})
+		if err != nil {
+			return fmt.Errorf("Failed to wait for '%s' to be healthy: %s", serviceName, err)
+		}
 	}
 
 	results := make([]interface{}, 0, len(serviceEntries))
