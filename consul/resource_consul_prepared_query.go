@@ -1,7 +1,6 @@
 package consul
 
 import (
-	"fmt"
 	"strings"
 
 	consulapi "github.com/hashicorp/consul/api"
@@ -179,27 +178,13 @@ func resourceConsulPreparedQueryRead(d *schema.ResourceData, meta interface{}) e
 	}
 	pq := queries[0]
 
-	if err = d.Set("name", pq.Name); err != nil {
-		return fmt.Errorf("Failed to set 'name': %v", err)
-	}
-	if err = d.Set("session", pq.Session); err != nil {
-		return fmt.Errorf("Failed to set 'session': %v", err)
-	}
-	if err = d.Set("stored_token", pq.Token); err != nil {
-		return fmt.Errorf("Failed to set 'stored_token': %v", err)
-	}
-	if err = d.Set("service", pq.Service.Service); err != nil {
-		return fmt.Errorf("Failed to set 'service': %v", err)
-	}
-	if err = d.Set("near", pq.Service.Near); err != nil {
-		return fmt.Errorf("Failed to set 'near': %v", err)
-	}
-	if err = d.Set("only_passing", pq.Service.OnlyPassing); err != nil {
-		return fmt.Errorf("Failed to set 'only_passing': %v", err)
-	}
-	if err = d.Set("tags", pq.Service.Tags); err != nil {
-		return fmt.Errorf("Failed to set 'tags': %v", err)
-	}
+	d.Set("name", pq.Name)
+	d.Set("session", pq.Session)
+	d.Set("stored_token", pq.Token)
+	d.Set("service", pq.Service.Service)
+	d.Set("near", pq.Service.Near)
+	d.Set("only_passing", pq.Service.OnlyPassing)
+	d.Set("tags", pq.Service.Tags)
 
 	if pq.Service.Failover.NearestN > 0 {
 		d.Set("failover.0.nearest_n", pq.Service.Failover.NearestN)
