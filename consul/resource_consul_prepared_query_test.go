@@ -148,7 +148,6 @@ func testAccCheckConsulPreparedQueryAttrValue(attr, val string) resource.TestChe
 const testAccConsulPreparedQueryConfig = `
 resource "consul_prepared_query" "foo" {
 	name = "foo"
-	token = "client-token"
 	stored_token = "pq-token"
 	service = "redis"
 	tags = ["prod"]
@@ -174,7 +173,6 @@ resource "consul_prepared_query" "foo" {
 const testAccConsulPreparedQueryConfigUpdate1 = `
 resource "consul_prepared_query" "foo" {
 	name = "baz"
-	token = "client-token"
 	stored_token = "pq-token-updated"
 	service = "memcached"
 	tags = ["prod","sup"]
@@ -201,6 +199,5 @@ const testAccConsulPreparedQueryConfigUpdate2 = `
 resource "consul_prepared_query" "foo" {
 	name = "baz"
 	service = "memcached"
-	token = "client-token"
 }
 `

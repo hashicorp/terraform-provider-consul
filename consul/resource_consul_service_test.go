@@ -188,7 +188,7 @@ func testAccRemoveConsulService(t *testing.T) func() {
 		catalog := testAccProvider.Meta().(*consulapi.Client).Catalog()
 		wOpts := &consulapi.WriteOptions{}
 		dereg := &consulapi.CatalogDeregistration{
-			Node:      "comput-example",
+			Node:      "compute-example",
 			ServiceID: "example",
 		}
 		_, err := catalog.Deregister(dereg, wOpts)

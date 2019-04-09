@@ -36,7 +36,7 @@ $ make build
 ```
 
 Developing the Provider
----------------------------
+-----------------------
 
 If you wish to work on the provider, you'll first need [Go](http://www.golang.org) installed on your machine (version 1.11+ is *required*). You'll also need to correctly setup a [GOPATH](http://golang.org/doc/code.html#GOPATH), as well as adding `$GOPATH/bin` to your `$PATH`.
 
@@ -59,7 +59,10 @@ In order to run the full suite of Acceptance tests, run `make testacc`.
 This should be performed before merging or opening pull requests.
 
 ```sh
-$ CONSUL_HTTP_ADDR=localhost:8500 make testacc
+$ consul agent -dev -config-file ./consul_test.hcl &
+$ export CONSUL_HTTP_ADDR=localhost:8500
+$ export CONSUL_HTTP_TOKEN=master-token
+$ make testacc
 ```
 
 This requires a running Consul agent locally. This provider targets
