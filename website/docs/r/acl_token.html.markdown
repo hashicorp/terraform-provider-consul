@@ -45,3 +45,4 @@ The following attributes are exported:
 * `description` - The description of the token.
 * `policies` - The list of policies attached to the token.
 * `local` - The flag to set the token local to the current datacenter.
+* `secret_id` - The Secret ID generated at token creation.

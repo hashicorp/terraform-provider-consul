@@ -36,6 +36,11 @@ func resourceConsulACLToken() *schema.Resource {
 				Default:     false,
 				Description: "Flag to set the token local to the current datacenter.",
 			},
+			"secret_id": {
+				Type:        schema.TypeString,
+				Description: "The Secret ID of the token that will be created",
+				Computed:    true,
+			},
 		},
 	}
 }
@@ -103,6 +108,9 @@ func resourceConsulACLTokenRead(d *schema.ResourceData, meta interface{}) error 
 	}
 	if err = d.Set("local", aclToken.Local); err != nil {
 		return fmt.Errorf("Error while setting 'local': %s", err)
+	}
+	if err = d.Set("secret_id", aclToken.SecretID); err != nil {
+		return fmt.Errorf("Error while setting 'secret_id': %s", err)
 	}
 
 	return nil
