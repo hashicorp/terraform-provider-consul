@@ -3,6 +3,7 @@ package consul
 import (
 	"fmt"
 	"strconv"
+	"strings"
 
 	consulapi "github.com/hashicorp/consul/api"
 	"github.com/hashicorp/terraform/helper/schema"
@@ -346,6 +347,11 @@ func getDC(d *schema.ResourceData, client *consulapi.Client) (string, error) {
 	}
 	info, err := client.Agent().Self()
 	if err != nil {
+		// Reading can fail with `Unexpected response code: 403 (Permission denied)`
+		// if the permission has not been given. Default to "" in this case.
+		if strings.HasSuffix(err.Error(), "403 (Permission denied)") {
+			return "", nil
+		}
 		return "", fmt.Errorf("Failed to get datacenter from Consul agent: %v", err)
 	}
 	return info["Config"]["Datacenter"].(string), nil
