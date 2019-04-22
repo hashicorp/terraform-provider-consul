@@ -55,6 +55,43 @@ func TestAccConsulACLToken_basic(t *testing.T) {
 	})
 }
 
+func TestAccConsulACLToken_import(t *testing.T) {
+	checkFn := func(s []*terraform.InstanceState) error {
+		if len(s) != 1 {
+			return fmt.Errorf("bad state: %s", s)
+		}
+		v, ok := s[0].Attributes["description"]
+		if !ok || v != "test" {
+			return fmt.Errorf("bad description: %s", s)
+		}
+		v, ok = s[0].Attributes["policies.#"]
+		if !ok || v != "1" {
+			return fmt.Errorf("bad policies: %s", s)
+		}
+		v, ok = s[0].Attributes["local"]
+		if !ok || v != "true" {
+			return fmt.Errorf("bad local: %s", s)
+		}
+
+		return nil
+	}
+
+	resource.Test(t, resource.TestCase{
+		Providers: testAccProviders,
+		PreCheck:  func() { testAccPreCheck(t) },
+		Steps: []resource.TestStep{
+			{
+				Config: testResourceACLTokenConfigBasic,
+			},
+			{
+				ResourceName:     "consul_acl_token.test",
+				ImportState:      true,
+				ImportStateCheck: checkFn,
+			},
+		},
+	})
+}
+
 const testResourceACLTokenConfigBasic = `
 resource "consul_acl_policy" "test" {
 	name = "test"
