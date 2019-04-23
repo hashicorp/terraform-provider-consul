@@ -163,6 +163,10 @@ func testAccConsulPreparedQueryNearestN(t *testing.T) func() {
 	}
 }
 
+func testAccCheckConsulPreparedQueryAttrValue(attr, val string) resource.TestCheckFunc {
+	return resource.TestCheckResourceAttr("consul_prepared_query.foo", attr, val)
+}
+
 const testAccConsulPreparedQueryConfig = `
 resource "consul_prepared_query" "foo" {
 	name = "foo"
