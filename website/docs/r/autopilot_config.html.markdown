@@ -28,8 +28,8 @@ resource "consul_autopilot_config" "config" {
 
 The following arguments are supported:
 
-* `datacenter` - (Optional) The datacenter to use. This overrides the
-  datacenter in the provider setup and the agent's default datacenter.
+* `datacenter` - (Optional) The datacenter to use. This overrides the agent's
+  default datacenter and the datacenter in the provider setup.
 
 * `cleanup_dead_servers` - (Optional) Whether to remove failing servers when a
 replacement comes online. Defaults to true.
