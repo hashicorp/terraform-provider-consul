@@ -116,7 +116,7 @@ github.com/hashicorp/hil/scanner
 github.com/hashicorp/logutils
 # github.com/hashicorp/serf v0.8.2-0.20171022020050-c20a0b1b1ea9
 github.com/hashicorp/serf/coordinate
-# github.com/hashicorp/terraform v0.12.0-alpha4.0.20190417210818-177a7afb781f
+# github.com/hashicorp/terraform v0.12.0-alpha4.0.20190424121927-9327eedb0417
 github.com/hashicorp/terraform/plugin
 github.com/hashicorp/terraform/helper/hashcode
 github.com/hashicorp/terraform/helper/schema
