@@ -92,9 +92,6 @@ of the `name` attribute.
 
 * `port` - (Optional, int) The port of the service.
 
-* `external` - (Optional, boolean) Whether to register this service as an
-  external service. This can be useful when using [Consul External Service Monitor](https://github.com/hashicorp/consul-esm)
-
 * `checks` - (Optional, list of checks) Health-checks to register to monitor the
   service. The list of attributes for each health-check is detailled below.
 
@@ -141,6 +138,5 @@ The following attributes are exported:
 * `name` - The name of the service.
 * `port` - The port of the service.
 * `tags` - The tags of the service.
-* `external` - Whether this is an external service.
 * `checks` - The list of health-checks associated with the service.
 * `datacenter` - The datacenter of the service.
