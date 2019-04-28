@@ -48,8 +48,9 @@ var schemaQueryOpts = &schema.Schema{
 				Type:     schema.TypeBool,
 			},
 			queryOptToken: {
-				Optional: true,
-				Type:     schema.TypeString,
+				Optional:  true,
+				Type:      schema.TypeString,
+				Sensitive: true,
 			},
 			queryOptWaitIndex: {
 				Optional: true,
