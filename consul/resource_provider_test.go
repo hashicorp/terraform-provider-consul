@@ -1,10 +1,13 @@
 package consul
 
 import (
+	"fmt"
 	"os"
+	"strings"
 	"testing"
 
 	"github.com/hashicorp/terraform/config"
+	"github.com/hashicorp/terraform/config/configschema"
 	"github.com/hashicorp/terraform/helper/schema"
 	"github.com/hashicorp/terraform/terraform"
 )
@@ -134,6 +137,22 @@ func TestResourceProvider_ConfigureTLSInsecureHttpsMismatch(t *testing.T) {
 	}
 }
 
+// token is sometime nested inside the object
+func checkToken(name string, resource *configschema.Block) error {
+	for key, value := range resource.BlockTypes {
+		if err := checkToken(fmt.Sprintf("%s.%s", name, key), &value.Block); err != nil {
+			return err
+		}
+	}
+
+	for key, value := range resource.Attributes {
+		if (key == "token" || strings.HasSuffix(key, ".token")) && !value.Sensitive {
+			return fmt.Errorf("token should be marked as sensitive for %s.%s", name, key)
+		}
+	}
+	return nil
+}
+
 func TestResourceProvider_tokenIsSensitive(t *testing.T) {
 	rp := Provider()
 
@@ -144,10 +163,8 @@ func TestResourceProvider_tokenIsSensitive(t *testing.T) {
 		if err != nil {
 			t.Fatalf("err: %v", err)
 		}
-		if token, ok := schema.ResourceTypes[resource.Name].Attributes["token"]; ok {
-			if !token.Sensitive {
-				t.Fatalf("token should be marked as sensitive for %v", resource.Name)
-			}
+		if err = checkToken(resource.Name, schema.ResourceTypes[resource.Name]); err != nil {
+			t.Fatal(err)
 		}
 	}
 
@@ -158,10 +175,9 @@ func TestResourceProvider_tokenIsSensitive(t *testing.T) {
 		if err != nil {
 			t.Fatalf("err: %v", err)
 		}
-		if token, ok := schema.DataSources[datasource.Name].Attributes["token"]; ok {
-			if !token.Sensitive {
-				t.Fatalf("token should be marked as sensitive for %v", datasource.Name)
-			}
+
+		if err = checkToken(datasource.Name, schema.DataSources[datasource.Name]); err != nil {
+			t.Fatal(err)
 		}
 	}
 }
