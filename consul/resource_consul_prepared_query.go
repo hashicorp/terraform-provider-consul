@@ -67,6 +67,11 @@ func resourceConsulPreparedQuery() *schema.Resource {
 				Optional: true,
 			},
 
+			"connect": {
+				Type:     schema.TypeBool,
+				Optional: true,
+			},
+
 			"failover": {
 				Type:     schema.TypeList,
 				Optional: true,
@@ -184,6 +189,7 @@ func resourceConsulPreparedQueryRead(d *schema.ResourceData, meta interface{}) e
 	d.Set("service", pq.Service.Service)
 	d.Set("near", pq.Service.Near)
 	d.Set("only_passing", pq.Service.OnlyPassing)
+	d.Set("connect", pq.Service.Connect)
 	d.Set("tags", pq.Service.Tags)
 
 	if pq.Service.Failover.NearestN > 0 {
@@ -230,6 +236,7 @@ func preparedQueryDefinitionFromResourceData(d *schema.ResourceData) *consulapi.
 			Service:     d.Get("service").(string),
 			Near:        d.Get("near").(string),
 			OnlyPassing: d.Get("only_passing").(bool),
+			Connect:     d.Get("connect").(bool),
 		},
 	}
 
