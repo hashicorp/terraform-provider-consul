@@ -155,7 +155,6 @@ resource "consul_prepared_query" "foo" {
 	tags = ["prod"]
 	near = "_agent"
 	only_passing = true
-	connect = false
 
 	failover {
 		nearest_n = 3

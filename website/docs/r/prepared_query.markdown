@@ -105,7 +105,7 @@ The following arguments are supported:
 
 *  `connect` - (Optional) When `true` the prepared query will return connect
   proxy services for a queried service.  Conditions such as `tags` in the
-  prepared query will be matched against the proxy service.
+  prepared query will be matched against the proxy service. Defaults to false.
 
 * `near` - (Optional) Allows specifying the name of a node to sort results
   near using Consul's distance sorting and network coordinates. The magic
