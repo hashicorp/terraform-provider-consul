@@ -25,6 +25,7 @@ func TestAccConsulPreparedQuery_basic(t *testing.T) {
 					testAccCheckConsulPreparedQueryAttrValue("near", "_agent"),
 					testAccCheckConsulPreparedQueryAttrValue("tags.#", "1"),
 					testAccCheckConsulPreparedQueryAttrValue("only_passing", "true"),
+					testAccCheckConsulPreparedQueryAttrValue("connect", "false"),
 					testAccCheckConsulPreparedQueryAttrValue("failover.0.nearest_n", "3"),
 					testAccCheckConsulPreparedQueryAttrValue("failover.0.datacenters.#", "2"),
 					testAccCheckConsulPreparedQueryAttrValue("template.0.type", "name_prefix_match"),
@@ -42,6 +43,7 @@ func TestAccConsulPreparedQuery_basic(t *testing.T) {
 					testAccCheckConsulPreparedQueryAttrValue("near", "node1"),
 					testAccCheckConsulPreparedQueryAttrValue("tags.#", "2"),
 					testAccCheckConsulPreparedQueryAttrValue("only_passing", "false"),
+					testAccCheckConsulPreparedQueryAttrValue("connect", "true"),
 					testAccCheckConsulPreparedQueryAttrValue("failover.0.nearest_n", "2"),
 					testAccCheckConsulPreparedQueryAttrValue("failover.0.datacenters.#", "1"),
 					testAccCheckConsulPreparedQueryAttrValue("template.0.regexp", "goodbye"),
@@ -153,6 +155,7 @@ resource "consul_prepared_query" "foo" {
 	tags = ["prod"]
 	near = "_agent"
 	only_passing = true
+	connect = false
 
 	failover {
 		nearest_n = 3
@@ -178,6 +181,7 @@ resource "consul_prepared_query" "foo" {
 	tags = ["prod","sup"]
 	near = "node1"
 	only_passing = false
+	connect = true
 
 	failover {
 		nearest_n = 2
