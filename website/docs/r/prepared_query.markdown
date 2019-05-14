@@ -50,6 +50,7 @@ resource "consul_prepared_query" "service-near-self" {
   stored_token = "wxyz"
   name         = ""
   only_passing = true
+  connect      = true
   near         = "_agent"
 
   template {
@@ -101,6 +102,10 @@ The following arguments are supported:
 
 * `only_passing` - (Optional) When `true`, the prepared query will only
   return nodes with passing health checks in the result.
+
+*  `connect` - (Optional) When `true` the prepared query will return connect
+  proxy services for a queried service.  Conditions such as `tags` in the
+  prepared query will be matched against the proxy service. Defaults to false.
 
 * `near` - (Optional) Allows specifying the name of a node to sort results
   near using Consul's distance sorting and network coordinates. The magic
