@@ -13,7 +13,6 @@ const (
 	resourceACLTokenDescription = "description"
 	resourceACLTokenPolicies    = "policies"
 	resourceACLTokenLocal       = "local"
-	resourceACLTokenRequestOpts = "request_options"
 
 	resourceACLTokenSecret = "secret"
 )
@@ -48,8 +47,9 @@ func resourceConsulACLToken() *schema.Resource {
 				Description: "Flag to set the token local to the current datacenter.",
 			},
 			resourceACLTokenSecret: {
-				Type:     schema.TypeString,
-				Computed: true,
+				Type:      schema.TypeString,
+				Computed:  true,
+				Sensitive: true,
 			},
 		},
 	}
