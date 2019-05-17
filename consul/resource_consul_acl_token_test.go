@@ -41,23 +41,37 @@ func TestAccConsulACLToken_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("consul_acl_token.test", "local", "true"),
 				),
 			},
-			{
-				Config:  testResourceACLTokenConfigBasic,
-				Destroy: false,
-			},
 		},
 	})
 }
 
 const testResourceACLTokenConfigBasic = `
+resource "consul_acl_policy" "write" {
+	name = "test-write"
+	rules = "acl = \"write\""
+	datacenters = [ "dc1" ]
+}
+
+resource "consul_acl_token" "write" {
+	description = "test"
+	policies = ["${consul_acl_policy.write.name}"]
+	local = true
+}
+
 resource "consul_acl_policy" "test" {
 	name = "test"
 	rules = "node \"\" { policy = \"read\" }"
 	datacenters = [ "dc1" ]
+	request_options {
+		token = "${consul_acl_token.write.secret}"
+	}
 }
 
 resource "consul_acl_token" "test" {
 	description = "test"
 	policies = ["${consul_acl_policy.test.name}"]
 	local = true
+	request_options {
+		token = "${consul_acl_token.write.secret}"
+	}
 }`

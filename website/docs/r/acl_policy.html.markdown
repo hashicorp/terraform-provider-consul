@@ -32,6 +32,17 @@ The following arguments are supported:
 * `description` - (Optional) The description of the policy.
 * `rules` - (Required) The rules of the policy.
 * `datacenters` - (Optional) The datacenters of the policy.
+* `request_options` - (Optional) See below.
+
+The `request_options` block supports the following:
+
+* `datacenter` - (Optional) Specify the Consul Datacenter to use when performing the
+  request.  This defaults to the datacenter local to the `consul` provider configuration
+  but may be overwritten to query a remote datacenter if necessary.
+
+* `token` - (Optional) Specify the Consul ACL token to use when performing the
+  request.  This defaults to the same API token configured by the `consul`
+  provider but may be overriden if necessary.
 
 ## Attributes Reference
 

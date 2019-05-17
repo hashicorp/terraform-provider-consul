@@ -5,7 +5,15 @@ import (
 	"log"
 
 	consulapi "github.com/hashicorp/consul/api"
+	"github.com/hashicorp/errwrap"
 	"github.com/hashicorp/terraform/helper/schema"
+)
+
+const (
+	resourceACLPolicyName        = "name"
+	resourceACLPolicyDescription = "description"
+	resourceACLPolicyRules       = "rules"
+	resourceACLPolicyDatacenters = "datacenters"
 )
 
 func resourceConsulACLPolicy() *schema.Resource {
@@ -16,22 +24,23 @@ func resourceConsulACLPolicy() *schema.Resource {
 		Delete: resourceConsulACLPolicyDelete,
 
 		Schema: map[string]*schema.Schema{
-			"name": {
+			requestOptions: schemaRequestOpts,
+			resourceACLPolicyName: {
 				Type:        schema.TypeString,
 				Required:    true,
 				Description: "The ACL policy name.",
 			},
-			"description": {
+			resourceACLPolicyDescription: {
 				Type:        schema.TypeString,
 				Optional:    true,
 				Description: "The ACL policy description.",
 			},
-			"rules": {
+			resourceACLPolicyRules: {
 				Type:        schema.TypeString,
 				Required:    true,
 				Description: "The ACL policy rules.",
 			},
-			"datacenters": {
+			resourceACLPolicyDatacenters: {
 				Type:        schema.TypeSet,
 				Optional:    true,
 				Description: "The ACL policy datacenters.",
@@ -44,15 +53,21 @@ func resourceConsulACLPolicy() *schema.Resource {
 func resourceConsulACLPolicyCreate(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*consulapi.Client)
 
+	// Parse out data source filters to populate Consul's write options
+	writeOpts, _, err := getRequestOpts(d, client)
+	if err != nil {
+		return errwrap.Wrapf("unable to get query options for fetching catalog nodes: {{err}}", err)
+	}
+
 	log.Printf("[DEBUG] Creating ACL policy")
 
 	aclPolicy := consulapi.ACLPolicy{
-		Name:        d.Get("name").(string),
-		Description: d.Get("description").(string),
-		Rules:       d.Get("rules").(string),
+		Name:        d.Get(resourceACLPolicyName).(string),
+		Description: d.Get(resourceACLPolicyDescription).(string),
+		Rules:       d.Get(resourceACLPolicyRules).(string),
 	}
 
-	if v, ok := d.GetOk("datacenters"); ok {
+	if v, ok := d.GetOk(resourceACLPolicyDatacenters); ok {
 		vs := v.(*schema.Set).List()
 		s := make([]string, len(vs))
 		for i, raw := range vs {
@@ -61,7 +76,7 @@ func resourceConsulACLPolicyCreate(d *schema.ResourceData, meta interface{}) err
 		aclPolicy.Datacenters = s
 	}
 
-	policy, _, err := client.ACL().PolicyCreate(&aclPolicy, nil)
+	policy, _, err := client.ACL().PolicyCreate(&aclPolicy, writeOpts)
 	if err != nil {
 		return fmt.Errorf("error creating ACL policy: %s", err)
 	}
@@ -76,10 +91,16 @@ func resourceConsulACLPolicyCreate(d *schema.ResourceData, meta interface{}) err
 func resourceConsulACLPolicyRead(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*consulapi.Client)
 
+	// Parse out data source filters to populate Consul's write options
+	_, queryOptions, err := getRequestOpts(d, client)
+	if err != nil {
+		return errwrap.Wrapf("unable to get query options for fetching catalog nodes: {{err}}", err)
+	}
+
 	id := d.Id()
 	log.Printf("[DEBUG] Reading ACL policy %q", id)
 
-	aclPolicy, _, err := client.ACL().PolicyRead(id, nil)
+	aclPolicy, _, err := client.ACL().PolicyRead(id, queryOptions)
 	if err != nil {
 		log.Printf("[WARN] ACL policy not found, removing from state")
 		d.SetId("")
@@ -88,13 +109,13 @@ func resourceConsulACLPolicyRead(d *schema.ResourceData, meta interface{}) error
 
 	log.Printf("[DEBUG] Read ACL policy %q", id)
 
-	if err = d.Set("name", aclPolicy.Name); err != nil {
+	if err = d.Set(resourceACLPolicyName, aclPolicy.Name); err != nil {
 		return fmt.Errorf("Error while setting 'name': %s", err)
 	}
-	if err = d.Set("description", aclPolicy.Description); err != nil {
+	if err = d.Set(resourceACLPolicyDescription, aclPolicy.Description); err != nil {
 		return fmt.Errorf("Error while setting 'description': %s", err)
 	}
-	if err = d.Set("rules", aclPolicy.Rules); err != nil {
+	if err = d.Set(resourceACLPolicyRules, aclPolicy.Rules); err != nil {
 		return fmt.Errorf("Error while setting 'rules': %s", err)
 	}
 
@@ -103,7 +124,7 @@ func resourceConsulACLPolicyRead(d *schema.ResourceData, meta interface{}) error
 		datacenters = append(datacenters, datacenter)
 	}
 
-	if err = d.Set("datacenters", datacenters); err != nil {
+	if err = d.Set(resourceACLPolicyDatacenters, datacenters); err != nil {
 		return fmt.Errorf("Error while setting 'datacenters': %s", err)
 	}
 
@@ -113,17 +134,23 @@ func resourceConsulACLPolicyRead(d *schema.ResourceData, meta interface{}) error
 func resourceConsulACLPolicyUpdate(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*consulapi.Client)
 
+	// Parse out data source filters to populate Consul's write options
+	writeOpts, _, err := getRequestOpts(d, client)
+	if err != nil {
+		return errwrap.Wrapf("unable to get query options for fetching catalog nodes: {{err}}", err)
+	}
+
 	id := d.Id()
 	log.Printf("[DEBUG] Updating ACL policy %q", id)
 
 	aclPolicy := consulapi.ACLPolicy{
 		ID:          id,
-		Name:        d.Get("name").(string),
-		Description: d.Get("description").(string),
-		Rules:       d.Get("rules").(string),
+		Name:        d.Get(resourceACLPolicyName).(string),
+		Description: d.Get(resourceACLPolicyDescription).(string),
+		Rules:       d.Get(resourceACLPolicyRules).(string),
 	}
 
-	if v, ok := d.GetOk("datacenters"); ok {
+	if v, ok := d.GetOk(resourceACLPolicyDatacenters); ok {
 		vs := v.(*schema.Set).List()
 		s := make([]string, len(vs))
 		for i, raw := range vs {
@@ -132,7 +159,7 @@ func resourceConsulACLPolicyUpdate(d *schema.ResourceData, meta interface{}) err
 		aclPolicy.Datacenters = s
 	}
 
-	_, _, err := client.ACL().PolicyUpdate(&aclPolicy, nil)
+	_, _, err = client.ACL().PolicyUpdate(&aclPolicy, writeOpts)
 	if err != nil {
 		return fmt.Errorf("error updating ACL policy %q: %s", id, err)
 	}
@@ -144,10 +171,16 @@ func resourceConsulACLPolicyUpdate(d *schema.ResourceData, meta interface{}) err
 func resourceConsulACLPolicyDelete(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*consulapi.Client)
 
+	// Parse out data source filters to populate Consul's write options
+	writeOpts, _, err := getRequestOpts(d, client)
+	if err != nil {
+		return errwrap.Wrapf("unable to get query options for fetching catalog nodes: {{err}}", err)
+	}
+
 	id := d.Id()
 
 	log.Printf("[DEBUG] Deleting ACL policy %q", id)
-	_, err := client.ACL().PolicyDelete(id, nil)
+	_, err = client.ACL().PolicyDelete(id, writeOpts)
 	if err != nil {
 		return fmt.Errorf("error deleting ACL policy %q: %s", id, err)
 	}
