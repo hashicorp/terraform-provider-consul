@@ -2,7 +2,6 @@ package consul
 
 import (
 	"fmt"
-	"log"
 	"strings"
 
 	consulapi "github.com/hashicorp/consul/api"
@@ -65,8 +64,6 @@ func getRequestOpts(d *schema.ResourceData, client *consulapi.Client) (*consulap
 		requestOpts.Datacenter = dc
 		queryOpts.Datacenter = dc
 	}
-
-	log.Printf("[DEBUG] Options %+v %+v", d, requestOpts)
 
 	return requestOpts, queryOpts, nil
 }
