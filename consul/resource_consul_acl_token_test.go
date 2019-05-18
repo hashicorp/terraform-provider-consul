@@ -51,6 +51,10 @@ func TestAccConsulACLToken_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("consul_acl_token.test", "local", "true"),
 				),
 			},
+			{
+				Config:  testResourceACLTokenConfigBasic,
+				Destroy: false,
+			},
 		},
 	})
 }
