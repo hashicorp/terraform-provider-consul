@@ -14,6 +14,9 @@ func resourceConsulACLToken() *schema.Resource {
 		Read:   resourceConsulACLTokenRead,
 		Update: resourceConsulACLTokenUpdate,
 		Delete: resourceConsulACLTokenDelete,
+		Importer: &schema.ResourceImporter{
+			State: schema.ImportStatePassthrough,
+		},
 
 		Schema: map[string]*schema.Schema{
 			"description": {

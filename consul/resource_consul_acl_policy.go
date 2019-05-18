@@ -14,6 +14,9 @@ func resourceConsulACLPolicy() *schema.Resource {
 		Read:   resourceConsulACLPolicyRead,
 		Update: resourceConsulACLPolicyUpdate,
 		Delete: resourceConsulACLPolicyDelete,
+		Importer: &schema.ResourceImporter{
+			State: schema.ImportStatePassthrough,
+		},
 
 		Schema: map[string]*schema.Schema{
 			"name": {

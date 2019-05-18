@@ -57,6 +57,43 @@ func TestAccConsulACLPolicy_basic(t *testing.T) {
 	})
 }
 
+func TestAccConsulACLPolicy_import(t *testing.T) {
+	checkFn := func(s []*terraform.InstanceState) error {
+		if len(s) != 1 {
+			return fmt.Errorf("bad state: %s", s)
+		}
+		v, ok := s[0].Attributes["rules"]
+		if !ok || v != `node_prefix "" { policy = "read" }` {
+			return fmt.Errorf("bad rules: %s", s)
+		}
+		v, ok = s[0].Attributes["description"]
+		if !ok || v != "" {
+			return fmt.Errorf("bad description: %s", s)
+		}
+		v, ok = s[0].Attributes["datacenters.#"]
+		if !ok || v != "1" {
+			return fmt.Errorf("bad datacenters: %s", s)
+		}
+
+		return nil
+	}
+
+	resource.Test(t, resource.TestCase{
+		Providers: testAccProviders,
+		PreCheck:  func() { testAccPreCheck(t) },
+		Steps: []resource.TestStep{
+			{
+				Config: testResourceACLPolicyConfigBasic,
+			},
+			{
+				ResourceName:     "consul_acl_policy.test",
+				ImportState:      true,
+				ImportStateCheck: checkFn,
+			},
+		},
+	})
+}
+
 const testResourceACLPolicyConfigBasic = `
 resource "consul_acl_policy" "test" {
 	name = "test"
