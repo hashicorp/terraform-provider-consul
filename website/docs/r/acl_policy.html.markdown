@@ -53,3 +53,11 @@ The following attributes are exported:
 * `description` - The description of the policy.
 * `rules` - The rules of the policy.
 * `datacenters` - The datacenters of the policy.
+
+## Import
+
+`consul_acl_policy` can be imported:
+
+```
+$ terraform import consul_acl_policy.my-policy 1c90ef03-a6dd-6a8c-ac49-042ad3752896
+```
