@@ -10,6 +10,8 @@ description: |-
 
 The `consul_acl_policy` resource writes an ACL policy into Consul.
 
+~> Warning: The consul_acl_policy resource is part of the new policy system introduced in Consul 1.4.0
+
 ## Example Usage
 
 ```hcl
