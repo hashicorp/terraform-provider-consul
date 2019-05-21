@@ -64,7 +64,8 @@ func TestAccConsulKeyPrefix_basic(t *testing.T) {
 }
 
 func testAccCheckConsulKeyPrefixDestroy(s *terraform.State) error {
-	kv := testAccProvider.Meta().(*consulapi.Client).KV()
+	client := getClient(testAccProvider.Meta())
+	kv := client.KV()
 	opts := &consulapi.QueryOptions{Datacenter: "dc1"}
 	pair, _, err := kv.Get("test/set", opts)
 	if err != nil {
@@ -79,7 +80,8 @@ func testAccCheckConsulKeyPrefixDestroy(s *terraform.State) error {
 func testAccCheckConsulKeyPrefixKeyAbsent(name string) resource.TestCheckFunc {
 	fullName := "prefix_test/" + name
 	return func(s *terraform.State) error {
-		kv := testAccProvider.Meta().(*consulapi.Client).KV()
+		client := getClient(testAccProvider.Meta())
+		kv := client.KV()
 		opts := &consulapi.QueryOptions{Datacenter: "dc1"}
 		pair, _, err := kv.Get(fullName, opts)
 		if err != nil {
@@ -97,7 +99,8 @@ func testAccCheckConsulKeyPrefixKeyAbsent(name string) resource.TestCheckFunc {
 func testAccAddConsulKeyPrefixRogue(name, value string) resource.TestCheckFunc {
 	fullName := "prefix_test/" + name
 	return func(s *terraform.State) error {
-		kv := testAccProvider.Meta().(*consulapi.Client).KV()
+		client := getClient(testAccProvider.Meta())
+		kv := client.KV()
 		opts := &consulapi.WriteOptions{Datacenter: "dc1"}
 		pair := &consulapi.KVPair{
 			Key:   fullName,
@@ -111,7 +114,8 @@ func testAccAddConsulKeyPrefixRogue(name, value string) resource.TestCheckFunc {
 func testAccCheckConsulKeyPrefixKeyValue(name, value string, flags uint64) resource.TestCheckFunc {
 	fullName := "prefix_test/" + name
 	return func(s *terraform.State) error {
-		kv := testAccProvider.Meta().(*consulapi.Client).KV()
+		client := getClient(testAccProvider.Meta())
+		kv := client.KV()
 		opts := &consulapi.QueryOptions{Datacenter: "dc1"}
 		pair, _, err := kv.Get(fullName, opts)
 		if err != nil {

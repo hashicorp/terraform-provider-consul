@@ -167,7 +167,7 @@ func resourceConsulService() *schema.Resource {
 }
 
 func resourceConsulServiceCreate(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*consulapi.Client)
+	client := getClient(meta)
 	catalog := client.Catalog()
 
 	name := d.Get("name").(string)
@@ -270,8 +270,7 @@ func resourceConsulServiceCreate(d *schema.ResourceData, meta interface{}) error
 }
 
 func resourceConsulServiceUpdate(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*consulapi.Client)
-	catalog := client.Catalog()
+	catalog := getClient(meta).Catalog()
 
 	name := d.Get("name").(string)
 	node := d.Get("node").(string)
@@ -343,7 +342,7 @@ func resourceConsulServiceUpdate(d *schema.ResourceData, meta interface{}) error
 }
 
 func resourceConsulServiceRead(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*consulapi.Client)
+	client := getClient(meta)
 
 	dc := ""
 	if _, ok := d.GetOk("datacenter"); ok {
@@ -443,7 +442,7 @@ func resourceConsulServiceRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceConsulServiceDelete(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*consulapi.Client)
+	client := getClient(meta)
 	catalog := client.Catalog()
 	id := d.Id()
 	node := d.Get("node").(string)

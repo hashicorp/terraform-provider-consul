@@ -45,7 +45,7 @@ func resourceConsulACLPolicy() *schema.Resource {
 }
 
 func resourceConsulACLPolicyCreate(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*consulapi.Client)
+	client := getClient(meta)
 
 	log.Printf("[DEBUG] Creating ACL policy")
 
@@ -77,7 +77,7 @@ func resourceConsulACLPolicyCreate(d *schema.ResourceData, meta interface{}) err
 }
 
 func resourceConsulACLPolicyRead(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*consulapi.Client)
+	client := getClient(meta)
 
 	id := d.Id()
 	log.Printf("[DEBUG] Reading ACL policy %q", id)
@@ -114,7 +114,7 @@ func resourceConsulACLPolicyRead(d *schema.ResourceData, meta interface{}) error
 }
 
 func resourceConsulACLPolicyUpdate(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*consulapi.Client)
+	client := getClient(meta)
 
 	id := d.Id()
 	log.Printf("[DEBUG] Updating ACL policy %q", id)
@@ -145,7 +145,7 @@ func resourceConsulACLPolicyUpdate(d *schema.ResourceData, meta interface{}) err
 }
 
 func resourceConsulACLPolicyDelete(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*consulapi.Client)
+	client := getClient(meta)
 
 	id := d.Id()
 

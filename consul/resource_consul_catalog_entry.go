@@ -118,7 +118,7 @@ func resourceConsulCatalogEntryServicesHash(v interface{}) int {
 }
 
 func resourceConsulCatalogEntryCreate(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*consulapi.Client)
+	client := getClient(meta)
 	catalog := client.Catalog()
 
 	var dc string
@@ -126,7 +126,7 @@ func resourceConsulCatalogEntryCreate(d *schema.ResourceData, meta interface{}) 
 		dc = v.(string)
 	} else {
 		var err error
-		if dc, err = getDC(d, client); err != nil {
+		if dc, err = getDC(d, client, meta); err != nil {
 			return err
 		}
 	}
@@ -212,7 +212,7 @@ func resourceConsulCatalogEntryCreate(d *schema.ResourceData, meta interface{}) 
 }
 
 func resourceConsulCatalogEntryRead(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*consulapi.Client)
+	client := getClient(meta)
 	catalog := client.Catalog()
 
 	// Get the DC, error if not available.
@@ -238,7 +238,7 @@ func resourceConsulCatalogEntryRead(d *schema.ResourceData, meta interface{}) er
 }
 
 func resourceConsulCatalogEntryDelete(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*consulapi.Client)
+	client := getClient(meta)
 	catalog := client.Catalog()
 
 	var dc string
@@ -246,7 +246,7 @@ func resourceConsulCatalogEntryDelete(d *schema.ResourceData, meta interface{}) 
 		dc = v.(string)
 	} else {
 		var err error
-		if dc, err = getDC(d, client); err != nil {
+		if dc, err = getDC(d, client, meta); err != nil {
 			return err
 		}
 	}

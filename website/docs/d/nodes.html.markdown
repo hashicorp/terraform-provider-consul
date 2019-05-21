@@ -38,7 +38,7 @@ The following arguments are supported:
 * `datacenter` - (Optional) The Consul datacenter to query.  Defaults to the
   same value found in `query_options` parameter specified below, or if that is
   empty, the `datacenter` value found in the Consul agent that this provider is
-  configured to talk to.
+  configured to talk to then the datacenter in the provider setup.
 
 * `query_options` - (Optional) See below.
 

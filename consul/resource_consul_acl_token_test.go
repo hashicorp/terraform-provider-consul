@@ -4,13 +4,12 @@ import (
 	"fmt"
 	"testing"
 
-	consulapi "github.com/hashicorp/consul/api"
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/terraform"
 )
 
 func testAccCheckConsulACLTokenDestroy(s *terraform.State) error {
-	client := testAccProvider.Meta().(*consulapi.Client)
+	client := getClient(testAccProvider.Meta())
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "consul_acl" {
@@ -29,7 +28,8 @@ func testAccCheckConsulACLTokenDestroy(s *terraform.State) error {
 
 func TestAccConsulACLToken_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
-		Providers:    testAccProviders,
+		Providers: testAccProviders,
+
 		PreCheck:     func() { testAccPreCheck(t) },
 		CheckDestroy: testAccCheckConsulACLTokenDestroy,
 		Steps: []resource.TestStep{

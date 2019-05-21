@@ -45,7 +45,7 @@ func resourceConsulAgentService() *schema.Resource {
 }
 
 func resourceConsulAgentServiceCreate(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*consulapi.Client)
+	client := getClient(meta)
 	agent := client.Agent()
 
 	name := d.Get("name").(string)
@@ -94,7 +94,7 @@ func resourceConsulAgentServiceCreate(d *schema.ResourceData, meta interface{}) 
 }
 
 func resourceConsulAgentServiceRead(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*consulapi.Client)
+	client := getClient(meta)
 	agent := client.Agent()
 
 	name := d.Get("name").(string)
@@ -120,7 +120,7 @@ func resourceConsulAgentServiceRead(d *schema.ResourceData, meta interface{}) er
 }
 
 func resourceConsulAgentServiceDelete(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*consulapi.Client)
+	client := getClient(meta)
 	catalog := client.Agent()
 
 	id := d.Id()
