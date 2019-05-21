@@ -118,10 +118,7 @@ func resourceConsulCatalogEntryServicesHash(v interface{}) int {
 }
 
 func resourceConsulCatalogEntryCreate(d *schema.ResourceData, meta interface{}) error {
-	client, err := meta.(*Config).Client()
-	if err != nil {
-		return err
-	}
+	client := getClient(meta)
 	catalog := client.Catalog()
 
 	var dc string
@@ -215,10 +212,7 @@ func resourceConsulCatalogEntryCreate(d *schema.ResourceData, meta interface{}) 
 }
 
 func resourceConsulCatalogEntryRead(d *schema.ResourceData, meta interface{}) error {
-	client, err := meta.(*Config).Client()
-	if err != nil {
-		return err
-	}
+	client := getClient(meta)
 	catalog := client.Catalog()
 
 	// Get the DC, error if not available.
@@ -244,10 +238,7 @@ func resourceConsulCatalogEntryRead(d *schema.ResourceData, meta interface{}) er
 }
 
 func resourceConsulCatalogEntryDelete(d *schema.ResourceData, meta interface{}) error {
-	client, err := meta.(*Config).Client()
-	if err != nil {
-		return err
-	}
+	client := getClient(meta)
 	catalog := client.Catalog()
 
 	var dc string

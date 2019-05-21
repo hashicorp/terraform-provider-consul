@@ -50,10 +50,7 @@ func resourceConsulNode() *schema.Resource {
 }
 
 func resourceConsulNodeCreate(d *schema.ResourceData, meta interface{}) error {
-	client, err := meta.(*Config).Client()
-	if err != nil {
-		return err
-	}
+	client := getClient(meta)
 	catalog := client.Catalog()
 
 	var dc string
@@ -111,10 +108,7 @@ func resourceConsulNodeCreate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceConsulNodeRead(d *schema.ResourceData, meta interface{}) error {
-	client, err := meta.(*Config).Client()
-	if err != nil {
-		return err
-	}
+	client := getClient(meta)
 	catalog := client.Catalog()
 
 	// Get the DC, error if not available.
@@ -141,10 +135,7 @@ func resourceConsulNodeRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceConsulNodeDelete(d *schema.ResourceData, meta interface{}) error {
-	client, err := meta.(*Config).Client()
-	if err != nil {
-		return err
-	}
+	client := getClient(meta)
 	catalog := client.Catalog()
 
 	var dc string

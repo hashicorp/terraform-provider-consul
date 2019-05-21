@@ -42,10 +42,7 @@ func resourceConsulACLPolicy() *schema.Resource {
 }
 
 func resourceConsulACLPolicyCreate(d *schema.ResourceData, meta interface{}) error {
-	client, err := meta.(*Config).Client()
-	if err != nil {
-		return err
-	}
+	client := getClient(meta)
 
 	log.Printf("[DEBUG] Creating ACL policy")
 
@@ -77,10 +74,7 @@ func resourceConsulACLPolicyCreate(d *schema.ResourceData, meta interface{}) err
 }
 
 func resourceConsulACLPolicyRead(d *schema.ResourceData, meta interface{}) error {
-	client, err := meta.(*Config).Client()
-	if err != nil {
-		return err
-	}
+	client := getClient(meta)
 
 	id := d.Id()
 	log.Printf("[DEBUG] Reading ACL policy %q", id)
@@ -117,10 +111,7 @@ func resourceConsulACLPolicyRead(d *schema.ResourceData, meta interface{}) error
 }
 
 func resourceConsulACLPolicyUpdate(d *schema.ResourceData, meta interface{}) error {
-	client, err := meta.(*Config).Client()
-	if err != nil {
-		return err
-	}
+	client := getClient(meta)
 
 	id := d.Id()
 	log.Printf("[DEBUG] Updating ACL policy %q", id)
@@ -141,7 +132,7 @@ func resourceConsulACLPolicyUpdate(d *schema.ResourceData, meta interface{}) err
 		aclPolicy.Datacenters = s
 	}
 
-	_, _, err = client.ACL().PolicyUpdate(&aclPolicy, nil)
+	_, _, err := client.ACL().PolicyUpdate(&aclPolicy, nil)
 	if err != nil {
 		return fmt.Errorf("error updating ACL policy %q: %s", id, err)
 	}
@@ -151,15 +142,12 @@ func resourceConsulACLPolicyUpdate(d *schema.ResourceData, meta interface{}) err
 }
 
 func resourceConsulACLPolicyDelete(d *schema.ResourceData, meta interface{}) error {
-	client, err := meta.(*Config).Client()
-	if err != nil {
-		return err
-	}
+	client := getClient(meta)
 
 	id := d.Id()
 
 	log.Printf("[DEBUG] Deleting ACL policy %q", id)
-	_, err = client.ACL().PolicyDelete(id, nil)
+	_, err := client.ACL().PolicyDelete(id, nil)
 	if err != nil {
 		return fmt.Errorf("error deleting ACL policy %q: %s", id, err)
 	}

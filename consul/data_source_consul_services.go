@@ -58,10 +58,7 @@ func dataSourceConsulServices() *schema.Resource {
 }
 
 func dataSourceConsulServicesRead(d *schema.ResourceData, meta interface{}) error {
-	client, err := meta.(*Config).Client()
-	if err != nil {
-		return err
-	}
+	client := getClient(meta)
 
 	// Parse out data source filters to populate Consul's query options
 	queryOpts, err := getQueryOpts(d, client, meta)

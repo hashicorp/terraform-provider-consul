@@ -31,7 +31,8 @@ func testAccCheckConsulACLTokenDestroy(s *terraform.State) error {
 
 func TestAccConsulACLToken_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
-		Providers:    testAccProviders,
+		Providers: testAccProviders,
+
 		PreCheck:     func() { testAccPreCheck(t) },
 		CheckDestroy: testAccCheckConsulACLTokenDestroy,
 		Steps: []resource.TestStep{

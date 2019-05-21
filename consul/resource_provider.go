@@ -3,6 +3,7 @@ package consul
 import (
 	"log"
 
+	consulapi "github.com/hashicorp/consul/api"
 	"github.com/hashicorp/terraform/helper/schema"
 	"github.com/hashicorp/terraform/terraform"
 	"github.com/mitchellh/mapstructure"
@@ -130,4 +131,10 @@ func providerConfigure(d *schema.ResourceData) (interface{}, error) {
 		return nil, err
 	}
 	return config, nil
+}
+
+func getClient(meta interface{}) *consulapi.Client {
+	// We can ignore err since we checked the configuration in providerConfigure()
+	client, _ := meta.(*Config).Client()
+	return client
 }

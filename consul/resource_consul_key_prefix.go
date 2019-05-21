@@ -72,10 +72,7 @@ func resourceConsulKeyPrefix() *schema.Resource {
 }
 
 func resourceConsulKeyPrefixCreate(d *schema.ResourceData, meta interface{}) error {
-	client, err := meta.(*Config).Client()
-	if err != nil {
-		return err
-	}
+	client := getClient(meta)
 	kv := client.KV()
 	token := d.Get("token").(string)
 	dc, err := getDC(d, client, meta)
@@ -154,10 +151,7 @@ func resourceConsulKeyPrefixCreate(d *schema.ResourceData, meta interface{}) err
 }
 
 func resourceConsulKeyPrefixUpdate(d *schema.ResourceData, meta interface{}) error {
-	client, err := meta.(*Config).Client()
-	if err != nil {
-		return err
-	}
+	client := getClient(meta)
 	kv := client.KV()
 	token := d.Get("token").(string)
 	dc, err := getDC(d, client, meta)
@@ -268,10 +262,7 @@ func resourceConsulKeyPrefixUpdate(d *schema.ResourceData, meta interface{}) err
 }
 
 func resourceConsulKeyPrefixRead(d *schema.ResourceData, meta interface{}) error {
-	client, err := meta.(*Config).Client()
-	if err != nil {
-		return err
-	}
+	client := getClient(meta)
 	kv := client.KV()
 	token := d.Get("token").(string)
 	dc, err := getDC(d, client, meta)
@@ -341,10 +332,7 @@ func resourceConsulKeyPrefixRead(d *schema.ResourceData, meta interface{}) error
 }
 
 func resourceConsulKeyPrefixDelete(d *schema.ResourceData, meta interface{}) error {
-	client, err := meta.(*Config).Client()
-	if err != nil {
-		return err
-	}
+	client := getClient(meta)
 	kv := client.KV()
 	token := d.Get("token").(string)
 	dc, err := getDC(d, client, meta)

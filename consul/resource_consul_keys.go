@@ -83,10 +83,7 @@ func resourceConsulKeys() *schema.Resource {
 }
 
 func resourceConsulKeysCreate(d *schema.ResourceData, meta interface{}) error {
-	client, err := meta.(*Config).Client()
-	if err != nil {
-		return err
-	}
+	client := getClient(meta)
 	kv := client.KV()
 	token := d.Get("token").(string)
 	dc, err := getDC(d, client, meta)
@@ -124,10 +121,7 @@ func resourceConsulKeysCreate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceConsulKeysUpdate(d *schema.ResourceData, meta interface{}) error {
-	client, err := meta.(*Config).Client()
-	if err != nil {
-		return err
-	}
+	client := getClient(meta)
 	kv := client.KV()
 	token := d.Get("token").(string)
 	dc, err := getDC(d, client, meta)
@@ -213,10 +207,7 @@ func resourceConsulKeysUpdate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceConsulKeysRead(d *schema.ResourceData, meta interface{}) error {
-	client, err := meta.(*Config).Client()
-	if err != nil {
-		return err
-	}
+	client := getClient(meta)
 	kv := client.KV()
 	token := d.Get("token").(string)
 	dc, err := getDC(d, client, meta)
@@ -276,10 +267,7 @@ func resourceConsulKeysRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceConsulKeysDelete(d *schema.ResourceData, meta interface{}) error {
-	client, err := meta.(*Config).Client()
-	if err != nil {
-		return err
-	}
+	client := getClient(meta)
 	kv := client.KV()
 	token := d.Get("token").(string)
 	dc, err := getDC(d, client, meta)

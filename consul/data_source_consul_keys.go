@@ -54,10 +54,7 @@ func dataSourceConsulKeys() *schema.Resource {
 }
 
 func dataSourceConsulKeysRead(d *schema.ResourceData, meta interface{}) error {
-	client, err := meta.(*Config).Client()
-	if err != nil {
-		return err
-	}
+	client := getClient(meta)
 	kv := client.KV()
 	token := d.Get("token").(string)
 	dc, err := getDC(d, client, meta)

@@ -87,10 +87,7 @@ func dataSourceConsulAutopilotHealth() *schema.Resource {
 }
 
 func dataSourceConsulAutopilotHealthRead(d *schema.ResourceData, meta interface{}) error {
-	client, err := meta.(*Config).Client()
-	if err != nil {
-		return err
-	}
+	client := getClient(meta)
 	operator := client.Operator()
 
 	queryOpts, err := getQueryOpts(d, client, meta)
