@@ -58,10 +58,7 @@ func TestAccConsulIntention_badAction(t *testing.T) {
 }
 
 func testAccCheckConsulIntentionDestroy(s *terraform.State) error {
-	client, err := testAccProvider.Meta().(*Config).Client()
-	if err != nil {
-		return err
-	}
+	client := getClient(testAccProvider.Meta())
 
 	qOpts := consulapi.QueryOptions{}
 	intentions, _, err := client.Connect().Intentions(&qOpts)
@@ -78,10 +75,7 @@ func testAccCheckConsulIntentionDestroy(s *terraform.State) error {
 
 func testAccRemoveConsulIntention(t *testing.T) func() {
 	return func() {
-		client, err := testAccProvider.Meta().(*Config).Client()
-		if err != nil {
-			t.Fatal(err)
-		}
+		client := getClient(testAccProvider.Meta())
 		connect := client.Connect()
 		qOpts := &consulapi.QueryOptions{}
 		iM := &consulapi.IntentionMatch{

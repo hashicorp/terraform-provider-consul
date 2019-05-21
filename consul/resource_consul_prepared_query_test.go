@@ -106,10 +106,7 @@ func checkPreparedQueryExists(s *terraform.State) bool {
 	}
 	id := rn.Primary.ID
 
-	c, err := testAccProvider.Meta().(*Config).Client()
-	if err != nil {
-		return false
-	}
+	c := getClient(testAccProvider.Meta())
 	client := c.PreparedQuery()
 	opts := &consulapi.QueryOptions{Datacenter: "dc1"}
 	pq, _, err := client.Get(id, opts)

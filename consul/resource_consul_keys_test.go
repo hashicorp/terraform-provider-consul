@@ -57,10 +57,7 @@ func testAccCheckConsulKeysFlags(path string, flags int) resource.TestCheckFunc 
 }
 
 func testAccCheckConsulKeysDestroy(s *terraform.State) error {
-	client, err := testAccProvider.Meta().(*Config).Client()
-	if err != nil {
-		return err
-	}
+	client := getClient(testAccProvider.Meta())
 	kv := client.KV()
 	opts := &consulapi.QueryOptions{Datacenter: "dc1"}
 	pair, _, err := kv.Get("test/set", opts)
@@ -75,10 +72,7 @@ func testAccCheckConsulKeysDestroy(s *terraform.State) error {
 
 func testAccCheckConsulKeysExists() resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		client, err := testAccProvider.Meta().(*Config).Client()
-		if err != nil {
-			return err
-		}
+		client := getClient(testAccProvider.Meta())
 		kv := client.KV()
 		opts := &consulapi.QueryOptions{Datacenter: "dc1"}
 		pair, _, err := kv.Get("test/set", opts)

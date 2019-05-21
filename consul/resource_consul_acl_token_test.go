@@ -9,10 +9,7 @@ import (
 )
 
 func testAccCheckConsulACLTokenDestroy(s *terraform.State) error {
-	client, err := testAccProvider.Meta().(*Config).Client()
-	if err != nil {
-		return err
-	}
+	client := getClient(testAccProvider.Meta())
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "consul_acl" {

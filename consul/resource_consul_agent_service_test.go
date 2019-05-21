@@ -32,10 +32,7 @@ func TestAccConsulAgentService_basic(t *testing.T) {
 }
 
 func testAccCheckConsulAgentServiceDestroy(s *terraform.State) error {
-	client, err := testAccProvider.Meta().(*Config).Client()
-	if err != nil {
-		return err
-	}
+	client := getClient(testAccProvider.Meta())
 	agent := client.Agent()
 	services, err := agent.Services()
 	if err != nil {
@@ -50,10 +47,7 @@ func testAccCheckConsulAgentServiceDestroy(s *terraform.State) error {
 
 func testAccCheckConsulAgentServiceExists() resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		client, err := testAccProvider.Meta().(*Config).Client()
-		if err != nil {
-			return err
-		}
+		client := getClient(testAccProvider.Meta())
 		agent := client.Agent()
 		services, err := agent.Services()
 		if err != nil {

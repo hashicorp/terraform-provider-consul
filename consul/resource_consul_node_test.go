@@ -71,10 +71,7 @@ func TestAccConsulNode_nodeMeta(t *testing.T) {
 }
 
 func testAccCheckConsulNodeDestroy(s *terraform.State) error {
-	client, err := testAccProvider.Meta().(*Config).Client()
-	if err != nil {
-		return nil
-	}
+	client := getClient(testAccProvider.Meta())
 	catalog := client.Catalog()
 	qOpts := consulapi.QueryOptions{}
 	nodes, _, err := catalog.Nodes(&qOpts)
@@ -91,10 +88,7 @@ func testAccCheckConsulNodeDestroy(s *terraform.State) error {
 
 func testAccCheckConsulNodeExists() resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		client, err := testAccProvider.Meta().(*Config).Client()
-		if err != nil {
-			return nil
-		}
+		client := getClient(testAccProvider.Meta())
 		catalog := client.Catalog()
 		qOpts := consulapi.QueryOptions{}
 		nodes, _, err := catalog.Nodes(&qOpts)
@@ -146,16 +140,13 @@ func testAccCheckConsulNodeValueRemoved(n, attr string) resource.TestCheckFunc {
 
 func testAccRemoveConsulNode(t *testing.T) func() {
 	return func() {
-		client, err := testAccProvider.Meta().(*Config).Client()
-		if err != nil {
-			t.Fatal(err)
-		}
+		client := getClient(testAccProvider.Meta())
 		catalog := client.Catalog()
 		wOpts := &consulapi.WriteOptions{}
 		dereg := &consulapi.CatalogDeregistration{
 			Node: "foo",
 		}
-		_, err = catalog.Deregister(dereg, wOpts)
+		_, err := catalog.Deregister(dereg, wOpts)
 		if err != nil {
 			t.Errorf("err: %v", err)
 		}
