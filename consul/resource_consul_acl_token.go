@@ -27,7 +27,6 @@ func resourceConsulACLToken() *schema.Resource {
 			"policies": {
 				Type:     schema.TypeSet,
 				Optional: true,
-				ForceNew: true,
 				Elem: &schema.Schema{
 					Type: schema.TypeString,
 				},
@@ -124,10 +123,12 @@ func resourceConsulACLTokenUpdate(d *schema.ResourceData, meta interface{}) erro
 	}
 
 	if v, ok := d.GetOk("policies"); ok {
-		vs := v.([]interface{})
+		vs := v.(*schema.Set).List()
 		s := make([]*consulapi.ACLTokenPolicyLink, len(vs))
 		for i, raw := range vs {
-			s[i].Name = raw.(string)
+			s[i] = &consulapi.ACLTokenPolicyLink{
+				Name: raw.(string),
+			}
 		}
 		aclToken.Policies = s
 	}
