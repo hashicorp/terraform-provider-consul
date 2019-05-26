@@ -111,7 +111,7 @@ func resourceConsulACLTokenRead(d *schema.ResourceData, meta interface{}) error 
 }
 
 func resourceConsulACLTokenUpdate(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*consulapi.Client)
+	client := getClient(meta)
 
 	id := d.Id()
 	log.Printf("[DEBUG] Updating ACL token %q", id)

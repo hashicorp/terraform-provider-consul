@@ -167,7 +167,7 @@ func testAccRemoveConsulNode(t *testing.T) func() {
 
 func testAccChangeConsulNodeAddress(t *testing.T) func() {
 	return func() {
-		catalog := testAccProvider.Meta().(*consulapi.Client).Catalog()
+		catalog := getClient(testAccProvider.Meta()).Catalog()
 		wOpts := &consulapi.WriteOptions{}
 
 		registration := &consulapi.CatalogRegistration{
@@ -186,7 +186,7 @@ func testAccChangeConsulNodeAddress(t *testing.T) func() {
 }
 func testAccChangeConsulNodeAddressMeta(t *testing.T) func() {
 	return func() {
-		catalog := testAccProvider.Meta().(*consulapi.Client).Catalog()
+		catalog := getClient(testAccProvider.Meta()).Catalog()
 		wOpts := &consulapi.WriteOptions{}
 
 		registration := &consulapi.CatalogRegistration{
@@ -202,7 +202,7 @@ func testAccChangeConsulNodeAddressMeta(t *testing.T) func() {
 }
 
 func testAccConsulNodeDetectAttributeChanges(*terraform.State) error {
-	catalog := testAccProvider.Meta().(*consulapi.Client).Catalog()
+	catalog := getClient(testAccProvider.Meta()).Catalog()
 	n, _, err := catalog.Node("foo", &consulapi.QueryOptions{})
 	if err != nil {
 		return fmt.Errorf("Failed to read 'foo': %v", err)

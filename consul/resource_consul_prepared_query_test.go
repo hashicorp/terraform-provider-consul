@@ -139,7 +139,7 @@ func testAccCheckConsulPreparedQueryExists() resource.TestCheckFunc {
 
 func testAccConsulPreparedQueryNearestN(t *testing.T) func() {
 	return func() {
-		client := testAccProvider.Meta().(*consulapi.Client)
+		client := getClient(testAccProvider.Meta())
 		wOpts := &consulapi.WriteOptions{}
 		qOpts := &consulapi.QueryOptions{}
 
