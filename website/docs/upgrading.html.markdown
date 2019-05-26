@@ -12,6 +12,47 @@ This page includes details on our compatibility promise and guidelines to
 follow when upgrading between versions of the provider. Whenever possible,
 we recommend verifying upgrades in isolated test environments.
 
+## Upgrading to 2.4.0
+
+### Changes to consul_service
+
+The `external` attribute introduced in 2.3.0 has been deprecated and does not
+update the associated Consul Node meta information anymore. The same functionnality
+can be done by setting the meta attribute on the `consul_node` resource:
+
+``` terraform
+# This was working in 2.3.0
+resource "consul_node" "compute" {
+	name    = "compute-example"
+	address = "www.hashicorptest.com"
+}
+
+resource "consul_service" "example1" {
+	name = "example"
+	node = "${consul_node.compute.name}"
+	port = 80
+
+	external = true
+}
+
+# This is working in 2.4.0
+resource "consul_node" "compute" {
+	name    = "compute-example"
+	address = "www.hashicorptest.com"
+
+  meta = {
+    "external-node" = "true"
+    "external-probe" = "true"
+  }
+}
+
+resource "consul_service" "example1" {
+	name = "example"
+	node = "${consul_node.compute.name}"
+	port = 80
+}
+```
+
 ## Upgrading to 2.0.0
 
 There were several major deprecation notices introduced in 2.0.0. This

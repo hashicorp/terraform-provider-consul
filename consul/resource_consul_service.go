@@ -75,9 +75,9 @@ func resourceConsulService() *schema.Resource {
 			},
 
 			"external": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  false,
+				Type:       schema.TypeBool,
+				Optional:   true,
+				Deprecated: "The external field has been deprecated and does nothing.",
 			},
 
 			"port": {
@@ -201,6 +201,9 @@ func resourceConsulServiceCreate(d *schema.ResourceData, meta interface{}) error
 		Service: &consulapi.AgentService{
 			Service: name,
 		},
+		// Creating a service should not modify the node
+		// See https://github.com/terraform-providers/terraform-provider-consul/issues/101
+		SkipNodeUpdate: true,
 	}
 
 	// By default, the ID will match the name of the service
@@ -235,14 +238,6 @@ func resourceConsulServiceCreate(d *schema.ResourceData, meta interface{}) error
 		}
 		registration.Service.Tags = s
 	}
-
-	var nodeMeta map[string]string
-	nodeMeta = make(map[string]string)
-	if d.Get("external").(bool) {
-		nodeMeta["external-node"] = "true"
-		nodeMeta["external-probe"] = "true"
-	}
-	registration.NodeMeta = nodeMeta
 
 	checks, err := parseChecks(node, name, d)
 	if err != nil {
@@ -289,6 +284,8 @@ func resourceConsulServiceUpdate(d *schema.ResourceData, meta interface{}) error
 		Service: &consulapi.AgentService{
 			Service: name,
 		},
+		// Updating a service should not modify the node
+		SkipNodeUpdate: true,
 	}
 
 	// If we have a service_id
@@ -316,14 +313,6 @@ func resourceConsulServiceUpdate(d *schema.ResourceData, meta interface{}) error
 		}
 		registration.Service.Tags = s
 	}
-
-	var nodeMeta map[string]string
-	nodeMeta = make(map[string]string)
-	if d.Get("external").(bool) {
-		nodeMeta["external-node"] = "true"
-		nodeMeta["external-probe"] = "true"
-	}
-	registration.NodeMeta = nodeMeta
 
 	checks, err := parseChecks(node, name, d)
 	if err != nil {
@@ -387,15 +376,6 @@ func resourceConsulServiceRead(d *schema.ResourceData, meta interface{}) error {
 	}
 	if err = d.Set("node", service.Node); err != nil {
 		return fmt.Errorf("Failed to store 'node': %s", err)
-	}
-	if externalNode, present := service.NodeMeta["external-node"]; present && externalNode == "true" {
-		if err = d.Set("external", true); err != nil {
-			return fmt.Errorf("Failed to store 'external': %s", err)
-		}
-	} else {
-		if err = d.Set("external", false); err != nil {
-			return fmt.Errorf("Failed to store 'external': %s", err)
-		}
 	}
 
 	checks := make([]map[string]interface{}, 0)

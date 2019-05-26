@@ -129,8 +129,15 @@ func resourceConsulNodeRead(d *schema.ResourceData, meta interface{}) error {
 
 	if n == nil {
 		d.SetId("")
+		return nil
 	}
 
+	if err = d.Set("address", n.Node.Address); err != nil {
+		return fmt.Errorf("Failed to set 'address': %v", err)
+	}
+	if err = d.Set("meta", n.Node.Meta); err != nil {
+		return fmt.Errorf("Failed to set 'meta': %v", err)
+	}
 	return nil
 }
 

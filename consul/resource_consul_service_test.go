@@ -12,7 +12,7 @@ import (
 
 func TestAccConsulService_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() {},
+		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckConsulServiceDestroy,
 		Steps: []resource.TestStep{
@@ -49,7 +49,7 @@ func TestAccConsulService_basic(t *testing.T) {
 
 func TestAccConsulService_basicModify(t *testing.T) {
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() {},
+		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckConsulServiceDestroy,
 		Steps: []resource.TestStep{
@@ -84,7 +84,7 @@ func TestAccConsulService_basicModify(t *testing.T) {
 
 func TestAccConsulService_serviceID(t *testing.T) {
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() {},
+		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckConsulServiceDestroy,
 		Steps: []resource.TestStep{
@@ -103,7 +103,7 @@ func TestAccConsulService_serviceID(t *testing.T) {
 
 func TestAccConsulServiceCheck(t *testing.T) {
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() {},
+		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckConsulServiceDestroy,
 		Steps: []resource.TestStep{
@@ -137,13 +137,27 @@ func TestAccConsulServiceCheck(t *testing.T) {
 
 func TestAccConsulService_nodeDoesNotExist(t *testing.T) {
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() {},
+		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckConsulServiceDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccConsulServiceConfigNoNode,
 				ExpectError: regexp.MustCompile(`Node does not exist: '*'`),
+			},
+		},
+	})
+}
+
+func TestAccConsulService_dontOverrideNodeMeta(t *testing.T) {
+	// This would raise an error if consul_service changed attributes of consul_node
+	// since the next plan would not be empty
+	resource.Test(t, resource.TestCase{
+		PreCheck:  func() { testAccPreCheck(t) },
+		Providers: testAccProviders,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccConsulServiceDontOverrideNodeMeta,
 			},
 		},
 	})
@@ -248,7 +262,6 @@ resource "consul_node" "external" {
 resource "consul_service" "external" {
 	name     = "example-external"
 	node     = "${consul_node.external.name}"
-	external = true
 	port     = 80
 
 	check {
@@ -265,7 +278,6 @@ resource "consul_service" "external" {
 resource "consul_service" "no-deregister" {
 	name     = "example-external"
 	node     = "${consul_node.external.name}"
-	external = true
 	port     = 80
 
 	check {
@@ -332,4 +344,23 @@ resource "consul_service" "example" {
 	name    = "compute-example"
 	address = "www.hashicorptest.com"
   }
+`
+
+// Regression test, creating a service used to make changes to the associated node
+// See https://github.com/terraform-providers/terraform-provider-consul/issues/101
+const testAccConsulServiceDontOverrideNodeMeta = `
+resource "consul_node" "compute" {
+	name    = "compute-example"
+	address = "www.hashicorptest.com"
+
+	meta = {
+	  foo = "bar"
+	}
+}
+
+resource "consul_service" "example" {
+	name = "example"
+	node = "${consul_node.compute.name}"
+	port = 80
+}
 `
