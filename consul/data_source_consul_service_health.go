@@ -208,7 +208,7 @@ func dataSourceConsulServiceHealthRead(d *schema.ResourceData, meta interface{})
 	dc := d.Get("datacenter").(string)
 	if dc == "" {
 		var err error
-		dc, err = getDC(d, client)
+		dc, err = getDC(d, client, meta)
 		if err != nil {
 			return err
 		}
