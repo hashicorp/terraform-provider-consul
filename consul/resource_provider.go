@@ -89,6 +89,7 @@ func Provider() terraform.ResourceProvider {
 			"consul_autopilot_health": dataSourceConsulAutopilotHealth(),
 			"consul_nodes":            dataSourceConsulNodes(),
 			"consul_service":          dataSourceConsulService(),
+			"consul_service_health":   dataSourceConsulServiceHealth(),
 			"consul_services":         dataSourceConsulServices(),
 			"consul_keys":             dataSourceConsulKeys(),
 			"consul_key_prefix":       dataSourceConsulKeyPrefix(),

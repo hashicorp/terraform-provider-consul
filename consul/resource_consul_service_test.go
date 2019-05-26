@@ -135,6 +135,20 @@ func TestAccConsulServiceCheck(t *testing.T) {
 	})
 }
 
+// When the same service is defined on multiple nodes, the health-checks must
+// be associated to the correct instance.
+func TestAccDataConsulServiceSameServiceMultipleNodes(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:  func() { testAccPreCheck(t) },
+		Providers: testAccProviders,
+		Steps: []resource.TestStep{
+			resource.TestStep{
+				Config: testAccDataConsulServiceSameServiceMultipleNodes,
+			},
+		},
+	})
+}
+
 func TestAccConsulService_nodeDoesNotExist(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -345,6 +359,75 @@ resource "consul_service" "example" {
 	address = "www.hashicorptest.com"
   }
 `
+
+const testAccDataConsulServiceSameServiceMultipleNodes = `
+resource "consul_node" "compute1" {
+  name    = "compute-google1"
+  address = "www.google.com"
+}
+
+resource "consul_service" "google1" {
+  name    = "google"
+  node    = "${consul_node.compute1.name}"
+  port    = 80
+  tags    = ["tag0"]
+
+  check {
+    check_id                          = "service:redis1"
+    name                              = "Redis health check"
+    status                            = "passing"
+    http                              = "https://www.hashicorptest.com"
+    tls_skip_verify                   = false
+    method                            = "PUT"
+    interval                          = "5s"
+    timeout                           = "1s"
+    deregister_critical_service_after = "30s"
+
+    header {
+      name  = "foo"
+      value = ["test"]
+    }
+
+    header {
+      name  = "bar"
+      value = ["test"]
+    }
+  }
+}
+
+resource "consul_node" "compute2" {
+  name    = "compute-google2"
+  address = "www.google.com"
+}
+
+resource "consul_service" "google2" {
+  name    = "google"
+  node    = "${consul_node.compute2.name}"
+  port    = 80
+  tags    = ["tag0"]
+
+  check {
+    check_id                          = "service:redis1"
+    name                              = "Redis health check"
+    status                            = "critical"
+    http                              = "https://www.hashicorptest.com"
+    tls_skip_verify                   = false
+    method                            = "PUT"
+    interval                          = "5s"
+    timeout                           = "1s"
+    deregister_critical_service_after = "30s"
+
+    header {
+      name  = "foo"
+      value = ["test"]
+    }
+
+    header {
+      name  = "bar"
+      value = ["test"]
+    }
+  }
+}`
 
 // Regression test, creating a service used to make changes to the associated node
 // See https://github.com/terraform-providers/terraform-provider-consul/issues/101
