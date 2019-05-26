@@ -26,8 +26,8 @@ output "health" {
 
 The following arguments are supported:
 
-* `datacenter` - (Optional) The datacenter to use. This overrides the
-  datacenter in the provider setup and the agent's default datacenter.
+* `datacenter` - (Optional) The datacenter to use. This overrides the agent's
+  default datacenter and the datacenter in the provider setup.
 
 ## Attributes Reference
 

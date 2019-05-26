@@ -2,7 +2,7 @@ package consul
 
 import (
 	"fmt"
-	consulapi "github.com/hashicorp/consul/api"
+
 	"github.com/hashicorp/terraform/helper/schema"
 )
 
@@ -51,8 +51,7 @@ func dataSourceConsulAgentConfig() *schema.Resource {
 }
 
 func dataSourceConsulAgentConfigRead(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*consulapi.Client)
-	agentSelf, err := client.Agent().Self()
+	agentSelf, err := getClient(meta).Agent().Self()
 	if err != nil {
 		return err
 	}

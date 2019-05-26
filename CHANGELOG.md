@@ -1,9 +1,25 @@
-## 2.3.0 (Unreleased)
+## 2.3.1 (Unreleased)
+## 2.3.0 (April 09, 2019)
+
+NEW FEATURES:
+
+* New resources: `consul_acl_policy` and `consul_acl_token` can now be used to manage Consul ACLs with Terraform. ([[!60](https://github.com/terraform-providers/terraform-provider-consul/pull/60)])
+* New resource: the `consul_autopilot_config` resource can now be used to manage the [Consul Autopilot](https://learn.hashicorp.com/consul/day-2-operations/advanced-operations/autopilot) configuration ([[!86](https://github.com/terraform-providers/terraform-provider-consul/pull/86)]).
+* New datasource: The `consul_autopilot_health` datasource returns the [autopilot health information](https://www.consul.io/api/operator/autopilot.html#read-health) of the Consul cluster ([[!84](https://github.com/terraform-providers/terraform-provider-consul/pull/84)])
+
+IMPROVEMENTS:
+
+* `consul_service` can now manage health-checks associated with the service. ([[!64](https://github.com/terraform-providers/terraform-provider-consul/pull/64)] and [[#54](https://github.com/terraform-providers/terraform-provider-consul/issues/54)])
+* The `ca_path` attribute of the provider configuration can now be used to indicate a directory containing certificate files. ([[!80](https://github.com/terraform-providers/terraform-provider-consul/pull/80)] and [[!79](https://github.com/terraform-providers/terraform-provider-consul/issues/79)])
+* The `consul_prepared_query` resource can now be imported. ([[!94](https://github.com/terraform-providers/terraform-provider-consul/pull/94)])
+* The `consul_key_prefix` resource can now be imported. ([[!78](https://github.com/terraform-providers/terraform-provider-consul/pull/78)] and [[#77](https://github.com/terraform-providers/terraform-provider-consul/issues/77)])
+* `consul_keys` and `consul_key_prefix` can now manage flags associated with each key. ([[!71](https://github.com/terraform-providers/terraform-provider-consul/pull/71)] and [[#59](https://github.com/terraform-providers/terraform-provider-consul/issues/59)])
 
 BUG FIXES:
 
 * `consul_intention`, `consul_node` and `consul_service` now correctly re-creates
 resources deleted out-of-band ([#81](https://github.com/terraform-providers/terraform-provider-consul/issues/81) and [!69](https://github.com/terraform-providers/terraform-provider-consul/pull/69)).
+* Consul tokens no longer appear in the logs and the standard output. ([[!73](https://github.com/terraform-providers/terraform-provider-consul/pull/73)] and [[#50](https://github.com/terraform-providers/terraform-provider-consul/issues/50)])
 
 ## 2.2.0 (October 03, 2018)
 

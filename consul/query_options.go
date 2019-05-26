@@ -48,8 +48,9 @@ var schemaQueryOpts = &schema.Schema{
 				Type:     schema.TypeBool,
 			},
 			queryOptToken: {
-				Optional: true,
-				Type:     schema.TypeString,
+				Optional:  true,
+				Type:      schema.TypeString,
+				Sensitive: true,
 			},
 			queryOptWaitIndex: {
 				Optional: true,
@@ -69,7 +70,7 @@ var schemaQueryOpts = &schema.Schema{
 	},
 }
 
-func getQueryOpts(d *schema.ResourceData, client *consulapi.Client) (*consulapi.QueryOptions, error) {
+func getQueryOpts(d *schema.ResourceData, client *consulapi.Client, meta interface{}) (*consulapi.QueryOptions, error) {
 	queryOpts := &consulapi.QueryOptions{}
 
 	if v, ok := d.GetOk(queryOptAllowStale); ok {
@@ -81,7 +82,7 @@ func getQueryOpts(d *schema.ResourceData, client *consulapi.Client) (*consulapi.
 	}
 
 	if queryOpts.Datacenter == "" {
-		dc, err := getDC(d, client)
+		dc, err := getDC(d, client, meta)
 		if err != nil {
 			return nil, err
 		}

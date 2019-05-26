@@ -5,7 +5,6 @@ import (
 	"strconv"
 	"time"
 
-	consulapi "github.com/hashicorp/consul/api"
 	"github.com/hashicorp/errwrap"
 	"github.com/hashicorp/terraform/helper/schema"
 )
@@ -735,8 +734,7 @@ func dataSourceConsulAgentSelf() *schema.Resource {
 }
 
 func dataSourceConsulAgentSelfRead(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*consulapi.Client)
-	info, err := client.Agent().Self()
+	info, err := getClient(meta).Agent().Self()
 	if err != nil {
 		return err
 	}

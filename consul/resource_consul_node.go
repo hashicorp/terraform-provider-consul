@@ -50,7 +50,7 @@ func resourceConsulNode() *schema.Resource {
 }
 
 func resourceConsulNodeCreate(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*consulapi.Client)
+	client := getClient(meta)
 	catalog := client.Catalog()
 
 	var dc string
@@ -58,7 +58,7 @@ func resourceConsulNodeCreate(d *schema.ResourceData, meta interface{}) error {
 		dc = v.(string)
 	} else {
 		var err error
-		if dc, err = getDC(d, client); err != nil {
+		if dc, err = getDC(d, client, meta); err != nil {
 			return err
 		}
 	}
@@ -108,7 +108,7 @@ func resourceConsulNodeCreate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceConsulNodeRead(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*consulapi.Client)
+	client := getClient(meta)
 	catalog := client.Catalog()
 
 	// Get the DC, error if not available.
@@ -129,13 +129,20 @@ func resourceConsulNodeRead(d *schema.ResourceData, meta interface{}) error {
 
 	if n == nil {
 		d.SetId("")
+		return nil
 	}
 
+	if err = d.Set("address", n.Node.Address); err != nil {
+		return fmt.Errorf("Failed to set 'address': %v", err)
+	}
+	if err = d.Set("meta", n.Node.Meta); err != nil {
+		return fmt.Errorf("Failed to set 'meta': %v", err)
+	}
 	return nil
 }
 
 func resourceConsulNodeDelete(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*consulapi.Client)
+	client := getClient(meta)
 	catalog := client.Catalog()
 
 	var dc string
@@ -143,7 +150,7 @@ func resourceConsulNodeDelete(d *schema.ResourceData, meta interface{}) error {
 		dc = v.(string)
 	} else {
 		var err error
-		if dc, err = getDC(d, client); err != nil {
+		if dc, err = getDC(d, client, meta); err != nil {
 			return err
 		}
 	}

@@ -32,6 +32,18 @@ func TestAccConsulNode_basic(t *testing.T) {
 					testAccCheckConsulNodeValue("consul_node.foo", "name", "foo"),
 				),
 			},
+			{
+				// consul_node must detect changes made to its address...
+				PreConfig: testAccChangeConsulNodeAddress(t),
+				Config:    testAccConsulNodeConfigBasic,
+				Check:     testAccConsulNodeDetectAttributeChanges,
+			},
+			{
+				// ... and to its meta information
+				PreConfig: testAccChangeConsulNodeAddressMeta(t),
+				Config:    testAccConsulNodeConfigBasic,
+				Check:     testAccConsulNodeDetectAttributeChanges,
+			},
 		},
 	})
 }
@@ -71,7 +83,8 @@ func TestAccConsulNode_nodeMeta(t *testing.T) {
 }
 
 func testAccCheckConsulNodeDestroy(s *terraform.State) error {
-	catalog := testAccProvider.Meta().(*consulapi.Client).Catalog()
+	client := getClient(testAccProvider.Meta())
+	catalog := client.Catalog()
 	qOpts := consulapi.QueryOptions{}
 	nodes, _, err := catalog.Nodes(&qOpts)
 	if err != nil {
@@ -87,7 +100,8 @@ func testAccCheckConsulNodeDestroy(s *terraform.State) error {
 
 func testAccCheckConsulNodeExists() resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		catalog := testAccProvider.Meta().(*consulapi.Client).Catalog()
+		client := getClient(testAccProvider.Meta())
+		catalog := client.Catalog()
 		qOpts := consulapi.QueryOptions{}
 		nodes, _, err := catalog.Nodes(&qOpts)
 		if err != nil {
@@ -138,7 +152,8 @@ func testAccCheckConsulNodeValueRemoved(n, attr string) resource.TestCheckFunc {
 
 func testAccRemoveConsulNode(t *testing.T) func() {
 	return func() {
-		catalog := testAccProvider.Meta().(*consulapi.Client).Catalog()
+		client := getClient(testAccProvider.Meta())
+		catalog := client.Catalog()
 		wOpts := &consulapi.WriteOptions{}
 		dereg := &consulapi.CatalogDeregistration{
 			Node: "foo",
@@ -150,10 +165,68 @@ func testAccRemoveConsulNode(t *testing.T) func() {
 	}
 }
 
+func testAccChangeConsulNodeAddress(t *testing.T) func() {
+	return func() {
+		catalog := testAccProvider.Meta().(*consulapi.Client).Catalog()
+		wOpts := &consulapi.WriteOptions{}
+
+		registration := &consulapi.CatalogRegistration{
+			Address:    "wrong_address",
+			Datacenter: "dc1",
+			Node:       "foo",
+			NodeMeta: map[string]string{
+				"foo": "bar",
+			},
+		}
+		_, err := catalog.Register(registration, wOpts)
+		if err != nil {
+			t.Errorf("err: %v", err)
+		}
+	}
+}
+func testAccChangeConsulNodeAddressMeta(t *testing.T) func() {
+	return func() {
+		catalog := testAccProvider.Meta().(*consulapi.Client).Catalog()
+		wOpts := &consulapi.WriteOptions{}
+
+		registration := &consulapi.CatalogRegistration{
+			Address:    "127.0.0.1",
+			Datacenter: "dc1",
+			Node:       "foo",
+		}
+		_, err := catalog.Register(registration, wOpts)
+		if err != nil {
+			t.Errorf("err: %v", err)
+		}
+	}
+}
+
+func testAccConsulNodeDetectAttributeChanges(*terraform.State) error {
+	catalog := testAccProvider.Meta().(*consulapi.Client).Catalog()
+	n, _, err := catalog.Node("foo", &consulapi.QueryOptions{})
+	if err != nil {
+		return fmt.Errorf("Failed to read 'foo': %v", err)
+	}
+	if n == nil {
+		return fmt.Errorf("No 'foo' node found")
+	}
+	if n.Node.Address != "127.0.0.1" {
+		return fmt.Errorf("Wrong address: %s", n.Node.Address)
+	}
+	if len(n.Node.Meta) != 1 || n.Node.Meta["foo"] != "bar" {
+		return fmt.Errorf("Wrong node meta: %v", n.Node.Meta)
+	}
+	return nil
+}
+
 const testAccConsulNodeConfigBasic = `
 resource "consul_node" "foo" {
 	name 	= "foo"
 	address = "127.0.0.1"
+
+	meta = {
+		foo     = "bar"
+	}
 }
 `
 

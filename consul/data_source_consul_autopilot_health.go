@@ -3,7 +3,6 @@ package consul
 import (
 	"fmt"
 
-	consulapi "github.com/hashicorp/consul/api"
 	"github.com/hashicorp/errwrap"
 	"github.com/hashicorp/terraform/helper/schema"
 )
@@ -88,10 +87,13 @@ func dataSourceConsulAutopilotHealth() *schema.Resource {
 }
 
 func dataSourceConsulAutopilotHealthRead(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*consulapi.Client)
+	client := getClient(meta)
 	operator := client.Operator()
 
-	queryOpts, err := getQueryOpts(d, client)
+	queryOpts, err := getQueryOpts(d, client, meta)
+	if err != nil {
+		return err
+	}
 	if datacenter, ok := d.GetOk("datacenter"); ok {
 		queryOpts.Datacenter = datacenter.(string)
 	}

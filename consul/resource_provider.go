@@ -3,6 +3,7 @@ package consul
 import (
 	"log"
 
+	consulapi "github.com/hashicorp/consul/api"
 	"github.com/hashicorp/terraform/helper/schema"
 	"github.com/hashicorp/terraform/terraform"
 	"github.com/mitchellh/mapstructure"
@@ -101,6 +102,8 @@ func Provider() terraform.ResourceProvider {
 		},
 
 		ResourcesMap: map[string]*schema.Resource{
+			"consul_acl_policy":       resourceConsulACLPolicy(),
+			"consul_acl_token":        resourceConsulACLToken(),
 			"consul_agent_service":    resourceConsulAgentService(),
 			"consul_catalog_entry":    resourceConsulCatalogEntry(),
 			"consul_keys":             resourceConsulKeys(),
@@ -117,11 +120,22 @@ func Provider() terraform.ResourceProvider {
 }
 
 func providerConfigure(d *schema.ResourceData) (interface{}, error) {
-	var config Config
+	var config *Config
 	configRaw := d.Get("").(map[string]interface{})
 	if err := mapstructure.Decode(configRaw, &config); err != nil {
 		return nil, err
 	}
 	log.Printf("[INFO] Initializing Consul client")
-	return config.Client()
+	if _, err := config.Client(); err != nil {
+		// The provider must error if the configuration is incorrect. We must
+		// check this here.
+		return nil, err
+	}
+	return config, nil
+}
+
+func getClient(meta interface{}) *consulapi.Client {
+	// We can ignore err since we checked the configuration in providerConfigure()
+	client, _ := meta.(*Config).Client()
+	return client
 }

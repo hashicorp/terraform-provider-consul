@@ -83,10 +83,10 @@ func resourceConsulKeys() *schema.Resource {
 }
 
 func resourceConsulKeysCreate(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*consulapi.Client)
+	client := getClient(meta)
 	kv := client.KV()
 	token := d.Get("token").(string)
-	dc, err := getDC(d, client)
+	dc, err := getDC(d, client, meta)
 	if err != nil {
 		return err
 	}
@@ -121,10 +121,10 @@ func resourceConsulKeysCreate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceConsulKeysUpdate(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*consulapi.Client)
+	client := getClient(meta)
 	kv := client.KV()
 	token := d.Get("token").(string)
-	dc, err := getDC(d, client)
+	dc, err := getDC(d, client, meta)
 	if err != nil {
 		return err
 	}
@@ -207,10 +207,10 @@ func resourceConsulKeysUpdate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceConsulKeysRead(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*consulapi.Client)
+	client := getClient(meta)
 	kv := client.KV()
 	token := d.Get("token").(string)
-	dc, err := getDC(d, client)
+	dc, err := getDC(d, client, meta)
 	if err != nil {
 		return err
 	}
@@ -267,10 +267,10 @@ func resourceConsulKeysRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceConsulKeysDelete(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*consulapi.Client)
+	client := getClient(meta)
 	kv := client.KV()
 	token := d.Get("token").(string)
-	dc, err := getDC(d, client)
+	dc, err := getDC(d, client, meta)
 	if err != nil {
 		return err
 	}
@@ -340,12 +340,16 @@ func attributeValue(sub map[string]interface{}, readValue string) string {
 }
 
 // getDC is used to get the datacenter of the local agent
-func getDC(d *schema.ResourceData, client *consulapi.Client) (string, error) {
+func getDC(d *schema.ResourceData, client *consulapi.Client, meta interface{}) (string, error) {
 	if v, ok := d.GetOk("datacenter"); ok {
 		return v.(string), nil
 	}
 	info, err := client.Agent().Self()
 	if err != nil {
+		datacenter := meta.(*Config).Datacenter
+		if datacenter != "" {
+			return datacenter, nil
+		}
 		return "", fmt.Errorf("Failed to get datacenter from Consul agent: %v", err)
 	}
 	return info["Config"]["Datacenter"].(string), nil

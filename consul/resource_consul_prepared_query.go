@@ -1,6 +1,7 @@
 package consul
 
 import (
+	"fmt"
 	"strings"
 
 	consulapi "github.com/hashicorp/consul/api"
@@ -67,6 +68,11 @@ func resourceConsulPreparedQuery() *schema.Resource {
 				Optional: true,
 			},
 
+			"connect": {
+				Type:     schema.TypeBool,
+				Optional: true,
+			},
+
 			"failover": {
 				Type:     schema.TypeList,
 				Optional: true,
@@ -122,7 +128,7 @@ func resourceConsulPreparedQuery() *schema.Resource {
 }
 
 func resourceConsulPreparedQueryCreate(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*consulapi.Client)
+	client := getClient(meta)
 	wo := &consulapi.WriteOptions{
 		Datacenter: d.Get("datacenter").(string),
 		Token:      d.Get("token").(string),
@@ -140,7 +146,7 @@ func resourceConsulPreparedQueryCreate(d *schema.ResourceData, meta interface{})
 }
 
 func resourceConsulPreparedQueryUpdate(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*consulapi.Client)
+	client := getClient(meta)
 	wo := &consulapi.WriteOptions{
 		Datacenter: d.Get("datacenter").(string),
 		Token:      d.Get("token").(string),
@@ -156,7 +162,7 @@ func resourceConsulPreparedQueryUpdate(d *schema.ResourceData, meta interface{})
 }
 
 func resourceConsulPreparedQueryRead(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*consulapi.Client)
+	client := getClient(meta)
 	qo := &consulapi.QueryOptions{
 		Datacenter: d.Get("datacenter").(string),
 		Token:      d.Get("token").(string),
@@ -178,35 +184,68 @@ func resourceConsulPreparedQueryRead(d *schema.ResourceData, meta interface{}) e
 	}
 	pq := queries[0]
 
-	d.Set("name", pq.Name)
-	d.Set("session", pq.Session)
-	d.Set("stored_token", pq.Token)
-	d.Set("service", pq.Service.Service)
-	d.Set("near", pq.Service.Near)
-	d.Set("only_passing", pq.Service.OnlyPassing)
-	d.Set("tags", pq.Service.Tags)
+	if err = d.Set("name", pq.Name); err != nil {
+		return fmt.Errorf("Failed to set 'name': %v", err)
+	}
+	if err = d.Set("session", pq.Session); err != nil {
+		return fmt.Errorf("Failed to set 'session': %v", err)
+	}
+	if err = d.Set("stored_token", pq.Token); err != nil {
+		return fmt.Errorf("Failed to set 'stored_token': %v", err)
+	}
+	if err = d.Set("service", pq.Service.Service); err != nil {
+		return fmt.Errorf("Failed to set 'service': %v", err)
+	}
+	if err = d.Set("near", pq.Service.Near); err != nil {
+		return fmt.Errorf("Failed to set 'near': %v", err)
+	}
+	if err = d.Set("only_passing", pq.Service.OnlyPassing); err != nil {
+		return fmt.Errorf("Failed to set 'only_passing': %v", err)
+	}
+	if err = d.Set("connect", pq.Service.Connect); err != nil {
+		return fmt.Errorf("Failed to set 'connect': %v", err)
+	}
+	if err = d.Set("tags", pq.Service.Tags); err != nil {
+		return fmt.Errorf("Failed to set 'tags': %v", err)
+	}
 
+	failover := make([]map[string]interface{}, 0)
 	if pq.Service.Failover.NearestN > 0 {
-		d.Set("failover.0.nearest_n", pq.Service.Failover.NearestN)
+		failover = append(failover, map[string]interface{}{
+			"nearest_n":   pq.Service.Failover.NearestN,
+			"datacenters": pq.Service.Failover.Datacenters,
+		})
 	}
-	if len(pq.Service.Failover.Datacenters) > 0 {
-		d.Set("failover.0.datacenters", pq.Service.Failover.Datacenters)
+	if err = d.Set("failover", failover); err != nil {
+		return fmt.Errorf("Failed to set 'failover': %v", err)
 	}
 
+	dns := make([]map[string]interface{}, 0)
 	if pq.DNS.TTL != "" {
-		d.Set("dns.0.ttl", pq.DNS.TTL)
+		dns = append(dns, map[string]interface{}{
+			"ttl": pq.DNS.TTL,
+		})
+	}
+	if err = d.Set("dns", dns); err != nil {
+		return fmt.Errorf("Failed to set 'dns': %v", err)
 	}
 
+	template := make([]map[string]interface{}, 0)
 	if pq.Template.Type != "" {
-		d.Set("template.0.type", pq.Template.Type)
-		d.Set("template.0.regexp", pq.Template.Regexp)
+		template = append(template, map[string]interface{}{
+			"type":   pq.Template.Type,
+			"regexp": pq.Template.Regexp,
+		})
+	}
+	if err = d.Set("template", template); err != nil {
+		return fmt.Errorf("Failed to set 'template': %v", err)
 	}
 
 	return nil
 }
 
 func resourceConsulPreparedQueryDelete(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*consulapi.Client)
+	client := getClient(meta)
 	writeOpts := &consulapi.WriteOptions{
 		Datacenter: d.Get("datacenter").(string),
 		Token:      d.Get("token").(string),
@@ -230,6 +269,7 @@ func preparedQueryDefinitionFromResourceData(d *schema.ResourceData) *consulapi.
 			Service:     d.Get("service").(string),
 			Near:        d.Get("near").(string),
 			OnlyPassing: d.Get("only_passing").(bool),
+			Connect:     d.Get("connect").(bool),
 		},
 	}
 

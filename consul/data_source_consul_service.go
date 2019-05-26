@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"sort"
 
-	consulapi "github.com/hashicorp/consul/api"
 	"github.com/hashicorp/errwrap"
 	"github.com/hashicorp/terraform/helper/schema"
 )
@@ -136,10 +135,10 @@ func dataSourceConsulService() *schema.Resource {
 }
 
 func dataSourceConsulServiceRead(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*consulapi.Client)
+	client := getClient(meta)
 
 	// Parse out data source filters to populate Consul's query options
-	queryOpts, err := getQueryOpts(d, client)
+	queryOpts, err := getQueryOpts(d, client, meta)
 	if err != nil {
 		return errwrap.Wrapf("unable to get query options for fetching catalog services: {{err}}", err)
 	}

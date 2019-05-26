@@ -66,10 +66,10 @@ func resourceConsulAutopilotConfigCreate(d *schema.ResourceData, meta interface{
 }
 
 func resourceConsulAutopilotConfigUpdate(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*consulapi.Client)
+	client := getClient(meta)
 	operator := client.Operator()
 
-	dc, err := getDC(d, client)
+	dc, err := getDC(d, client, meta)
 	if err != nil {
 		return err
 	}
@@ -104,10 +104,10 @@ func resourceConsulAutopilotConfigUpdate(d *schema.ResourceData, meta interface{
 }
 
 func resourceConsulAutopilotConfigRead(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*consulapi.Client)
+	client := getClient(meta)
 	operator := client.Operator()
 
-	dc, err := getDC(d, client)
+	dc, err := getDC(d, client, meta)
 	if err != nil {
 		return err
 	}

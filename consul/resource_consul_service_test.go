@@ -151,7 +151,7 @@ func TestAccDataConsulServiceSameServiceMultipleNodes(t *testing.T) {
 
 func TestAccConsulService_nodeDoesNotExist(t *testing.T) {
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() {},
+		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckConsulServiceDestroy,
 		Steps: []resource.TestStep{
@@ -163,8 +163,22 @@ func TestAccConsulService_nodeDoesNotExist(t *testing.T) {
 	})
 }
 
+func TestAccConsulService_dontOverrideNodeMeta(t *testing.T) {
+	// This would raise an error if consul_service changed attributes of consul_node
+	// since the next plan would not be empty
+	resource.Test(t, resource.TestCase{
+		PreCheck:  func() { testAccPreCheck(t) },
+		Providers: testAccProviders,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccConsulServiceDontOverrideNodeMeta,
+			},
+		},
+	})
+}
+
 func testAccConsulExternalSource(s *terraform.State) error {
-	client := testAccProvider.Meta().(*consulapi.Client)
+	client := getClient(testAccProvider.Meta())
 	qOpts := consulapi.QueryOptions{}
 
 	service, _, err := client.Catalog().Service("example", "", &qOpts)
@@ -182,8 +196,7 @@ func testAccConsulExternalSource(s *terraform.State) error {
 }
 
 func testAccCheckConsulServiceDestroy(s *terraform.State) error {
-	client := testAccProvider.Meta().(*consulapi.Client)
-
+	client := getClient(testAccProvider.Meta())
 	qOpts := consulapi.QueryOptions{}
 	services, _, err := client.Catalog().Services(&qOpts)
 	if err != nil {
@@ -199,10 +212,11 @@ func testAccCheckConsulServiceDestroy(s *terraform.State) error {
 
 func testAccRemoveConsulService(t *testing.T) func() {
 	return func() {
-		catalog := testAccProvider.Meta().(*consulapi.Client).Catalog()
+		client := getClient(testAccProvider.Meta())
+		catalog := client.Catalog()
 		wOpts := &consulapi.WriteOptions{}
 		dereg := &consulapi.CatalogDeregistration{
-			Node:      "comput-example",
+			Node:      "compute-example",
 			ServiceID: "example",
 		}
 		_, err := catalog.Deregister(dereg, wOpts)
@@ -262,7 +276,6 @@ resource "consul_node" "external" {
 resource "consul_service" "external" {
 	name     = "example-external"
 	node     = "${consul_node.external.name}"
-	external = true
 	port     = 80
 
 	check {
@@ -279,7 +292,6 @@ resource "consul_service" "external" {
 resource "consul_service" "no-deregister" {
 	name     = "example-external"
 	node     = "${consul_node.external.name}"
-	external = true
 	port     = 80
 
 	check {
@@ -416,3 +428,22 @@ resource "consul_service" "google2" {
     }
   }
 }`
+
+// Regression test, creating a service used to make changes to the associated node
+// See https://github.com/terraform-providers/terraform-provider-consul/issues/101
+const testAccConsulServiceDontOverrideNodeMeta = `
+resource "consul_node" "compute" {
+	name    = "compute-example"
+	address = "www.hashicorptest.com"
+
+	meta = {
+	  foo = "bar"
+	}
+}
+
+resource "consul_service" "example" {
+	name = "example"
+	node = "${consul_node.compute.name}"
+	port = 80
+}
+`

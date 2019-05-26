@@ -19,45 +19,53 @@ func TestAccConsulPreparedQuery_basic(t *testing.T) {
 				Config: testAccConsulPreparedQueryConfig,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConsulPreparedQueryExists(),
-					testAccCheckConsulPreparedQueryAttrValue("name", "foo"),
-					testAccCheckConsulPreparedQueryAttrValue("stored_token", "pq-token"),
-					testAccCheckConsulPreparedQueryAttrValue("service", "redis"),
-					testAccCheckConsulPreparedQueryAttrValue("near", "_agent"),
-					testAccCheckConsulPreparedQueryAttrValue("tags.#", "1"),
-					testAccCheckConsulPreparedQueryAttrValue("only_passing", "true"),
-					testAccCheckConsulPreparedQueryAttrValue("failover.0.nearest_n", "3"),
-					testAccCheckConsulPreparedQueryAttrValue("failover.0.datacenters.#", "2"),
-					testAccCheckConsulPreparedQueryAttrValue("template.0.type", "name_prefix_match"),
-					testAccCheckConsulPreparedQueryAttrValue("template.0.regexp", "hello"),
-					testAccCheckConsulPreparedQueryAttrValue("dns.0.ttl", "8m"),
+					resource.TestCheckResourceAttr("consul_prepared_query.foo", "name", "foo"),
+					resource.TestCheckResourceAttr("consul_prepared_query.foo", "stored_token", "pq-token"),
+					resource.TestCheckResourceAttr("consul_prepared_query.foo", "service", "redis"),
+					resource.TestCheckResourceAttr("consul_prepared_query.foo", "near", "_agent"),
+					resource.TestCheckResourceAttr("consul_prepared_query.foo", "tags.#", "1"),
+					resource.TestCheckResourceAttr("consul_prepared_query.foo", "only_passing", "true"),
+					resource.TestCheckResourceAttr("consul_prepared_query.foo", "connect", "false"),
+					resource.TestCheckResourceAttr("consul_prepared_query.foo", "failover.0.nearest_n", "3"),
+					resource.TestCheckResourceAttr("consul_prepared_query.foo", "failover.0.datacenters.#", "2"),
+					resource.TestCheckResourceAttr("consul_prepared_query.foo", "template.0.type", "name_prefix_match"),
+					resource.TestCheckResourceAttr("consul_prepared_query.foo", "template.0.regexp", "hello"),
+					resource.TestCheckResourceAttr("consul_prepared_query.foo", "dns.0.ttl", "8m"),
 				),
 			},
 			{
 				Config: testAccConsulPreparedQueryConfigUpdate1,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConsulPreparedQueryExists(),
-					testAccCheckConsulPreparedQueryAttrValue("name", "baz"),
-					testAccCheckConsulPreparedQueryAttrValue("stored_token", "pq-token-updated"),
-					testAccCheckConsulPreparedQueryAttrValue("service", "memcached"),
-					testAccCheckConsulPreparedQueryAttrValue("near", "node1"),
-					testAccCheckConsulPreparedQueryAttrValue("tags.#", "2"),
-					testAccCheckConsulPreparedQueryAttrValue("only_passing", "false"),
-					testAccCheckConsulPreparedQueryAttrValue("failover.0.nearest_n", "2"),
-					testAccCheckConsulPreparedQueryAttrValue("failover.0.datacenters.#", "1"),
-					testAccCheckConsulPreparedQueryAttrValue("template.0.regexp", "goodbye"),
-					testAccCheckConsulPreparedQueryAttrValue("dns.0.ttl", "16m"),
+					resource.TestCheckResourceAttr("consul_prepared_query.foo", "name", "baz"),
+					resource.TestCheckResourceAttr("consul_prepared_query.foo", "stored_token", "pq-token-updated"),
+					resource.TestCheckResourceAttr("consul_prepared_query.foo", "service", "memcached"),
+					resource.TestCheckResourceAttr("consul_prepared_query.foo", "near", "node1"),
+					resource.TestCheckResourceAttr("consul_prepared_query.foo", "tags.#", "2"),
+					resource.TestCheckResourceAttr("consul_prepared_query.foo", "only_passing", "false"),
+					resource.TestCheckResourceAttr("consul_prepared_query.foo", "connect", "true"),
+					resource.TestCheckResourceAttr("consul_prepared_query.foo", "failover.0.nearest_n", "2"),
+					resource.TestCheckResourceAttr("consul_prepared_query.foo", "failover.0.datacenters.#", "1"),
+					resource.TestCheckResourceAttr("consul_prepared_query.foo", "template.0.regexp", "goodbye"),
+					resource.TestCheckResourceAttr("consul_prepared_query.foo", "dns.0.ttl", "16m"),
 				),
+			},
+			{
+				PreConfig:          testAccConsulPreparedQueryNearestN(t),
+				Config:             testAccConsulPreparedQueryConfigUpdate1,
+				PlanOnly:           true,
+				ExpectNonEmptyPlan: true,
 			},
 			{
 				Config: testAccConsulPreparedQueryConfigUpdate2,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConsulPreparedQueryExists(),
-					testAccCheckConsulPreparedQueryAttrValue("stored_token", ""),
-					testAccCheckConsulPreparedQueryAttrValue("near", ""),
-					testAccCheckConsulPreparedQueryAttrValue("tags.#", "0"),
-					testAccCheckConsulPreparedQueryAttrValue("failover.#", "0"),
-					testAccCheckConsulPreparedQueryAttrValue("template.#", "0"),
-					testAccCheckConsulPreparedQueryAttrValue("dns.#", "0"),
+					resource.TestCheckResourceAttr("consul_prepared_query.foo", "stored_token", ""),
+					resource.TestCheckResourceAttr("consul_prepared_query.foo", "near", ""),
+					resource.TestCheckResourceAttr("consul_prepared_query.foo", "tags.#", "0"),
+					resource.TestCheckResourceAttr("consul_prepared_query.foo", "failover.#", "0"),
+					resource.TestCheckResourceAttr("consul_prepared_query.foo", "template.#", "0"),
+					resource.TestCheckResourceAttr("consul_prepared_query.foo", "dns.#", "0"),
 				),
 			},
 		},
@@ -106,7 +114,8 @@ func checkPreparedQueryExists(s *terraform.State) bool {
 	}
 	id := rn.Primary.ID
 
-	client := testAccProvider.Meta().(*consulapi.Client).PreparedQuery()
+	c := getClient(testAccProvider.Meta())
+	client := c.PreparedQuery()
 	opts := &consulapi.QueryOptions{Datacenter: "dc1"}
 	pq, _, err := client.Get(id, opts)
 	return err == nil && pq != nil
@@ -128,27 +137,35 @@ func testAccCheckConsulPreparedQueryExists() resource.TestCheckFunc {
 	}
 }
 
-func testAccCheckConsulPreparedQueryAttrValue(attr, val string) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		rn, ok := s.RootModule().Resources["consul_prepared_query.foo"]
-		if !ok {
-			return fmt.Errorf("Resource not found")
+func testAccConsulPreparedQueryNearestN(t *testing.T) func() {
+	return func() {
+		client := testAccProvider.Meta().(*consulapi.Client)
+		wOpts := &consulapi.WriteOptions{}
+		qOpts := &consulapi.QueryOptions{}
+
+		queries, _, err := client.PreparedQuery().List(qOpts)
+		if err != nil {
+			t.Fatalf("Failed to fetch prepared queries: %v", err)
 		}
-		out, ok := rn.Primary.Attributes[attr]
-		if !ok {
-			return fmt.Errorf("Attribute '%s' not found: %#v", attr, rn.Primary.Attributes)
+		if len(queries) != 1 {
+			t.Fatal("Should have exactly one query")
 		}
-		if out != val {
-			return fmt.Errorf("Attribute '%s' value '%s' != '%s'", attr, out, val)
+
+		pq := queries[0]
+
+		// We change the value of nearest_n so the new plan should be non-empty
+		pq.Service.Failover.NearestN = 1
+
+		_, err = client.PreparedQuery().Update(pq, wOpts)
+		if err != nil {
+			t.Fatalf("Failed to update prepared query: %v", err)
 		}
-		return nil
 	}
 }
 
 const testAccConsulPreparedQueryConfig = `
 resource "consul_prepared_query" "foo" {
 	name = "foo"
-	token = "client-token"
 	stored_token = "pq-token"
 	service = "redis"
 	tags = ["prod"]
@@ -174,12 +191,12 @@ resource "consul_prepared_query" "foo" {
 const testAccConsulPreparedQueryConfigUpdate1 = `
 resource "consul_prepared_query" "foo" {
 	name = "baz"
-	token = "client-token"
 	stored_token = "pq-token-updated"
 	service = "memcached"
 	tags = ["prod","sup"]
 	near = "node1"
 	only_passing = false
+	connect = true
 
 	failover {
 		nearest_n = 2
@@ -201,6 +218,5 @@ const testAccConsulPreparedQueryConfigUpdate2 = `
 resource "consul_prepared_query" "foo" {
 	name = "baz"
 	service = "memcached"
-	token = "client-token"
 }
 `
