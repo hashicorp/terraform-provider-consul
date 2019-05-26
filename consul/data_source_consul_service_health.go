@@ -196,7 +196,7 @@ func dataSourceConsulServiceHealth() *schema.Resource {
 }
 
 func dataSourceConsulServiceHealthRead(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*consulapi.Client)
+	client := getClient(meta)
 	health := client.Health()
 
 	serviceName := d.Get("name").(string)
@@ -208,7 +208,7 @@ func dataSourceConsulServiceHealthRead(d *schema.ResourceData, meta interface{})
 	dc := d.Get("datacenter").(string)
 	if dc == "" {
 		var err error
-		dc, err = getDC(d, client)
+		dc, err = getDC(d, client, meta)
 		if err != nil {
 			return err
 		}

@@ -1,4 +1,23 @@
-## 2.3.1 (Unreleased)
+## 2.4.0 (Unreleased)
+
+NEW FEATURES:
+
+* New resource: the `consul_service_health` can now be used to fetch healthy instances of a service ([[#87](https://github.com/terraform-providers/terraform-provider-consul/issues/87)] and [[#89](https://github.com/terraform-providers/terraform-provider-consul/issues/89)])
+
+IMPROVEMENTS:
+
+*  The `consul_prepared_query` resource now supports Consul Connect ([[#107](https://github.com/terraform-providers/terraform-provider-consul/issues/107)])
+*  The `consul_acl_token` and `consul_acl_policy` resources are now importable ([[#103](https://github.com/terraform-providers/terraform-provider-consul/issues/103)])
+
+BUG FIXES:
+
+* Tokens attribute nested in a resource attribute are now marked as sensitive so they won't appear in the ouput and the logs ([[#106](https://github.com/terraform-providers/terraform-provider-consul/issues/106)])
+* The default datacenter is left empty if it cannot be read from the agent and is not set in the provider configuration ([[#99](https://github.com/terraform-providers/terraform-provider-consul/issues/99)], [[#97](https://github.com/terraform-providers/terraform-provider-consul/issues/97)] and [[#105](https://github.com/terraform-providers/terraform-provider-consul/issues/105)])
+* The attributes `failover`, `dns` and `template` of the `consul_prepared_query` resource are now set correctly ([[#109](https://github.com/terraform-providers/terraform-provider-consul/issues/109)] and [[#108](https://github.com/terraform-providers/terraform-provider-consul/issues/108)])
+* The `consul_acl_token` resource can now be updated and does not crashes Terraform anymore ([[#102](https://github.com/terraform-providers/terraform-provider-consul/issues/102)])
+* The `consul_node` resource now detect external changes made to its `address` and `meta` attributes ([[#104](https://github.com/terraform-providers/terraform-provider-consul/issues/104)])
+* The `external` attribute of the `consul_service` resource has been deprecated ([[#104](https://github.com/terraform-providers/terraform-provider-consul/issues/104)])
+
 ## 2.3.0 (April 09, 2019)
 
 NEW FEATURES:
