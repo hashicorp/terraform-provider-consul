@@ -13,6 +13,9 @@ are currently healthy, according to their associated  health-checks.
 The result includes the list of service instances, the node associated to each
 instance and its health-checks.
 
+This resource is likely to change as frequently as the health-checks are being
+updated, you should expect different results in a frequent basis.
+
 ## Example Usage
 
 ```hcl
