@@ -16,7 +16,7 @@ The `consul_acl_policy` resource writes an ACL policy into Consul.
 resource "consul_acl_policy" "test" {
   name        = "my_policy"
   datacenters = ["dc1"]
-  rules       = <<RULE
+  rules       = <<-RULE
     node_prefix "" {
       policy = "read"
     }
