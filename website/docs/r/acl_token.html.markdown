@@ -15,7 +15,7 @@ The `consul_acl_token` resource writes an ACL token into Consul.
 ```hcl
 resource "consul_acl_policy" "agent" {
   name  = "agent"
-  rules = <<RULE
+  rules = <<-RULE
     node_prefix "" {
       policy = "read"
     }
