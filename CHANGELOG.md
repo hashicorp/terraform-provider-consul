@@ -17,6 +17,7 @@ BUG FIXES:
 * The `consul_acl_token` resource can now be updated and does not crashes Terraform anymore ([[#102](https://github.com/terraform-providers/terraform-provider-consul/issues/102)])
 * The `consul_node` resource now detect external changes made to its `address` and `meta` attributes ([[#104](https://github.com/terraform-providers/terraform-provider-consul/issues/104)])
 * The `external` attribute of the `consul_service` resource has been deprecated ([[#104](https://github.com/terraform-providers/terraform-provider-consul/issues/104)])
+* The `local` attribute is now correctly marked as requiring the creation of a new ACL token in the `consul_acl_token` resource ([[#117](https://github.com/terraform-providers/terraform-provider-consul/issues/117)])
 
 ## 2.3.0 (April 09, 2019)
 
