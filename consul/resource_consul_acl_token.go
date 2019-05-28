@@ -34,6 +34,7 @@ func resourceConsulACLToken() *schema.Resource {
 			},
 			"local": {
 				Type:        schema.TypeBool,
+				ForceNew:    true,
 				Optional:    true,
 				Default:     false,
 				Description: "Flag to set the token local to the current datacenter.",
