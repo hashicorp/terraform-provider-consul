@@ -48,7 +48,7 @@ func TestAccConsulACLToken_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("consul_acl_token.test", "description", "test"),
 					resource.TestCheckResourceAttr("consul_acl_token.test", "policies.#", "1"),
 					resource.TestCheckResourceAttr("consul_acl_token.test", "policies.111830242", "test2"),
-					resource.TestCheckResourceAttr("consul_acl_token.test", "local", "true"),
+					resource.TestCheckResourceAttr("consul_acl_token.test", "local", "false"),
 				),
 			},
 			{
@@ -120,5 +120,4 @@ resource "consul_acl_policy" "test2" {
 resource "consul_acl_token" "test" {
 	description = "test"
 	policies = ["${consul_acl_policy.test2.name}"]
-	local = true
 }`
