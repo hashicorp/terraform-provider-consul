@@ -1,4 +1,4 @@
-## 2.4.0 (Unreleased)
+## 2.4.0 (May 29, 2019)
 
 NEW FEATURES:
 
