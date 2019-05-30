@@ -17,7 +17,7 @@ we recommend verifying upgrades in isolated test environments.
 ### Changes to consul_service
 
 The `external` attribute introduced in 2.3.0 has been deprecated and does not
-update the associated Consul Node meta information anymore. The same functionnality
+update the associated Consul Node meta information anymore. The same functionality
 can be done by setting the meta attribute on the `consul_node` resource:
 
 ``` terraform
