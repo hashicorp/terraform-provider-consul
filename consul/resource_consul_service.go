@@ -91,6 +91,12 @@ func resourceConsulService() *schema.Resource {
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
 
+			"meta": {
+				Type:     schema.TypeMap,
+				Optional: true,
+				ForceNew: false,
+			},
+
 			"check": {
 				Type:     schema.TypeList,
 				Optional: true,
@@ -244,9 +250,16 @@ func resourceConsulServiceCreate(d *schema.ResourceData, meta interface{}) error
 		return fmt.Errorf("Failed to fetch health-checks: %v", err)
 	}
 	registration.Checks = checks
-	registration.Service.Meta = map[string]string{
+
+	serviceMeta := map[string]string{
 		consulSourceKey: consulSourceValue,
 	}
+	if v, ok := d.GetOk("meta"); ok {
+		for k, j := range v.(map[string]interface{}) {
+			serviceMeta[k] = j.(string)
+		}
+	}
+	registration.Service.Meta = serviceMeta
 
 	if _, err := catalog.Register(registration, &wOpts); err != nil {
 		return fmt.Errorf("Failed to register service (dc: '%s'): %v", dc, err)
@@ -319,9 +332,16 @@ func resourceConsulServiceUpdate(d *schema.ResourceData, meta interface{}) error
 		return fmt.Errorf("Failed to fetch health-checks: %v", err)
 	}
 	registration.Checks = checks
-	registration.Service.Meta = map[string]string{
+	
+	serviceMeta := map[string]string{
 		consulSourceKey: consulSourceValue,
 	}
+	if v, ok := d.GetOk("meta"); ok {
+		for k, j := range v.(map[string]interface{}) {
+			serviceMeta[k] = j.(string)
+		}
+	}
+	registration.Service.Meta = serviceMeta
 
 	if _, err := catalog.Register(registration, &wOpts); err != nil {
 		return fmt.Errorf("Failed to update service (dc: '%s'): %v", dc, err)

@@ -26,6 +26,7 @@ func TestAccConsulService_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("consul_service.example", "port", "80"),
 					resource.TestCheckResourceAttr("consul_service.example", "tags.#", "1"),
 					resource.TestCheckResourceAttr("consul_service.example", "tags.0", "tag0"),
+					resource.TestCheckResourceAttr("consul_service.example", "meta.test", "test"),
 					testAccConsulExternalSource,
 				),
 			},
@@ -40,6 +41,7 @@ func TestAccConsulService_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("consul_service.example", "port", "80"),
 					resource.TestCheckResourceAttr("consul_service.example", "tags.#", "1"),
 					resource.TestCheckResourceAttr("consul_service.example", "tags.0", "tag0"),
+					resource.TestCheckResourceAttr("consul_service.example", "meta.test", "test"),
 					testAccConsulExternalSource,
 				),
 			},
@@ -65,6 +67,7 @@ func TestAccConsulService_basicModify(t *testing.T) {
 					resource.TestCheckResourceAttr("consul_service.example", "tags.#", "2"),
 					resource.TestCheckResourceAttr("consul_service.example", "tags.0", "tag0"),
 					resource.TestCheckResourceAttr("consul_service.example", "tags.1", "tag1"),
+					resource.TestCheckResourceAttr("consul_service.example", "meta.test", "test"),
 				),
 			},
 			{
@@ -311,12 +314,15 @@ resource "consul_service" "example" {
 	node    = "${consul_node.compute.name}"
 	port    = 80
 	tags    = ["tag0"]
-  }
+	meta    = {
+		test  = "test"
+	}
+}
 
-  resource "consul_node" "compute" {
-	name    = "compute-example"
+resource "consul_node" "compute" {
+  name    = "compute-example"
 	address = "www.hashicorptest.com"
-  }
+}
 `
 
 const testAccConsulServiceConfigBasicNewTags = `
@@ -325,12 +331,15 @@ resource "consul_service" "example" {
 	node    = "${consul_node.compute.name}"
 	port    = 80
 	tags    = ["tag0", "tag1"]
-  }
+	meta    = {
+		test  = "test"
+	}
+}
 
-  resource "consul_node" "compute" {
+resource "consul_node" "compute" {
 	name    = "compute-example"
 	address = "www.hashicorptest.com"
-  }
+}
 `
 
 const testAccConsulServiceConfigBasicAddress = `
@@ -340,24 +349,24 @@ resource "consul_service" "example" {
 	node    = "${consul_node.compute.name}"
 	port    = 80
 	tags    = ["tag0", "tag1"]
-  }
+}
 
-  resource "consul_node" "compute" {
+resource "consul_node" "compute" {
 	name    = "compute-example"
 	address = "www.hashicorptest.com"
-  }
+}
 `
 const testAccConsulServiceConfigServiceID = `
 resource "consul_service" "example" {
 	name       = "example"
 	service_id = "8ce84078-b32a-4039-bb68-17b13b7c2396"
 	node       = "${consul_node.compute.name}"
-  }
+}
 
-  resource "consul_node" "compute" {
+resource "consul_node" "compute" {
 	name    = "compute-example"
 	address = "www.hashicorptest.com"
-  }
+}
 `
 
 const testAccDataConsulServiceSameServiceMultipleNodes = `
@@ -427,7 +436,8 @@ resource "consul_service" "google2" {
       value = ["test"]
     }
   }
-}`
+}
+`
 
 // Regression test, creating a service used to make changes to the associated node
 // See https://github.com/terraform-providers/terraform-provider-consul/issues/101
