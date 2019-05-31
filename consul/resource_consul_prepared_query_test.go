@@ -121,6 +121,9 @@ func TestAccConsulPreparedQuery_blocks(t *testing.T) {
 			resource.TestStep{
 				Config: testAccConsulPreparedQueryBlocks3,
 			},
+			resource.TestStep{
+				Config: testAccConsulPreparedQueryBlocks4,
+			},
 		},
 	})
 }
@@ -282,6 +285,22 @@ resource "consul_prepared_query" "foo" {
 
 	dns {
 		ttl = ""
+	}
+}
+`
+
+const testAccConsulPreparedQueryBlocks4 = `
+resource "consul_prepared_query" "foo" {
+	name = "foo"
+	stored_token = "pq-token"
+	service = "redis"
+	tags = ["prod"]
+	near = "_agent"
+	only_passing = true
+
+	template {
+		type   = ""
+		regexp = ""
 	}
 }
 `
