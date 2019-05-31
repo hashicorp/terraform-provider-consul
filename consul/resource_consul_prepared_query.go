@@ -209,8 +209,8 @@ func resourceConsulPreparedQueryRead(d *schema.ResourceData, meta interface{}) e
 		return fmt.Errorf("Failed to set 'tags': %v", err)
 	}
 
-	// Since failover is implemented with an optionnal list instead of a
-	// sub-resource, writing this attribute to the state is more involved that
+	// Since failover and dns are implemented with an optionnal list instead of a
+	// sub-resource, writing those attributes to the state is more involved that
 	// it needs to.
 
 	failover := make([]map[string]interface{}, 0)
@@ -233,7 +233,10 @@ func resourceConsulPreparedQueryRead(d *schema.ResourceData, meta interface{}) e
 	}
 
 	dns := make([]map[string]interface{}, 0)
-	if pq.DNS.TTL != "" {
+
+	userWroteDNS := len(d.Get("dns").([]interface{})) != 0
+
+	if userWroteDNS || pq.DNS.TTL != "" {
 		dns = append(dns, map[string]interface{}{
 			"ttl": pq.DNS.TTL,
 		})
