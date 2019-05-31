@@ -115,6 +115,9 @@ func TestAccConsulPreparedQuery_blocks(t *testing.T) {
 			resource.TestStep{
 				Config: testAccConsulPreparedQueryBlocks,
 			},
+			resource.TestStep{
+				Config: testAccConsulPreparedQueryBlocks2,
+			},
 		},
 	})
 }
@@ -245,6 +248,22 @@ resource "consul_prepared_query" "foo" {
 	failover {
 		nearest_n = 0
 		datacenters = ["dc1", "dc2"]
+	}
+}
+`
+
+const testAccConsulPreparedQueryBlocks2 = `
+resource "consul_prepared_query" "foo" {
+	name = "foo"
+	stored_token = "pq-token"
+	service = "redis"
+	tags = ["prod"]
+	near = "_agent"
+	only_passing = true
+
+	failover {
+		nearest_n = 0
+		datacenters = []
 	}
 }
 `
