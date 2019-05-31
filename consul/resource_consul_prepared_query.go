@@ -210,7 +210,7 @@ func resourceConsulPreparedQueryRead(d *schema.ResourceData, meta interface{}) e
 	}
 
 	failover := make([]map[string]interface{}, 0)
-	if pq.Service.Failover.NearestN > 0 {
+	if pq.Service.Failover.NearestN > 0 || len(pq.Service.Failover.Datacenters) > 0 {
 		failover = append(failover, map[string]interface{}{
 			"nearest_n":   pq.Service.Failover.NearestN,
 			"datacenters": pq.Service.Failover.Datacenters,
