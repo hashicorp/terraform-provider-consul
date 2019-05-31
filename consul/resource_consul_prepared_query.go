@@ -246,7 +246,10 @@ func resourceConsulPreparedQueryRead(d *schema.ResourceData, meta interface{}) e
 	}
 
 	template := make([]map[string]interface{}, 0)
-	if pq.Template.Type != "" {
+
+	userWroteTemplate := len(d.Get("template").([]interface{})) != 0
+
+	if userWroteTemplate || pq.Template.Type != "" {
 		template = append(template, map[string]interface{}{
 			"type":   pq.Template.Type,
 			"regexp": pq.Template.Regexp,
