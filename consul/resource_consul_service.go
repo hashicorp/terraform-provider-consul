@@ -332,7 +332,7 @@ func resourceConsulServiceUpdate(d *schema.ResourceData, meta interface{}) error
 		return fmt.Errorf("Failed to fetch health-checks: %v", err)
 	}
 	registration.Checks = checks
-	
+
 	serviceMeta := map[string]string{
 		consulSourceKey: consulSourceValue,
 	}
