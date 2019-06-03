@@ -19,6 +19,13 @@ func resourceConsulKeys() *schema.Resource {
 		SchemaVersion: 1,
 		MigrateState:  resourceConsulKeysMigrateState,
 
+		CustomizeDiff: func(d *schema.ResourceDiff, _ interface{}) error {
+			if d.HasChange("key") {
+				d.SetNewComputed("var")
+			}
+			return nil
+		},
+
 		Schema: map[string]*schema.Schema{
 			"datacenter": {
 				Type:     schema.TypeString,

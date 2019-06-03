@@ -1,4 +1,10 @@
 ## 2.5.0 (Unreleased)
+
+NEW FEATURES:
+
+* The Consul Terraform provider is now compatible with Terraform 0.12 ([[#118](https://github.com/terraform-providers/terraform-provider-consul/issues/118)] and [[#88](https://github.com/terraform-providers/terraform-provider-consul/issues/88)]).
+
+
 ## 2.4.0 (May 29, 2019)
 
 NEW FEATURES:
