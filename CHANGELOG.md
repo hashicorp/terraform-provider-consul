@@ -1,3 +1,4 @@
+## 2.6.0 (Unreleased)
 ## 2.5.0 (June 03, 2019)
 
 NEW FEATURES:
