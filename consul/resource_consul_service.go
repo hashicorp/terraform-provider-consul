@@ -396,6 +396,11 @@ func resourceConsulServiceRead(d *schema.ResourceData, meta interface{}) error {
 	if err = d.Set("node", service.Node); err != nil {
 		return fmt.Errorf("Failed to store 'node': %s", err)
 	}
+	serviceMeta := service.ServiceMeta
+	delete(serviceMeta, consulSourceKey)
+	if err = d.Set("meta", serviceMeta); err != nil {
+		return fmt.Errorf("Failed to store 'meta': %s", err)
+	}
 
 	checks := make([]map[string]interface{}, 0)
 	for _, check := range service.Checks {
