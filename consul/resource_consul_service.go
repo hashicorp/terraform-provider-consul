@@ -253,10 +253,8 @@ func resourceConsulServiceCreate(d *schema.ResourceData, meta interface{}) error
 	serviceMeta := map[string]string{
 		consulSourceKey: consulSourceValue,
 	}
-	if v, ok := d.GetOk("meta"); ok {
-		for k, j := range v.(map[string]interface{}) {
-			serviceMeta[k] = j.(string)
-		}
+	for k, v := range d.Get("meta").(map[string]interface{}) {
+		serviceMeta[k] = v.(string)
 	}
 	registration.Service.Meta = serviceMeta
 
@@ -335,10 +333,8 @@ func resourceConsulServiceUpdate(d *schema.ResourceData, meta interface{}) error
 	serviceMeta := map[string]string{
 		consulSourceKey: consulSourceValue,
 	}
-	if v, ok := d.GetOk("meta"); ok {
-		for k, j := range v.(map[string]interface{}) {
-			serviceMeta[k] = j.(string)
-		}
+	for k, v := range d.Get("meta").(map[string]interface{}) {
+		serviceMeta[k] = v.(string)
 	}
 	registration.Service.Meta = serviceMeta
 
