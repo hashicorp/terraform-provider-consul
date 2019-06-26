@@ -26,13 +26,12 @@ func TestAccConsulService_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("consul_service.example", "port", "80"),
 					resource.TestCheckResourceAttr("consul_service.example", "tags.#", "1"),
 					resource.TestCheckResourceAttr("consul_service.example", "tags.0", "tag0"),
-					resource.TestCheckResourceAttr("consul_service.example", "meta.test", "test"),
+					resource.TestCheckResourceAttr("consul_service.example", "meta.%", "0"),
 					testAccConsulExternalSource,
 				),
 			},
 			{
-				PreConfig: testAccRemoveConsulService(t),
-				Config:    testAccConsulServiceConfigBasic,
+				Config: testAccConsulServiceConfigBasicMeta,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("consul_service.example", "id", "example"),
 					resource.TestCheckResourceAttr("consul_service.example", "service_id", "example"),
@@ -41,8 +40,23 @@ func TestAccConsulService_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("consul_service.example", "port", "80"),
 					resource.TestCheckResourceAttr("consul_service.example", "tags.#", "1"),
 					resource.TestCheckResourceAttr("consul_service.example", "tags.0", "tag0"),
+					resource.TestCheckResourceAttr("consul_service.example", "meta.%", "1"),
 					resource.TestCheckResourceAttr("consul_service.example", "meta.test", "test"),
-					testAccConsulExternalSource,
+				),
+			},
+			{
+				PreConfig: testAccRemoveConsulService(t),
+				Config:    testAccConsulServiceConfigBasicMeta,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("consul_service.example", "id", "example"),
+					resource.TestCheckResourceAttr("consul_service.example", "service_id", "example"),
+					resource.TestCheckResourceAttr("consul_service.example", "address", "www.hashicorptest.com"),
+					resource.TestCheckResourceAttr("consul_service.example", "node", "compute-example"),
+					resource.TestCheckResourceAttr("consul_service.example", "port", "80"),
+					resource.TestCheckResourceAttr("consul_service.example", "tags.#", "1"),
+					resource.TestCheckResourceAttr("consul_service.example", "tags.0", "tag0"),
+					resource.TestCheckResourceAttr("consul_service.example", "meta.%", "1"),
+					resource.TestCheckResourceAttr("consul_service.example", "meta.test", "test"),
 				),
 			},
 		},
@@ -314,14 +328,28 @@ resource "consul_service" "example" {
 	node    = "${consul_node.compute.name}"
 	port    = 80
 	tags    = ["tag0"]
-	meta    = {
-		test  = "test"
-	}
 }
 
 resource "consul_node" "compute" {
   name    = "compute-example"
-	address = "www.hashicorptest.com"
+  address = "www.hashicorptest.com"
+}
+`
+
+const testAccConsulServiceConfigBasicMeta = `
+resource "consul_service" "example" {
+  name    = "example"
+  node    = "${consul_node.compute.name}"
+  port    = 80
+  tags    = ["tag0"]
+  meta    = {
+	test  = "test"
+  }
+}
+
+resource "consul_node" "compute" {
+  name    = "compute-example"
+  address = "www.hashicorptest.com"
 }
 `
 
