@@ -8,7 +8,8 @@ description: |-
 
 # consul_acl_policy
 
-The `consul_acl_policy` resource writes an ACL policy into Consul.
+Starting with Consul 1.4.0, the consul_acl_policy can be used to managed Consul ACL policies.
+
 
 ## Example Usage
 
