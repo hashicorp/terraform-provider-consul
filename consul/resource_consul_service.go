@@ -91,6 +91,11 @@ func resourceConsulService() *schema.Resource {
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
 
+			"meta": {
+				Type:     schema.TypeMap,
+				Optional: true,
+			},
+
 			"check": {
 				Type:     schema.TypeList,
 				Optional: true,
@@ -244,9 +249,14 @@ func resourceConsulServiceCreate(d *schema.ResourceData, meta interface{}) error
 		return fmt.Errorf("Failed to fetch health-checks: %v", err)
 	}
 	registration.Checks = checks
-	registration.Service.Meta = map[string]string{
+
+	serviceMeta := map[string]string{
 		consulSourceKey: consulSourceValue,
 	}
+	for k, v := range d.Get("meta").(map[string]interface{}) {
+		serviceMeta[k] = v.(string)
+	}
+	registration.Service.Meta = serviceMeta
 
 	if _, err := catalog.Register(registration, &wOpts); err != nil {
 		return fmt.Errorf("Failed to register service (dc: '%s'): %v", dc, err)
@@ -319,9 +329,14 @@ func resourceConsulServiceUpdate(d *schema.ResourceData, meta interface{}) error
 		return fmt.Errorf("Failed to fetch health-checks: %v", err)
 	}
 	registration.Checks = checks
-	registration.Service.Meta = map[string]string{
+
+	serviceMeta := map[string]string{
 		consulSourceKey: consulSourceValue,
 	}
+	for k, v := range d.Get("meta").(map[string]interface{}) {
+		serviceMeta[k] = v.(string)
+	}
+	registration.Service.Meta = serviceMeta
 
 	if _, err := catalog.Register(registration, &wOpts); err != nil {
 		return fmt.Errorf("Failed to update service (dc: '%s'): %v", dc, err)
@@ -376,6 +391,11 @@ func resourceConsulServiceRead(d *schema.ResourceData, meta interface{}) error {
 	}
 	if err = d.Set("node", service.Node); err != nil {
 		return fmt.Errorf("Failed to store 'node': %s", err)
+	}
+	serviceMeta := service.ServiceMeta
+	delete(serviceMeta, consulSourceKey)
+	if err = d.Set("meta", serviceMeta); err != nil {
+		return fmt.Errorf("Failed to store 'meta': %s", err)
 	}
 
 	checks := make([]map[string]interface{}, 0)
