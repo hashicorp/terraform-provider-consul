@@ -7,3 +7,5 @@ require (
 	github.com/hashicorp/terraform v0.12.0
 	github.com/mitchellh/mapstructure v1.1.2
 )
+
+go 1.13

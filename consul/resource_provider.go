@@ -112,6 +112,7 @@ func Provider() terraform.ResourceProvider {
 			"consul_acl_token_policy_attachment": resourceConsulACLTokenPolicyAttachment(),
 			"consul_agent_service":               resourceConsulAgentService(),
 			"consul_catalog_entry":               resourceConsulCatalogEntry(),
+			"consul_configuration_entry":         resourceConsulConfigurationEntry(),
 			"consul_keys":                        resourceConsulKeys(),
 			"consul_key_prefix":                  resourceConsulKeyPrefix(),
 			"consul_node":                        resourceConsulNode(),
