@@ -12,6 +12,8 @@ github.com/agext/levenshtein
 github.com/apparentlymart/go-cidr/cidr
 # github.com/apparentlymart/go-textseg v1.0.0
 github.com/apparentlymart/go-textseg/textseg
+# github.com/armon/go-metrics v0.0.0-20180917152333-f0300d1749da
+github.com/armon/go-metrics
 # github.com/armon/go-radix v1.0.0
 github.com/armon/go-radix
 # github.com/aws/aws-sdk-go v1.19.18
@@ -73,17 +75,19 @@ github.com/google/go-cmp/cmp/internal/function
 github.com/google/go-cmp/cmp/internal/value
 # github.com/googleapis/gax-go/v2 v2.0.3
 github.com/googleapis/gax-go/v2
-# github.com/hashicorp/consul v1.4.2
+# github.com/hashicorp/consul/api v1.1.0
 github.com/hashicorp/consul/api
 # github.com/hashicorp/errwrap v1.0.0
 github.com/hashicorp/errwrap
-# github.com/hashicorp/go-cleanhttp v0.5.0
+# github.com/hashicorp/go-cleanhttp v0.5.1
 github.com/hashicorp/go-cleanhttp
 # github.com/hashicorp/go-getter v1.3.0
 github.com/hashicorp/go-getter
 github.com/hashicorp/go-getter/helper/url
 # github.com/hashicorp/go-hclog v0.0.0-20181001195459-61d530d6c27f
 github.com/hashicorp/go-hclog
+# github.com/hashicorp/go-immutable-radix v1.0.0
+github.com/hashicorp/go-immutable-radix
 # github.com/hashicorp/go-multierror v1.0.0
 github.com/hashicorp/go-multierror
 # github.com/hashicorp/go-plugin v1.0.1-0.20190430211030-5692942914bb
@@ -97,7 +101,9 @@ github.com/hashicorp/go-safetemp
 github.com/hashicorp/go-uuid
 # github.com/hashicorp/go-version v1.1.0
 github.com/hashicorp/go-version
-# github.com/hashicorp/hcl v0.0.0-20170504190234-a4b07c25de5f
+# github.com/hashicorp/golang-lru v0.5.0
+github.com/hashicorp/golang-lru/simplelru
+# github.com/hashicorp/hcl v0.0.0-20180906183839-65a6292f0157
 github.com/hashicorp/hcl
 github.com/hashicorp/hcl/hcl/ast
 github.com/hashicorp/hcl/hcl/parser
@@ -125,7 +131,7 @@ github.com/hashicorp/hil/parser
 github.com/hashicorp/hil/scanner
 # github.com/hashicorp/logutils v1.0.0
 github.com/hashicorp/logutils
-# github.com/hashicorp/serf v0.8.2-0.20171022020050-c20a0b1b1ea9
+# github.com/hashicorp/serf v0.8.2
 github.com/hashicorp/serf/coordinate
 # github.com/hashicorp/terraform v0.12.0
 github.com/hashicorp/terraform/plugin
@@ -177,7 +183,7 @@ github.com/hashicorp/terraform/svchost
 github.com/hashicorp/terraform/svchost/auth
 # github.com/hashicorp/terraform-config-inspect v0.0.0-20190327195015-8022a2663a70
 github.com/hashicorp/terraform-config-inspect/tfconfig
-# github.com/hashicorp/yamux v0.0.0-20180604194846-3520598351bb
+# github.com/hashicorp/yamux v0.0.0-20181012175058-2f1d1f20f75d
 github.com/hashicorp/yamux
 # github.com/jmespath/go-jmespath v0.0.0-20180206201540-c2b33e8439af
 github.com/jmespath/go-jmespath
@@ -201,7 +207,7 @@ github.com/mitchellh/go-wordwrap
 github.com/mitchellh/hashstructure
 # github.com/mitchellh/mapstructure v1.1.2
 github.com/mitchellh/mapstructure
-# github.com/mitchellh/reflectwalk v1.0.0
+# github.com/mitchellh/reflectwalk v1.0.1
 github.com/mitchellh/reflectwalk
 # github.com/oklog/run v1.0.0
 github.com/oklog/run
