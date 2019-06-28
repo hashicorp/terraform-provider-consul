@@ -64,7 +64,7 @@ The following attributes are exported:
 
 * `name` - The name of the configuration entry.
 
-* `config` - (A map of configuration values.
+* `config` - A map of configuration values.
 
 * `protocol` - The protocol of the service.
 
