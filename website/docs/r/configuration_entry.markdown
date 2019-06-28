@@ -57,13 +57,15 @@ proxies. Can only be set when `kind` is `proxy-defaults`.
 
 The following attributes are exported:
 
-* `kind` - (Required) The kind of the configuration entry, `proxy-defaults` or
+* `id` - The id of the configuration entry.
+
+* `kind` - The kind of the configuration entry, `proxy-defaults` or
 `service-defaults`.
 
-* `name` - (Required) The name of the configuration entry.
+* `name` - The name of the configuration entry.
 
-* `config` - (Optional) A map of configuration values.
+* `config` - (A map of configuration values.
 
-* `protocol` - (Optional) The protocol of the service.
+* `protocol` - The protocol of the service.
 
-* `token` - (Optional) ACL token.
+* `token` - ACL token.
