@@ -12,7 +12,7 @@ func testAccCheckConsulACLTokenDestroy(s *terraform.State) error {
 	client := getClient(testAccProvider.Meta())
 
 	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "consul_acl" {
+		if rs.Type != "consul_acl_token" {
 			continue
 		}
 		aclToken, _, err := client.ACL().TokenRead(rs.Primary.ID, nil)
