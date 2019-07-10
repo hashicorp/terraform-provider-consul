@@ -99,6 +99,7 @@ func Provider() terraform.ResourceProvider {
 			"consul_catalog_nodes":    dataSourceConsulNodes(),
 			"consul_catalog_service":  dataSourceConsulService(),
 			"consul_catalog_services": dataSourceConsulServices(),
+			"consul_acl_token":        dataSourceConsulACLToken(),
 		},
 
 		ResourcesMap: map[string]*schema.Resource{
