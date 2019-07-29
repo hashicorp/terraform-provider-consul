@@ -6,17 +6,6 @@ import (
 	"github.com/hashicorp/terraform/helper/schema"
 )
 
-const (
-	// Datasource predicates
-	aclTokenAccessorID = "accessor_id"
-
-	// Output
-	aclTokenSecretID    = "secret_id"
-	aclTokenDescription = "description"
-	aclTokenPolicies    = "policies"
-	aclTokenLocal       = "local"
-)
-
 func dataSourceConsulACLToken() *schema.Resource {
 	return &schema.Resource{
 		Read: dataSourceConsulACLTokenRead,
@@ -24,30 +13,32 @@ func dataSourceConsulACLToken() *schema.Resource {
 		Schema: map[string]*schema.Schema{
 
 			// Filters
-			aclTokenAccessorID: {
+			"accessor_id": {
 				Required: true,
 				Type:     schema.TypeString,
 			},
 
 			// Out parameters
-			aclTokenSecretID: {
+			"secret_id": {
 				Type:      schema.TypeString,
 				Computed:  true,
 				Sensitive: true,
 			},
 
-			aclTokenDescription: {
+			"description": {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-			aclTokenPolicies: {
+
+			"policies": {
 				Type:     schema.TypeSet,
 				Optional: true,
 				Elem: &schema.Schema{
 					Type: schema.TypeString,
 				},
 			},
-			aclTokenLocal: {
+
+			"local": {
 				Type:     schema.TypeBool,
 				Optional: true,
 			},
@@ -57,7 +48,7 @@ func dataSourceConsulACLToken() *schema.Resource {
 
 func dataSourceConsulACLTokenRead(d *schema.ResourceData, meta interface{}) error {
 	client := getClient(meta)
-	accessorID := d.Get(aclTokenAccessorID).(string)
+	accessorID := d.Get("accessor_id").(string)
 	aclToken, _, err := client.ACL().TokenRead(accessorID, nil)
 	if err != nil {
 		return err
@@ -69,17 +60,17 @@ func dataSourceConsulACLTokenRead(d *schema.ResourceData, meta interface{}) erro
 	}
 
 	d.SetId(accessorID)
-	if err = d.Set(aclTokenSecretID, aclToken.SecretID); err != nil {
-		return fmt.Errorf("Error while setting '%s': %s", aclTokenSecretID, err)
+	if err = d.Set("secret_id", aclToken.SecretID); err != nil {
+		return fmt.Errorf("Error while setting '%s': %s", "secret_id", err)
 	}
-	if err = d.Set(aclTokenDescription, aclToken.Description); err != nil {
-		return fmt.Errorf("Error while setting %s: %s", aclTokenDescription, accessorID)
+	if err = d.Set("description", aclToken.Description); err != nil {
+		return fmt.Errorf("Error while setting 'description': %s", err)
 	}
-	if err = d.Set(aclTokenLocal, aclToken.Local); err != nil {
-		return fmt.Errorf("Error while setting %s: %s", aclTokenLocal, accessorID)
+	if err = d.Set("local", aclToken.Local); err != nil {
+		return fmt.Errorf("Error while setting 'local': %s", err)
 	}
-	if err = d.Set(aclTokenPolicies, policies); err != nil {
-		return fmt.Errorf("Error while setting %s: %s", aclTokenPolicies, accessorID)
+	if err = d.Set("policies", policies); err != nil {
+		return fmt.Errorf("Error while setting 'policies': %s", err)
 	}
 
 	return nil
