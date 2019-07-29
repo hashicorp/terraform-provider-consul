@@ -107,6 +107,27 @@ func TestAccConsulPreparedQuery_import(t *testing.T) {
 	})
 }
 
+func TestAccConsulPreparedQuery_blocks(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:  func() { testAccPreCheck(t) },
+		Providers: testAccProviders,
+		Steps: []resource.TestStep{
+			resource.TestStep{
+				Config: testAccConsulPreparedQueryBlocks,
+			},
+			resource.TestStep{
+				Config: testAccConsulPreparedQueryBlocks2,
+			},
+			resource.TestStep{
+				Config: testAccConsulPreparedQueryBlocks3,
+			},
+			resource.TestStep{
+				Config: testAccConsulPreparedQueryBlocks4,
+			},
+		},
+	})
+}
+
 func checkPreparedQueryExists(s *terraform.State) bool {
 	rn, ok := s.RootModule().Resources["consul_prepared_query.foo"]
 	if !ok {
@@ -218,5 +239,68 @@ const testAccConsulPreparedQueryConfigUpdate2 = `
 resource "consul_prepared_query" "foo" {
 	name = "baz"
 	service = "memcached"
+}
+`
+
+const testAccConsulPreparedQueryBlocks = `
+resource "consul_prepared_query" "foo" {
+	name = "foo"
+	stored_token = "pq-token"
+	service = "redis"
+	tags = ["prod"]
+	near = "_agent"
+	only_passing = true
+
+	failover {
+		nearest_n = 0
+		datacenters = ["dc1", "dc2"]
+	}
+}
+`
+
+const testAccConsulPreparedQueryBlocks2 = `
+resource "consul_prepared_query" "foo" {
+	name = "foo"
+	stored_token = "pq-token"
+	service = "redis"
+	tags = ["prod"]
+	near = "_agent"
+	only_passing = true
+
+	failover {
+		nearest_n = 0
+		datacenters = []
+	}
+}
+`
+
+const testAccConsulPreparedQueryBlocks3 = `
+resource "consul_prepared_query" "foo" {
+	name = "foo"
+	stored_token = "pq-token"
+	service = "redis"
+	tags = ["prod"]
+	near = "_agent"
+	only_passing = true
+
+	dns {
+		ttl = ""
+	}
+}
+`
+
+const testAccConsulPreparedQueryBlocks4 = `
+resource "consul_prepared_query" "foo" {
+	name = "foo"
+	stored_token = "pq-token"
+	service = "redis"
+	tags = ["prod"]
+	near = "_agent"
+	only_passing = true
+
+	template {
+		type   = ""
+		regexp = ""
+	}
 }
 `
