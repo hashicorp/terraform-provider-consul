@@ -1,12 +1,9 @@
 package consul
 
 import (
-	"fmt"
-	"regexp"
 	"testing"
 
 	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/terraform"
 )
 
 func TestAccDataACLToken_basic(t *testing.T) {
@@ -20,27 +17,10 @@ func TestAccDataACLToken_basic(t *testing.T) {
 					testAccCheckDataSourceValue("data.consul_acl_token.read", "description", "test"),
 					testAccCheckDataSourceValue("data.consul_acl_token.read", "policies.#", "1"),
 					testAccCheckDataSourceValue("data.consul_acl_token.read", "local", "true"),
-					testAccCheckTokenExistsAndValidUUID("data.consul_acl_token.read", "secret_id"),
 				),
 			},
 		},
 	})
-}
-
-func testAccCheckTokenExistsAndValidUUID(n string, attr string) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[n]
-		if !ok {
-			return fmt.Errorf("Not Found: %s", n)
-		}
-
-		secretID := rs.Primary.Attributes[attr]
-		r := regexp.MustCompile("[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}")
-		if !r.MatchString(secretID) {
-			return fmt.Errorf("No valid UUID format %q", secretID)
-		}
-		return nil
-	}
 }
 
 const testAccDataACLTokenConfig = `

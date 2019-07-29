@@ -19,12 +19,6 @@ func dataSourceConsulACLToken() *schema.Resource {
 			},
 
 			// Out parameters
-			"secret_id": {
-				Type:      schema.TypeString,
-				Computed:  true,
-				Sensitive: true,
-			},
-
 			"description": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -60,9 +54,6 @@ func dataSourceConsulACLTokenRead(d *schema.ResourceData, meta interface{}) erro
 	}
 
 	d.SetId(accessorID)
-	if err = d.Set("secret_id", aclToken.SecretID); err != nil {
-		return fmt.Errorf("Error while setting '%s': %s", "secret_id", err)
-	}
 	if err = d.Set("description", aclToken.Description); err != nil {
 		return fmt.Errorf("Error while setting 'description': %s", err)
 	}
