@@ -1,8 +1,14 @@
-## 2.4.1 (Unreleased)
+## 2.5.1 (Unreleased)
 
 BUG FIXES:
 
 * The `consul_prepared_query` now handles default values correctly for the `failover`, `dns` and `template` blocks ([[#119](https://github.com/terraform-providers/terraform-provider-consul/issues/119)] and [[#121](https://github.com/terraform-providers/terraform-provider-consul/issues/121)])
+
+## 2.5.0 (June 03, 2019)
+
+NEW FEATURES:
+
+* The Consul Terraform provider is now compatible with Terraform 0.12 ([[#118](https://github.com/terraform-providers/terraform-provider-consul/issues/118)] and [[#88](https://github.com/terraform-providers/terraform-provider-consul/issues/88)]).
 
 
 ## 2.4.0 (May 29, 2019)

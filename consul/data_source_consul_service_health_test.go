@@ -89,7 +89,7 @@ const testAccDataConsulServiceHealth = `
 data "consul_service_health" "consul" {
 	name = "consul"
 
-	node_meta {
+	node_meta = {
 		// Consul development server has this node meta information
 		consul-network-segment = ""
 	}
