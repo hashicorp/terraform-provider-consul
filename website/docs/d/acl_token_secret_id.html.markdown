@@ -8,6 +8,11 @@ description: |-
 
 # consul_acl_token_secret_id
 
+~> **Warning:** When using this is resource, the ACL Token secret ID will be
+written to the Terraform state. It is strongly recommended to use the `gpg_key`
+attribute and to make sure the remote state has strong access controls before
+using this resource.
+
 The `consul_acl_token_secret` data source returns the secret ID associated to
 the accessor ID. This can be useful to make systems that cannot use an auth
 method to interface with Consul.
@@ -32,10 +37,11 @@ resource "consul_acl_token" "test" {
 
 data "consul_acl_token_secret_id" "read" {
     accessor_id = "${consul_acl_token.test.id}"
+	gpg_key     = "keybase:my_username"
 }
 
 output "consul_acl_token_secret_id" {
-  value = "${data.consul_acl_token.read.secret_id}"
+  value = "${data.consul_acl_token.read.encrypted_secret_id}"
 }
 ```
 
@@ -45,9 +51,14 @@ output "consul_acl_token_secret_id" {
 The following arguments are supported:
 
 * `accessor_id` - (Required) The accessor ID of the ACL token.
+* `gpg_key` - (Optional) Either a base-64 encoded PGP public key, or a keybase
+  username in the form `keybase:some_person_that_exists`.
 
 ## Attributes Reference
 
 The following attributes are exported:
 
-* `secret_id` - The secret ID of the ACL token.
+* `secret_id` - The secret ID of the ACL token if `gpg_key` has not been set.
+* `encrypted_secret_id` - The encrypted secret ID of the ACL token if `gpg_key`
+  has been set. You can decrypt the secret by using the command line, for example
+  with: `terraform output encrypted_secret | base64 --decode | keybase pgp decrypt`.

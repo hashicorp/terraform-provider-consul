@@ -17,7 +17,25 @@ func TestAccDataACLTokenSecretID_basic(t *testing.T) {
 			{
 				Config: testAccDataACLTokenSecretIDConfig,
 				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.consul_acl_token_secret_id.read", "pgp_key", ""),
+					resource.TestCheckResourceAttr("data.consul_acl_token_secret_id.read", "encrypted_secret_id", ""),
 					testAccCheckTokenExistsAndValidUUID("data.consul_acl_token_secret_id.read", "secret_id"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccDataACLTokenSecretID_PGP(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:  func() { testAccPreCheck(t) },
+		Providers: testAccProviders,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDataACLTokenSecretIDPGPConfig,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.consul_acl_token_secret_id.read", "pgp_key", "keybase:terraformacctest"),
+					resource.TestCheckResourceAttr("data.consul_acl_token_secret_id.read", "secret_id", ""),
 				),
 			},
 		},
@@ -55,5 +73,24 @@ resource "consul_acl_token" "test" {
 
 data "consul_acl_token_secret_id" "read" {
     accessor_id = "${consul_acl_token.test.id}"
+}
+`
+
+const testAccDataACLTokenSecretIDPGPConfig = `
+resource "consul_acl_policy" "test" {
+	name = "test"
+	rules = "node \"\" { policy = \"read\" }"
+	datacenters = [ "dc1" ]
+}
+
+resource "consul_acl_token" "test" {
+	description = "test"
+	policies = ["${consul_acl_policy.test.name}"]
+	local = true
+}
+
+data "consul_acl_token_secret_id" "read" {
+	accessor_id = "${consul_acl_token.test.id}"
+	pgp_key     = "keybase:terraformacctest"
 }
 `

@@ -3,6 +3,7 @@ package consul
 import (
 	"fmt"
 
+	"github.com/hashicorp/terraform/helper/encryption"
 	"github.com/hashicorp/terraform/helper/schema"
 )
 
@@ -24,6 +25,18 @@ func dataSourceConsulACLTokenSecretID() *schema.Resource {
 				Computed:  true,
 				Sensitive: true,
 			},
+
+			"pgp_key": {
+				Type:     schema.TypeString,
+				ForceNew: true,
+				Optional: true,
+			},
+
+			"encrypted_secret_id": {
+				Type:      schema.TypeString,
+				Computed:  true,
+				Sensitive: true,
+			},
 		},
 	}
 }
@@ -37,8 +50,36 @@ func dataSourceConsulACLTokenSecretIDRead(d *schema.ResourceData, meta interface
 	}
 
 	d.SetId(accessorID)
-	if err = d.Set("secret_id", aclToken.SecretID); err != nil {
-		return fmt.Errorf("Error while setting '%s': %s", "secret_id", err)
+	if v, ok := d.GetOk("pgp_key"); ok {
+		pgpKey := v.(string)
+		encryptionKey, err := encryption.RetrieveGPGKey(pgpKey)
+		if err != nil {
+			return err
+		}
+		_, encrypted, err := encryption.EncryptValue(encryptionKey, aclToken.SecretID, "ACL Token secret ID")
+		if err != nil {
+			return err
+		}
+
+		if err = d.Set("secret_id", ""); err != nil {
+			return fmt.Errorf("Error while setting 'secret_id': %s", err)
+		}
+
+		if err = d.Set("encrypted_secret_id", encrypted); err != nil {
+			return fmt.Errorf("Error while setting 'encrypted_secret_id': %s", err)
+		}
+	} else {
+		if err = d.Set("pgp_key", ""); err != nil {
+			return fmt.Errorf("Error while setting 'encrypted_secret_id': %s", err)
+		}
+
+		if err = d.Set("secret_id", aclToken.SecretID); err != nil {
+			return fmt.Errorf("Error while setting 'secret_id': %s", err)
+		}
+
+		if err = d.Set("encrypted_secret_id", ""); err != nil {
+			return fmt.Errorf("Error while setting 'encrypted_secret_id': %s", err)
+		}
 	}
 	return nil
 }
