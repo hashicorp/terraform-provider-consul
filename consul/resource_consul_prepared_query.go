@@ -209,19 +209,34 @@ func resourceConsulPreparedQueryRead(d *schema.ResourceData, meta interface{}) e
 		return fmt.Errorf("Failed to set 'tags': %v", err)
 	}
 
+	// Since failover and dns are implemented with an optionnal list instead of a
+	// sub-resource, writing those attributes to the state is more involved that
+	// it needs to.
+
 	failover := make([]map[string]interface{}, 0)
-	if pq.Service.Failover.NearestN > 0 {
+
+	// First we must find whether the user wrote a failover block
+	userWroteFailover := len(d.Get("failover").([]interface{})) != 0
+
+	// We must write a failover block if the user wrote one or if one of the values
+	// differ from the defaults
+	if userWroteFailover || pq.Service.Failover.NearestN > 0 || len(pq.Service.Failover.Datacenters) > 0 {
 		failover = append(failover, map[string]interface{}{
 			"nearest_n":   pq.Service.Failover.NearestN,
 			"datacenters": pq.Service.Failover.Datacenters,
 		})
 	}
+
+	// We can finally set the failover attribute
 	if err = d.Set("failover", failover); err != nil {
 		return fmt.Errorf("Failed to set 'failover': %v", err)
 	}
 
 	dns := make([]map[string]interface{}, 0)
-	if pq.DNS.TTL != "" {
+
+	userWroteDNS := len(d.Get("dns").([]interface{})) != 0
+
+	if userWroteDNS || pq.DNS.TTL != "" {
 		dns = append(dns, map[string]interface{}{
 			"ttl": pq.DNS.TTL,
 		})
@@ -231,7 +246,10 @@ func resourceConsulPreparedQueryRead(d *schema.ResourceData, meta interface{}) e
 	}
 
 	template := make([]map[string]interface{}, 0)
-	if pq.Template.Type != "" {
+
+	userWroteTemplate := len(d.Get("template").([]interface{})) != 0
+
+	if userWroteTemplate || pq.Template.Type != "" {
 		template = append(template, map[string]interface{}{
 			"type":   pq.Template.Type,
 			"regexp": pq.Template.Regexp,
