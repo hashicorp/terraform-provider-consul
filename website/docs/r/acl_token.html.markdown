@@ -27,12 +27,22 @@ resource "consul_acl_token" "test" {
   policies = ["${consul_acl_policy.agent.name}"]
   local = true
 }
+
+resource "random_uuid" "test" { }
+
+resource "consul_acl_token" "test_predefined_id" {
+  accessor_id = ${random_uuid.test_uuid.result}
+  description = "my test uuid token"
+  policies = ["${consul_acl_policy.agent.name}"]
+  local = true
+}
 ```
 
 ## Argument Reference
 
 The following arguments are supported:
 
+* `accessor_id` - (Optional) The uuid of the token. If omitted, Consul will generate a random uuid.
 * `description` - (Optional) The description of the token.
 * `policies` - (Optional) The list of policies attached to the token.
 * `local` - (Optional) The flag to set the token local to the current datacenter.
@@ -42,6 +52,7 @@ The following arguments are supported:
 The following attributes are exported:
 
 * `id` - The token accessor ID.
+* `accessor_id` - The token accessor ID.
 * `description` - The description of the token.
 * `policies` - The list of policies attached to the token.
 * `local` - The flag to set the token local to the current datacenter.
