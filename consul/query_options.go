@@ -73,50 +73,55 @@ var schemaQueryOpts = &schema.Schema{
 func getQueryOpts(d *schema.ResourceData, client *consulapi.Client, meta interface{}) (*consulapi.QueryOptions, error) {
 	queryOpts := &consulapi.QueryOptions{}
 
-	if v, ok := d.GetOk(queryOptAllowStale); ok {
-		queryOpts.AllowStale = v.(bool)
-	}
+	if v, ok := d.GetOk(catalogNodesQueryOpts); ok {
+		for _, config := range v.(*schema.Set).List() {
+			queryOptions := config.(map[string]interface{})
+			if v, ok := queryOptions[queryOptAllowStale]; ok {
+				queryOpts.AllowStale = v.(bool)
+			}
 
-	if v, ok := d.GetOk(queryOptDatacenter); ok {
-		queryOpts.Datacenter = v.(string)
-	}
+			if v, ok := queryOptions[queryOptDatacenter]; ok {
+				queryOpts.Datacenter = v.(string)
+			}
 
-	if queryOpts.Datacenter == "" {
-		dc, err := getDC(d, client, meta)
-		if err != nil {
-			return nil, err
+			if queryOpts.Datacenter == "" {
+				dc, err := getDC(d, client, meta)
+				if err != nil {
+					return nil, err
+				}
+				queryOpts.Datacenter = dc
+			}
+
+			if v, ok := queryOptions[queryOptNear]; ok {
+				queryOpts.Near = v.(string)
+			}
+
+			if v, ok := queryOptions[queryOptRequireConsistent]; ok {
+				queryOpts.RequireConsistent = v.(bool)
+			}
+
+			if v, ok := queryOptions[queryOptNodeMeta]; ok {
+				m := v.(map[string]interface{})
+				nodeMetaMap := make(map[string]string, len(queryOptNodeMeta))
+				for s, t := range m {
+					nodeMetaMap[s] = t.(string)
+				}
+				queryOpts.NodeMeta = nodeMetaMap
+			}
+
+			if v, ok := queryOptions[queryOptToken]; ok {
+				queryOpts.Token = v.(string)
+			}
+
+			if v, ok := queryOptions[queryOptWaitIndex]; ok {
+				queryOpts.WaitIndex = uint64(v.(int))
+			}
+
+			if v, ok := queryOptions[queryOptWaitTime]; ok {
+				d, _ := time.ParseDuration(v.(string))
+				queryOpts.WaitTime = d
+			}
 		}
-		queryOpts.Datacenter = dc
-	}
-
-	if v, ok := d.GetOk(queryOptNear); ok {
-		queryOpts.Near = v.(string)
-	}
-
-	if v, ok := d.GetOk(queryOptRequireConsistent); ok {
-		queryOpts.RequireConsistent = v.(bool)
-	}
-
-	if v, ok := d.GetOk(queryOptNodeMeta); ok {
-		m := v.(map[string]interface{})
-		nodeMetaMap := make(map[string]string, len(queryOptNodeMeta))
-		for s, t := range m {
-			nodeMetaMap[s] = t.(string)
-		}
-		queryOpts.NodeMeta = nodeMetaMap
-	}
-
-	if v, ok := d.GetOk(queryOptToken); ok {
-		queryOpts.Token = v.(string)
-	}
-
-	if v, ok := d.GetOk(queryOptWaitIndex); ok {
-		queryOpts.WaitIndex = uint64(v.(int))
-	}
-
-	if v, ok := d.GetOk(queryOptWaitTime); ok {
-		d, _ := time.ParseDuration(v.(string))
-		queryOpts.WaitTime = d
 	}
 
 	return queryOpts, nil
