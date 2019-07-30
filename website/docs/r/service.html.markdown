@@ -101,6 +101,8 @@ of the `name` attribute.
 * `datacenter` - (Optional) The datacenter to use. This overrides the
   agent's default datacenter and the datacenter in the provider setup.
 
+* `meta` - (Optional) A map of arbitrary KV metadata linked to the service
+  instance.
 
 The following attributes are available for each health-check:
 
@@ -140,3 +142,4 @@ The following attributes are exported:
 * `tags` - The tags of the service.
 * `checks` - The list of health-checks associated with the service.
 * `datacenter` - The datacenter of the service.
+* `meta` - A map of arbitrary KV metadata linked to the service instance.
