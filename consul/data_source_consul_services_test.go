@@ -1,6 +1,7 @@
 package consul
 
 import (
+	"regexp"
 	"testing"
 
 	"github.com/hashicorp/terraform/helper/resource"
@@ -38,6 +39,19 @@ func TestAccDataConsulCatalogServices_alias(t *testing.T) {
 	})
 }
 
+func TestAccDataConsulCatalogServices_badToken(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:  func() { testAccPreCheck(t) },
+		Providers: testAccProviders,
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccDataConsulCatalogServicesBadTokenConfig,
+				ExpectError: regexp.MustCompile(`Unexpected response code: 403 \(ACL not found\)`),
+			},
+		},
+	})
+}
+
 const testAccDataConsulCatalogServicesConfig = `
 data "consul_services" "read" {
   query_options {
@@ -52,4 +66,12 @@ data "consul_services" "read" {
 
 const testAccDataConsulCatalogServicesAlias = `
 data "consul_catalog_services" "read" {}
+`
+
+const testAccDataConsulCatalogServicesBadTokenConfig = `
+data "consul_services" "read" {
+  query_options {
+    token = "foobar"
+  }
+}
 `
