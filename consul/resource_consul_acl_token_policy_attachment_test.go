@@ -33,20 +33,20 @@ func testAccCheckConsulACLTokenPolicyAttachmentDestroy(s *terraform.State) error
 
 func testAccCheckTokenPolicyID(s *terraform.State) error {
 	rs, ok := s.RootModule().Resources["consul_acl_token.test"]
-		if !ok {
+	if !ok {
 		return fmt.Errorf("Not Found: consul_acl_token.test")
-		}
+	}
 
-		tokenID := rs.Primary.Attributes["id"]
-		if tokenID == "" {
-			return fmt.Errorf("No token ID is set")
-		}
+	tokenID := rs.Primary.Attributes["id"]
+	if tokenID == "" {
+		return fmt.Errorf("No token ID is set")
+	}
 
-		client := getClient(testAccProvider.Meta())
-		_, _, err := client.ACL().TokenRead(tokenID, nil)
-		if err != nil {
-			return fmt.Errorf("Unable to retrieve token %q", tokenID)
-		}
+	client := getClient(testAccProvider.Meta())
+	_, _, err := client.ACL().TokenRead(tokenID, nil)
+	if err != nil {
+		return fmt.Errorf("Unable to retrieve token %q", tokenID)
+	}
 
 	// Make sure the policy has then same token_id
 	rs, ok = s.RootModule().Resources["consul_acl_token_policy_attachment.test"]
@@ -63,8 +63,8 @@ func testAccCheckTokenPolicyID(s *terraform.State) error {
 		return fmt.Errorf("%s != %s", policyTokenID, tokenID)
 	}
 
-		return nil
-	}
+	return nil
+}
 
 func TestAccConsulACLTokenPolicyAttachment_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
@@ -95,14 +95,12 @@ func TestAccConsulACLTokenPolicyAttachment_basic(t *testing.T) {
 }
 
 func TestAccConsulACLTokenPolicyAttachment_import(t *testing.T) {
-	var tokenID string
-
 	checkFn := func(s []*terraform.InstanceState) error {
 		if len(s) != 1 {
 			return fmt.Errorf("bad state: %s", s)
 		}
 		v, ok := s[0].Attributes["token_id"]
-		if !ok || v != tokenID {
+		if !ok {
 			return fmt.Errorf("bad token_id: %s", s)
 		}
 		v, ok = s[0].Attributes["policy"]
@@ -119,7 +117,6 @@ func TestAccConsulACLTokenPolicyAttachment_import(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testResourceACLTokenPolicyAttachmentConfigBasic,
-				Check:  testAccCheckTokenExists("", &tokenID),
 			},
 			{
 				ResourceName:     "consul_acl_token_policy_attachment.test",
