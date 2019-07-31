@@ -19,10 +19,7 @@ func testAccCheckConsulACLTokenPolicyAttachmentDestroy(s *terraform.State) error
 		if err != nil {
 			return fmt.Errorf("Invalid ACL token policy attachment id '%q'", rs.Primary.ID)
 		}
-		aclToken, _, err := client.ACL().TokenRead(tokenID, nil)
-		if err != nil {
-			return err
-		}
+		aclToken, _, _ := client.ACL().TokenRead(tokenID, nil)
 		if aclToken != nil {
 			for _, iPolicy := range aclToken.Policies {
 				if iPolicy.Name == policyName {
@@ -82,8 +79,7 @@ func TestAccConsulACLTokenPolicyAttachment_basic(t *testing.T) {
 				),
 			},
 			{
-				Config:  testResourceACLTokenPolicyAttachmentConfigBasic,
-				Destroy: false,
+				Config: testResourceACLTokenPolicyAttachmentConfigUpdate,
 			},
 		},
 	})
