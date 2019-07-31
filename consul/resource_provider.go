@@ -84,15 +84,17 @@ func Provider() terraform.ResourceProvider {
 		},
 
 		DataSourcesMap: map[string]*schema.Resource{
-			"consul_agent_self":       dataSourceConsulAgentSelf(),
-			"consul_agent_config":     dataSourceConsulAgentConfig(),
-			"consul_autopilot_health": dataSourceConsulAutopilotHealth(),
-			"consul_nodes":            dataSourceConsulNodes(),
-			"consul_service":          dataSourceConsulService(),
-			"consul_service_health":   dataSourceConsulServiceHealth(),
-			"consul_services":         dataSourceConsulServices(),
-			"consul_keys":             dataSourceConsulKeys(),
-			"consul_key_prefix":       dataSourceConsulKeyPrefix(),
+			"consul_agent_self":          dataSourceConsulAgentSelf(),
+			"consul_agent_config":        dataSourceConsulAgentConfig(),
+			"consul_autopilot_health":    dataSourceConsulAutopilotHealth(),
+			"consul_nodes":               dataSourceConsulNodes(),
+			"consul_service":             dataSourceConsulService(),
+			"consul_service_health":      dataSourceConsulServiceHealth(),
+			"consul_services":            dataSourceConsulServices(),
+			"consul_keys":                dataSourceConsulKeys(),
+			"consul_key_prefix":          dataSourceConsulKeyPrefix(),
+			"consul_acl_token":           dataSourceConsulACLToken(),
+			"consul_acl_token_secret_id": dataSourceConsulACLTokenSecretID(),
 
 			// Aliases to limit the impact of rename of catalog
 			// datasources
