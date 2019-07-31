@@ -19,6 +19,13 @@ func resourceConsulACLToken() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
+			"accessor_id": {
+				Type:        schema.TypeString,
+				ForceNew:    true,
+				Computed:    true,
+				Optional:    true,
+				Description: "The token id.",
+			},
 			"description": {
 				Type:        schema.TypeString,
 				Optional:    true,
@@ -49,6 +56,7 @@ func resourceConsulACLTokenCreate(d *schema.ResourceData, meta interface{}) erro
 	log.Printf("[DEBUG] Creating ACL token")
 
 	aclToken := consulapi.ACLToken{
+		AccessorID:  d.Get("accessor_id").(string),
 		Description: d.Get("description").(string),
 		Local:       d.Get("local").(bool),
 	}
@@ -91,6 +99,10 @@ func resourceConsulACLTokenRead(d *schema.ResourceData, meta interface{}) error 
 	}
 
 	log.Printf("[DEBUG] Read ACL token %q", id)
+
+	if err = d.Set("accessor_id", aclToken.AccessorID); err != nil {
+		return fmt.Errorf("Error while setting 'accessor_id': %s", err)
+	}
 
 	if err = d.Set("description", aclToken.Description); err != nil {
 		return fmt.Errorf("Error while setting 'description': %s", err)
