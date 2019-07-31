@@ -18,7 +18,7 @@ the accessor ID. This can be useful to make systems that cannot use an auth
 method to interface with Consul.
 
 If you want to get other attributes of the Consul ACL token, please use the
-`consul_acl_token` data source.
+[`consul_acl_token` data source](/docs/providers/consul/d/acl_token.html).
 
 ## Example Usage
 
@@ -52,7 +52,9 @@ The following arguments are supported:
 
 * `accessor_id` - (Required) The accessor ID of the ACL token.
 * `gpg_key` - (Optional) Either a base-64 encoded PGP public key, or a keybase
-  username in the form `keybase:some_person_that_exists`.
+  username in the form `keybase:some_person_that_exists`. **If you do not set this
+  argument, the token secret ID will be written as plain text in the Terraform
+  state.**
 
 ## Attributes Reference
 
