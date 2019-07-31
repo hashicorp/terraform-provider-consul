@@ -15,10 +15,7 @@ func testAccCheckConsulACLTokenDestroy(s *terraform.State) error {
 		if rs.Type != "consul_acl_token" {
 			continue
 		}
-		aclToken, _, err := client.ACL().TokenRead(rs.Primary.ID, nil)
-		if err != nil {
-			return err
-		}
+		aclToken, _, _ := client.ACL().TokenRead(rs.Primary.ID, nil)
 		if aclToken != nil {
 			return fmt.Errorf("ACL token %q still exists", rs.Primary.ID)
 		}
@@ -52,8 +49,7 @@ func TestAccConsulACLToken_basic(t *testing.T) {
 				),
 			},
 			{
-				Config:  testResourceACLTokenConfigBasic,
-				Destroy: false,
+				Config: testResourceACLTokenConfigUpdate,
 			},
 		},
 	})
