@@ -1,7 +1,7 @@
 ---
 layout: "consul"
 page_title: "Consul: consul_acl_token_secret_id"
-sidebar_current: "docs-consul-data-source-acl-token-secret-id"
+sidebar_current: "docs-consul-data-source-acl-tok-secret-id"
 description: |-
   Provides the ACL Token secret ID.
 ---
