@@ -3,6 +3,7 @@ package consul
 import (
 	"fmt"
 	"log"
+	"strings"
 
 	consulapi "github.com/hashicorp/consul/api"
 	"github.com/hashicorp/terraform/helper/schema"
@@ -62,7 +63,7 @@ func resourceConsulACLTokenPolicyAttachmentCreate(d *schema.ResourceData, meta i
 		return fmt.Errorf("Error updating ACL token '%q' to set new policy attachment: '%s'", tokenID, err)
 	}
 
-	id := buildTwoPartID(&tokenID, &newPolicyName)
+	id := fmt.Sprintf("%s:%s", tokenID, newPolicyName)
 
 	log.Printf("[DEBUG] Created ACL token policy attachment '%q'", id)
 
@@ -144,4 +145,14 @@ func resourceConsulACLTokenPolicyAttachmentDelete(d *schema.ResourceData, meta i
 	log.Printf("[DEBUG] Deleted ACL token attachment policy %q", id)
 
 	return nil
+}
+
+// return the pieces of id `a:b` as a, b
+func parseTwoPartID(id string) (string, string, error) {
+	parts := strings.SplitN(id, ":", 2)
+	if len(parts) != 2 {
+		return "", "", fmt.Errorf("Unexpected ID format (%q). Expected token_id:policy_name", id)
+	}
+
+	return parts[0], parts[1], nil
 }
