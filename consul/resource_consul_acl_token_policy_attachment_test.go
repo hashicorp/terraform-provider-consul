@@ -31,11 +31,10 @@ func testAccCheckConsulACLTokenPolicyAttachmentDestroy(s *terraform.State) error
 	return nil
 }
 
-func testAccCheckTokenExists(n string, tokenID *string) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[n]
+func testAccCheckTokenPolicyID(s *terraform.State) error {
+	rs, ok := s.RootModule().Resources["consul_acl_token.test"]
 		if !ok {
-			return fmt.Errorf("Not Found: %s", n)
+		return fmt.Errorf("Not Found: consul_acl_token.test")
 		}
 
 		tokenID := rs.Primary.Attributes["id"]
@@ -49,13 +48,25 @@ func testAccCheckTokenExists(n string, tokenID *string) resource.TestCheckFunc {
 			return fmt.Errorf("Unable to retrieve token %q", tokenID)
 		}
 
+	// Make sure the policy has then same token_id
+	rs, ok = s.RootModule().Resources["consul_acl_token_policy_attachment.test"]
+	if !ok {
+		return fmt.Errorf("Not Found: consul_acl_token_policy_attachment.test")
+	}
+
+	policyTokenID := rs.Primary.Attributes["token_id"]
+	if policyTokenID == "" {
+		return fmt.Errorf("No policy token_id is set")
+	}
+
+	if policyTokenID != tokenID {
+		return fmt.Errorf("%s != %s", policyTokenID, tokenID)
+	}
+
 		return nil
 	}
-}
 
 func TestAccConsulACLTokenPolicyAttachment_basic(t *testing.T) {
-	var tokenID string
-
 	resource.Test(t, resource.TestCase{
 		Providers: testAccProviders,
 
@@ -65,17 +76,15 @@ func TestAccConsulACLTokenPolicyAttachment_basic(t *testing.T) {
 			{
 				Config: testResourceACLTokenPolicyAttachmentConfigBasic,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTokenExists("consul_acl_token.test", &tokenID),
-					resource.TestCheckResourceAttr("consul_acl_token_policy_attachment.test", "token_id", tokenID),
+					testAccCheckTokenPolicyID,
 					resource.TestCheckResourceAttr("consul_acl_token_policy_attachment.test", "policy", "test"),
 				),
 			},
 			{
 				Config: testResourceACLTokenPolicyAttachmentConfigUpdate,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTokenExists("consul_acl_token.test", &tokenID),
-					resource.TestCheckResourceAttr("consul_acl_token_policy_attachment.test", "token_id", tokenID),
-					resource.TestCheckResourceAttr("consul_acl_token_policy_attachment.test", "policy", "test"),
+					testAccCheckTokenPolicyID,
+					resource.TestCheckResourceAttr("consul_acl_token_policy_attachment.test", "policy", "test2"),
 				),
 			},
 			{
