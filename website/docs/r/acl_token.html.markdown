@@ -12,6 +12,8 @@ The `consul_acl_token` resource writes an ACL token into Consul.
 
 ## Example Usage
 
+### Basic usage
+
 ```hcl
 resource "consul_acl_policy" "agent" {
   name  = "agent"
@@ -27,7 +29,11 @@ resource "consul_acl_token" "test" {
   policies = ["${consul_acl_policy.agent.name}"]
   local = true
 }
+```
 
+### Set explictly the `accessor_id`
+
+```hcl
 resource "random_uuid" "test" { }
 
 resource "consul_acl_token" "test_predefined_id" {
@@ -42,7 +48,8 @@ resource "consul_acl_token" "test_predefined_id" {
 
 The following arguments are supported:
 
-* `accessor_id` - (Optional) The uuid of the token. If omitted, Consul will generate a random uuid.
+* `accessor_id` - (Optional) The uuid of the token. If omitted, Consul will
+  generate a random uuid.
 * `description` - (Optional) The description of the token.
 * `policies` - (Optional) The list of policies attached to the token.
 * `local` - (Optional) The flag to set the token local to the current datacenter.
@@ -60,7 +67,7 @@ The following attributes are exported:
 
 ## Import
 
-`consul_acl_token` can be imported. This is especially useful to manage the 
+`consul_acl_token` can be imported. This is especially useful to manage the
 anonymous and the master token with Terraform:
 
 ```
