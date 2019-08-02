@@ -33,7 +33,7 @@ provider "consul" {
 }
 
 # Access a key in Consul
-resource "consul_keys" "app" {
+data "consul_keys" "app" {
   key {
     name    = "ami"
     path    = "service/app/launch_ami"
