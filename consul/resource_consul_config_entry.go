@@ -65,10 +65,6 @@ func resourceConsulConfigurationEntryCreate(d *schema.ResourceData, meta interfa
 }
 
 func resourceConsulConfigurationEntryUpdate(d *schema.ResourceData, meta interface{}) error {
-	if err := validateConfigEntry(d); err != nil {
-		return err
-	}
-
 	var config consulapi.ConfigEntry
 	configEntries := getClient(meta).ConfigEntries()
 	configKind := d.Get("kind").(string)
@@ -149,28 +145,5 @@ func resourceConsulConfigurationEntryDelete(d *schema.ResourceData, meta interfa
 		return fmt.Errorf("Failed to delete '%s' config entry: %#v", configName, err)
 	}
 	d.SetId("")
-	return nil
-}
-
-func validateConfigEntry(d *schema.ResourceData) error {
-	configKind := d.Get("kind").(string)
-	configName := d.Get("name").(string)
-
-	switch configKind {
-	case consulConfigEntryProxyDefaults:
-		if configName != "global" {
-			return fmt.Errorf("'name' must be 'global' when 'kind' is 'proxy-defaults'")
-		}
-		if d.Get("protocol").(string) != "" {
-			return fmt.Errorf("'protocol' must not be set when 'kind' is 'proxy-defaults'")
-		}
-	case consulConfigEntryServiceDefaults:
-		if len(d.Get("config").(map[string]interface{})) != 0 {
-			return fmt.Errorf("'config' must not be set when 'kind' is 'service-defaults'")
-		}
-	default:
-		return fmt.Errorf("'%s' is not a valid kind", configKind)
-	}
-
 	return nil
 }
