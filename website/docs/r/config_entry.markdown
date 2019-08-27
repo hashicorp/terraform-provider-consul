@@ -1,12 +1,12 @@
 ---
 layout: "consul"
-page_title: "Consul: configuration_entry"
-sidebar_current: "docs-consul-resource-configuration-entry"
+page_title: "Consul: config_entry"
+sidebar_current: "docs-consul-resource-config-entry"
 description: |-
   Registers a configuration entry in Consul.
 ---
 
-# consul_configuration_entry
+# consul_config_entry
 
 The [Configuration Entry](https://www.consul.io/docs/agent/config_entries.html)
 resource can be used to provide cluster-wide defaults for various aspects of
@@ -15,7 +15,7 @@ Consul.
 ## Example Usage
 
 ```hcl
-resource "consul_configuration_entry" "service-defaults" {
+resource "consul_config_entry" "service-defaults" {
 	name = "foo"
 	kind = "service-defaults"
 
@@ -24,7 +24,7 @@ resource "consul_configuration_entry" "service-defaults" {
 ```
 
 ```hcl
-resource "consul_configuration_entry" "proxy-defaults" {
+resource "consul_config_entry" "proxy-defaults" {
 	name = "global"
 	kind = "proxy-defaults"
 

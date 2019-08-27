@@ -15,17 +15,17 @@ func TestAccConsulConfigurationEntry_basic(t *testing.T) {
 			{
 				Config: testAccConsulConfigurationEntry_ServiceDefaults,
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("consul_configuration_entry.foo", "name", "foo"),
-					resource.TestCheckResourceAttr("consul_configuration_entry.foo", "kind", "service-defaults"),
-					resource.TestCheckResourceAttr("consul_configuration_entry.foo", "protocol", "https"),
+					resource.TestCheckResourceAttr("consul_config_entry.foo", "name", "foo"),
+					resource.TestCheckResourceAttr("consul_config_entry.foo", "kind", "service-defaults"),
+					resource.TestCheckResourceAttr("consul_config_entry.foo", "protocol", "https"),
 				),
 			},
 			{
 				Config: testAccConsulConfigurationEntry_ProxyDefaults,
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("consul_configuration_entry.foo", "name", "global"),
-					resource.TestCheckResourceAttr("consul_configuration_entry.foo", "kind", "proxy-defaults"),
-					resource.TestCheckResourceAttr("consul_configuration_entry.foo", "config.foo", "bar"),
+					resource.TestCheckResourceAttr("consul_config_entry.foo", "name", "global"),
+					resource.TestCheckResourceAttr("consul_config_entry.foo", "kind", "proxy-defaults"),
+					resource.TestCheckResourceAttr("consul_config_entry.foo", "config.foo", "bar"),
 				),
 			},
 		},
@@ -54,7 +54,7 @@ func TestAccConsulConfigurationEntry_Errors(t *testing.T) {
 }
 
 const testAccConsulConfigurationEntry_ServiceDefaults = `
-resource "consul_configuration_entry" "foo" {
+resource "consul_config_entry" "foo" {
 	name = "foo"
 	kind = "service-defaults"
 
@@ -63,7 +63,7 @@ resource "consul_configuration_entry" "foo" {
 `
 
 const testAccConsulConfigurationEntry_ProxyDefaults = `
-resource "consul_configuration_entry" "foo" {
+resource "consul_config_entry" "foo" {
 	name = "global"
 	kind = "proxy-defaults"
 
@@ -74,7 +74,7 @@ resource "consul_configuration_entry" "foo" {
 `
 
 const testAccConsulConfigurationEntry_ProxyDefaultsWrongName = `
-resource "consul_configuration_entry" "foo" {
+resource "consul_config_entry" "foo" {
 	name = "foo"
 	kind = "proxy-defaults"
 
@@ -85,7 +85,7 @@ resource "consul_configuration_entry" "foo" {
 `
 
 const testAccConsulConfigurationEntry_ProxyDefaultsProtocolSet = `
-resource "consul_configuration_entry" "foo" {
+resource "consul_config_entry" "foo" {
 	name = "global"
 	kind = "proxy-defaults"
 
@@ -97,7 +97,7 @@ resource "consul_configuration_entry" "foo" {
 `
 
 const testAccConsulConfigurationEntry_ServiceDefaultsConfigSet = `
-resource "consul_configuration_entry" "foo" {
+resource "consul_config_entry" "foo" {
 	name = "foo"
 	kind = "service-defaults"
 
