@@ -37,7 +37,8 @@ func TestAccDataConsulServiceHealth(t *testing.T) {
 					testAccCheckDataSourceValue("data.consul_service_health.consul", "results.0.service.0.tags.#", "0"),
 					testAccCheckDataSourceValue("data.consul_service_health.consul", "results.0.service.0.address", ""),
 					testAccCheckDataSourceValue("data.consul_service_health.consul", "results.0.service.0.port", "8300"),
-					testAccCheckDataSourceValue("data.consul_service_health.consul", "results.0.service.0.meta.%", "0"),
+					// The meta field contains data since Consul 1.5.2
+					testAccCheckDataSourceValue("data.consul_service_health.consul", "results.0.service.0.meta.%", "<any>"),
 
 					testAccCheckDataSourceValue("data.consul_service_health.consul", "results.0.checks.#", "1"),
 
