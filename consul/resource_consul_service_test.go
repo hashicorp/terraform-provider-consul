@@ -328,6 +328,19 @@ resource "consul_service" "no-deregister" {
 		timeout = "1s"
 	}
 }
+
+resource "consul_service" "no-check_id" {
+	name     = "no-check_id"
+	node     = "${consul_node.compute.name}"
+	port     = 81
+
+	check {
+		name = "No check ID"
+		http = "https://www.google.com"
+		interval = "5s"
+		timeout = "1s"
+	}
+}
 `
 
 const testAccConsulServiceCheckID = `
