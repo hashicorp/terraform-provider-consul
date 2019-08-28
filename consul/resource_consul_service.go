@@ -244,7 +244,7 @@ func resourceConsulServiceCreate(d *schema.ResourceData, meta interface{}) error
 		registration.Service.Tags = s
 	}
 
-	checks, err := parseChecks(node, name, d)
+	checks, err := parseChecks(node, ident, d)
 	if err != nil {
 		return fmt.Errorf("Failed to fetch health-checks: %v", err)
 	}
@@ -324,7 +324,7 @@ func resourceConsulServiceUpdate(d *schema.ResourceData, meta interface{}) error
 		registration.Service.Tags = s
 	}
 
-	checks, err := parseChecks(node, name, d)
+	checks, err := parseChecks(node, registration.Service.ID, d)
 	if err != nil {
 		return fmt.Errorf("Failed to fetch health-checks: %v", err)
 	}
@@ -504,7 +504,7 @@ func retrieveService(client *consulapi.Client, name string, ident string, node s
 			// Filter the checks that correspond to this specific service instance
 			s.Checks = make([]*consulapi.HealthCheck, 0)
 			for _, h := range healthChecks {
-				if h.Node == node {
+				if h.Node == node && h.ServiceID == ident {
 					s.Checks = append(s.Checks, h)
 				}
 			}
@@ -515,7 +515,7 @@ func retrieveService(client *consulapi.Client, name string, ident string, node s
 	return nil, fmt.Errorf("Failed to retrieve service: '%s', services: %v", name, len(services))
 }
 
-func parseChecks(node string, name string, d *schema.ResourceData) ([]*consulapi.HealthCheck, error) {
+func parseChecks(node string, serviceID string, d *schema.ResourceData) ([]*consulapi.HealthCheck, error) {
 	// Get health checks definition
 	checks := d.Get("check").([]interface{})
 	s := []*consulapi.HealthCheck{}
@@ -576,7 +576,7 @@ func parseChecks(node string, name string, d *schema.ResourceData) ([]*consulapi
 
 		s[i] = &consulapi.HealthCheck{
 			Node:       node,
-			ServiceID:  name,
+			ServiceID:  serviceID,
 			CheckID:    check["check_id"].(string),
 			Name:       check["name"].(string),
 			Notes:      check["notes"].(string),

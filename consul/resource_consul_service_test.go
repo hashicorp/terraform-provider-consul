@@ -148,6 +148,14 @@ func TestAccConsulServiceCheck(t *testing.T) {
 					resource.TestCheckResourceAttr("consul_service.no-deregister", "check.0.deregister_critical_service_after", "30s"),
 				),
 			},
+			resource.TestStep{
+				Config: testAccConsulServiceCheckID,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("consul_service.example", "name", "example"),
+					resource.TestCheckResourceAttr("consul_service.example", "port", "80"),
+					resource.TestCheckResourceAttr("consul_service.example", "check.#", "1"),
+				),
+			},
 		},
 	})
 }
@@ -319,6 +327,32 @@ resource "consul_service" "no-deregister" {
 		interval = "5s"
 		timeout = "1s"
 	}
+}
+`
+
+const testAccConsulServiceCheckID = `
+resource "consul_service" "example" {
+  name       = "example"
+  service_id = "service_id"
+  node       = consul_node.example.name
+  port       = 80
+
+  check {
+    check_id                          = "service:example"
+    name                              = "Example health check"
+    status                            = "passing"
+    http                              = "https://www.hashicorptest.com"
+    tls_skip_verify                   = false
+    method                            = "PUT"
+    interval                          = "5s"
+    timeout                           = "1s"
+    deregister_critical_service_after = "30s"
+  }
+}
+
+resource "consul_node" "example" {
+name    = "example"
+address = "www.example.com"
 }
 `
 
