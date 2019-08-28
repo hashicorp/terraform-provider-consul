@@ -104,6 +104,7 @@ func resourceConsulService() *schema.Resource {
 						"check_id": {
 							Type:     schema.TypeString,
 							Optional: true,
+							Computed: true,
 						},
 
 						"name": {
