@@ -515,7 +515,7 @@ func retrieveService(client *consulapi.Client, name string, ident string, node s
 	return nil, fmt.Errorf("Failed to retrieve service: '%s', services: %v", name, len(services))
 }
 
-func parseChecks(node string, id string, d *schema.ResourceData) ([]*consulapi.HealthCheck, error) {
+func parseChecks(node string, serviceID string, d *schema.ResourceData) ([]*consulapi.HealthCheck, error) {
 	// Get health checks definition
 	checks := d.Get("check").([]interface{})
 	s := []*consulapi.HealthCheck{}
@@ -576,7 +576,7 @@ func parseChecks(node string, id string, d *schema.ResourceData) ([]*consulapi.H
 
 		s[i] = &consulapi.HealthCheck{
 			Node:       node,
-			ServiceID:  id,
+			ServiceID:  serviceID,
 			CheckID:    check["check_id"].(string),
 			Name:       check["name"].(string),
 			Notes:      check["notes"].(string),
