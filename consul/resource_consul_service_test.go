@@ -160,6 +160,18 @@ func TestAccConsulServiceCheck(t *testing.T) {
 	})
 }
 
+func TestAccConsulServiceCheckOrder(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:  func() { testAccPreCheck(t) },
+		Providers: testAccProviders,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccConsulServiceCheckOrder,
+			},
+		},
+	})
+}
+
 // When the same service is defined on multiple nodes, the health-checks must
 // be associated to the correct instance.
 func TestAccDataConsulServiceSameServiceMultipleNodes(t *testing.T) {
@@ -323,6 +335,36 @@ resource "consul_service" "no-deregister" {
 		check_id = "service:redis1"
 		name = "Redis health check"
 		notes = "Script based health check"
+		http = "https://www.google.com"
+		interval = "5s"
+		timeout = "1s"
+	}
+}
+`
+
+const testAccConsulServiceCheckOrder = `
+resource "consul_node" "external" {
+	name    = "external-example"
+	address = "www.hashicorptest.com"
+}
+
+resource "consul_service" "no-deregister" {
+	name     = "example-external"
+	node     = "${consul_node.external.name}"
+	port     = 80
+
+	check {
+		// Consul seems to order checks alphabetically by check_id
+		check_id = "service:redis2"
+		name = "Redis health check"
+		http = "https://www.google.com"
+		interval = "5s"
+		timeout = "1s"
+	}
+
+	check {
+		check_id = "service:redis1"
+		name = "Redis health check"
 		http = "https://www.google.com"
 		interval = "5s"
 		timeout = "1s"
