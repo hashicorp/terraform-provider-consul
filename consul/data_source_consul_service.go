@@ -24,6 +24,7 @@ const (
 	catalogServiceServiceName              = "name"
 	catalogServiceServicePort              = "port"
 	catalogServiceServiceTags              = "tags"
+	catalogServiceServiceMeta              = "meta"
 	catalogServiceTaggedAddresses          = "tagged_addresses"
 
 	// Filters
@@ -111,6 +112,10 @@ func dataSourceConsulService() *schema.Resource {
 							Computed: true,
 							Elem:     &schema.Schema{Type: schema.TypeString},
 						},
+						catalogServiceServiceMeta: {
+							Type:     schema.TypeMap,
+							Computed: true,
+						},
 						catalogServiceTaggedAddresses: {
 							Type:     schema.TypeMap,
 							Computed: true,
@@ -182,6 +187,7 @@ func dataSourceConsulServiceRead(d *schema.ResourceData, meta interface{}) error
 		m[catalogServiceServicePort] = fmt.Sprintf("%d", service.ServicePort)
 		sort.Strings(service.ServiceTags)
 		m[catalogServiceServiceTags] = service.ServiceTags
+		m[catalogServiceServiceMeta] = service.ServiceMeta
 		m[catalogServiceTaggedAddresses] = service.TaggedAddresses
 
 		l = append(l, m)

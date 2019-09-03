@@ -104,6 +104,7 @@ The following is a list of the per-node `service` attributes:
   name of the service.
 * [`port`](https://www.consul.io/docs/agent/http/catalog.html#ServicePort) -
   Port number of the service.
+* [`meta`] - The metadata linked to the service instance.
 * [`tagged_addresses`](https://www.consul.io/docs/agent/http/catalog.html#TaggedAddresses) -
   List of explicit LAN and WAN IP addresses for the agent.
 * [`tags`](https://www.consul.io/docs/agent/http/catalog.html#ServiceTags) -
