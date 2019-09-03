@@ -97,7 +97,7 @@ func resourceConsulService() *schema.Resource {
 			},
 
 			"check": {
-				Type:     schema.TypeList,
+				Type:     schema.TypeSet,
 				Optional: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
@@ -517,7 +517,7 @@ func retrieveService(client *consulapi.Client, name string, ident string, node s
 
 func parseChecks(node string, serviceID string, d *schema.ResourceData) ([]*consulapi.HealthCheck, error) {
 	// Get health checks definition
-	checks := d.Get("check").([]interface{})
+	checks := d.Get("check").(*schema.Set).List()
 	s := []*consulapi.HealthCheck{}
 	s = make([]*consulapi.HealthCheck, len(checks))
 	for i, raw := range checks {
