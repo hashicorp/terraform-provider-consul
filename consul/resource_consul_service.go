@@ -120,7 +120,7 @@ func resourceConsulService() *schema.Resource {
 						"status": {
 							Type:     schema.TypeString,
 							Optional: true,
-							Default:  "critical",
+							Computed: true,
 						},
 						"tcp": {
 							Type:     schema.TypeString,

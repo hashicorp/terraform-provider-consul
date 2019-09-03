@@ -110,8 +110,7 @@ The following attributes are available for each health-check:
   if not set.
 * `name` - (Required) The name of the health-check.
 * `notes` - (Optional, string) An opaque field meant to hold human readable text.
-* `status` - (Optional, string) The initial health-check status. Defaults
-  to `critical`.
+* `status` - (Optional, string) The initial health-check status.
 * `tcp` - (Optional, string) The TCP address and port to connect to for a TCP check.
 * `http` - (Optional, string) The HTTP endpoint to call for an HTTP check.
 * `header` - (Optional, set of headers) The headers to send for an HTTP check.
@@ -123,8 +122,9 @@ The following attributes are available for each health-check:
 * `interval` - (Required, string) The interval to wait between each health-check
   invocation.
 * `timeout` - (Required, string) The timeout value for HTTP checks.
-* `deregister_critical_service_after` - (Required, string) The time after which
+* `deregister_critical_service_after` - (Optional, string) The time after which
   the service is automatically deregistered when in the `critical` state.
+  Defaults to `30s`.
 
 Each `header` must have the following attributes:
 * `name` - (Required, string) The name of the header.
