@@ -4,14 +4,9 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/hashicorp/consul/agent/structs"
 	consulapi "github.com/hashicorp/consul/api"
 	"github.com/hashicorp/terraform/helper/schema"
-	"github.com/hashicorp/terraform/helper/validation"
-)
-
-const (
-	consulConfigEntryServiceDefaults = "service-defaults"
-	consulConfigEntryProxyDefaults   = "proxy-defaults"
 )
 
 func resourceConsulConfigurationEntry() *schema.Resource {
@@ -26,13 +21,6 @@ func resourceConsulConfigurationEntry() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
-				ValidateFunc: validation.StringInSlice(
-					[]string{
-						consulConfigEntryServiceDefaults,
-						consulConfigEntryProxyDefaults,
-					},
-					false,
-				),
 			},
 
 			"name": {
@@ -41,20 +29,9 @@ func resourceConsulConfigurationEntry() *schema.Resource {
 				ForceNew: true,
 			},
 
-			"protocol": {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-
 			"config": {
 				Type:     schema.TypeMap,
 				Optional: true,
-			},
-
-			"token": {
-				Type:      schema.TypeString,
-				Optional:  true,
-				Sensitive: true,
 			},
 		},
 	}
@@ -65,36 +42,36 @@ func resourceConsulConfigurationEntryCreate(d *schema.ResourceData, meta interfa
 }
 
 func resourceConsulConfigurationEntryUpdate(d *schema.ResourceData, meta interface{}) error {
-	var config consulapi.ConfigEntry
-	configEntries := getClient(meta).ConfigEntries()
-	configKind := d.Get("kind").(string)
-	configName := d.Get("name").(string)
+	kind := d.Get("kind").(string)
+	name := d.Get("name").(string)
+	config := d.Get("config").(map[string]interface{})
 
-	switch configKind {
-	case consulConfigEntryServiceDefaults:
-		config = &consulapi.ServiceConfigEntry{
-			Kind:     consulConfigEntryServiceDefaults,
-			Name:     configName,
-			Protocol: d.Get("protocol").(string),
+	config["kind"] = kind
+	config["name"] = name
+
+	configEntry, err := structs.DecodeConfigEntry(config)
+	if err != nil {
+		config = map[string]interface{}{
+			"kind":   kind,
+			"name":   name,
+			"config": d.Get("config").(map[string]interface{}),
 		}
-	case consulConfigEntryProxyDefaults:
-		config = &consulapi.ProxyConfigEntry{
-			Kind:   consulConfigEntryProxyDefaults,
-			Name:   configName,
-			Config: d.Get("config").(map[string]interface{}),
+		configEntry, err = structs.DecodeConfigEntry(config)
+		if err != nil {
+			return fmt.Errorf("Failed to decode config entry: %v", err)
 		}
-	default:
-		return fmt.Errorf("Config kind '%s' is not supported", configKind)
 	}
 
-	wOpts := &consulapi.WriteOptions{
-		Token: d.Get("token").(string),
-	}
-	if _, _, err := configEntries.Set(config, wOpts); err != nil {
-		return fmt.Errorf("Failed to set '%s' config entry: %#v", configName, err)
-	}
+	return fmt.Errorf("Succes: %#v", configEntry)
 
-	return resourceConsulConfigurationEntryRead(d, meta)
+	// wOpts := &consulapi.WriteOptions{
+	// 	Token: d.Get("token").(string),
+	// }
+	// if _, _, err := configEntries.Set(config, wOpts); err != nil {
+	// 	return fmt.Errorf("Failed to set '%s' config entry: %#v", configName, err)
+	// }
+
+	// return resourceConsulConfigurationEntryRead(d, meta)
 }
 
 func resourceConsulConfigurationEntryRead(d *schema.ResourceData, meta interface{}) error {
@@ -105,7 +82,7 @@ func resourceConsulConfigurationEntryRead(d *schema.ResourceData, meta interface
 	qOpts := &consulapi.QueryOptions{
 		Token: d.Get("token").(string),
 	}
-	configEntry, _, err := configEntries.Get(configKind, configName, qOpts)
+	_, _, err := configEntries.Get(configKind, configName, qOpts)
 	if err != nil {
 		if strings.Contains(err.Error(), "Unexpected response code: 404") {
 			// The config entry has been removed
@@ -113,19 +90,6 @@ func resourceConsulConfigurationEntryRead(d *schema.ResourceData, meta interface
 			return nil
 		}
 		return fmt.Errorf("Failed to fetch '%s' config entry: %#v", configName, err)
-	}
-
-	switch configKind {
-	case consulConfigEntryProxyDefaults:
-		if err = d.Set("config", configEntry.(*consulapi.ProxyConfigEntry).Config); err != nil {
-			return fmt.Errorf("Failed to set 'config': %#v", err)
-		}
-	case consulConfigEntryServiceDefaults:
-		if err = d.Set("protocol", configEntry.(*consulapi.ServiceConfigEntry).Protocol); err != nil {
-			return fmt.Errorf("Failed to set 'protocol': %#v", err)
-		}
-	default:
-		return fmt.Errorf("Config kind '%s' is not supported", configKind)
 	}
 
 	d.SetId(fmt.Sprintf("%s-%s", configKind, configName))
