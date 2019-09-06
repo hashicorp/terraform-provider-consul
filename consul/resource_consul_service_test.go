@@ -45,7 +45,7 @@ func TestAccConsulService_basic(t *testing.T) {
 				),
 			},
 			{
-				PreConfig: testAccRemoveConsulService(t),
+				PreConfig: testAccRemoveConsulService(t, "compute-example", "example"),
 				Config:    testAccConsulServiceConfigBasicMeta,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("consul_service.example", "id", "example"),
@@ -202,6 +202,22 @@ func TestAccConsulService_dontOverrideNodeMeta(t *testing.T) {
 	})
 }
 
+func TestAccConsulService_multipleInstances(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:  func() { testAccPreCheck(t) },
+		Providers: testAccProviders,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccConsulServiceMultipleInstances,
+			},
+			{
+				PreConfig: testAccRemoveConsulService(t, "redis/redis1", "redis"),
+				Config:    testAccConsulServiceMultipleInstances,
+			},
+		},
+	})
+}
+
 func testAccConsulExternalSource(s *terraform.State) error {
 	client := getClient(testAccProvider.Meta())
 	qOpts := consulapi.QueryOptions{}
@@ -235,14 +251,14 @@ func testAccCheckConsulServiceDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccRemoveConsulService(t *testing.T) func() {
+func testAccRemoveConsulService(t *testing.T, node, serviceID string) func() {
 	return func() {
 		client := getClient(testAccProvider.Meta())
 		catalog := client.Catalog()
 		wOpts := &consulapi.WriteOptions{}
 		dereg := &consulapi.CatalogDeregistration{
-			Node:      "compute-example",
-			ServiceID: "example",
+			Node:      node,
+			ServiceID: serviceID,
 		}
 		_, err := catalog.Deregister(dereg, wOpts)
 		if err != nil {
@@ -530,5 +546,48 @@ resource "consul_service" "example" {
 	name = "example"
 	node = "${consul_node.compute.name}"
 	port = 80
+}
+`
+
+// Removing one instance of a service used to make Terraform complains when refreshing the plan
+// See https://github.com/terraform-providers/terraform-provider-consul/issues/146
+const testAccConsulServiceMultipleInstances = `
+resource "consul_node" "redis1" {
+	name = "redis/redis1"
+	address = "hostname1"
+}
+resource "consul_node" "redis2" {
+	name = "redis/redis2"
+	address = "hostname2"
+}
+
+resource "consul_service" "redis1" {
+	name = "redis"
+	node = consul_node.redis1.name
+	port = 6379
+
+	check {
+		check_id                          = "service:redis1"
+		name                              = "Redis health check"
+		tcp                               = "127.0.0.1:6379"
+		interval                          = "5s"
+		timeout                           = "1s"
+		deregister_critical_service_after = "30s"
+	}
+}
+
+resource "consul_service" "redis2" {
+	name = "redis"
+	node = consul_node.redis2.name
+	port = 6379
+
+	check {
+		check_id                          = "service:redis1"
+		name                              = "Redis health check"
+		tcp                               = "127.0.0.1:6379"
+		interval                          = "5s"
+		timeout                           = "1s"
+		deregister_critical_service_after = "30s"
+	}
 }
 `
