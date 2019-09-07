@@ -6,7 +6,6 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/hashicorp/terraform/config"
 	"github.com/hashicorp/terraform/configs/configschema"
 	"github.com/hashicorp/terraform/helper/schema"
 	"github.com/hashicorp/terraform/terraform"
@@ -41,12 +40,7 @@ func TestResourceProvider_Configure(t *testing.T) {
 		"scheme":     "https",
 	}
 
-	rawConfig, err := config.NewRawConfig(raw)
-	if err != nil {
-		t.Fatalf("err: %s", err)
-	}
-
-	err = rp.Configure(terraform.NewResourceConfig(rawConfig))
+	err := rp.Configure(terraform.NewResourceConfigRaw(raw))
 	if err != nil {
 		t.Fatalf("err: %s", err)
 	}
@@ -64,12 +58,7 @@ func TestResourceProvider_ConfigureTLS(t *testing.T) {
 		"scheme":     "https",
 	}
 
-	rawConfig, err := config.NewRawConfig(raw)
-	if err != nil {
-		t.Fatalf("err: %s", err)
-	}
-
-	err = rp.Configure(terraform.NewResourceConfig(rawConfig))
+	err := rp.Configure(terraform.NewResourceConfigRaw(raw))
 	if err != nil {
 		t.Fatalf("err: %s", err)
 	}
@@ -84,12 +73,7 @@ func TestResourceProvider_CAPath(t *testing.T) {
 		"scheme":  "https",
 	}
 
-	rawConfig, err := config.NewRawConfig(raw)
-	if err != nil {
-		t.Fatalf("err: %s", err)
-	}
-
-	err = rp.Configure(terraform.NewResourceConfig(rawConfig))
+	err := rp.Configure(terraform.NewResourceConfigRaw(raw))
 	if err != nil {
 		t.Fatalf("err: %s", err)
 	}
@@ -105,12 +89,7 @@ func TestResourceProvider_ConfigureTLSInsecureHttps(t *testing.T) {
 		"insecure_https": true,
 	}
 
-	rawConfig, err := config.NewRawConfig(raw)
-	if err != nil {
-		t.Fatalf("err: %s", err)
-	}
-
-	err = rp.Configure(terraform.NewResourceConfig(rawConfig))
+	err := rp.Configure(terraform.NewResourceConfigRaw(raw))
 	if err != nil {
 		t.Fatalf("err: %s", err)
 	}
@@ -126,12 +105,7 @@ func TestResourceProvider_ConfigureTLSInsecureHttpsMismatch(t *testing.T) {
 		"insecure_https": true,
 	}
 
-	rawConfig, err := config.NewRawConfig(raw)
-	if err != nil {
-		t.Fatalf("err: %s", err)
-	}
-
-	err = rp.Configure(terraform.NewResourceConfig(rawConfig))
+	err := rp.Configure(terraform.NewResourceConfigRaw(raw))
 	if err == nil {
 		t.Fatal("Provider should error if insecure_https is set but scheme is not https")
 	}
