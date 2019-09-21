@@ -115,6 +115,7 @@ func dataSourceConsulService() *schema.Resource {
 						catalogServiceServiceMeta: {
 							Type:     schema.TypeMap,
 							Computed: true,
+							Elem:     &schema.Schema{Type: schema.TypeString},
 						},
 						catalogServiceTaggedAddresses: {
 							Type:     schema.TypeMap,
