@@ -1,20 +1,21 @@
 package consul
 
 import (
+	"encoding/json"
 	"fmt"
 	"strings"
 
-	"github.com/hashicorp/consul/agent/structs"
+	"github.com/hashicorp/consul/api"
 	consulapi "github.com/hashicorp/consul/api"
 	"github.com/hashicorp/terraform/helper/schema"
 )
 
-func resourceConsulConfigurationEntry() *schema.Resource {
+func resourceConsulConfigEntry() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceConsulConfigurationEntryCreate,
-		Update: resourceConsulConfigurationEntryCreate,
-		Read:   resourceConsulConfigurationEntryRead,
-		Delete: resourceConsulConfigurationEntryDelete,
+		Create: resourceConsulConfigEntryUpdate,
+		Update: resourceConsulConfigEntryUpdate,
+		Read:   resourceConsulConfigEntryRead,
+		Delete: resourceConsulConfigEntryDelete,
 
 		Schema: map[string]*schema.Schema{
 			"kind": {
@@ -29,60 +30,41 @@ func resourceConsulConfigurationEntry() *schema.Resource {
 				ForceNew: true,
 			},
 
-			"config": {
-				Type:     schema.TypeMap,
+			"config_json": {
+				Type:     schema.TypeString,
 				Optional: true,
 			},
 		},
 	}
 }
 
-func resourceConsulConfigurationEntryCreate(d *schema.ResourceData, meta interface{}) error {
-	return resourceConsulConfigurationEntryUpdate(d, meta)
-}
+func resourceConsulConfigEntryUpdate(d *schema.ResourceData, meta interface{}) error {
+	configEntries := getClient(meta).ConfigEntries()
 
-func resourceConsulConfigurationEntryUpdate(d *schema.ResourceData, meta interface{}) error {
 	kind := d.Get("kind").(string)
 	name := d.Get("name").(string)
-	config := d.Get("config").(map[string]interface{})
 
-	config["kind"] = kind
-	config["name"] = name
-
-	configEntry, err := structs.DecodeConfigEntry(config)
+	configEntry, err := makeConfigEntry(kind, name, d.Get("config_json").(string))
 	if err != nil {
-		config = map[string]interface{}{
-			"kind":   kind,
-			"name":   name,
-			"config": d.Get("config").(map[string]interface{}),
-		}
-		configEntry, err = structs.DecodeConfigEntry(config)
-		if err != nil {
-			return fmt.Errorf("Failed to decode config entry: %v", err)
-		}
+		return fmt.Errorf("Failed to decode config entry: %v", err)
 	}
 
-	return fmt.Errorf("Succes: %#v", configEntry)
+	wOpts := &consulapi.WriteOptions{}
+	if _, _, err := configEntries.Set(configEntry, wOpts); err != nil {
+		return fmt.Errorf("Failed to set '%s' config entry: %#v", name, err)
+	}
 
-	// wOpts := &consulapi.WriteOptions{
-	// 	Token: d.Get("token").(string),
-	// }
-	// if _, _, err := configEntries.Set(config, wOpts); err != nil {
-	// 	return fmt.Errorf("Failed to set '%s' config entry: %#v", configName, err)
-	// }
-
-	// return resourceConsulConfigurationEntryRead(d, meta)
+	d.SetId(fmt.Sprintf("%s-%s", kind, name))
+	return resourceConsulConfigEntryRead(d, meta)
 }
 
-func resourceConsulConfigurationEntryRead(d *schema.ResourceData, meta interface{}) error {
+func resourceConsulConfigEntryRead(d *schema.ResourceData, meta interface{}) error {
 	configEntries := getClient(meta).ConfigEntries()
 	configKind := d.Get("kind").(string)
 	configName := d.Get("name").(string)
 
-	qOpts := &consulapi.QueryOptions{
-		Token: d.Get("token").(string),
-	}
-	_, _, err := configEntries.Get(configKind, configName, qOpts)
+	qOpts := &consulapi.QueryOptions{}
+	configEntry, _, err := configEntries.Get(configKind, configName, qOpts)
 	if err != nil {
 		if strings.Contains(err.Error(), "Unexpected response code: 404") {
 			// The config entry has been removed
@@ -92,22 +74,75 @@ func resourceConsulConfigurationEntryRead(d *schema.ResourceData, meta interface
 		return fmt.Errorf("Failed to fetch '%s' config entry: %#v", configName, err)
 	}
 
-	d.SetId(fmt.Sprintf("%s-%s", configKind, configName))
+	_, _, configJSON, err := parseConfigEntry(configEntry)
+	if err != nil {
+		return fmt.Errorf("Failed to parse ConfigEntry: %v", err)
+	}
+
+	if err = d.Set("config_json", string(configJSON)); err != nil {
+		return fmt.Errorf("Failed to set 'config_json': %v", err)
+	}
 
 	return nil
 }
 
-func resourceConsulConfigurationEntryDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceConsulConfigEntryDelete(d *schema.ResourceData, meta interface{}) error {
 	configEntries := getClient(meta).ConfigEntries()
 	configKind := d.Get("kind").(string)
 	configName := d.Get("name").(string)
 
-	wOpts := &consulapi.WriteOptions{
-		Token: d.Get("token").(string),
-	}
+	wOpts := &consulapi.WriteOptions{}
 	if _, err := configEntries.Delete(configKind, configName, wOpts); err != nil {
 		return fmt.Errorf("Failed to delete '%s' config entry: %#v", configName, err)
 	}
 	d.SetId("")
 	return nil
+}
+
+func makeConfigEntry(kind, name, config string) (api.ConfigEntry, error) {
+	var configMap map[string]interface{}
+	if err := json.Unmarshal([]byte(config), &configMap); err != nil {
+		return nil, fmt.Errorf("Failed to unmarshal configMap: %v", err)
+	}
+
+	configMap["kind"] = kind
+	configMap["name"] = name
+
+	configEntry, err := api.DecodeConfigEntry(configMap)
+	if err != nil {
+		return nil, fmt.Errorf("Failed to decode config entry: %v", err)
+	}
+
+	return configEntry, nil
+}
+
+func parseConfigEntry(configEntry api.ConfigEntry) (string, string, string, error) {
+	// We need to transform the ConfigEntry to a representation that works with
+	// the config_json attribute
+	name := configEntry.GetName()
+	kind := configEntry.GetKind()
+
+	marshalled, err := json.Marshal(configEntry)
+	if err != nil {
+		return "", "", "", fmt.Errorf("Failed to marshal %v: %v", configEntry, err)
+	}
+
+	var configMap map[string]interface{}
+	if err = json.Unmarshal(marshalled, &configMap); err != nil {
+		// This should never happen
+		return "", "", "", fmt.Errorf("Failed to unmarshal %v: %v", marshalled, err)
+	}
+
+	// Remove the fields unrelated to the configEntry
+	delete(configMap, "CreateIndex")
+	delete(configMap, "ModifyIndex")
+	delete(configMap, "Kind")
+	delete(configMap, "Name")
+
+	configJSON, err := json.Marshal(configMap)
+	if err != nil {
+		return "", "", "", fmt.Errorf("Failed to marshal %v: %v", configMap, err)
+	}
+
+	return kind, name, string(configJSON), nil
 }

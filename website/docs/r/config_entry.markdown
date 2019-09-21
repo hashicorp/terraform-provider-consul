@@ -15,23 +15,103 @@ Consul.
 ## Example Usage
 
 ```hcl
-resource "consul_config_entry" "service-defaults" {
-	name = "foo"
-	kind = "service-defaults"
+resource "consul_config_entry" "proxy_defaults" {
+  kind = "proxy-defaults"
+  name = "global"
 
-	protocol = "https"
+  config_json = jsonencode({
+    MeshGateway = {}
+    Config = {
+      local_connect_timeout_ms = 1000
+      handshake_timeout_ms     = 10000
+    }
+  })
 }
-```
 
-```hcl
-resource "consul_config_entry" "proxy-defaults" {
-	name = "global"
-	kind = "proxy-defaults"
+resource "consul_config_entry" "web" {
+  name = "web"
+  kind = "service-defaults"
 
-	config = {
-        local_connect_timeout_ms = 1000
-        handshake_timeout_ms = 1000
-	}
+  config_json = jsonencode({
+    MeshGateway = {}
+    Protocol    = "http"
+  })
+}
+
+resource "consul_config_entry" "admin" {
+  name = "admin"
+  kind = "service-defaults"
+
+  config_json = jsonencode({
+    MeshGateway = {}
+    Protocol    = "http"
+  })
+}
+
+resource "consul_config_entry" "service_resolver" {
+  kind = "service-resolver"
+  name = consul_config_entry.web.name
+
+  config_json = jsonencode({
+    DefaultSubset = "v1"
+
+    Subsets = {
+      "v1" = {
+        Filter = "Service.Meta.version == v1"
+      }
+      "v2" = {
+        Filter = "Service.Meta.version == v2"
+      }
+    }
+  })
+
+  depends_on = [
+    consul_config_entry.web,
+    consul_config_entry.admin
+  ]
+}
+
+resource "consul_config_entry" "service_splitter" {
+  kind = "service-splitter"
+  name = consul_config_entry.web.name
+
+  config_json = jsonencode({
+    Splits = [
+      {
+        Weight        = 90
+        ServiceSubset = "v1"
+      },
+      {
+        Weight        = 10
+        ServiceSubset = "v2"
+      },
+    ]
+  })
+
+  depends_on = [consul_config_entry.service_resolver]
+}
+
+resource "consul_config_entry" "service_router" {
+  kind = "service-router"
+  name = "web"
+
+  config_json = jsonencode({
+    Routes = [
+      {
+        Match = {
+          HTTP = {
+            PathPrefix = "/admin"
+          }
+        }
+
+        Destination = {
+          Service = "admin"
+        }
+      },
+      # NOTE: a default catch-all will send unmatched traffic to "web"
+    ]
+  })
+
 }
 ```
 
@@ -39,19 +119,11 @@ resource "consul_config_entry" "proxy-defaults" {
 
 The following arguments are supported:
 
-* `kind` - (Required) The kind of configuration entry to register. Can be
-`proxy-defaults` or `service-defaults`.
+* `kind` - (Required) The kind of configuration entry to register.
 
-* `name` - (Required) The name of the configuration entry being registred. If
-`kind` is `proxy-defaults`, `name` must be `global`.
+* `name` - (Required) The name of the configuration entry being registred.
 
-* `config` - (Optional) An arbitrary map of configuration values used by Connect
-proxies. Can only be set when `kind` is `proxy-defaults`.
-
-* `protocol` - (Optional) The protocol of the service. Can only be set when
-`kind` is `service-defaults`.
-
-* `token` - (Optional) ACL token.
+* `config_json` - (Optional) An arbitrary map of configuration values.
 
 ## Attributes Reference
 
@@ -64,8 +136,4 @@ The following attributes are exported:
 
 * `name` - The name of the configuration entry.
 
-* `config` - A map of configuration values.
-
-* `protocol` - The protocol of the service.
-
-* `token` - ACL token.
+* `config_json` - A map of configuration values.
