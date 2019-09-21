@@ -108,3 +108,5 @@ The following is a list of the per-node `service` attributes:
   List of explicit LAN and WAN IP addresses for the agent.
 * [`tags`](https://www.consul.io/docs/agent/http/catalog.html#ServiceTags) -
   List of tags for the service.
+* [`meta`](https://www.consul.io/docs/agent/http/catalog.html#Meta) - Service meta
+  data tag information, if any.

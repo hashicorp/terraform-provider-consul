@@ -490,10 +490,6 @@ func retrieveService(client *consulapi.Client, name string, ident string, node s
 		return nil, err
 	}
 
-	if len(services) == 0 {
-		return nil, NoServiceRegistered
-	}
-
 	// Only one service with a given ID may be present per node
 	for _, s := range services {
 		if (s.ServiceID == ident) && (s.Node == node) {
@@ -513,7 +509,8 @@ func retrieveService(client *consulapi.Client, name string, ident string, node s
 		}
 	}
 
-	return nil, fmt.Errorf("Failed to retrieve service: '%s', services: %v", name, len(services))
+	// No matching service has been found
+	return nil, NoServiceRegistered
 }
 
 func parseChecks(node string, serviceID string, d *schema.ResourceData) ([]*consulapi.HealthCheck, error) {

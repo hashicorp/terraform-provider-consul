@@ -55,6 +55,7 @@ func TestAccDataConsulService_filtered(t *testing.T) {
 					testAccCheckDataSourceValue("data.consul_service.read_f", "service.0.node_name", "foobar_dummy"),
 					testAccCheckDataSourceValue("data.consul_service.read_f", "service.0.port", "<any>"),
 					testAccCheckDataSourceValue("data.consul_service.read_f", "service.0.tags.#", "2"),
+					testAccCheckDataSourceValue("data.consul_service.read_f", "service.0.meta.test", "test"),
 				),
 			},
 		},
@@ -114,6 +115,9 @@ resource "consul_service" "service2" {
 	name       = "redis"
 	port       = 8000
 	tags       = ["master", "v1"]
+	meta       = {
+		test  = "test"
+	}
 }
 
 data "consul_service" "read_f" {
