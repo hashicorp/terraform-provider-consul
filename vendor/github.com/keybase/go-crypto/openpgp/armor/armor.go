@@ -12,7 +12,6 @@ import (
 	"encoding/base64"
 	"io"
 	"strings"
-	"unicode"
 
 	"github.com/keybase/go-crypto/openpgp/errors"
 )
@@ -68,14 +67,7 @@ type lineReader struct {
 	in  *bufio.Reader
 	buf []byte
 	eof bool
-	crc *uint32
-}
-
-// ourIsSpace checks if a rune is either space according to unicode
-// package, or ZeroWidthSpace (which is not a space according to
-// unicode module). Used to trim lines during header reading.
-func ourIsSpace(r rune) bool {
-	return r == '\u200b' || unicode.IsSpace(r)
+	crc uint32
 }
 
 func (l *lineReader) Read(p []byte) (n int, err error) {
@@ -89,13 +81,13 @@ func (l *lineReader) Read(p []byte) (n int, err error) {
 		return
 	}
 
-	line, _, err := l.in.ReadLine()
+	line, isPrefix, err := l.in.ReadLine()
 	if err != nil {
 		return
 	}
-
-	// Entry-level cleanup, just trim spaces.
-	line = bytes.TrimFunc(line, ourIsSpace)
+	if isPrefix {
+		return 0, ArmorCorrupt
+	}
 
 	if len(line) == 5 && line[0] == '=' {
 		// This is the checksum line
@@ -105,17 +97,13 @@ func (l *lineReader) Read(p []byte) (n int, err error) {
 		if m != 3 || err != nil {
 			return
 		}
-		crc := uint32(expectedBytes[0])<<16 |
+		l.crc = uint32(expectedBytes[0])<<16 |
 			uint32(expectedBytes[1])<<8 |
 			uint32(expectedBytes[2])
-		l.crc = &crc
 
 		for {
 			line, _, err = l.in.ReadLine()
-			if err == io.EOF {
-				break
-			}
-			if err != nil {
+			if err != nil && err != io.EOF {
 				return
 			}
 			if len(strings.TrimSpace(string(line))) > 0 {
@@ -130,24 +118,9 @@ func (l *lineReader) Read(p []byte) (n int, err error) {
 		return 0, io.EOF
 	}
 
-	if bytes.HasPrefix(line, armorEnd) {
-		// Unexpected ending, there was no checksum.
-		l.eof = true
-		l.crc = nil
-		return 0, io.EOF
+	if len(line) > 96 {
+		return 0, ArmorCorrupt
 	}
-
-	// Clean-up line from whitespace to pass it further (to base64
-	// decoder). This is done after test for CRC and test for
-	// armorEnd. Keys that have whitespace in CRC will have CRC
-	// treated as part of the payload and probably fail in base64
-	// reading.
-	line = bytes.Map(func(r rune) rune {
-		if ourIsSpace(r) {
-			return -1
-		}
-		return r
-	}, line)
 
 	n = copy(p, line)
 	bytesToSave := len(line) - n
@@ -176,7 +149,7 @@ func (r *openpgpReader) Read(p []byte) (n int, err error) {
 	r.currentCRC = crc24(r.currentCRC, p[:n])
 
 	if err == io.EOF {
-		if r.lReader.crc != nil && *r.lReader.crc != uint32(r.currentCRC&crc24Mask) {
+		if r.lReader.crc != uint32(r.currentCRC&crc24Mask) {
 			return 0, ArmorCorrupt
 		}
 	}
@@ -230,7 +203,7 @@ TryNextBlock:
 			p.Header[lastKey] += string(line)
 			continue
 		}
-		line = bytes.TrimFunc(line, ourIsSpace)
+		line = bytes.TrimSpace(line)
 		if len(line) == 0 {
 			break
 		}
