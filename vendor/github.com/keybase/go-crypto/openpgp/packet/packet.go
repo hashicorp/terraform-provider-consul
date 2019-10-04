@@ -11,7 +11,6 @@ import (
 	"crypto/aes"
 	"crypto/cipher"
 	"crypto/des"
-	"crypto/elliptic"
 	"io"
 	"math/big"
 
@@ -387,18 +386,17 @@ func Read(r io.Reader) (p Packet, err error) {
 type SignatureType uint8
 
 const (
-	SigTypeBinary             SignatureType = 0
-	SigTypeText                             = 1
-	SigTypeGenericCert                      = 0x10
-	SigTypePersonaCert                      = 0x11
-	SigTypeCasualCert                       = 0x12
-	SigTypePositiveCert                     = 0x13
-	SigTypeSubkeyBinding                    = 0x18
-	SigTypePrimaryKeyBinding                = 0x19
-	SigTypeDirectSignature                  = 0x1F
-	SigTypeKeyRevocation                    = 0x20
-	SigTypeSubkeyRevocation                 = 0x28
-	SigTypeIdentityRevocation               = 0x30
+	SigTypeBinary            SignatureType = 0
+	SigTypeText                            = 1
+	SigTypeGenericCert                     = 0x10
+	SigTypePersonaCert                     = 0x11
+	SigTypeCasualCert                      = 0x12
+	SigTypePositiveCert                    = 0x13
+	SigTypeSubkeyBinding                   = 0x18
+	SigTypePrimaryKeyBinding               = 0x19
+	SigTypeDirectSignature                 = 0x1F
+	SigTypeKeyRevocation                   = 0x20
+	SigTypeSubkeyRevocation                = 0x28
 )
 
 // PublicKeyAlgorithm represents the different public key system specified for
@@ -413,19 +411,17 @@ const (
 	PubKeyAlgoElGamal        PublicKeyAlgorithm = 16
 	PubKeyAlgoDSA            PublicKeyAlgorithm = 17
 	// RFC 6637, Section 5.
-	PubKeyAlgoECDH           PublicKeyAlgorithm = 18
-	PubKeyAlgoECDSA          PublicKeyAlgorithm = 19
-
-	PubKeyAlgoBadElGamal     PublicKeyAlgorithm = 20 // Reserved (deprecated, formerly ElGamal Encrypt or Sign)
+	PubKeyAlgoECDH  PublicKeyAlgorithm = 18
+	PubKeyAlgoECDSA PublicKeyAlgorithm = 19
 	// RFC -1
-	PubKeyAlgoEdDSA          PublicKeyAlgorithm = 22
+	PubKeyAlgoEdDSA PublicKeyAlgorithm = 22
 )
 
 // CanEncrypt returns true if it's possible to encrypt a message to a public
 // key of the given type.
 func (pka PublicKeyAlgorithm) CanEncrypt() bool {
 	switch pka {
-	case PubKeyAlgoRSA, PubKeyAlgoRSAEncryptOnly, PubKeyAlgoElGamal, PubKeyAlgoECDH:
+	case PubKeyAlgoRSA, PubKeyAlgoRSAEncryptOnly, PubKeyAlgoElGamal:
 		return true
 	}
 	return false
@@ -527,25 +523,6 @@ func writeMPI(w io.Writer, bitLength uint16, mpiBytes []byte) (err error) {
 		_, err = w.Write(mpiBytes)
 	}
 	return
-}
-
-func WritePaddedBigInt(w io.Writer, length int, X *big.Int) (n int, err error) {
-	bytes := X.Bytes()
-	n1, err := w.Write(make([]byte, length-len(bytes)))
-	if err != nil {
-		return n1, err
-	}
-	n2, err := w.Write(bytes)
-	if err != nil {
-		return n2, err
-	}
-	return (n1 + n2), err
-}
-
-// Minimum number of bytes to fit the curve coordinates. All
-// coordinates have to be 0-padded to this length.
-func mpiPointByteLength(curve elliptic.Curve) int {
-	return (curve.Params().P.BitLen() + 7) / 8
 }
 
 // writeBig serializes a *big.Int to w.
