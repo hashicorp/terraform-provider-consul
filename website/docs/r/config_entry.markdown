@@ -133,8 +133,7 @@ The following attributes are exported:
 
 * `id` - The id of the configuration entry.
 
-* `kind` - The kind of the configuration entry, `proxy-defaults` or
-`service-defaults`.
+* `kind` - The kind of the configuration entry.
 
 * `name` - The name of the configuration entry.
 
