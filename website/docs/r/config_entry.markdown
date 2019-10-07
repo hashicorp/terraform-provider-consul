@@ -17,6 +17,8 @@ Consul.
 ```hcl
 resource "consul_config_entry" "proxy_defaults" {
   kind = "proxy-defaults"
+  # Note that only "global" is currently supported for proxy-defaults and that
+  # Consul will override this attribute if you set it to anything else.
   name = "global"
 
   config_json = jsonencode({
