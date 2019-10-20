@@ -9,6 +9,7 @@ import (
 	"github.com/hashicorp/consul/api"
 	consulapi "github.com/hashicorp/consul/api"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/mitchellh/mapstructure"
 )
 
 func resourceConsulConfigEntry() *schema.Resource {
@@ -48,7 +49,7 @@ func resourceConsulConfigEntryUpdate(d *schema.ResourceData, meta interface{}) e
 
 	configEntry, err := makeConfigEntry(kind, name, d.Get("config_json").(string))
 	if err != nil {
-		return fmt.Errorf("Failed to decode config entry: %v", err)
+		return err
 	}
 
 	wOpts := &consulapi.WriteOptions{}
@@ -110,7 +111,7 @@ func makeConfigEntry(kind, name, config string) (api.ConfigEntry, error) {
 	configMap["kind"] = kind
 	configMap["name"] = name
 
-	configEntry, err := api.DecodeConfigEntry(configMap)
+	configEntry, err := decodeConfigEntry(configMap)
 	if err != nil {
 		return nil, fmt.Errorf("Failed to decode config entry: %v", err)
 	}
@@ -171,4 +172,42 @@ func diffConfigJSON(k, old, new string, d *schema.ResourceData) bool {
 	}
 
 	return reflect.DeepEqual(oldEntry, newEntry)
+}
+
+// This could be removed if 'ErrorUnused: true' is upstreamed in
+// https://github.com/hashicorp/consul/blob/fdd10dd8b872466f8a614c7ed76b3becf2c5fc4c/api/config_entry.go#L178
+func decodeConfigEntry(raw map[string]interface{}) (consulapi.ConfigEntry, error) {
+	var entry consulapi.ConfigEntry
+
+	kindVal, ok := raw["Kind"]
+	if !ok {
+		kindVal, ok = raw["kind"]
+	}
+	if !ok {
+		return nil, fmt.Errorf("Payload does not contain a kind/Kind key at the top level")
+	}
+
+	if kindStr, ok := kindVal.(string); ok {
+		newEntry, err := consulapi.MakeConfigEntry(kindStr, "")
+		if err != nil {
+			return nil, err
+		}
+		entry = newEntry
+	} else {
+		return nil, fmt.Errorf("Kind value in payload is not a string")
+	}
+
+	decodeConf := &mapstructure.DecoderConfig{
+		DecodeHook:       mapstructure.StringToTimeDurationHookFunc(),
+		Result:           &entry,
+		WeaklyTypedInput: true,
+		ErrorUnused:      true,
+	}
+
+	decoder, err := mapstructure.NewDecoder(decodeConf)
+	if err != nil {
+		return nil, err
+	}
+
+	return entry, decoder.Decode(raw)
 }
