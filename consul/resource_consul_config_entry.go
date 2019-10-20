@@ -6,7 +6,6 @@ import (
 	"reflect"
 	"strings"
 
-	"github.com/hashicorp/consul/api"
 	consulapi "github.com/hashicorp/consul/api"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 	"github.com/mitchellh/mapstructure"
@@ -102,7 +101,7 @@ func resourceConsulConfigEntryDelete(d *schema.ResourceData, meta interface{}) e
 	return nil
 }
 
-func makeConfigEntry(kind, name, config string) (api.ConfigEntry, error) {
+func makeConfigEntry(kind, name, config string) (consulapi.ConfigEntry, error) {
 	var configMap map[string]interface{}
 	if err := json.Unmarshal([]byte(config), &configMap); err != nil {
 		return nil, fmt.Errorf("Failed to unmarshal configMap: %v", err)
@@ -119,7 +118,7 @@ func makeConfigEntry(kind, name, config string) (api.ConfigEntry, error) {
 	return configEntry, nil
 }
 
-func configEntryToMap(configEntry api.ConfigEntry) (map[string]interface{}, error) {
+func configEntryToMap(configEntry consulapi.ConfigEntry) (map[string]interface{}, error) {
 	marshalled, err := json.Marshal(configEntry)
 	if err != nil {
 		return nil, fmt.Errorf("Failed to marshal %v: %v", configEntry, err)
@@ -140,7 +139,7 @@ func configEntryToMap(configEntry api.ConfigEntry) (map[string]interface{}, erro
 	return configMap, nil
 }
 
-func parseConfigEntry(configEntry api.ConfigEntry) (string, string, string, error) {
+func parseConfigEntry(configEntry consulapi.ConfigEntry) (string, string, string, error) {
 	// We need to transform the ConfigEntry to a representation that works with
 	// the config_json attribute
 	name := configEntry.GetName()
