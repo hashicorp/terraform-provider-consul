@@ -21,6 +21,14 @@ func TestAccConsulConfigEntry_basic(t *testing.T) {
 				),
 			},
 			{
+				Config: testAccConsulConfigEntry_ServiceDefaultsOptionalField,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("consul_config_entry.foo", "name", "foo"),
+					resource.TestCheckResourceAttr("consul_config_entry.foo", "kind", "service-defaults"),
+					resource.TestCheckResourceAttr("consul_config_entry.foo", "config_json", "{\"MeshGateway\":{},\"Protocol\":\"https\"}"),
+				),
+			},
+			{
 				Config: testAccConsulConfigEntry_ProxyDefaults,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("consul_config_entry.foo", "name", "global"),
@@ -76,6 +84,17 @@ resource "consul_config_entry" "foo" {
 
 	config_json = jsonencode({
 		MeshGateway = {}
+		Protocol    = "https"
+	})
+}
+`
+
+const testAccConsulConfigEntry_ServiceDefaultsOptionalField = `
+resource "consul_config_entry" "foo" {
+	name = "foo"
+	kind = "service-defaults"
+
+	config_json = jsonencode({
 		Protocol    = "https"
 	})
 }
