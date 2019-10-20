@@ -3,6 +3,7 @@ package consul
 import (
 	"encoding/json"
 	"fmt"
+	"reflect"
 	"strings"
 
 	"github.com/hashicorp/consul/api"
@@ -31,8 +32,9 @@ func resourceConsulConfigEntry() *schema.Resource {
 			},
 
 			"config_json": {
-				Type:     schema.TypeString,
-				Optional: true,
+				Type:             schema.TypeString,
+				Optional:         true,
+				DiffSuppressFunc: diffConfigJSON,
 			},
 		},
 	}
@@ -116,21 +118,16 @@ func makeConfigEntry(kind, name, config string) (api.ConfigEntry, error) {
 	return configEntry, nil
 }
 
-func parseConfigEntry(configEntry api.ConfigEntry) (string, string, string, error) {
-	// We need to transform the ConfigEntry to a representation that works with
-	// the config_json attribute
-	name := configEntry.GetName()
-	kind := configEntry.GetKind()
-
+func configEntryToMap(configEntry api.ConfigEntry) (map[string]interface{}, error) {
 	marshalled, err := json.Marshal(configEntry)
 	if err != nil {
-		return "", "", "", fmt.Errorf("Failed to marshal %v: %v", configEntry, err)
+		return nil, fmt.Errorf("Failed to marshal %v: %v", configEntry, err)
 	}
 
 	var configMap map[string]interface{}
 	if err = json.Unmarshal(marshalled, &configMap); err != nil {
 		// This should never happen
-		return "", "", "", fmt.Errorf("Failed to unmarshal %v: %v", marshalled, err)
+		return nil, fmt.Errorf("Failed to unmarshal %v: %v", marshalled, err)
 	}
 
 	// Remove the fields unrelated to the configEntry
@@ -139,10 +136,39 @@ func parseConfigEntry(configEntry api.ConfigEntry) (string, string, string, erro
 	delete(configMap, "Kind")
 	delete(configMap, "Name")
 
+	return configMap, nil
+}
+
+func parseConfigEntry(configEntry api.ConfigEntry) (string, string, string, error) {
+	// We need to transform the ConfigEntry to a representation that works with
+	// the config_json attribute
+	name := configEntry.GetName()
+	kind := configEntry.GetKind()
+
+	configMap, err := configEntryToMap(configEntry)
+	if err != nil {
+		return "", "", "", fmt.Errorf("Failed to convert config entry to map")
+	}
+
 	configJSON, err := json.Marshal(configMap)
 	if err != nil {
 		return "", "", "", fmt.Errorf("Failed to marshal %v: %v", configMap, err)
 	}
 
 	return kind, name, string(configJSON), nil
+}
+func diffConfigJSON(k, old, new string, d *schema.ResourceData) bool {
+	kind := d.Get("kind").(string)
+	name := d.Get("name").(string)
+
+	oldEntry, err := makeConfigEntry(kind, name, old)
+	if err != nil {
+		return false
+	}
+	newEntry, err := makeConfigEntry(kind, name, new)
+	if err != nil {
+		return false
+	}
+
+	return reflect.DeepEqual(oldEntry, newEntry)
 }
