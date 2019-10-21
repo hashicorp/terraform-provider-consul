@@ -38,5 +38,6 @@ The following arguments are supported:
 The following attributes are exported:
 
 * `description` - The description of the ACL token.
-* `policies` - The policies associated with the ACL token.
+* `policies` - A list of policies associated with the ACL token. Each entry has
+  an `id` and a `name` attribute.
 * `local` - Whether the ACL token is local to the datacenter it was created within.

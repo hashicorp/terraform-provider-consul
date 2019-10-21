@@ -16,6 +16,8 @@ func TestAccDataACLToken_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDataSourceValue("data.consul_acl_token.read", "description", "test"),
 					testAccCheckDataSourceValue("data.consul_acl_token.read", "policies.#", "1"),
+					testAccCheckDataSourceValue("data.consul_acl_token.read", "policies.0.name", "test"),
+					testAccCheckDataSourceValue("data.consul_acl_token.read", "policies.0.id", "<any>"),
 					testAccCheckDataSourceValue("data.consul_acl_token.read", "local", "true"),
 				),
 			},
