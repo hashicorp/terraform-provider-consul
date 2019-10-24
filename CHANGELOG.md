@@ -1,8 +1,32 @@
-## 2.5.1 (Unreleased)
+## 2.6.0 (Unreleased)
+
+NEW FEATURES:
+
+* The `consul_acl_role`, `consul_acl_auth_method` and `consul_acl_binding_rule` can now be used to manage the Consul ACL system ([[#128](https://github.com/terraform-providers/terraform-provider-consul/issues/128)] and [[#123](https://github.com/terraform-providers/terraform-provider-consul/issues/123)]).
+
+* The `consul_acl_token_policy_attachment` can be used to attach a policy to a token created outside the Terraform configuration ([[#130](https://github.com/terraform-providers/terraform-provider-consul/issues/130)] and [[#125](https://github.com/terraform-providers/terraform-provider-consul/issues/125)]).
+
+* The `consul_config_entry` can now be used to manage Consul Configuration Entries ([[#127](https://github.com/terraform-providers/terraform-provider-consul/issues/127)]).
+
+* The `consul_acl_auth_method`, `consul_acl_policy`, `consul_acl_role` datasources can now be used to retrieve information about the Consul ACL objects ([[#153](https://github.com/terraform-providers/terraform-provider-consul/issues/153)]).
+
+* The `consul_acl_token` can now be used to read public token information ([[#137](https://github.com/terraform-providers/terraform-provider-consul/issues/137)] and [[#126](https://github.com/terraform-providers/terraform-provider-consul/issues/126)]).
+
+* The `consul_acl_token_secret_id` can now be used to read a token secret ID ([[#137](https://github.com/terraform-providers/terraform-provider-consul/issues/137)] and [[#126](https://github.com/terraform-providers/terraform-provider-consul/issues/126)]).
+
+IMPROVEMENTS:
+
+* The `consul_service` resource can now set the service metadata ([[#122](https://github.com/terraform-providers/terraform-provider-consul/issues/122)]).
+
+* The `consul_service` datasource now returns the service metadata ([[#148](https://github.com/terraform-providers/terraform-provider-consul/issues/148)] and [[#132](https://github.com/terraform-providers/terraform-provider-consul/issues/132)]).
 
 BUG FIXES:
 
 * The `consul_prepared_query` now handles default values correctly for the `failover`, `dns` and `template` blocks ([[#119](https://github.com/terraform-providers/terraform-provider-consul/issues/119)] and [[#121](https://github.com/terraform-providers/terraform-provider-consul/issues/121)])
+
+* The `consul_service` resource correctly associates a service instance with its health-checks ([[#147](https://github.com/terraform-providers/terraform-provider-consul/issues/147)] and [[#146](https://github.com/terraform-providers/terraform-provider-consul/issues/146)]).
+
+* Fix the `check_id` and `status` attribute of health-checks in the `consul_service` resources that would always mark the plan as dirty ([[#142](https://github.com/terraform-providers/terraform-provider-consul/issues/142)]).
 
 ## 2.5.0 (June 03, 2019)
 
