@@ -22,7 +22,6 @@ resource "consul_config_entry" "proxy_defaults" {
   name = "global"
 
   config_json = jsonencode({
-    MeshGateway = {}
     Config = {
       local_connect_timeout_ms = 1000
       handshake_timeout_ms     = 10000
@@ -35,7 +34,6 @@ resource "consul_config_entry" "web" {
   kind = "service-defaults"
 
   config_json = jsonencode({
-    MeshGateway = {}
     Protocol    = "http"
   })
 }
@@ -45,7 +43,6 @@ resource "consul_config_entry" "admin" {
   kind = "service-defaults"
 
   config_json = jsonencode({
-    MeshGateway = {}
     Protocol    = "http"
   })
 }
