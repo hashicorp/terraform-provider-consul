@@ -129,8 +129,7 @@ resource "consul_config_entry" "foo" {
 	kind = "proxy-defaults"
 
 	config_json = jsonencode({
-		MeshGateway = {}
-		Config      = {
+		Config = {
 			foo = "bar"
 		}
 	})
@@ -143,8 +142,7 @@ resource "consul_config_entry" "web" {
 	kind = "service-defaults"
 
 	config_json = jsonencode({
-		MeshGateway = {}
-		Protocol    = "http"
+		Protocol = "http"
 	})
 }
 
@@ -153,8 +151,7 @@ resource "consul_config_entry" "admin_service_defaults" {
 	kind = "service-defaults"
 
 	config_json = jsonencode({
-		MeshGateway = {}
-		Protocol    = "http"
+		Protocol = "http"
 	})
 }
 
@@ -187,8 +184,7 @@ resource "consul_config_entry" "web" {
 	kind = "service-defaults"
 
 	config_json = jsonencode({
-		MeshGateway = {}
-		Protocol    = "http"
+		Protocol = "http"
 	})
 }
 
@@ -223,7 +219,7 @@ resource "consul_config_entry" "service_splitter" {
 				ServiceSubset = "v1"
 			},
 			{
-				Weight         = 10
+				Weight        = 10
 				ServiceSubset = "v2"
 			},
 		]
@@ -239,8 +235,7 @@ resource "consul_config_entry" "web" {
 	kind = "service-defaults"
 
 	config_json = jsonencode({
-		MeshGateway = {}
-		Protocol    = "http"
+		Protocol = "http"
 	})
 }
 
