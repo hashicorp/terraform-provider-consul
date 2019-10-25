@@ -7,6 +7,7 @@ import (
 
 	consulapi "github.com/hashicorp/consul/api"
 	"github.com/hashicorp/errwrap"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/hashcode"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 )
 
@@ -97,14 +98,17 @@ func resourceConsulService() *schema.Resource {
 			},
 
 			"check": {
-				Type:     schema.TypeList,
+				Type: schema.TypeSet,
+				Set: func(v interface{}) int {
+					m := v.(map[string]interface{})
+					return hashcode.String(m["check_id"].(string))
+				},
 				Optional: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"check_id": {
 							Type:     schema.TypeString,
-							Optional: true,
-							Computed: true,
+							Required: true,
 						},
 
 						"name": {
@@ -120,7 +124,7 @@ func resourceConsulService() *schema.Resource {
 						"status": {
 							Type:     schema.TypeString,
 							Optional: true,
-							Default:  "critical",
+							Computed: true,
 						},
 						"tcp": {
 							Type:     schema.TypeString,
@@ -515,7 +519,7 @@ func retrieveService(client *consulapi.Client, name string, ident string, node s
 
 func parseChecks(node string, serviceID string, d *schema.ResourceData) ([]*consulapi.HealthCheck, error) {
 	// Get health checks definition
-	checks := d.Get("check").([]interface{})
+	checks := d.Get("check").(*schema.Set).List()
 	s := []*consulapi.HealthCheck{}
 	s = make([]*consulapi.HealthCheck, len(checks))
 	for i, raw := range checks {

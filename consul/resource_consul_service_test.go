@@ -130,22 +130,22 @@ func TestAccConsulServiceCheck(t *testing.T) {
 					resource.TestCheckResourceAttr("consul_service.example", "name", "example"),
 					resource.TestCheckResourceAttr("consul_service.example", "port", "80"),
 					resource.TestCheckResourceAttr("consul_service.example", "check.#", "1"),
-					resource.TestCheckResourceAttr("consul_service.example", "check.0.check_id", "service:redis1"),
-					resource.TestCheckResourceAttr("consul_service.example", "check.0.name", "Redis health check"),
-					resource.TestCheckResourceAttr("consul_service.example", "check.0.notes", "Script based health check"),
-					resource.TestCheckResourceAttr("consul_service.example", "check.0.status", "passing"),
-					resource.TestCheckResourceAttr("consul_service.example", "check.0.http", "https://www.hashicorptest.com"),
-					resource.TestCheckResourceAttr("consul_service.example", "check.0.interval", "5s"),
-					resource.TestCheckResourceAttr("consul_service.example", "check.0.timeout", "1s"),
-					resource.TestCheckResourceAttr("consul_service.example", "check.0.deregister_critical_service_after", "30s"),
-					resource.TestCheckResourceAttr("consul_service.example", "check.0.header.#", "2"),
-					resource.TestCheckResourceAttr("consul_service.example", "check.0.header.344754333.name", "bar"),
-					resource.TestCheckResourceAttr("consul_service.example", "check.0.header.344754333.value.#", "1"),
-					resource.TestCheckResourceAttr("consul_service.example", "check.0.header.344754333.value.0", "test"),
-					resource.TestCheckResourceAttr("consul_service.example", "check.0.header.2976766922.name", "foo"),
-					resource.TestCheckResourceAttr("consul_service.example", "check.0.header.2976766922.value.#", "1"),
-					resource.TestCheckResourceAttr("consul_service.example", "check.0.header.2976766922.value.0", "test"),
-					resource.TestCheckResourceAttr("consul_service.no-deregister", "check.0.deregister_critical_service_after", "30s"),
+					resource.TestCheckResourceAttr("consul_service.example", "check.3879545300.check_id", "service:redis1"),
+					resource.TestCheckResourceAttr("consul_service.example", "check.3879545300.name", "Redis health check"),
+					resource.TestCheckResourceAttr("consul_service.example", "check.3879545300.notes", "Script based health check"),
+					resource.TestCheckResourceAttr("consul_service.example", "check.3879545300.status", "passing"),
+					resource.TestCheckResourceAttr("consul_service.example", "check.3879545300.http", "https://www.hashicorptest.com"),
+					resource.TestCheckResourceAttr("consul_service.example", "check.3879545300.interval", "5s"),
+					resource.TestCheckResourceAttr("consul_service.example", "check.3879545300.timeout", "1s"),
+					resource.TestCheckResourceAttr("consul_service.example", "check.3879545300.deregister_critical_service_after", "30s"),
+					resource.TestCheckResourceAttr("consul_service.example", "check.3879545300.header.#", "2"),
+					resource.TestCheckResourceAttr("consul_service.example", "check.3879545300.header.344754333.name", "bar"),
+					resource.TestCheckResourceAttr("consul_service.example", "check.3879545300.header.344754333.value.#", "1"),
+					resource.TestCheckResourceAttr("consul_service.example", "check.3879545300.header.344754333.value.0", "test"),
+					resource.TestCheckResourceAttr("consul_service.example", "check.3879545300.header.2976766922.name", "foo"),
+					resource.TestCheckResourceAttr("consul_service.example", "check.3879545300.header.2976766922.value.#", "1"),
+					resource.TestCheckResourceAttr("consul_service.example", "check.3879545300.header.2976766922.value.0", "test"),
+					resource.TestCheckResourceAttr("consul_service.no-deregister", "check.3879545300.deregister_critical_service_after", "30s"),
 				),
 			},
 			resource.TestStep{
@@ -155,6 +155,18 @@ func TestAccConsulServiceCheck(t *testing.T) {
 					resource.TestCheckResourceAttr("consul_service.example", "port", "80"),
 					resource.TestCheckResourceAttr("consul_service.example", "check.#", "1"),
 				),
+			},
+		},
+	})
+}
+
+func TestAccConsulServiceCheckOrder(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:  func() { testAccPreCheck(t) },
+		Providers: testAccProviders,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccConsulServiceCheckOrder,
 			},
 		},
 	})
@@ -344,14 +356,31 @@ resource "consul_service" "no-deregister" {
 		timeout = "1s"
 	}
 }
+`
 
-resource "consul_service" "no-check_id" {
-	name     = "no-check_id"
-	node     = "${consul_node.compute.name}"
-	port     = 81
+const testAccConsulServiceCheckOrder = `
+resource "consul_node" "external" {
+	name    = "external-example"
+	address = "www.hashicorptest.com"
+}
+
+resource "consul_service" "no-deregister" {
+	name     = "example-external"
+	node     = "${consul_node.external.name}"
+	port     = 80
 
 	check {
-		name = "No check ID"
+		// Consul seems to order checks alphabetically by check_id
+		check_id = "service:redis2"
+		name = "Redis health check"
+		http = "https://www.google.com"
+		interval = "5s"
+		timeout = "1s"
+	}
+
+	check {
+		check_id = "service:redis1"
+		name = "Redis health check"
 		http = "https://www.google.com"
 		interval = "5s"
 		timeout = "1s"
