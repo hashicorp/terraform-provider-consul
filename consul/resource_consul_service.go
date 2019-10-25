@@ -7,6 +7,7 @@ import (
 
 	consulapi "github.com/hashicorp/consul/api"
 	"github.com/hashicorp/errwrap"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/hashcode"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 )
 
@@ -97,7 +98,11 @@ func resourceConsulService() *schema.Resource {
 			},
 
 			"check": {
-				Type:     schema.TypeSet,
+				Type: schema.TypeSet,
+				Set: func(v interface{}) int {
+					m := v.(map[string]interface{})
+					return hashcode.String(m["check_id"].(string))
+				},
 				Optional: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{

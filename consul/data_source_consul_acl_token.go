@@ -25,10 +25,19 @@ func dataSourceConsulACLToken() *schema.Resource {
 			},
 
 			"policies": {
-				Type:     schema.TypeSet,
+				Type:     schema.TypeList,
 				Optional: true,
-				Elem: &schema.Schema{
-					Type: schema.TypeString,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"name": {
+							Computed: true,
+							Type:     schema.TypeString,
+						},
+						"id": {
+							Computed: true,
+							Type:     schema.TypeString,
+						},
+					},
 				},
 			},
 
@@ -48,9 +57,12 @@ func dataSourceConsulACLTokenRead(d *schema.ResourceData, meta interface{}) erro
 		return err
 	}
 
-	policies := make([]string, 0, len(aclToken.Policies))
-	for _, policyLink := range aclToken.Policies {
-		policies = append(policies, policyLink.Name)
+	policies := make([]map[string]interface{}, len(aclToken.Policies))
+	for i, policyLink := range aclToken.Policies {
+		policies[i] = map[string]interface{}{
+			"name": policyLink.Name,
+			"id":   policyLink.ID,
+		}
 	}
 
 	d.SetId(accessorID)

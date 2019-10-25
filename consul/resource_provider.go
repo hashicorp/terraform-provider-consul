@@ -93,6 +93,9 @@ func Provider() terraform.ResourceProvider {
 			"consul_services":            dataSourceConsulServices(),
 			"consul_keys":                dataSourceConsulKeys(),
 			"consul_key_prefix":          dataSourceConsulKeyPrefix(),
+			"consul_acl_auth_method":     dataSourceConsulACLAuthMethod(),
+			"consul_acl_policy":          dataSourceConsulACLPolicy(),
+			"consul_acl_role":            dataSourceConsulACLRole(),
 			"consul_acl_token":           dataSourceConsulACLToken(),
 			"consul_acl_token_secret_id": dataSourceConsulACLTokenSecretID(),
 
