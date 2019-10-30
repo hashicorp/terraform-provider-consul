@@ -64,5 +64,5 @@ The following arguments are supported:
 
 ## Environment Variables
 
-All environment variables prefixed with `CONSUL_HTTP` listed in the [Consul environment variables](https://www.consul.io/docs/commands/index.html#environment-variables)
+All environment variables listed in the [Consul environment variables](https://www.consul.io/docs/commands/index.html#environment-variables)
 documentation are supported by the Terraform provider.
