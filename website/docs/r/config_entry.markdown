@@ -63,16 +63,11 @@ resource "consul_config_entry" "service_resolver" {
       }
     }
   })
-
-  depends_on = [
-    consul_config_entry.web,
-    consul_config_entry.admin
-  ]
 }
 
 resource "consul_config_entry" "service_splitter" {
   kind = "service-splitter"
-  name = consul_config_entry.web.name
+  name = consul_config_entry.service_resolver.name
 
   config_json = jsonencode({
     Splits = [
@@ -86,8 +81,6 @@ resource "consul_config_entry" "service_splitter" {
       },
     ]
   })
-
-  depends_on = [consul_config_entry.service_resolver]
 }
 
 resource "consul_config_entry" "service_router" {
