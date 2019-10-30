@@ -35,20 +35,27 @@ func (c *Config) Client() (*consulapi.Client, error) {
 		config.Scheme = c.Scheme
 	}
 
-	tlsConfig := consulapi.TLSConfig{}
-	tlsConfig.CAFile = c.CAFile
-	tlsConfig.CertFile = c.CertFile
-	tlsConfig.KeyFile = c.KeyFile
-	tlsConfig.CAPath = c.CAPath
+	if c.CAFile != "" {
+		config.TLSConfig.CAFile = c.CAFile
+	}
+	if c.CertFile != "" {
+		config.TLSConfig.CertFile = c.CertFile
+	}
+	if c.KeyFile != "" {
+		config.TLSConfig.KeyFile = c.KeyFile
+	}
+	if c.CAPath != "" {
+		config.TLSConfig.CAPath = c.CAPath
+	}
 	if c.InsecureHttps {
 		if config.Scheme != "https" {
 			return nil, fmt.Errorf("insecure_https is meant to be used when scheme is https")
 		}
-		tlsConfig.InsecureSkipVerify = c.InsecureHttps
+		config.TLSConfig.InsecureSkipVerify = c.InsecureHttps
 	}
 
 	var err error
-	config.HttpClient, err = consulapi.NewHttpClient(config.Transport, tlsConfig)
+	config.HttpClient, err = consulapi.NewHttpClient(config.Transport, config.TLSConfig)
 	if err != nil {
 		return nil, fmt.Errorf("Failed to create http client: %s", err)
 	}
@@ -72,7 +79,7 @@ func (c *Config) Client() (*consulapi.Client, error) {
 	client, err := consulapi.NewClient(config)
 
 	log.Printf("[INFO] Consul Client configured with address: '%s', scheme: '%s', datacenter: '%s'"+
-		", insecure_https: '%t'", config.Address, config.Scheme, config.Datacenter, tlsConfig.InsecureSkipVerify)
+		", insecure_https: '%t'", config.Address, config.Scheme, config.Datacenter, config.TLSConfig.InsecureSkipVerify)
 	if err != nil {
 		return nil, err
 	}

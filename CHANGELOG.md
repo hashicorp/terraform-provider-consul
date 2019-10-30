@@ -1,4 +1,9 @@
 ## 2.6.1 (Unreleased)
+
+BUG FIXES:
+
+* The `CONSUL_CLIENT_CERT`, `CONSUL_CLIENT_KEY`, `CONSUL_CACERT` and `CONSUL_CAPATH` are now used to the set the TLS configuration of the provider.
+
 ## 2.6.0 (October 25, 2019)
 
 NEW FEATURES:
