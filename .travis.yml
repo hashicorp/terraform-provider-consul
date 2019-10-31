@@ -13,10 +13,6 @@ install:
 # See: https://github.com/golang/go/issues/12933
 - bash scripts/gogetcookie.sh
 
-env:
-- CONSUL_HTTP_ADDR=http://localhost:8500
-- CONSUL_HTTP_TOKEN=master-token
-
 script:
 - make test
 - docker run --rm
@@ -38,4 +34,4 @@ matrix:
   allow_failures:
   - go: tip
 env:
-  - GOFLAGS=-mod=vendor GO111MODULE=on
+  - GOFLAGS=-mod=vendor GO111MODULE=on CONSUL_HTTP_TOKEN=master-token CONSUL_HTTP_ADDR=http://localhost:8500
