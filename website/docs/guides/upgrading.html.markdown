@@ -1,6 +1,6 @@
 ---
 layout: "consul"
-page_title: "Provider: Consul - Upgrading"
+page_title: "Upgrading"
 sidebar_current: "docs-consul-upgrading"
 description: |-
   Detailed guidelines for upgrading between versions of the Consul Terraform Provider.
@@ -133,4 +133,4 @@ View migration instructions [here][migrate_service].
 continue to work, but in the long term it may be deprecated and removed. This is to present
 a more consistent and intuitive naming convention for the resources.
 
-[migrate_service]: /docs/providers/consul/upgrading.html#migrating-to-consul_service-or-consul_node-resources "Migrate to consul_service or consul_node"
+[migrate_service]: /docs/providers/consul/guides/upgrading.html#migrating-to-consul_service-or-consul_node-resources "Migrate to consul_service or consul_node"
