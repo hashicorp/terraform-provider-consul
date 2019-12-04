@@ -48,6 +48,7 @@ func resourceConsulKeys() *schema.Resource {
 						"name": {
 							Type:       schema.TypeString,
 							Optional:   true,
+							Default:    "",
 							Deprecated: "Using consul_keys resource to *read* is deprecated; please use consul_keys data source instead",
 						},
 
@@ -71,6 +72,7 @@ func resourceConsulKeys() *schema.Resource {
 						"default": {
 							Type:     schema.TypeString,
 							Optional: true,
+							Default:  "",
 						},
 
 						"delete": {
