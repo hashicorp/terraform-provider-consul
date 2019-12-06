@@ -1,8 +1,13 @@
 ## 2.6.1 (Unreleased)
 
+IMPROVEMENTS:
+
+* The `consul_keys` diffs are now easier to read.
+
 BUG FIXES:
 
-* The `CONSUL_CLIENT_CERT`, `CONSUL_CLIENT_KEY`, `CONSUL_CACERT` and `CONSUL_CAPATH` are now used to the set the TLS configuration of the provider.
+* The `CONSUL_CLIENT_CERT`, `CONSUL_CLIENT_KEY`, `CONSUL_CACERT` and `CONSUL_CAPATH` are now used to set the TLS configuration of the provider.
+* The `consul_keys` can now create keys with an empty string as value.
 
 ## 2.6.0 (October 25, 2019)
 
