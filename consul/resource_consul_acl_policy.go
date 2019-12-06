@@ -3,6 +3,7 @@ package consul
 import (
 	"fmt"
 	"log"
+	"strings"
 
 	consulapi "github.com/hashicorp/consul/api"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
@@ -84,9 +85,12 @@ func resourceConsulACLPolicyRead(d *schema.ResourceData, meta interface{}) error
 
 	aclPolicy, _, err := client.ACL().PolicyRead(id, nil)
 	if err != nil {
-		log.Printf("[WARN] ACL policy not found, removing from state")
-		d.SetId("")
-		return nil
+		if strings.Contains(err.Error(), "ACL not found") {
+			log.Printf("[INFO] ACL policy not found, removing from state")
+			d.SetId("")
+			return nil
+		}
+		return fmt.Errorf("Failed to read policy '%s': %v", id, err)
 	}
 
 	log.Printf("[DEBUG] Read ACL policy %q", id)
