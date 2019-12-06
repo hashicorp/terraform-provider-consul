@@ -82,7 +82,7 @@ func TestAccConsulConfigEntry_Errors(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccConsulConfigEntry_ProxyDefaultsWrongName,
-				ExpectError: regexp.MustCompile("Provider produced inconsistent result after apply: When applying changes to consul_config_entry.foo, provider \"consul\" produced an unexpected new value for was present, but now absent."),
+				ExpectError: regexp.MustCompile("failed to read config entry after setting it.\nThis may happen when some attributes have an unexpected value.\nRead the documentation at https://www.consul.io/docs/agent/config-entries/proxy-defaults.html\nto see what values are expected."),
 			},
 		},
 	})
