@@ -3,6 +3,7 @@ package consul
 import (
 	"fmt"
 	"log"
+	"strings"
 
 	consulapi "github.com/hashicorp/consul/api"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
@@ -93,9 +94,12 @@ func resourceConsulACLTokenRead(d *schema.ResourceData, meta interface{}) error 
 
 	aclToken, _, err := client.ACL().TokenRead(id, nil)
 	if err != nil {
-		log.Printf("[WARN] ACL token not found, removing from state")
-		d.SetId("")
-		return nil
+		if strings.Contains(err.Error(), "ACL not found") {
+			log.Printf("[WARN] ACL token not found, removing from state")
+			d.SetId("")
+			return nil
+		}
+		return fmt.Errorf("Failed to read token '%s': %v", id, err)
 	}
 
 	log.Printf("[DEBUG] Read ACL token %q", id)
