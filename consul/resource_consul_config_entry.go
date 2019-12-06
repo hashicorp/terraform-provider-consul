@@ -55,6 +55,17 @@ func resourceConsulConfigEntryUpdate(d *schema.ResourceData, meta interface{}) e
 	if _, _, err := configEntries.Set(configEntry, wOpts); err != nil {
 		return fmt.Errorf("Failed to set '%s' config entry: %#v", name, err)
 	}
+	qOpts := &consulapi.QueryOptions{}
+	_, _, err = configEntries.Get(configEntry.GetKind(), configEntry.GetName(), qOpts)
+	if err != nil {
+		if strings.Contains(err.Error(), "Unexpected response code: 404") {
+			return fmt.Errorf(`failed to read config entry after setting it.
+This may happen when some attributes have an unexpected value.
+Read the documentation at https://www.consul.io/docs/agent/config-entries/%s.html
+to see what values are expected.`, configEntry.GetKind())
+		}
+		return fmt.Errorf("failed to read config entry: %v", err)
+	}
 
 	d.SetId(fmt.Sprintf("%s-%s", kind, name))
 	return resourceConsulConfigEntryRead(d, meta)
