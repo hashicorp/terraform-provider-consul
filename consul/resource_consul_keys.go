@@ -11,8 +11,8 @@ import (
 
 func resourceConsulKeys() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceConsulKeysCreate,
-		Update: resourceConsulKeysUpdate,
+		Create: resourceConsulKeysCreateUpdate,
+		Update: resourceConsulKeysCreateUpdate,
 		Read:   resourceConsulKeysRead,
 		Delete: resourceConsulKeysDelete,
 
@@ -92,45 +92,7 @@ func resourceConsulKeys() *schema.Resource {
 	}
 }
 
-func resourceConsulKeysCreate(d *schema.ResourceData, meta interface{}) error {
-	client := getClient(meta)
-	kv := client.KV()
-	token := d.Get("token").(string)
-	dc, err := getDC(d, client, meta)
-	if err != nil {
-		return err
-	}
-
-	keyClient := newKeyClient(kv, dc, token)
-
-	keys := d.Get("key").(*schema.Set).List()
-	for _, raw := range keys {
-		_, path, sub, err := parseKey(raw)
-		if err != nil {
-			return err
-		}
-
-		value := sub["value"].(string)
-		if value == "" {
-			continue
-		}
-
-		flags := sub["flags"].(int)
-
-		if err := keyClient.Put(path, value, flags); err != nil {
-			return err
-		}
-	}
-
-	// The ID doesn't matter, since we use provider config, datacenter,
-	// and key paths to address consul properly. So we just need to fill it in
-	// with some value to indicate the resource has been created.
-	d.SetId("consul")
-
-	return resourceConsulKeysRead(d, meta)
-}
-
-func resourceConsulKeysUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceConsulKeysCreateUpdate(d *schema.ResourceData, meta interface{}) error {
 	client := getClient(meta)
 	kv := client.KV()
 	token := d.Get("token").(string)
@@ -173,8 +135,12 @@ func resourceConsulKeysUpdate(d *schema.ResourceData, meta interface{}) error {
 				return err
 			}
 
+			// The name attribute is set when using consul_keys to read values
+			// from the KV store. We must not overwrite the value when are
+			// reading.
+			name := sub["name"].(string)
 			value := sub["value"].(string)
-			if value == "" {
+			if name != "" && value == "" {
 				continue
 			}
 
@@ -213,6 +179,11 @@ func resourceConsulKeysUpdate(d *schema.ResourceData, meta interface{}) error {
 	// in case it was read from the provider
 	d.Set("datacenter", dc)
 
+	// The ID doesn't matter, since we use provider config, datacenter,
+	// and key paths to address consul properly. So we just need to fill it in
+	// with some value to indicate the resource has been created.
+	d.SetId("consul")
+
 	return resourceConsulKeysRead(d, meta)
 }
 
@@ -231,7 +202,7 @@ func resourceConsulKeysRead(d *schema.ResourceData, meta interface{}) error {
 
 	keys := d.Get("key").(*schema.Set).List()
 	for _, raw := range keys {
-		key, path, sub, err := parseKey(raw)
+		name, path, sub, err := parseKey(raw)
 		if err != nil {
 			return err
 		}
@@ -243,21 +214,19 @@ func resourceConsulKeysRead(d *schema.ResourceData, meta interface{}) error {
 		sub["flags"] = flags
 
 		value = attributeValue(sub, value)
-		if key != "" {
-			// If key is set then we'll update vars, for backward-compatibilty
+		if name != "" {
+			// If 'name' is set then we'll update vars, for backward-compatibilty
 			// with the pre-0.7 capability to read from Consul with this
 			// resource.
-			vars[key] = value
-		}
-
-		// If there is already a "value" attribute present for this key
-		// then it was created as a "write" block. We need to update the
-		// given value within the block itself so that Terraform can detect
-		// when the Consul-stored value has drifted from what was most
-		// recently written by Terraform.
-		// We don't do this for "read" blocks; that causes confusing diffs
-		// because "value" should not be set for read-only key blocks.
-		if oldValue := sub["value"]; oldValue != "" {
+			vars[name] = value
+		} else {
+			// If the 'name' attribute is set for this key then it was created
+			// as a "write" block. We need to update the given value within the
+			// block itself so that Terraform can detect when the
+			// Consul-stored value has drifted from what was most recently
+			// written by Terraform.
+			// We don't do this for "read" blocks; that causes confusing diffs
+			// because "value" should not be set for read-only key blocks.
 			sub["value"] = value
 		}
 	}

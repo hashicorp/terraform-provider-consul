@@ -38,6 +38,19 @@ func TestAccConsulKeys_basic(t *testing.T) {
 	})
 }
 
+func TestAccConsulKeys_EmptyValue(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:  func() { testAccPreCheck(t) },
+		Providers: testAccProviders,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccConsulKeysEmptyValue,
+				Check:  testAccCheckConsulKeysExists(),
+			},
+		},
+	})
+}
+
 func testAccCheckConsulKeysFlags(path string, flags int) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		kv := testAccProvider.Meta().(*consulapi.Client).KV()
@@ -160,3 +173,12 @@ resource "consul_keys" "app" {
 	}
 }
 `
+
+const testAccConsulKeysEmptyValue = `
+resource "consul_keys" "consul" {
+	key {
+	  path  = "test/set"
+	  value = ""
+	  delete = true
+	}
+}`
