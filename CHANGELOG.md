@@ -1,4 +1,4 @@
-## 2.6.1 (Unreleased)
+## 2.6.1 (December 07, 2019)
 
 IMPROVEMENTS:
 
