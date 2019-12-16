@@ -63,6 +63,24 @@ func TestAccConsulKeyPrefix_basic(t *testing.T) {
 	})
 }
 
+func TestAccCheckConsulKeyPrefix_Import(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:  func() { testAccPreCheck(t) },
+		Providers: testAccProviders,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccConsulKeyPrefixConfig_Update,
+			},
+			{
+				Config:            testAccConsulKeyPrefixConfig_Update,
+				ResourceName:      "consul_key_prefix.app",
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func testAccCheckConsulKeyPrefixDestroy(s *terraform.State) error {
 	client := getClient(testAccProvider.Meta())
 	kv := client.KV()
