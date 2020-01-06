@@ -118,6 +118,7 @@ func Provider() terraform.ResourceProvider {
 			"consul_config_entry":                resourceConsulConfigEntry(),
 			"consul_keys":                        resourceConsulKeys(),
 			"consul_key_prefix":                  resourceConsulKeyPrefix(),
+			"consul_license":                     resourceConsulLicense(),
 			"consul_node":                        resourceConsulNode(),
 			"consul_prepared_query":              resourceConsulPreparedQuery(),
 			"consul_autopilot_config":            resourceConsulAutopilotConfig(),
