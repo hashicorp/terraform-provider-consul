@@ -10,7 +10,7 @@ description: |-
 
 ~> **NOTE:** This feature requires Consul Enterprise.
 
-The `consul_license` resource resource provider datacenter-level management of
+The `consul_license` resource provides datacenter-level management of
 the Consul Enterprise license. If ACLs are enabled then a token with operator
 privileges may be required in order to use this command.
 
