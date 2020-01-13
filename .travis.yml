@@ -21,7 +21,15 @@ script:
              -v $PWD/consul_test.hcl:/consul_test.hcl:ro
              -p 8500:8500
              consul:latest consul agent -dev -config-file consul_test.hcl -client=0.0.0.0
-- make testacc
+- make testacc TESTARGS="-count=1"
+- docker stop consul-test
+- docker run --rm
+             -d
+             --name consul-test
+             -v $PWD/consul_test.hcl:/consul_test.hcl:ro
+             -p 8500:8500
+             hashicorp/consul-enterprise:latest consul agent -dev -config-file consul_test.hcl -client=0.0.0.0
+- make testacc TESTARGS="-count=1"
 - docker stop consul-test
 - make vet
 - make website-test
