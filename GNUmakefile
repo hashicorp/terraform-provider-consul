@@ -3,6 +3,7 @@ GOFMT_FILES?=$$(find . -name '*.go' |grep -v vendor)
 WEBSITE_REPO=github.com/hashicorp/terraform-website
 PKG_NAME=consul
 CONSUL_VERSION ?= "latest"
+CONSUL_IMAGE ?= "consul:$(CONSUL_VERSION)"
 
 default: build
 
@@ -45,10 +46,10 @@ test-compile:
 	go test -c $(TEST) $(TESTARGS)
 
 test-serv: fmtcheck
-	@docker pull "consul:$(CONSUL_VERSION)"
+	@docker pull $(CONSUL_IMAGE)
 	docker run --rm -p 127.0.0.1:8500:8500 \
 		-v $(PWD)/consul_test.hcl:/consul/config/consul_test.hcl:ro \
-		"consul:$(CONSUL_VERSION)"
+		$(CONSUL_IMAGE)
 
 website:
 ifeq (,$(wildcard $(GOPATH)/src/$(WEBSITE_REPO)))
