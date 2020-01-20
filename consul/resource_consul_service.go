@@ -95,6 +95,9 @@ func resourceConsulService() *schema.Resource {
 			"meta": {
 				Type:     schema.TypeMap,
 				Optional: true,
+				Elem: &schema.Schema{
+					Type: schema.TypeString,
+				},
 			},
 
 			"check": {
