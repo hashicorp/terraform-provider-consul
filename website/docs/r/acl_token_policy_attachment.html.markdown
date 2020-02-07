@@ -37,7 +37,7 @@ resource "consul_acl_token_policy_attachment" "attachment" {
 }
 ```
 
-### Attach a policy to a token creted in another Terraform configuration
+### Attach a policy to a token created in another Terraform configuration
 
 #### In `first_configuration/main.tf`
 
