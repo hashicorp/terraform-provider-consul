@@ -40,6 +40,14 @@ func resourceConsulACLToken() *schema.Resource {
 				},
 				Description: "List of policies.",
 			},
+			"roles": {
+				Type:     schema.TypeSet,
+				Optional: true,
+				Elem: &schema.Schema{
+					Type: schema.TypeString,
+				},
+				Description: "List of roles",
+			},
 			"local": {
 				Type:        schema.TypeBool,
 				ForceNew:    true,
@@ -56,25 +64,9 @@ func resourceConsulACLTokenCreate(d *schema.ResourceData, meta interface{}) erro
 
 	log.Printf("[DEBUG] Creating ACL token")
 
-	aclToken := consulapi.ACLToken{
-		AccessorID:  d.Get("accessor_id").(string),
-		Description: d.Get("description").(string),
-		Local:       d.Get("local").(bool),
-	}
+	aclToken := getToken(d)
 
-	iPolicies := d.Get("policies").(*schema.Set).List()
-	policyLinks := make([]*consulapi.ACLTokenPolicyLink, 0, len(iPolicies))
-	for _, iPolicy := range iPolicies {
-		policyLinks = append(policyLinks, &consulapi.ACLTokenPolicyLink{
-			Name: iPolicy.(string),
-		})
-	}
-
-	if len(policyLinks) > 0 {
-		aclToken.Policies = policyLinks
-	}
-
-	token, _, err := client.ACL().TokenCreate(&aclToken, nil)
+	token, _, err := client.ACL().TokenCreate(aclToken, nil)
 	if err != nil {
 		return fmt.Errorf("error creating ACL token: %s", err)
 	}
@@ -120,6 +112,16 @@ func resourceConsulACLTokenRead(d *schema.ResourceData, meta interface{}) error 
 	if err = d.Set("policies", policies); err != nil {
 		return fmt.Errorf("Error while setting 'policies': %s", err)
 	}
+
+	roles := make([]string, 0, len(aclToken.Roles))
+	for _, roleLink := range aclToken.Roles {
+		roles = append(roles, roleLink.Name)
+	}
+
+	if err = d.Set("roles", roles); err != nil {
+		return fmt.Errorf("Error while setting 'roles': %s", err)
+	}
+
 	if err = d.Set("local", aclToken.Local); err != nil {
 		return fmt.Errorf("Error while setting 'local': %s", err)
 	}
@@ -133,24 +135,10 @@ func resourceConsulACLTokenUpdate(d *schema.ResourceData, meta interface{}) erro
 	id := d.Id()
 	log.Printf("[DEBUG] Updating ACL token %q", id)
 
-	aclToken := consulapi.ACLToken{
-		AccessorID:  id,
-		Description: d.Get("description").(string),
-		Local:       d.Get("local").(bool),
-	}
+	aclToken := getToken(d)
+	aclToken.AccessorID = id
 
-	if v, ok := d.GetOk("policies"); ok {
-		vs := v.(*schema.Set).List()
-		s := make([]*consulapi.ACLTokenPolicyLink, len(vs))
-		for i, raw := range vs {
-			s[i] = &consulapi.ACLTokenPolicyLink{
-				Name: raw.(string),
-			}
-		}
-		aclToken.Policies = s
-	}
-
-	_, _, err := client.ACL().TokenUpdate(&aclToken, nil)
+	_, _, err := client.ACL().TokenUpdate(aclToken, nil)
 	if err != nil {
 		return fmt.Errorf("error updating ACL token %q: %s", id, err)
 	}
@@ -172,4 +160,32 @@ func resourceConsulACLTokenDelete(d *schema.ResourceData, meta interface{}) erro
 	log.Printf("[DEBUG] Deleted ACL token %q", id)
 
 	return nil
+}
+
+func getToken(d *schema.ResourceData) *consulapi.ACLToken {
+	aclToken := &consulapi.ACLToken{
+		AccessorID:  d.Get("accessor_id").(string),
+		Description: d.Get("description").(string),
+		Local:       d.Get("local").(bool),
+	}
+
+	iPolicies := d.Get("policies").(*schema.Set).List()
+	policyLinks := make([]*consulapi.ACLTokenPolicyLink, 0, len(iPolicies))
+	for _, iPolicy := range iPolicies {
+		policyLinks = append(policyLinks, &consulapi.ACLTokenPolicyLink{
+			Name: iPolicy.(string),
+		})
+	}
+	aclToken.Policies = policyLinks
+
+	iRoles := d.Get("roles").(*schema.Set).List()
+	roleLinks := make([]*consulapi.ACLTokenRoleLink, 0, len(iRoles))
+	for _, iRole := range iRoles {
+		roleLinks = append(roleLinks, &consulapi.ACLTokenRoleLink{
+			Name: iRole.(string),
+		})
+	}
+	aclToken.Roles = roleLinks
+
+	return aclToken
 }
