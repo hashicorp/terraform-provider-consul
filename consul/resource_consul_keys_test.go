@@ -2,6 +2,7 @@ package consul
 
 import (
 	"fmt"
+	"regexp"
 	"testing"
 
 	consulapi "github.com/hashicorp/consul/api"
@@ -46,6 +47,31 @@ func TestAccConsulKeys_EmptyValue(t *testing.T) {
 			{
 				Config: testAccConsulKeysEmptyValue,
 				Check:  testAccCheckConsulKeysExists(),
+			},
+		},
+	})
+}
+
+func TestAccConsulKeys_NamespaceCE(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		Providers: testAccProviders,
+		PreCheck:  func() { skipTestOnConsulEnterpriseEdition(t) },
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccConsulKeysNamespaceCE,
+				ExpectError: regexp.MustCompile("Namespaces is a Consul Enterprise feature"),
+			},
+		},
+	})
+}
+
+func TestAccConsulKeys_NamespaceEE(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		Providers: testAccProviders,
+		PreCheck:  func() { skipTestOnConsulCommunityEdition(t) },
+		Steps: []resource.TestStep{
+			{
+				Config: testAccConsulKeysNamespaceEE,
 			},
 		},
 	})
@@ -181,4 +207,30 @@ resource "consul_keys" "consul" {
 	  value = ""
 	  delete = true
 	}
+}`
+
+const testAccConsulKeysNamespaceCE = `
+resource "consul_keys" "consul" {
+  namespace = "test-keys"
+
+  key {
+    path  = "test/set"
+    value = ""
+    delete = true
+  }
+}`
+
+const testAccConsulKeysNamespaceEE = `
+resource "consul_namespace" "test" {
+  name = "test-keys"
+}
+
+resource "consul_keys" "consul" {
+  namespace = consul_namespace.test.name
+
+  key {
+    path  = "test/set"
+    value = ""
+    delete = true
+  }
 }`

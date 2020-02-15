@@ -60,13 +60,19 @@ func resourceConsulACLRole() *schema.Resource {
 				},
 				Description: "The list of service identities that should be applied to the role.",
 			},
+
+			"namespace": {
+				Type:     schema.TypeString,
+				Optional: true,
+				ForceNew: true,
+			},
 		},
 	}
 }
 
 func resourceConsulACLRoleCreate(d *schema.ResourceData, meta interface{}) error {
 	ACL := getClient(meta).ACL()
-	role := getRole(d)
+	role := getRole(d, meta)
 	wOpts := &consulapi.WriteOptions{}
 
 	name := role.Name
@@ -81,7 +87,9 @@ func resourceConsulACLRoleCreate(d *schema.ResourceData, meta interface{}) error
 
 func resourceConsulACLRoleRead(d *schema.ResourceData, meta interface{}) error {
 	ACL := getClient(meta).ACL()
-	qOpts := &consulapi.QueryOptions{}
+	qOpts := &consulapi.QueryOptions{
+		Namespace: getNamespace(d, meta),
+	}
 
 	role, _, err := ACL.RoleRead(d.Id(), qOpts)
 	if err != nil {
@@ -98,6 +106,13 @@ func resourceConsulACLRoleRead(d *schema.ResourceData, meta interface{}) error {
 
 	if err = d.Set("description", role.Description); err != nil {
 		return fmt.Errorf("Failed to set 'description': %s", err)
+	}
+	// Consul Enterprise will change "" to "default" but Community Edition only
+	// understands the first one.
+	if d.Get("namespace").(string) != "" || role.Namespace != "default" {
+		if err = d.Set("namespace", role.Namespace); err != nil {
+			return fmt.Errorf("failed to set 'namespace': %v", err)
+		}
 	}
 
 	policies := make([]string, len(role.Policies))
@@ -124,7 +139,7 @@ func resourceConsulACLRoleRead(d *schema.ResourceData, meta interface{}) error {
 
 func resourceConsulACLRoleUpdate(d *schema.ResourceData, meta interface{}) error {
 	ACL := getClient(meta).ACL()
-	role := getRole(d)
+	role := getRole(d, meta)
 	wOpts := &consulapi.WriteOptions{}
 
 	role.ID = d.Id()
@@ -150,11 +165,13 @@ func resourceConsulACLRoleDelete(d *schema.ResourceData, meta interface{}) error
 	return nil
 }
 
-func getRole(d *schema.ResourceData) *consulapi.ACLRole {
+func getRole(d *schema.ResourceData, meta interface{}) *consulapi.ACLRole {
+	namespace := getNamespace(d, meta)
 	roleName := d.Get("name").(string)
 	role := &consulapi.ACLRole{
 		Name:        roleName,
 		Description: d.Get("description").(string),
+		Namespace:   namespace,
 	}
 	policies := make([]*consulapi.ACLRolePolicyLink, 0)
 	for _, raw := range d.Get("policies").(*schema.Set).List() {

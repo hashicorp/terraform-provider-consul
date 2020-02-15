@@ -30,6 +30,31 @@ func TestAccDataACLPolicy_basic(t *testing.T) {
 	})
 }
 
+func TestAccDataACLPolicy_namespaceCE(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		Providers: testAccProviders,
+		PreCheck:  func() { skipTestOnConsulEnterpriseEdition(t) },
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccDataSourceACLPolicyNamespaceCE,
+				ExpectError: regexp.MustCompile("Namespaces is a Consul Enterprise feature"),
+			},
+		},
+	})
+}
+
+func TestAccDataACLPolicy_namespaceEE(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		Providers: testAccProviders,
+		PreCheck:  func() { skipTestOnConsulCommunityEdition(t) },
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDataSourceACLPolicyNamespaceEE,
+			},
+		},
+	})
+}
+
 const testAccDataSourceACLPolicyConfigNotFound = `
 data "consul_acl_policy" "test" {
 	name = "not-found"
@@ -46,5 +71,29 @@ resource "consul_acl_policy" "test" {
 
 data "consul_acl_policy" "test" {
 	name = consul_acl_policy.test.name
+}
+`
+
+const testAccDataSourceACLPolicyNamespaceCE = `
+data "consul_acl_policy" "test" {
+  name      = "test"
+  namespace = "test-policy"
+}
+`
+
+const testAccDataSourceACLPolicyNamespaceEE = `
+resource "consul_acl_policy" "test" {
+  name      = "test"
+  rules     = "node_prefix \"\" { policy = \"read\" }"
+  namespace = consul_namespace.test.name
+}
+
+resource "consul_namespace" "test" {
+  name = "test-data-policy"
+}
+
+data "consul_acl_policy" "test" {
+  name      = consul_acl_policy.test.name
+  namespace = consul_namespace.test.name
 }
 `

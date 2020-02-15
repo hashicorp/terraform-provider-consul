@@ -53,6 +53,7 @@ The following arguments are supported:
 * `description` - (Optional) The description of the token.
 * `policies` - (Optional) The list of policies attached to the token.
 * `local` - (Optional) The flag to set the token local to the current datacenter.
+* `namespace` - (Optional, Enterprise Only) The namespace to create the token within.
 
 ## Attributes Reference
 

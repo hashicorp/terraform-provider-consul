@@ -32,6 +32,11 @@ func dataSourceConsulACLPolicy() *schema.Resource {
 				Optional: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
+			"namespace": {
+				Type:     schema.TypeString,
+				Optional: true,
+				ForceNew: true,
+			},
 		},
 	}
 }
@@ -45,6 +50,7 @@ func dataSourceConsulACLPolicyRead(d *schema.ResourceData, meta interface{}) err
 	}
 	qOpts := &consulapi.QueryOptions{
 		Datacenter: dc,
+		Namespace:  getNamespace(d, meta),
 	}
 
 	var policyEntry *consulapi.ACLPolicyListEntry

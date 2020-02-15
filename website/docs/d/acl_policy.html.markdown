@@ -30,6 +30,7 @@ output "consul_acl_policy" {
 The following arguments are supported:
 
 * `name` - (Required) The name of the ACL Policy.
+* `namespace` - (Optional, Enterprise Only) The namespace to lookup the policy.
 
 ## Attributes Reference
 

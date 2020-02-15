@@ -81,6 +81,11 @@ func Provider() terraform.ResourceProvider {
 					"CONSUL_HTTP_TOKEN",
 				}, ""),
 			},
+
+			"namespace": {
+				Type:     schema.TypeString,
+				Optional: true,
+			},
 		},
 
 		DataSourcesMap: map[string]*schema.Resource{

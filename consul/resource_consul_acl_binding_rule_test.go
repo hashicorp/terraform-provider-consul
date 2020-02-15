@@ -2,6 +2,7 @@ package consul
 
 import (
 	"fmt"
+	"regexp"
 	"testing"
 
 	consulapi "github.com/hashicorp/consul/api"
@@ -35,6 +36,31 @@ func TestAccConsulACLBindingRule_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("consul_acl_binding_rule.test", "bind_type", "role"),
 					resource.TestCheckResourceAttr("consul_acl_binding_rule.test", "bind_name", "minikube2"),
 				),
+			},
+		},
+	})
+}
+
+func TestAccConsulACLBindingRule_namespaceCE(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		Providers: testAccProviders,
+		PreCheck:  func() { skipTestOnConsulEnterpriseEdition(t) },
+		Steps: []resource.TestStep{
+			{
+				Config:      testResourceACLBindingRuleConfig_namespaceCE,
+				ExpectError: regexp.MustCompile("Namespaces is a Consul Enterprise feature"),
+			},
+		},
+	})
+}
+
+func TestAccConsulACLBindingRule_namespaceEE(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		Providers: testAccProviders,
+		PreCheck:  func() { skipTestOnConsulCommunityEdition(t) },
+		Steps: []resource.TestStep{
+			{
+				Config: testResourceACLBindingRuleConfig_namespaceEE,
 			},
 		},
 	})
@@ -99,4 +125,57 @@ resource "consul_acl_binding_rule" "test" {
 	selector    = "serviceaccount.namespace==default2"
 	bind_type   = "role"
 	bind_name   = "minikube2"
+}`
+
+const testResourceACLBindingRuleConfig_namespaceCE = `
+resource "consul_acl_auth_method" "test" {
+	name        = "minikube"
+    type        = "kubernetes"
+    description = "dev minikube cluster"
+
+	config = {
+        Host = "https://192.0.2.42:8443"
+		CACert = <<-EOF
+` + testCert + `
+		EOF
+        ServiceAccountJWT = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c"
+    }
+}
+
+resource "consul_acl_binding_rule" "test" {
+	auth_method = "${consul_acl_auth_method.test.name}"
+	description = "foobar"
+	selector    = "serviceaccount.namespace==default"
+	bind_type   = "service"
+	bind_name   = "minikube"
+	namespace   = "test-binding-rule"
+}`
+
+const testResourceACLBindingRuleConfig_namespaceEE = `
+resource "consul_namespace" "test" {
+  name = "test-binding-rule"
+}
+
+resource "consul_acl_auth_method" "test" {
+	name        = "minikube"
+    type        = "kubernetes"
+	description = "dev minikube cluster"
+	namespace   = consul_namespace.test.name
+
+	config = {
+        Host = "https://192.0.2.42:8443"
+		CACert = <<-EOF
+` + testCert + `
+		EOF
+        ServiceAccountJWT = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c"
+    }
+}
+
+resource "consul_acl_binding_rule" "test" {
+	auth_method = "${consul_acl_auth_method.test.name}"
+	description = "foobar"
+	selector    = "serviceaccount.namespace==default"
+	bind_type   = "service"
+	bind_name   = "minikube"
+	namespace   = consul_namespace.test.name
 }`

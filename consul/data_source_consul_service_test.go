@@ -1,6 +1,7 @@
 package consul
 
 import (
+	"regexp"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
@@ -77,6 +78,31 @@ func TestAccDataConsulService_alias(t *testing.T) {
 	})
 }
 
+func TestAccDataConsulService_namespaceCE(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		Providers: testAccProviders,
+		PreCheck:  func() { skipTestOnConsulEnterpriseEdition(t) },
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccDataConsulServiceNamespaceCE,
+				ExpectError: regexp.MustCompile("Namespaces is a Consul Enterprise feature"),
+			},
+		},
+	})
+}
+
+func TestAccDataConsulService_namespaceEE(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		Providers: testAccProviders,
+		PreCheck:  func() { skipTestOnConsulCommunityEdition(t) },
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDataConsulServiceNamespaceEE,
+			},
+		},
+	})
+}
+
 const testAccDataConsulServiceConfig = `
 data "consul_service" "read" {
   query_options {
@@ -138,5 +164,25 @@ data "consul_service" "read_f" {
 const testAccDataConsulServiceAlias = `
 data "consul_catalog_service" "read" {
   name = "consul"
+}
+`
+
+const testAccDataConsulServiceNamespaceCE = `
+data "consul_catalog_service" "read" {
+  name = "consul"
+
+  query_options {
+    namespace = "test-data-service"
+  }
+}
+`
+
+const testAccDataConsulServiceNamespaceEE = `
+data "consul_catalog_service" "read" {
+  name = "consul"
+
+  query_options {
+    namespace = "test-data-service"
+  }
 }
 `

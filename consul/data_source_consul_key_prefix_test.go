@@ -2,6 +2,7 @@ package consul
 
 import (
 	"fmt"
+	"regexp"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
@@ -28,6 +29,31 @@ func TestAccDataConsulKeyPrefix_basic(t *testing.T) {
 					testAccCheckConsulKeyPrefixAttribute("data.consul_key_prefix.read2", "subkeys.key1", "written1"),
 					testAccCheckConsulKeyPrefixAttribute("data.consul_key_prefix.read2", "subkeys.key2/value", "written2"),
 				),
+			},
+		},
+	})
+}
+
+func TestAccDataConsulKeyPrefix_namespaceCE(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		Providers: testAccProviders,
+		PreCheck:  func() { skipTestOnConsulEnterpriseEdition(t) },
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccDataConsulKeyPrefixConfigNamespaceCE,
+				ExpectError: regexp.MustCompile("Unexpected response code: 400"),
+			},
+		},
+	})
+}
+
+func TestAccDataConsulKeyPrefix_namespaceEE(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		Providers: testAccProviders,
+		PreCheck:  func() { skipTestOnConsulCommunityEdition(t) },
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDataConsulKeyPrefixConfigNamespaceEE,
 			},
 		},
 	})
@@ -95,5 +121,28 @@ data "consul_key_prefix" "read2" {
     datacenter = "${consul_key_prefix.write.datacenter}"
 
     path_prefix = "${consul_key_prefix.write.path_prefix}"
+}
+`
+
+const testAccDataConsulKeyPrefixConfigNamespaceCE = `
+data "consul_key_prefix" "read" {
+  path_prefix = "foo/"
+  namespace   = "test-key-prefix"
+}
+`
+
+const testAccDataConsulKeyPrefixConfigNamespaceEE = `
+resource "consul_key_prefix" "write" {
+  path_prefix = "myapp/config/"
+
+  subkeys = {
+    "key1"       = "written1"
+    "key2/value" = "written2"
+  }
+}
+
+data "consul_key_prefix" "read" {
+  path_prefix = "consul_key_prefix.write.path_prefix"
+  namespace   = "test-key-prefix"
 }
 `
