@@ -13,6 +13,9 @@ func resourceConsulACLRole() *schema.Resource {
 		Read:   resourceConsulACLRoleRead,
 		Update: resourceConsulACLRoleUpdate,
 		Delete: resourceConsulACLRoleDelete,
+		Importer: &schema.ResourceImporter{
+			State: schema.ImportStatePassthrough,
+		},
 
 		Schema: map[string]*schema.Schema{
 			"name": {
