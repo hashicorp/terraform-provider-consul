@@ -2,6 +2,7 @@ package consul
 
 import (
 	"fmt"
+	"os"
 	"regexp"
 	"testing"
 
@@ -9,6 +10,15 @@ import (
 )
 
 func TestAccConsulConfigEntry_basic(t *testing.T) {
+	// This needs to be called before serverIsConsulCommunityEdition() as the
+	// test provider won't be initialized for unit tests.
+	if os.Getenv(resource.TestEnvVar) == "" {
+		t.Skip(fmt.Sprintf(
+			"Acceptance tests skipped unless env '%s' set",
+			resource.TestEnvVar))
+		return
+	}
+
 	// Expected values for Consul Community Edition
 	extraConf := ""
 	configJSONServiceDefaults := "{\"Expose\":{},\"MeshGateway\":{},\"Protocol\":\"https\"}"
