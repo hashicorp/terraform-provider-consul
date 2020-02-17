@@ -13,6 +13,9 @@ func resourceConsulACLRole() *schema.Resource {
 		Read:   resourceConsulACLRoleRead,
 		Update: resourceConsulACLRoleUpdate,
 		Delete: resourceConsulACLRoleDelete,
+		Importer: &schema.ResourceImporter{
+			State: schema.ImportStatePassthrough,
+		},
 
 		Schema: map[string]*schema.Schema{
 			"name": {
@@ -80,10 +83,9 @@ func resourceConsulACLRoleRead(d *schema.ResourceData, meta interface{}) error {
 	ACL := getClient(meta).ACL()
 	qOpts := &consulapi.QueryOptions{}
 
-	roleName := d.Get("name").(string)
-	role, _, err := ACL.RoleReadByName(roleName, qOpts)
+	role, _, err := ACL.RoleRead(d.Id(), qOpts)
 	if err != nil {
-		return fmt.Errorf("Failed to read role '%s': %s", roleName, err)
+		return fmt.Errorf("Failed to read role '%s': %s", d.Id(), err)
 	}
 	if role == nil {
 		d.SetId("")
