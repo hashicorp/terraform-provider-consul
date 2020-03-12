@@ -100,6 +100,10 @@ func parseMapItem(item yaml.MapItem, subKeys map[string]string, parent string) {
 	case int:
 		// if we see an int, convert it to a string
 		subKeys[key] = strconv.Itoa(v)
+	case bool:
+		// if we see an bool, convert it to a string
+		subKeys[key] = strconv.FormatBool(v)
+
 	case yaml.MapSlice:
 		parseMapSlice(v, subKeys, key)
 	case nil:

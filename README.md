@@ -21,8 +21,8 @@ Building The Provider
 Clone repository to: `$GOPATH/src/github.com/schoology/terraform-provider-consul-yaml`
 
 ```sh
-$ mkdir -p $GOPATH/src/github.com/schoology; cd $GOPATH/src/github.com/schoology
-$ git clone git@github.com:schoology/terraform-provider-consul-yaml
+$ mkdir -p $GOPATH/src/schoology; cd $GOPATH/src/schoology
+$ git clone https://github.com/schoology/terraform-provider-consul-yaml.git
 ```
 
 Enter the provider directory and build the provider
@@ -37,14 +37,8 @@ Developing the Provider
 
 If you wish to work on the provider, you'll first need [Go](http://www.golang.org) installed on your machine (version 1.8+ is *required*). You'll also need to correctly setup a [GOPATH](http://golang.org/doc/code.html#GOPATH), as well as adding `$GOPATH/bin` to your `$PATH`.
 
-To compile the provider, run `make build`. This will build the provider and put the provider binary in the `$GOPATH/bin` directory.
+Once you have compiled the provider you can find binary in the `$GOPATH/bin` directory. To test with Terraform you will need to move the binary to your local plugin directory, located at `%APPDATA%\terraform.d\plugins` on Windows and `~/.terraform.d/plugins` on other systems.
 
-```sh
-$ make bin
-...
-$ $GOPATH/bin/terraform-provider-consul-yaml
-...
-```
 
 In order to test the provider, you can simply run `make test`.
 
