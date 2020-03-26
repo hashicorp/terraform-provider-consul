@@ -69,21 +69,15 @@ func dataSourceConsulNodes() *schema.Resource {
 						catalogNodesNodeMeta: {
 							Type:     schema.TypeMap,
 							Computed: true,
+							Elem: &schema.Schema{
+								Type: schema.TypeString,
+							},
 						},
 						catalogNodesNodeTaggedAddresses: {
 							Type:     schema.TypeMap,
 							Computed: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									catalogNodesSchemaTaggedLAN: {
-										Type:     schema.TypeString,
-										Computed: true,
-									},
-									catalogNodesSchemaTaggedWAN: {
-										Type:     schema.TypeString,
-										Computed: true,
-									},
-								},
+							Elem: &schema.Schema{
+								Type: schema.TypeString,
 							},
 						},
 					},

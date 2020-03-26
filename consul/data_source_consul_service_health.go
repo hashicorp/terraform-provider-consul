@@ -39,6 +39,9 @@ func dataSourceConsulServiceHealth() *schema.Resource {
 			"node_meta": &schema.Schema{
 				Optional: true,
 				Type:     schema.TypeMap,
+				Elem: &schema.Schema{
+					Type: schema.TypeString,
+				},
 				// ForceNew: true,
 			},
 			"passing": &schema.Schema{

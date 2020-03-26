@@ -42,6 +42,9 @@ func schemaQueryOpts() *schema.Schema {
 				queryOptNodeMeta: {
 					Optional: true,
 					Type:     schema.TypeMap,
+					Elem: &schema.Schema{
+						Type: schema.TypeString,
+					},
 				},
 				queryOptRequireConsistent: {
 					Optional: true,

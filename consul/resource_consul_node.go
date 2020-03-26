@@ -35,7 +35,10 @@ func resourceConsulNode() *schema.Resource {
 			},
 
 			"meta": {
-				Type:     schema.TypeMap,
+				Type: schema.TypeMap,
+				Elem: &schema.Schema{
+					Type: schema.TypeString,
+				},
 				Optional: true,
 				ForceNew: false,
 			},

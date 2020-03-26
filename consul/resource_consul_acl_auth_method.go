@@ -38,6 +38,9 @@ func resourceConsulACLAuthMethod() *schema.Resource {
 				Type:        schema.TypeMap,
 				Required:    true,
 				Description: "The raw configuration for this ACL auth method.",
+				Elem: &schema.Schema{
+					Type: schema.TypeString,
+				},
 			},
 
 			"namespace": {
