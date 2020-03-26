@@ -63,6 +63,8 @@ The `query_options` block supports the following:
 * `wait_time` - (Optional) Max time the client should wait for a blocking query
   to return.
 
+* `namespace` - (Optional, Enterprise Only) The namespace to lookup the services.
+
 ## Attributes Reference
 
 The following attributes are exported:

@@ -54,6 +54,7 @@ The following arguments are supported:
 * `policies` - (Optional) The list of policies attached to the token.
 * `roles` - (Optional) The list of roles attached to the token.
 * `local` - (Optional) The flag to set the token local to the current datacenter.
+* `namespace` - (Optional, Enterprise Only) The namespace to create the token within.
 
 ## Attributes Reference
 

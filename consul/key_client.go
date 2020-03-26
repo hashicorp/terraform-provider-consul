@@ -15,9 +15,17 @@ type keyClient struct {
 	wOpts  *consulapi.WriteOptions
 }
 
-func newKeyClient(realClient *consulapi.KV, dc, token string) *keyClient {
-	qOpts := &consulapi.QueryOptions{Datacenter: dc, Token: token}
-	wOpts := &consulapi.WriteOptions{Datacenter: dc, Token: token}
+func newKeyClient(realClient *consulapi.KV, dc, token, namespace string) *keyClient {
+	qOpts := &consulapi.QueryOptions{
+		Datacenter: dc,
+		Token:      token,
+		Namespace:  namespace,
+	}
+	wOpts := &consulapi.WriteOptions{
+		Datacenter: dc,
+		Token:      token,
+		Namespace:  namespace,
+	}
 
 	return &keyClient{
 		client: realClient,

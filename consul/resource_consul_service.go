@@ -172,12 +172,19 @@ func resourceConsulService() *schema.Resource {
 					},
 				},
 			},
+
+			"namespace": {
+				Type:     schema.TypeString,
+				Optional: true,
+				ForceNew: true,
+			},
 		},
 	}
 }
 
 func resourceConsulServiceCreate(d *schema.ResourceData, meta interface{}) error {
 	client := getClient(meta)
+	namespace := getNamespace(d, meta)
 	catalog := client.Catalog()
 
 	name := d.Get("name").(string)
@@ -203,7 +210,10 @@ func resourceConsulServiceCreate(d *schema.ResourceData, meta interface{}) error
 	}
 
 	// Setup the operations using the datacenter
-	wOpts := consulapi.WriteOptions{Datacenter: dc}
+	wOpts := consulapi.WriteOptions{
+		Datacenter: dc,
+		Namespace:  namespace,
+	}
 
 	registration := &consulapi.CatalogRegistration{
 		Datacenter: dc,
@@ -269,7 +279,7 @@ func resourceConsulServiceCreate(d *schema.ResourceData, meta interface{}) error
 
 	// Retrieve the service again to get the canonical service ID. We can't
 	// get this back from the register call or through
-	service, err := retrieveService(client, name, ident, node, dc)
+	service, err := retrieveService(client, name, ident, node, dc, namespace)
 	if err != nil {
 		return fmt.Errorf("Failed to retrieve service '%s' after registration. This may mean that the service should be manually deregistered. %v", ident, err)
 	}
@@ -281,6 +291,7 @@ func resourceConsulServiceCreate(d *schema.ResourceData, meta interface{}) error
 
 func resourceConsulServiceUpdate(d *schema.ResourceData, meta interface{}) error {
 	catalog := getClient(meta).Catalog()
+	namespace := getNamespace(d, meta)
 
 	name := d.Get("name").(string)
 	node := d.Get("node").(string)
@@ -291,7 +302,10 @@ func resourceConsulServiceUpdate(d *schema.ResourceData, meta interface{}) error
 	}
 
 	// Setup the operations using the datacenter
-	wOpts := consulapi.WriteOptions{Datacenter: dc}
+	wOpts := consulapi.WriteOptions{
+		Datacenter: dc,
+		Namespace:  namespace,
+	}
 
 	registration := &consulapi.CatalogRegistration{
 		Datacenter: dc,
@@ -352,6 +366,7 @@ func resourceConsulServiceUpdate(d *schema.ResourceData, meta interface{}) error
 
 func resourceConsulServiceRead(d *schema.ResourceData, meta interface{}) error {
 	client := getClient(meta)
+	namespace := getNamespace(d, meta)
 
 	dc := ""
 	if _, ok := d.GetOk("datacenter"); ok {
@@ -362,14 +377,13 @@ func resourceConsulServiceRead(d *schema.ResourceData, meta interface{}) error {
 	name := d.Get("name").(string)
 	node := d.Get("node").(string)
 
-	service, err := retrieveService(client, name, id, node, dc)
+	service, err := retrieveService(client, name, id, node, dc, namespace)
 	if err != nil {
 		if err == NoServiceRegistered {
 			d.SetId("")
 			return nil
-		} else {
-			return err
 		}
+		return err
 	}
 
 	if err = d.Set("address", service.ServiceAddress); err != nil {
@@ -448,6 +462,7 @@ func resourceConsulServiceRead(d *schema.ResourceData, meta interface{}) error {
 
 func resourceConsulServiceDelete(d *schema.ResourceData, meta interface{}) error {
 	client := getClient(meta)
+	namespace := getNamespace(d, meta)
 	catalog := client.Catalog()
 	id := d.Id()
 	node := d.Get("node").(string)
@@ -469,7 +484,11 @@ func resourceConsulServiceDelete(d *schema.ResourceData, meta interface{}) error
 	}
 
 	// Setup the operations using the datacenter
-	wOpts := consulapi.WriteOptions{Datacenter: dc, Token: token}
+	wOpts := consulapi.WriteOptions{
+		Datacenter: dc,
+		Token:      token,
+		Namespace:  namespace,
+	}
 
 	deregistration := consulapi.CatalogDeregistration{
 		Datacenter: dc,
@@ -487,8 +506,11 @@ func resourceConsulServiceDelete(d *schema.ResourceData, meta interface{}) error
 	return nil
 }
 
-func retrieveService(client *consulapi.Client, name string, ident string, node string, dc string) (*consulapi.CatalogService, error) {
-	qOpts := consulapi.QueryOptions{Datacenter: dc}
+func retrieveService(client *consulapi.Client, name, ident, node, dc, namespace string) (*consulapi.CatalogService, error) {
+	qOpts := consulapi.QueryOptions{
+		Datacenter: dc,
+		Namespace:  namespace,
+	}
 	services, _, err := client.Catalog().Service(name, "", &qOpts)
 	if err != nil {
 		return nil, err

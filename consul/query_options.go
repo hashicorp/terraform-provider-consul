@@ -18,56 +18,58 @@ const (
 	queryOptWaitTime          = "wait_time"
 )
 
-var schemaQueryOpts = &schema.Schema{
-	Optional: true,
-	Type:     schema.TypeSet,
-	Elem: &schema.Resource{
-		Schema: map[string]*schema.Schema{
-			queryOptAllowStale: {
-				Optional: true,
-				Default:  true,
-				Type:     schema.TypeBool,
-			},
-			queryOptDatacenter: {
-				// Optional because we'll pull the default from the local agent if it's
-				// not specified, but we can query remote data centers as a result.
-				Optional: true,
-				Type:     schema.TypeString,
-			},
-			queryOptNear: {
-				Optional: true,
-				Type:     schema.TypeString,
-			},
-			queryOptNodeMeta: {
-				Optional: true,
-				Type:     schema.TypeMap,
-			},
-			queryOptRequireConsistent: {
-				Optional: true,
-				Default:  false,
-				Type:     schema.TypeBool,
-			},
-			queryOptToken: {
-				Optional:  true,
-				Type:      schema.TypeString,
-				Sensitive: true,
-			},
-			queryOptWaitIndex: {
-				Optional: true,
-				Type:     schema.TypeInt,
-				ValidateFunc: makeValidationFunc(queryOptWaitIndex, []interface{}{
-					validateIntMin(0),
-				}),
-			},
-			queryOptWaitTime: {
-				Optional: true,
-				Type:     schema.TypeString,
-				ValidateFunc: makeValidationFunc(queryOptWaitTime, []interface{}{
-					validateDurationMin("0ns"),
-				}),
+func schemaQueryOpts() *schema.Schema {
+	return &schema.Schema{
+		Optional: true,
+		Type:     schema.TypeSet,
+		Elem: &schema.Resource{
+			Schema: map[string]*schema.Schema{
+				queryOptAllowStale: {
+					Optional: true,
+					Default:  true,
+					Type:     schema.TypeBool,
+				},
+				queryOptDatacenter: {
+					// Optional because we'll pull the default from the local agent if it's
+					// not specified, but we can query remote data centers as a result.
+					Optional: true,
+					Type:     schema.TypeString,
+				},
+				queryOptNear: {
+					Optional: true,
+					Type:     schema.TypeString,
+				},
+				queryOptNodeMeta: {
+					Optional: true,
+					Type:     schema.TypeMap,
+				},
+				queryOptRequireConsistent: {
+					Optional: true,
+					Default:  false,
+					Type:     schema.TypeBool,
+				},
+				queryOptToken: {
+					Optional:  true,
+					Type:      schema.TypeString,
+					Sensitive: true,
+				},
+				queryOptWaitIndex: {
+					Optional: true,
+					Type:     schema.TypeInt,
+					ValidateFunc: makeValidationFunc(queryOptWaitIndex, []interface{}{
+						validateIntMin(0),
+					}),
+				},
+				queryOptWaitTime: {
+					Optional: true,
+					Type:     schema.TypeString,
+					ValidateFunc: makeValidationFunc(queryOptWaitTime, []interface{}{
+						validateDurationMin("0ns"),
+					}),
+				},
 			},
 		},
-	},
+	}
 }
 
 func getQueryOpts(d *schema.ResourceData, client *consulapi.Client, meta interface{}) (*consulapi.QueryOptions, error) {
@@ -82,6 +84,10 @@ func getQueryOpts(d *schema.ResourceData, client *consulapi.Client, meta interfa
 
 			if v, ok := queryOptions[queryOptDatacenter]; ok {
 				queryOpts.Datacenter = v.(string)
+			}
+
+			if v, ok := queryOptions["namespace"]; ok {
+				queryOpts.Namespace = v.(string)
 			}
 
 			if queryOpts.Datacenter == "" {

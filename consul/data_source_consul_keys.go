@@ -49,12 +49,19 @@ func dataSourceConsulKeys() *schema.Resource {
 				Type:     schema.TypeMap,
 				Computed: true,
 			},
+
+			"namespace": {
+				Type:     schema.TypeString,
+				Optional: true,
+				ForceNew: true,
+			},
 		},
 	}
 }
 
 func dataSourceConsulKeysRead(d *schema.ResourceData, meta interface{}) error {
 	client := getClient(meta)
+	namespace := getNamespace(d, meta)
 	kv := client.KV()
 	token := d.Get("token").(string)
 	dc, err := getDC(d, client, meta)
@@ -62,7 +69,7 @@ func dataSourceConsulKeysRead(d *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
-	keyClient := newKeyClient(kv, dc, token)
+	keyClient := newKeyClient(kv, dc, token, namespace)
 
 	vars := make(map[string]string)
 

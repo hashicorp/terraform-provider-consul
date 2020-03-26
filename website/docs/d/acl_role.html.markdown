@@ -29,6 +29,7 @@ output "consul_acl_role" {
 The following arguments are supported:
 
 * `name` - (Required) The name of the ACL Role.
+* `namespace` - (Optional, Enterprise Only) The namespace to lookup the role.
 
 ## Attributes Reference
 

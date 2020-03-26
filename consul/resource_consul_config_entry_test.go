@@ -1,6 +1,8 @@
 package consul
 
 import (
+	"fmt"
+	"os"
 	"regexp"
 	"testing"
 
@@ -8,24 +10,50 @@ import (
 )
 
 func TestAccConsulConfigEntry_basic(t *testing.T) {
+	// This needs to be called before serverIsConsulCommunityEdition() as the
+	// test provider won't be initialized for unit tests.
+	if os.Getenv(resource.TestEnvVar) == "" {
+		t.Skip(fmt.Sprintf(
+			"Acceptance tests skipped unless env '%s' set",
+			resource.TestEnvVar))
+		return
+	}
+
+	// Expected values for Consul Community Edition
+	extraConf := ""
+	configJSONServiceDefaults := "{\"Expose\":{},\"MeshGateway\":{},\"Protocol\":\"https\"}"
+	configJSONProxyDefaults := "{\"Config\":{\"foo\":\"bar\"},\"Expose\":{},\"MeshGateway\":{}}"
+	configJSONServiceRouter := "{\"Routes\":[{\"Destination\":{\"Service\":\"admin\"},\"Match\":{\"HTTP\":{\"PathPrefix\":\"/admin\"}}}]}"
+	configJSONServiceSplitter := "{\"Splits\":[{\"ServiceSubset\":\"v1\",\"Weight\":90},{\"ServiceSubset\":\"v2\",\"Weight\":10}]}"
+	configJSONServiceResolver := "{\"DefaultSubset\":\"v1\",\"Subsets\":{\"v1\":{\"Filter\":\"Service.Meta.version == v1\"},\"v2\":{\"Filter\":\"Service.Meta.version == v2\"}}}"
+
+	if !serverIsConsulCommunityEdition(t) {
+		extraConf = `Namespace: "default"`
+		configJSONServiceDefaults = "{\"Expose\":{},\"MeshGateway\":{},\"Namespace\":\"default\",\"Protocol\":\"https\"}"
+		configJSONProxyDefaults = "{\"Config\":{\"foo\":\"bar\"},\"Expose\":{},\"MeshGateway\":{},\"Namespace\":\"default\"}"
+		configJSONServiceRouter = "{\"Namespace\":\"default\",\"Routes\":[{\"Destination\":{\"Service\":\"admin\"},\"Match\":{\"HTTP\":{\"PathPrefix\":\"/admin\"}}}]}"
+		configJSONServiceSplitter = "{\"Namespace\":\"default\",\"Splits\":[{\"ServiceSubset\":\"v1\",\"Weight\":90},{\"ServiceSubset\":\"v2\",\"Weight\":10}]}"
+		configJSONServiceResolver = "{\"DefaultSubset\":\"v1\",\"Namespace\":\"default\",\"Subsets\":{\"v1\":{\"Filter\":\"Service.Meta.version == v1\"},\"v2\":{\"Filter\":\"Service.Meta.version == v2\"}}}"
+	}
+
 	resource.Test(t, resource.TestCase{
-		PreCheck:  func() {},
+		PreCheck:  func() { testAccPreCheck(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccConsulConfigEntry_ServiceDefaults,
+				Config: testAccConsulConfigEntry_ServiceDefaults(extraConf),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("consul_config_entry.foo", "name", "foo"),
 					resource.TestCheckResourceAttr("consul_config_entry.foo", "kind", "service-defaults"),
-					resource.TestCheckResourceAttr("consul_config_entry.foo", "config_json", "{\"MeshGateway\":{},\"Protocol\":\"https\"}"),
+					resource.TestCheckResourceAttr("consul_config_entry.foo", "config_json", configJSONServiceDefaults),
 				),
 			},
 			{
-				Config: testAccConsulConfigEntry_ServiceDefaultsOptionalField,
+				Config: testAccConsulConfigEntry_ServiceDefaultsOptionalField(extraConf),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("consul_config_entry.foo", "name", "foo"),
 					resource.TestCheckResourceAttr("consul_config_entry.foo", "kind", "service-defaults"),
-					resource.TestCheckResourceAttr("consul_config_entry.foo", "config_json", "{\"MeshGateway\":{},\"Protocol\":\"https\"}"),
+					resource.TestCheckResourceAttr("consul_config_entry.foo", "config_json", configJSONServiceDefaults),
 				),
 			},
 			{
@@ -36,39 +64,39 @@ func TestAccConsulConfigEntry_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("consul_config_entry.foo", "name", "foo"),
 					resource.TestCheckResourceAttr("consul_config_entry.foo", "kind", "service-defaults"),
-					resource.TestCheckResourceAttr("consul_config_entry.foo", "config_json", "{\"MeshGateway\":{},\"Protocol\":\"https\"}"),
+					resource.TestCheckResourceAttr("consul_config_entry.foo", "config_json", configJSONServiceDefaults),
 				),
 			},
 			{
-				Config: testAccConsulConfigEntry_ProxyDefaults,
+				Config: testAccConsulConfigEntry_ProxyDefaults(extraConf),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("consul_config_entry.foo", "name", "global"),
 					resource.TestCheckResourceAttr("consul_config_entry.foo", "kind", "proxy-defaults"),
-					resource.TestCheckResourceAttr("consul_config_entry.foo", "config_json", "{\"Config\":{\"foo\":\"bar\"},\"MeshGateway\":{}}"),
+					resource.TestCheckResourceAttr("consul_config_entry.foo", "config_json", configJSONProxyDefaults),
 				),
 			},
 			{
-				Config: TestAccConsulConfigEntry_ServiceRouter,
+				Config: testAccConsulConfigEntry_ServiceRouter(extraConf),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("consul_config_entry.service_router", "name", "web"),
 					resource.TestCheckResourceAttr("consul_config_entry.service_router", "kind", "service-router"),
-					resource.TestCheckResourceAttr("consul_config_entry.service_router", "config_json", "{\"Routes\":[{\"Destination\":{\"Service\":\"admin\"},\"Match\":{\"HTTP\":{\"PathPrefix\":\"/admin\"}}}]}"),
+					resource.TestCheckResourceAttr("consul_config_entry.service_router", "config_json", configJSONServiceRouter),
 				),
 			},
 			{
-				Config: TestAccConsulConfigEntry_ServiceSplitter,
+				Config: testAccConsulConfigEntry_ServiceSplitter(extraConf),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("consul_config_entry.service_splitter", "name", "web"),
 					resource.TestCheckResourceAttr("consul_config_entry.service_splitter", "kind", "service-splitter"),
-					resource.TestCheckResourceAttr("consul_config_entry.service_splitter", "config_json", "{\"Splits\":[{\"ServiceSubset\":\"v1\",\"Weight\":90},{\"ServiceSubset\":\"v2\",\"Weight\":10}]}"),
+					resource.TestCheckResourceAttr("consul_config_entry.service_splitter", "config_json", configJSONServiceSplitter),
 				),
 			},
 			{
-				Config: TestAccConsulConfigEntry_ServiceResolver,
+				Config: testAccConsulConfigEntry_ServiceResolver(extraConf),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("consul_config_entry.service_resolver", "name", "web"),
 					resource.TestCheckResourceAttr("consul_config_entry.service_resolver", "kind", "service-resolver"),
-					resource.TestCheckResourceAttr("consul_config_entry.service_resolver", "config_json", "{\"DefaultSubset\":\"v1\",\"Subsets\":{\"v1\":{\"Filter\":\"Service.Meta.version == v1\"},\"v2\":{\"Filter\":\"Service.Meta.version == v2\"}}}"),
+					resource.TestCheckResourceAttr("consul_config_entry.service_resolver", "config_json", configJSONServiceResolver),
 				),
 			},
 		},
@@ -88,7 +116,8 @@ func TestAccConsulConfigEntry_Errors(t *testing.T) {
 	})
 }
 
-const testAccConsulConfigEntry_ServiceDefaults = `
+func testAccConsulConfigEntry_ServiceDefaults(extraConf string) string {
+	return fmt.Sprintf(`
 resource "consul_config_entry" "foo" {
 	name = "foo"
 	kind = "service-defaults"
@@ -96,20 +125,25 @@ resource "consul_config_entry" "foo" {
 	config_json = jsonencode({
 		MeshGateway = {}
 		Protocol    = "https"
+		%s
 	})
 }
-`
+`, extraConf)
+}
 
-const testAccConsulConfigEntry_ServiceDefaultsOptionalField = `
+func testAccConsulConfigEntry_ServiceDefaultsOptionalField(extraConf string) string {
+	return fmt.Sprintf(`
 resource "consul_config_entry" "foo" {
 	name = "foo"
 	kind = "service-defaults"
 
 	config_json = jsonencode({
 		Protocol    = "https"
+		%s
 	})
 }
-`
+`, extraConf)
+}
 
 const testAccConsulConfigEntry_ServiceDefaultsExtraField = `
 resource "consul_config_entry" "foo" {
@@ -123,7 +157,8 @@ resource "consul_config_entry" "foo" {
 }
 `
 
-const testAccConsulConfigEntry_ProxyDefaults = `
+func testAccConsulConfigEntry_ProxyDefaults(extraConf string) string {
+	return fmt.Sprintf(`
 resource "consul_config_entry" "foo" {
 	name = "global"
 	kind = "proxy-defaults"
@@ -132,17 +167,21 @@ resource "consul_config_entry" "foo" {
 		Config = {
 			foo = "bar"
 		}
+		%s
 	})
 }
-`
+`, extraConf)
+}
 
-const TestAccConsulConfigEntry_ServiceRouter = `
+func testAccConsulConfigEntry_ServiceRouter(extraConf string) string {
+	return fmt.Sprintf(`
 resource "consul_config_entry" "web" {
 	name = "web"
 	kind = "service-defaults"
 
 	config_json = jsonencode({
 		Protocol = "http"
+		%s
 	})
 }
 
@@ -152,6 +191,7 @@ resource "consul_config_entry" "admin_service_defaults" {
 
 	config_json = jsonencode({
 		Protocol = "http"
+		%s
 	})
 }
 
@@ -160,6 +200,7 @@ resource "consul_config_entry" "service_router" {
 	kind = "service-router"
 
 	config_json = jsonencode({
+		%s
 		Routes = [
 			{
 				Match = {
@@ -176,14 +217,17 @@ resource "consul_config_entry" "service_router" {
 		]
 	})
 }
-`
+`, extraConf, extraConf, extraConf)
+}
 
-const TestAccConsulConfigEntry_ServiceSplitter = `
+func testAccConsulConfigEntry_ServiceSplitter(extraConf string) string {
+	return fmt.Sprintf(`
 resource "consul_config_entry" "web" {
 	name = "web"
 	kind = "service-defaults"
 
 	config_json = jsonencode({
+		%s
 		Protocol = "http"
 	})
 }
@@ -193,6 +237,7 @@ resource "consul_config_entry" "service_resolver" {
 	name = consul_config_entry.web.name
 
 	config_json = jsonencode({
+		%s
 		DefaultSubset = "v1"
 
 		Subsets = {
@@ -211,6 +256,7 @@ resource "consul_config_entry" "service_splitter" {
 	name = consul_config_entry.service_resolver.name
 
 	config_json = jsonencode({
+		%s
 		Splits = [
 			{
 				Weight         = 90
@@ -223,14 +269,17 @@ resource "consul_config_entry" "service_splitter" {
 		]
 	})
 }
-`
+`, extraConf, extraConf, extraConf)
+}
 
-const TestAccConsulConfigEntry_ServiceResolver = `
+func testAccConsulConfigEntry_ServiceResolver(extraConf string) string {
+	return fmt.Sprintf(`
 resource "consul_config_entry" "web" {
 	name = "web"
 	kind = "service-defaults"
 
 	config_json = jsonencode({
+		%s
 		Protocol = "http"
 	})
 }
@@ -240,6 +289,7 @@ resource "consul_config_entry" "service_resolver" {
 	name = consul_config_entry.web.name
 
 	config_json = jsonencode({
+		%s
 		DefaultSubset = "v1"
 
 		Subsets = {
@@ -253,7 +303,8 @@ resource "consul_config_entry" "service_resolver" {
 
 	})
 }
-`
+`, extraConf, extraConf)
+}
 
 const testAccConsulConfigEntry_ProxyDefaultsWrongName = `
 resource "consul_config_entry" "foo" {

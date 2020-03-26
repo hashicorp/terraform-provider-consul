@@ -46,6 +46,8 @@ The following arguments are supported:
 * `key` - (Required) Specifies a key in Consul to be written.
   Supported values documented below.
 
+* `namespace` - (Optional, Enterprise Only) The namespace to create the keys within.
+
 The `key` block supports the following:
 
 * `path` - (Required) This is the path in Consul that should be written to.

@@ -2,6 +2,7 @@ package consul
 
 import (
 	"fmt"
+	"regexp"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
@@ -102,6 +103,31 @@ func TestAccConsulACLToken_import(t *testing.T) {
 	})
 }
 
+func TestAccConsulACLToken_namespaceCE(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		Providers: testAccProviders,
+		PreCheck:  func() { skipTestOnConsulEnterpriseEdition(t) },
+		Steps: []resource.TestStep{
+			{
+				Config:      testResourceACLTokenConfigNamespaceCE,
+				ExpectError: regexp.MustCompile("Namespaces is a Consul Enterprise feature"),
+			},
+		},
+	})
+}
+
+func TestAccConsulACLToken_namespaceEE(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		Providers: testAccProviders,
+		PreCheck:  func() { skipTestOnConsulCommunityEdition(t) },
+		Steps: []resource.TestStep{
+			{
+				Config: testResourceACLTokenConfigNamespaceEE,
+			},
+		},
+	})
+}
+
 const testResourceACLTokenConfigBasic = `
 resource "consul_acl_policy" "test" {
 	name = "test"
@@ -136,4 +162,19 @@ resource "consul_acl_role" "test" {
 resource "consul_acl_token" "test" {
 	description = "test"
 	roles = [consul_acl_role.test.name]
+}`
+
+const testResourceACLTokenConfigNamespaceCE = `
+resource "consul_acl_token" "test" {
+  description = "test"
+  namespace   = "test"
+}`
+
+const testResourceACLTokenConfigNamespaceEE = `
+resource "consul_namespace" "test" {
+  name = "test-token"
+}
+resource "consul_acl_token" "test" {
+  description = "test"
+  namespace   = consul_namespace.test.name
 }`

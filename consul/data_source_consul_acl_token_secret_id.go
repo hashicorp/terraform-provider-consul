@@ -70,7 +70,7 @@ func dataSourceConsulACLTokenSecretIDRead(d *schema.ResourceData, meta interface
 		}
 	} else {
 		if err = d.Set("pgp_key", ""); err != nil {
-			return fmt.Errorf("Error while setting 'encrypted_secret_id': %s", err)
+			return fmt.Errorf("Error while setting 'pgp_key': %s", err)
 		}
 
 		if err = d.Set("secret_id", aclToken.SecretID); err != nil {
