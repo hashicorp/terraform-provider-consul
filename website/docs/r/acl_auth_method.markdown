@@ -36,6 +36,7 @@ The following arguments are supported:
 * `type` - (Required) The type of the ACL auth method.
 * `description` - (Optional) A free form human readable description of the auth method.
 * `config` - (Required) The raw configuration for this ACL auth method.
+* `namespace` - (Optional, Enterprise Only) The namespace to create the policy within.
 
 ## Attributes Reference
 

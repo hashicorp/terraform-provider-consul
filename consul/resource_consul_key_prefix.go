@@ -13,7 +13,12 @@ func resourceConsulKeyPrefix() *schema.Resource {
 		Read:   resourceConsulKeyPrefixRead,
 		Delete: resourceConsulKeyPrefixDelete,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			State: func(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+				if err := d.Set("path_prefix", d.Id()); err != nil {
+					return nil, fmt.Errorf("failed to set 'path_prefix': %#v", err)
+				}
+				return []*schema.ResourceData{d}, nil
+			},
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -67,12 +72,19 @@ func resourceConsulKeyPrefix() *schema.Resource {
 					},
 				},
 			},
+
+			"namespace": {
+				Type:     schema.TypeString,
+				Optional: true,
+				ForceNew: true,
+			},
 		},
 	}
 }
 
 func resourceConsulKeyPrefixCreate(d *schema.ResourceData, meta interface{}) error {
 	client := getClient(meta)
+	namespace := getNamespace(d, meta)
 	kv := client.KV()
 	token := d.Get("token").(string)
 	dc, err := getDC(d, client, meta)
@@ -80,7 +92,7 @@ func resourceConsulKeyPrefixCreate(d *schema.ResourceData, meta interface{}) err
 		return err
 	}
 
-	keyClient := newKeyClient(kv, dc, token)
+	keyClient := newKeyClient(kv, dc, token, namespace)
 
 	type subKey struct {
 		value string
@@ -152,6 +164,7 @@ func resourceConsulKeyPrefixCreate(d *schema.ResourceData, meta interface{}) err
 
 func resourceConsulKeyPrefixUpdate(d *schema.ResourceData, meta interface{}) error {
 	client := getClient(meta)
+	namespace := getNamespace(d, meta)
 	kv := client.KV()
 	token := d.Get("token").(string)
 	dc, err := getDC(d, client, meta)
@@ -159,7 +172,7 @@ func resourceConsulKeyPrefixUpdate(d *schema.ResourceData, meta interface{}) err
 		return err
 	}
 
-	keyClient := newKeyClient(kv, dc, token)
+	keyClient := newKeyClient(kv, dc, token, namespace)
 
 	pathPrefix := d.Id()
 
@@ -263,6 +276,7 @@ func resourceConsulKeyPrefixUpdate(d *schema.ResourceData, meta interface{}) err
 
 func resourceConsulKeyPrefixRead(d *schema.ResourceData, meta interface{}) error {
 	client := getClient(meta)
+	namespace := getNamespace(d, meta)
 	kv := client.KV()
 	token := d.Get("token").(string)
 	dc, err := getDC(d, client, meta)
@@ -270,7 +284,7 @@ func resourceConsulKeyPrefixRead(d *schema.ResourceData, meta interface{}) error
 		return err
 	}
 
-	keyClient := newKeyClient(kv, dc, token)
+	keyClient := newKeyClient(kv, dc, token, namespace)
 
 	pathPrefix := d.Id()
 
@@ -333,6 +347,7 @@ func resourceConsulKeyPrefixRead(d *schema.ResourceData, meta interface{}) error
 
 func resourceConsulKeyPrefixDelete(d *schema.ResourceData, meta interface{}) error {
 	client := getClient(meta)
+	namespace := getNamespace(d, meta)
 	kv := client.KV()
 	token := d.Get("token").(string)
 	dc, err := getDC(d, client, meta)
@@ -340,7 +355,7 @@ func resourceConsulKeyPrefixDelete(d *schema.ResourceData, meta interface{}) err
 		return err
 	}
 
-	keyClient := newKeyClient(kv, dc, token)
+	keyClient := newKeyClient(kv, dc, token, namespace)
 
 	pathPrefix := d.Id()
 

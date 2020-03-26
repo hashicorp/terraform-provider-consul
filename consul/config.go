@@ -20,6 +20,7 @@ type Config struct {
 	KeyFile       string `mapstructure:"key_file"`
 	CAPath        string `mapstructure:"ca_path"`
 	InsecureHttps bool   `mapstructure:"insecure_https"`
+	Namespace     string `mapstructure:"namespace"`
 }
 
 // Client returns a new client for accessing consul.

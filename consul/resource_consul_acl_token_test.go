@@ -2,6 +2,7 @@ package consul
 
 import (
 	"fmt"
+	"regexp"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
@@ -34,6 +35,7 @@ func TestAccConsulACLToken_basic(t *testing.T) {
 				Config: testResourceACLTokenConfigBasic,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("consul_acl_token.test", "description", "test"),
+					resource.TestCheckResourceAttr("consul_acl_token.test", "roles.#", "0"),
 					resource.TestCheckResourceAttr("consul_acl_token.test", "policies.#", "1"),
 					resource.TestCheckResourceAttr("consul_acl_token.test", "policies.1785148924", "test"),
 					resource.TestCheckResourceAttr("consul_acl_token.test", "local", "true"),
@@ -43,6 +45,7 @@ func TestAccConsulACLToken_basic(t *testing.T) {
 				Config: testResourceACLTokenConfigUpdate,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("consul_acl_token.test", "description", "test"),
+					resource.TestCheckResourceAttr("consul_acl_token.test", "roles.#", "0"),
 					resource.TestCheckResourceAttr("consul_acl_token.test", "policies.#", "1"),
 					resource.TestCheckResourceAttr("consul_acl_token.test", "policies.111830242", "test2"),
 					resource.TestCheckResourceAttr("consul_acl_token.test", "local", "false"),
@@ -50,6 +53,14 @@ func TestAccConsulACLToken_basic(t *testing.T) {
 			},
 			{
 				Config: testResourceACLTokenConfigUpdate,
+			},
+			{
+				Config: testResourceACLTokenConfigRole,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("consul_acl_token.test", "description", "test"),
+					resource.TestCheckResourceAttr("consul_acl_token.test", "roles.#", "1"),
+					resource.TestCheckResourceAttr("consul_acl_token.test", "roles.1785148924", "test"),
+				),
 			},
 		},
 	})
@@ -92,6 +103,31 @@ func TestAccConsulACLToken_import(t *testing.T) {
 	})
 }
 
+func TestAccConsulACLToken_namespaceCE(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		Providers: testAccProviders,
+		PreCheck:  func() { skipTestOnConsulEnterpriseEdition(t) },
+		Steps: []resource.TestStep{
+			{
+				Config:      testResourceACLTokenConfigNamespaceCE,
+				ExpectError: regexp.MustCompile("Namespaces is a Consul Enterprise feature"),
+			},
+		},
+	})
+}
+
+func TestAccConsulACLToken_namespaceEE(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		Providers: testAccProviders,
+		PreCheck:  func() { skipTestOnConsulCommunityEdition(t) },
+		Steps: []resource.TestStep{
+			{
+				Config: testResourceACLTokenConfigNamespaceEE,
+			},
+		},
+	})
+}
+
 const testResourceACLTokenConfigBasic = `
 resource "consul_acl_policy" "test" {
 	name = "test"
@@ -116,4 +152,29 @@ resource "consul_acl_policy" "test2" {
 resource "consul_acl_token" "test" {
 	description = "test"
 	policies = ["${consul_acl_policy.test2.name}"]
+}`
+
+const testResourceACLTokenConfigRole = `
+resource "consul_acl_role" "test" {
+    name = "test"
+}
+
+resource "consul_acl_token" "test" {
+	description = "test"
+	roles = [consul_acl_role.test.name]
+}`
+
+const testResourceACLTokenConfigNamespaceCE = `
+resource "consul_acl_token" "test" {
+  description = "test"
+  namespace   = "test"
+}`
+
+const testResourceACLTokenConfigNamespaceEE = `
+resource "consul_namespace" "test" {
+  name = "test-token"
+}
+resource "consul_acl_token" "test" {
+  description = "test"
+  namespace   = consul_namespace.test.name
 }`

@@ -104,6 +104,8 @@ of the `name` attribute.
 * `meta` - (Optional) A map of arbitrary KV metadata linked to the service
   instance.
 
+* `namespace` - (Optional, Enterprise Only) The namespace to create the service within.
+
 The following attributes are available for each health-check:
 
 * `check_id` - (Optional, string) An ID, *unique per agent*. Will default to *name*

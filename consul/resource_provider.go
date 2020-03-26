@@ -81,6 +81,11 @@ func Provider() terraform.ResourceProvider {
 					"CONSUL_HTTP_TOKEN",
 				}, ""),
 			},
+
+			"namespace": {
+				Type:     schema.TypeString,
+				Optional: true,
+			},
 		},
 
 		DataSourcesMap: map[string]*schema.Resource{
@@ -121,6 +126,7 @@ func Provider() terraform.ResourceProvider {
 			"consul_keys":                        resourceConsulKeys(),
 			"consul_key_prefix":                  resourceConsulKeyPrefix(),
 			"consul_license":                     resourceConsulLicense(),
+			"consul_namespace":                   resourceConsulNamespace(),
 			"consul_node":                        resourceConsulNode(),
 			"consul_prepared_query":              resourceConsulPreparedQuery(),
 			"consul_autopilot_config":            resourceConsulAutopilotConfig(),
@@ -152,4 +158,12 @@ func getClient(meta interface{}) *consulapi.Client {
 	// We can ignore err since we checked the configuration in providerConfigure()
 	client, _ := meta.(*Config).Client()
 	return client
+}
+
+func getNamespace(d *schema.ResourceData, meta interface{}) string {
+	namespace := d.Get("namespace").(string)
+	if namespace != "" {
+		return namespace
+	}
+	return meta.(*Config).Namespace
 }

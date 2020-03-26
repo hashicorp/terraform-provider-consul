@@ -20,7 +20,7 @@ resource "consul_acl_policy" "read-policy" {
 	datacenters = [ "dc1" ]
 }
 
-resource "consul_acl_role" "test" {
+resource "consul_acl_role" "read" {
 	name = "foo"
 	description = "bar"
 
@@ -43,6 +43,7 @@ The following arguments are supported:
 * `policies` - (Optional) The list of policies that should be applied to the role.
 * `service_identities` - (Optional) The list of service identities that should
 be applied to the role.
+* `namespace` - (Optional, Enterprise Only) The namespace to create the role within.
 
 The `service_identities` supports:
 
@@ -59,3 +60,12 @@ The following attributes are exported:
 * `policies` - The list of policies that should be applied to the role.
 * `service_identities` - The list of service identities that should
 be applied to the role.
+
+
+## Import
+
+`consul_acl_role` can be imported:
+
+```
+$ terraform import consul_acl_role.read 816a195f-6cb1-2e8d-92af-3011ae706318
+```

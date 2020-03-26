@@ -2,6 +2,7 @@ package consul
 
 import (
 	"fmt"
+	"regexp"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
@@ -93,6 +94,31 @@ func TestAccConsulACLPolicy_import(t *testing.T) {
 	})
 }
 
+func TestAccConsulACLPolicy_NamespaceCE(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		Providers: testAccProviders,
+		PreCheck:  func() { skipTestOnConsulEnterpriseEdition(t) },
+		Steps: []resource.TestStep{
+			{
+				Config:      testResourceACLPolicyNamespaceCE,
+				ExpectError: regexp.MustCompile("Namespaces is a Consul Enterprise feature"),
+			},
+		},
+	})
+}
+
+func TestAccConsulACLPolicy_NamespaceEE(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		Providers: testAccProviders,
+		PreCheck:  func() { skipTestOnConsulCommunityEdition(t) },
+		Steps: []resource.TestStep{
+			{
+				Config: testResourceACLPolicyNamespaceEE,
+			},
+		},
+	})
+}
+
 const testResourceACLPolicyConfigBasic = `
 resource "consul_acl_policy" "test" {
 	name = "test"
@@ -106,3 +132,23 @@ resource "consul_acl_policy" "test" {
 	rules = "node_prefix \"\" { policy = \"write\" }"
 	datacenters = [ "dc1" ]
 }`
+
+const testResourceACLPolicyNamespaceCE = `
+resource "consul_acl_policy" "test" {
+  name      = "test"
+  rules     = "service \"app\" { policy = \"write\"}"
+  namespace = "test-policy"
+}
+`
+
+const testResourceACLPolicyNamespaceEE = `
+resource "consul_namespace" "test" {
+  name = "test-policy"
+}
+
+resource "consul_acl_policy" "test" {
+  name      = "test"
+  rules     = "service \"app\" { policy = \"write\"}"
+  namespace = consul_namespace.test.name
+}
+`

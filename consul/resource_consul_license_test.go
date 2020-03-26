@@ -58,15 +58,19 @@ func TestAccConsulLicense_CorrectLicense(t *testing.T) {
 	})
 }
 
-func skipTestOnConsulCommunityEdition(t *testing.T) {
-	testAccPreCheck(t)
-
+func serverIsConsulCommunityEdition(t *testing.T) bool {
 	client := getClient(testAccProvider.Meta())
 	self, err := client.Agent().Self()
 	if err != nil {
 		t.Fatalf("failed to get agent information: %v", err)
 	}
-	if !strings.HasSuffix(self["Config"]["Version"].(string), "+ent") {
+	return !strings.HasSuffix(self["Config"]["Version"].(string), "+ent")
+}
+
+func skipTestOnConsulCommunityEdition(t *testing.T) {
+	testAccPreCheck(t)
+
+	if serverIsConsulCommunityEdition(t) {
 		t.Skip("Test skipped on Consul Community Edition. Use a Consul Enterprise server to run this test.")
 	}
 }
@@ -74,12 +78,7 @@ func skipTestOnConsulCommunityEdition(t *testing.T) {
 func skipTestOnConsulEnterpriseEdition(t *testing.T) {
 	testAccPreCheck(t)
 
-	client := getClient(testAccProvider.Meta())
-	self, err := client.Agent().Self()
-	if err != nil {
-		t.Fatalf("failed to get agent information: %v", err)
-	}
-	if strings.HasSuffix(self["Config"]["Version"].(string), "+ent") {
+	if !serverIsConsulCommunityEdition(t) {
 		t.Skip("Test skipped on Consul Enterprise Edition. Use a Consul Community server to run this test.")
 	}
 }

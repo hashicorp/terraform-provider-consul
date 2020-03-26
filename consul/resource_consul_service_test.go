@@ -230,6 +230,31 @@ func TestAccConsulService_multipleInstances(t *testing.T) {
 	})
 }
 
+func TestAccConsulService_NamespaceCE(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:  func() { skipTestOnConsulEnterpriseEdition(t) },
+		Providers: testAccProviders,
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccConsulServiceNamespaceCE,
+				ExpectError: regexp.MustCompile("Namespaces is a Consul Enterprise feature"),
+			},
+		},
+	})
+}
+
+func TestAccConsulService_NamespaceEE(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:  func() { skipTestOnConsulCommunityEdition(t) },
+		Providers: testAccProviders,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccConsulServiceNamespaceEE,
+			},
+		},
+	})
+}
+
 func testAccConsulExternalSource(s *terraform.State) error {
 	client := getClient(testAccProvider.Meta())
 	qOpts := consulapi.QueryOptions{}
@@ -618,5 +643,45 @@ resource "consul_service" "redis2" {
 		timeout                           = "1s"
 		deregister_critical_service_after = "30s"
 	}
+}
+`
+
+const testAccConsulServiceNamespaceCE = `
+resource "consul_node" "test" {
+  name    = "test"
+  address = "test.com"
+}
+
+resource "consul_service" "test" {
+  name      = "test"
+  namespace = "test"
+  node      = consul_node.test.name
+  port      = 80
+}
+`
+
+const testAccConsulServiceNamespaceEE = `
+resource "consul_namespace" "test" {
+  name = "test-service"
+}
+
+resource "consul_node" "test" {
+  name    = "test"
+  address = "test.com"
+}
+
+resource "consul_service" "test" {
+  name      = "test"
+  namespace = consul_namespace.test.name
+  node      = consul_node.test.name
+  port      = 80
+}
+
+data "consul_service" "test" {
+  name = consul_service.test.name
+
+  query_options {
+    namespace = consul_namespace.test.name
+  }
 }
 `

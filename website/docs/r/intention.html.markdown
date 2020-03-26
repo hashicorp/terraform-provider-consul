@@ -49,8 +49,14 @@ The following arguments are supported:
 * `source_name` - (Required, string) The name of the source service for the intention. This
 service does not have to exist.
 
+* `source_namespace` - (Optional, Enterprise Only) The source namespace of the
+  intention.
+
 * `destination_name` - (Required, string) The name of the destination service for the intention. This
 service does not have to exist.
+
+* `destination_namespace` - (Optional, Enterprise Only) The destination
+  namespace of the intention.
 
 * `action` - (Required, string) The intention action. Must be one of `allow` or `deny`.
 
