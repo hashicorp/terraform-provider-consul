@@ -29,6 +29,7 @@ output "consul_acl_auth_method" {
 The following arguments are supported:
 
 * `name` - (Required) The name of the ACL Auth Method.
+* `namespace` - (Optional, Enterprise Only) The namespace to lookup the auth method.
 
 ## Attributes Reference
 

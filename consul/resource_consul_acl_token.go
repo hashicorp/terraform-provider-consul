@@ -47,12 +47,19 @@ func resourceConsulACLToken() *schema.Resource {
 				Default:     false,
 				Description: "Flag to set the token local to the current datacenter.",
 			},
+
+			"namespace": {
+				Type:     schema.TypeString,
+				Optional: true,
+				ForceNew: true,
+			},
 		},
 	}
 }
 
 func resourceConsulACLTokenCreate(d *schema.ResourceData, meta interface{}) error {
 	client := getClient(meta)
+	namespace := getNamespace(d, meta)
 
 	log.Printf("[DEBUG] Creating ACL token")
 
@@ -60,6 +67,7 @@ func resourceConsulACLTokenCreate(d *schema.ResourceData, meta interface{}) erro
 		AccessorID:  d.Get("accessor_id").(string),
 		Description: d.Get("description").(string),
 		Local:       d.Get("local").(bool),
+		Namespace:   namespace,
 	}
 
 	iPolicies := d.Get("policies").(*schema.Set).List()
@@ -88,11 +96,15 @@ func resourceConsulACLTokenCreate(d *schema.ResourceData, meta interface{}) erro
 
 func resourceConsulACLTokenRead(d *schema.ResourceData, meta interface{}) error {
 	client := getClient(meta)
+	namespace := getNamespace(d, meta)
+	qOpts := &consulapi.QueryOptions{
+		Namespace: namespace,
+	}
 
 	id := d.Id()
 	log.Printf("[DEBUG] Reading ACL token %q", id)
 
-	aclToken, _, err := client.ACL().TokenRead(id, nil)
+	aclToken, _, err := client.ACL().TokenRead(id, qOpts)
 	if err != nil {
 		if strings.Contains(err.Error(), "ACL not found") {
 			log.Printf("[WARN] ACL token not found, removing from state")
@@ -129,6 +141,7 @@ func resourceConsulACLTokenRead(d *schema.ResourceData, meta interface{}) error 
 
 func resourceConsulACLTokenUpdate(d *schema.ResourceData, meta interface{}) error {
 	client := getClient(meta)
+	namespace := getNamespace(d, meta)
 
 	id := d.Id()
 	log.Printf("[DEBUG] Updating ACL token %q", id)
@@ -137,6 +150,7 @@ func resourceConsulACLTokenUpdate(d *schema.ResourceData, meta interface{}) erro
 		AccessorID:  id,
 		Description: d.Get("description").(string),
 		Local:       d.Get("local").(bool),
+		Namespace:   namespace,
 	}
 
 	if v, ok := d.GetOk("policies"); ok {
@@ -161,11 +175,15 @@ func resourceConsulACLTokenUpdate(d *schema.ResourceData, meta interface{}) erro
 
 func resourceConsulACLTokenDelete(d *schema.ResourceData, meta interface{}) error {
 	client := getClient(meta)
+	namespace := getNamespace(d, meta)
+	wOpts := &consulapi.WriteOptions{
+		Namespace: namespace,
+	}
 
 	id := d.Id()
 
 	log.Printf("[DEBUG] Deleting ACL token %q", id)
-	_, err := client.ACL().TokenDelete(id, nil)
+	_, err := client.ACL().TokenDelete(id, wOpts)
 	if err != nil {
 		return fmt.Errorf("error deleting ACL token %q: %s", id, err)
 	}

@@ -43,6 +43,7 @@ The following arguments are supported:
 * `policies` - (Optional) The list of policies that should be applied to the role.
 * `service_identities` - (Optional) The list of service identities that should
 be applied to the role.
+* `namespace` - (Optional, Enterprise Only) The namespace to create the role within.
 
 The `service_identities` supports:
 

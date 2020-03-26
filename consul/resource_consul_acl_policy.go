@@ -41,6 +41,12 @@ func resourceConsulACLPolicy() *schema.Resource {
 				Description: "The ACL policy datacenters.",
 				Elem:        &schema.Schema{Type: schema.TypeString},
 			},
+
+			"namespace": {
+				Type:     schema.TypeString,
+				Optional: true,
+				ForceNew: true,
+			},
 		},
 	}
 }
@@ -54,6 +60,7 @@ func resourceConsulACLPolicyCreate(d *schema.ResourceData, meta interface{}) err
 		Name:        d.Get("name").(string),
 		Description: d.Get("description").(string),
 		Rules:       d.Get("rules").(string),
+		Namespace:   getNamespace(d, meta),
 	}
 
 	if v, ok := d.GetOk("datacenters"); ok {
@@ -79,11 +86,14 @@ func resourceConsulACLPolicyCreate(d *schema.ResourceData, meta interface{}) err
 
 func resourceConsulACLPolicyRead(d *schema.ResourceData, meta interface{}) error {
 	client := getClient(meta)
+	qOpts := &consulapi.QueryOptions{
+		Namespace: getNamespace(d, meta),
+	}
 
 	id := d.Id()
 	log.Printf("[DEBUG] Reading ACL policy %q", id)
 
-	aclPolicy, _, err := client.ACL().PolicyRead(id, nil)
+	aclPolicy, _, err := client.ACL().PolicyRead(id, qOpts)
 	if err != nil {
 		if strings.Contains(err.Error(), "ACL not found") {
 			log.Printf("[INFO] ACL policy not found, removing from state")
@@ -128,6 +138,7 @@ func resourceConsulACLPolicyUpdate(d *schema.ResourceData, meta interface{}) err
 		Name:        d.Get("name").(string),
 		Description: d.Get("description").(string),
 		Rules:       d.Get("rules").(string),
+		Namespace:   getNamespace(d, meta),
 	}
 
 	if v, ok := d.GetOk("datacenters"); ok {
@@ -150,11 +161,14 @@ func resourceConsulACLPolicyUpdate(d *schema.ResourceData, meta interface{}) err
 
 func resourceConsulACLPolicyDelete(d *schema.ResourceData, meta interface{}) error {
 	client := getClient(meta)
+	wOpts := &consulapi.WriteOptions{
+		Namespace: getNamespace(d, meta),
+	}
 
 	id := d.Id()
 
 	log.Printf("[DEBUG] Deleting ACL policy %q", id)
-	_, err := client.ACL().PolicyDelete(id, nil)
+	_, err := client.ACL().PolicyDelete(id, wOpts)
 	if err != nil {
 		return fmt.Errorf("error deleting ACL policy %q: %s", id, err)
 	}

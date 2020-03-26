@@ -82,6 +82,8 @@ The following arguments are supported:
 * `subkey` - (Optional) A subkey to add. Supported values documented below.
   Multiple blocks supported.
 
+* `namespace` - (Optional, Enterprise Only) The namespace to create the keys within.
+
 The `subkey` block supports the following:
 
 * `path` - (Required) This is the path (which will be appended to the given

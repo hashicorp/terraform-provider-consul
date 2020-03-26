@@ -32,6 +32,7 @@ output "consul_acl_policies" {
 The following arguments are supported:
 
 * `accessor_id` - (Required) The accessor ID of the ACL token.
+* `namespace` - (Optional, Enterprise Only) The namespace to lookup the ACL token.
 
 ## Attributes Reference
 

@@ -2,6 +2,7 @@ package consul
 
 import (
 	"fmt"
+	"regexp"
 	"testing"
 
 	consulapi "github.com/hashicorp/consul/api"
@@ -75,6 +76,31 @@ func TestAccConsulACLRole_import(t *testing.T) {
 	})
 }
 
+func TestAccConsulACLRole_NamespaceCE(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		Providers: testAccProviders,
+		PreCheck:  func() { skipTestOnConsulEnterpriseEdition(t) },
+		Steps: []resource.TestStep{
+			{
+				Config:      testResourceACLRoleNamespaceCE,
+				ExpectError: regexp.MustCompile("Namespaces is a Consul Enterprise feature"),
+			},
+		},
+	})
+}
+
+func TestAccConsulACLRole_NamespaceEE(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		Providers: testAccProviders,
+		PreCheck:  func() { skipTestOnConsulCommunityEdition(t) },
+		Steps: []resource.TestStep{
+			{
+				Config: testResourceACLRoleNamespaceEE,
+			},
+		},
+	})
+}
+
 func testRoleDestroy(s *terraform.State) error {
 	ACL := getClient(testAccProvider.Meta()).ACL()
 	qOpts := &consulapi.QueryOptions{}
@@ -119,3 +145,21 @@ resource "consul_acl_role" "test" {
 		service_name = "bar"
 	}
 }`
+
+const testResourceACLRoleNamespaceCE = `
+resource "consul_acl_role" "test" {
+  name      = "test"
+  namespace = "test-role"
+}
+`
+
+const testResourceACLRoleNamespaceEE = `
+resource "consul_namespace" "test" {
+  name = "test-role"
+}
+
+resource "consul_acl_role" "test" {
+  name      = "test-role"
+  namespace = consul_namespace.test.name
+}
+`
