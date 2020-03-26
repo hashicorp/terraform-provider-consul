@@ -72,6 +72,8 @@ The following arguments are supported:
 * `subkey` - (Optional) Specifies a subkey in Consul to be read. Supported
   values documented below. Multiple blocks supported.
 
+* `namespace` - (Optional, Enterprise Only) The namespace to create the keys within.
+
 The `subkey` block supports the following:
 
 * `name` - (Required) This is the name of the key. This value of the
@@ -84,6 +86,7 @@ The `subkey` block supports the following:
 
 * `default` - (Optional) This is the default value to set for `var.<name>`
   if the key does not exist in Consul. Defaults to an empty string.
+
 
 ## Attributes Reference
 

@@ -52,6 +52,31 @@ func TestAccDataConsulCatalogServices_badToken(t *testing.T) {
 	})
 }
 
+func TestAccDataConsulServices_namespaceCE(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		Providers: testAccProviders,
+		PreCheck:  func() { skipTestOnConsulEnterpriseEdition(t) },
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccDataConsulServicesNamespaceCE,
+				ExpectError: regexp.MustCompile("Namespaces is a Consul Enterprise feature"),
+			},
+		},
+	})
+}
+
+func TestAccDataConsulServices_namespaceEE(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		Providers: testAccProviders,
+		PreCheck:  func() { skipTestOnConsulCommunityEdition(t) },
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDataConsulServicesNamespaceEE,
+			},
+		},
+	})
+}
+
 const testAccDataConsulCatalogServicesConfig = `
 data "consul_services" "read" {
   query_options {
@@ -72,6 +97,22 @@ const testAccDataConsulCatalogServicesBadTokenConfig = `
 data "consul_services" "read" {
   query_options {
     token = "foobar"
+  }
+}
+`
+
+const testAccDataConsulServicesNamespaceCE = `
+data "consul_services" "read" {
+  query_options {
+    namespace = "test-data-services"
+  }
+}
+`
+
+const testAccDataConsulServicesNamespaceEE = `
+data "consul_services" "read" {
+  query_options {
+    namespace = "test-data-services"
   }
 }
 `

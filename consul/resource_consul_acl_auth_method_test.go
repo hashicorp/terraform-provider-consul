@@ -2,6 +2,7 @@ package consul
 
 import (
 	"fmt"
+	"regexp"
 	"testing"
 
 	consulapi "github.com/hashicorp/consul/api"
@@ -39,6 +40,31 @@ func TestAccConsulACLRole_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("consul_acl_auth_method.test", "config.CACert", testCert2+"\n"),
 					resource.TestCheckResourceAttr("consul_acl_auth_method.test", "config.ServiceAccountJWT", "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0IiwibmFtZSI6InRlc3QiLCJpYXQiOjE1MTYyMzkwMjJ9.uOnQsCs6ZAqj2F1VMA09tdgRZyFT1GQH2DwIC4TTn-A"),
 				),
+			},
+		},
+	})
+}
+
+func TestAccConsulACLAuthMethod_namespaceCE(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		Providers: testAccProviders,
+		PreCheck:  func() { skipTestOnConsulEnterpriseEdition(t) },
+		Steps: []resource.TestStep{
+			{
+				Config:      testResourceACLAuthMethodNamespaceCE,
+				ExpectError: regexp.MustCompile("Namespaces is a Consul Enterprise feature"),
+			},
+		},
+	})
+}
+
+func TestAccConsulACLAuthMethod_namespaceEE(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		Providers: testAccProviders,
+		PreCheck:  func() { skipTestOnConsulCommunityEdition(t) },
+		Steps: []resource.TestStep{
+			{
+				Config: testResourceACLAuthMethodNamespaceEE,
 			},
 		},
 	})
@@ -116,3 +142,39 @@ h61wQqlvkoFb/qPC/gvxdoQKUcddd7IhEujJjaddo9TV0w4nYX4Cq2Ybd5N3hgED
 8GuzduY=
 -----END CERTIFICATE-----
 `
+
+const testResourceACLAuthMethodNamespaceCE = `
+resource "consul_acl_auth_method" "test" {
+	name        = "minikube"
+    type        = "kubernetes"
+	description = "dev minikube cluster"
+	namespace   = "test"
+
+	config = {
+        Host = "https://192.0.2.42:8443"
+		CACert = <<-EOF
+` + testCert + `
+		EOF
+        ServiceAccountJWT = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c"
+    }
+}`
+
+const testResourceACLAuthMethodNamespaceEE = `
+resource "consul_namespace" "test" {
+  name = "test-auth-method"
+}
+
+resource "consul_acl_auth_method" "test" {
+  name        = "minikube"
+  type        = "kubernetes"
+  description = "dev minikube cluster"
+  namespace   = consul_namespace.test.name
+
+  config = {
+    Host = "https://192.0.2.42:8443"
+    CACert = <<-EOF
+` + testCert + `
+    EOF
+    ServiceAccountJWT = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c"
+  }
+}`

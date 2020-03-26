@@ -1,6 +1,7 @@
 package consul
 
 import (
+	"regexp"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
@@ -28,7 +29,7 @@ func TestAccDataConsulService_basic(t *testing.T) {
 					testAccCheckDataSourceValue("data.consul_service.read", "service.0.node_meta.consul-network-segment", ""),
 					testAccCheckDataSourceValue("data.consul_service.read", "service.0.node_name", "<any>"),
 					testAccCheckDataSourceValue("data.consul_service.read", "service.0.port", "<any>"),
-					testAccCheckDataSourceValue("data.consul_service.read", "service.0.tagged_addresses.%", "2"),
+					testAccCheckDataSourceValue("data.consul_service.read", "service.0.tagged_addresses.%", "4"),
 					testAccCheckDataSourceValue("data.consul_service.read", "service.0.tags.#", "0"),
 				),
 			},
@@ -72,6 +73,31 @@ func TestAccDataConsulService_alias(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("data.consul_catalog_service.read", "service.#", "1"),
 				),
+			},
+		},
+	})
+}
+
+func TestAccDataConsulService_namespaceCE(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		Providers: testAccProviders,
+		PreCheck:  func() { skipTestOnConsulEnterpriseEdition(t) },
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccDataConsulServiceNamespaceCE,
+				ExpectError: regexp.MustCompile("Namespaces is a Consul Enterprise feature"),
+			},
+		},
+	})
+}
+
+func TestAccDataConsulService_namespaceEE(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		Providers: testAccProviders,
+		PreCheck:  func() { skipTestOnConsulCommunityEdition(t) },
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDataConsulServiceNamespaceEE,
 			},
 		},
 	})
@@ -138,5 +164,25 @@ data "consul_service" "read_f" {
 const testAccDataConsulServiceAlias = `
 data "consul_catalog_service" "read" {
   name = "consul"
+}
+`
+
+const testAccDataConsulServiceNamespaceCE = `
+data "consul_catalog_service" "read" {
+  name = "consul"
+
+  query_options {
+    namespace = "test-data-service"
+  }
+}
+`
+
+const testAccDataConsulServiceNamespaceEE = `
+data "consul_catalog_service" "read" {
+  name = "consul"
+
+  query_options {
+    namespace = "test-data-service"
+  }
 }
 `

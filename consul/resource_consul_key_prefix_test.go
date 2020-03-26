@@ -2,6 +2,7 @@ package consul
 
 import (
 	"fmt"
+	"regexp"
 	"testing"
 
 	consulapi "github.com/hashicorp/consul/api"
@@ -76,6 +77,31 @@ func TestAccCheckConsulKeyPrefix_Import(t *testing.T) {
 				ResourceName:      "consul_key_prefix.app",
 				ImportState:       true,
 				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccConsulKeyPrefix_namespaceCE(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		Providers: testAccProviders,
+		PreCheck:  func() { skipTestOnConsulEnterpriseEdition(t) },
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccConsulKeyPrefixConfig_namespaceCE,
+				ExpectError: regexp.MustCompile("Unexpected response code: 400"),
+			},
+		},
+	})
+}
+
+func TestAccConsulKeyPrefix_namespaceEE(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		Providers: testAccProviders,
+		PreCheck:  func() { skipTestOnConsulCommunityEdition(t) },
+		Steps: []resource.TestStep{
+			{
+				Config: testAccConsulKeyPrefixConfig_namespaceEE,
 			},
 		},
 	})
@@ -189,3 +215,29 @@ resource "consul_key_prefix" "app" {
     }
 }
 `
+
+const testAccConsulKeyPrefixConfig_namespaceCE = `
+resource "consul_key_prefix" "test" {
+  path_prefix = "prefix_test/"
+  namespace   = "test-key-prefix"
+
+  subkeys = {
+    bread = "batard"
+    meat = "ham"
+  }
+}`
+
+const testAccConsulKeyPrefixConfig_namespaceEE = `
+resource "consul_namespace" "test" {
+  name = "test-key-prefix"
+}
+
+resource "consul_key_prefix" "test" {
+  path_prefix = "prefix_test/"
+  namespace   = consul_namespace.test.name
+
+  subkeys = {
+    bread = "batard"
+    meat = "ham"
+  }
+}`

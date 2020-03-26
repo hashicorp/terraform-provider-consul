@@ -21,6 +21,12 @@ const (
 )
 
 func dataSourceConsulServices() *schema.Resource {
+	queryOpts := schemaQueryOpts()
+	queryOpts.Elem.(*schema.Resource).Schema["namespace"] = &schema.Schema{
+		Optional: true,
+		Type:     schema.TypeString,
+	}
+
 	return &schema.Resource{
 		Read: dataSourceConsulServicesRead,
 		Schema: map[string]*schema.Schema{
@@ -32,7 +38,7 @@ func dataSourceConsulServices() *schema.Resource {
 				Type:     schema.TypeString,
 				ForceNew: true,
 			},
-			catalogNodesQueryOpts: schemaQueryOpts,
+			catalogNodesQueryOpts: queryOpts,
 
 			// Out parameters
 			catalogServicesNames: {

@@ -47,6 +47,8 @@ The following arguments are supported:
 * `key` - (Required) Specifies a key in Consul to be read. Supported
   values documented below. Multiple blocks supported.
 
+* `namespace` - (Optional, Enterprise Only) The namespace to lookup the keys.
+
 The `key` block supports the following:
 
 * `name` - (Required) This is the name of the key. This value of the

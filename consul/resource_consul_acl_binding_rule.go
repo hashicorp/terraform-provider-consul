@@ -58,6 +58,12 @@ func resourceConsulACLBindingRule() *schema.Resource {
 				Required:    true,
 				Description: "The name to bind to a token at login-time.",
 			},
+
+			"namespace": {
+				Type:     schema.TypeString,
+				Optional: true,
+				ForceNew: true,
+			},
 		},
 	}
 }
@@ -66,7 +72,7 @@ func resourceConsulACLBindingRuleCreate(d *schema.ResourceData, meta interface{}
 	ACL := getClient(meta).ACL()
 	wOpts := &consulapi.WriteOptions{}
 
-	rule := getBindingRule(d)
+	rule := getBindingRule(d, meta)
 
 	rule, _, err := ACL.BindingRuleCreate(rule, wOpts)
 	if err != nil {
@@ -80,7 +86,10 @@ func resourceConsulACLBindingRuleCreate(d *schema.ResourceData, meta interface{}
 
 func resourceConsulACLBindingRuleRead(d *schema.ResourceData, meta interface{}) error {
 	ACL := getClient(meta).ACL()
-	qOpts := &consulapi.QueryOptions{}
+	namespace := getNamespace(d, meta)
+	qOpts := &consulapi.QueryOptions{
+		Namespace: namespace,
+	}
 
 	rule, _, err := ACL.BindingRuleRead(d.Id(), qOpts)
 	if err != nil {
@@ -114,7 +123,7 @@ func resourceConsulACLBindingRuleUpdate(d *schema.ResourceData, meta interface{}
 	ACL := getClient(meta).ACL()
 	wOpts := &consulapi.WriteOptions{}
 
-	rule := getBindingRule(d)
+	rule := getBindingRule(d, meta)
 
 	rule, _, err := ACL.BindingRuleUpdate(rule, wOpts)
 	if err != nil {
@@ -126,7 +135,10 @@ func resourceConsulACLBindingRuleUpdate(d *schema.ResourceData, meta interface{}
 
 func resourceConsulACLBindingRuleDelete(d *schema.ResourceData, meta interface{}) error {
 	ACL := getClient(meta).ACL()
-	wOpts := &consulapi.WriteOptions{}
+	namespace := getNamespace(d, meta)
+	wOpts := &consulapi.WriteOptions{
+		Namespace: namespace,
+	}
 
 	if _, err := ACL.BindingRuleDelete(d.Id(), wOpts); err != nil {
 		return fmt.Errorf("Failed to delete binding rule '%s': %#v", d.Id(), err)
@@ -137,13 +149,15 @@ func resourceConsulACLBindingRuleDelete(d *schema.ResourceData, meta interface{}
 	return nil
 }
 
-func getBindingRule(d *schema.ResourceData) *consulapi.ACLBindingRule {
+func getBindingRule(d *schema.ResourceData, meta interface{}) *consulapi.ACLBindingRule {
+	namespace := getNamespace(d, meta)
 	rule := &consulapi.ACLBindingRule{
 		ID:          d.Id(),
 		Description: d.Get("description").(string),
 		AuthMethod:  d.Get("auth_method").(string),
 		Selector:    d.Get("selector").(string),
 		BindName:    d.Get("bind_name").(string),
+		Namespace:   namespace,
 	}
 
 	bindType := d.Get("bind_type").(string)

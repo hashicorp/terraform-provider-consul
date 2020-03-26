@@ -62,12 +62,19 @@ func dataSourceConsulKeyPrefix() *schema.Resource {
 					Type: schema.TypeString,
 				},
 			},
+
+			"namespace": {
+				Type:     schema.TypeString,
+				Optional: true,
+				ForceNew: true,
+			},
 		},
 	}
 }
 
 func dataSourceConsulKeyPrefixRead(d *schema.ResourceData, meta interface{}) error {
 	client := getClient(meta)
+	namespace := getNamespace(d, meta)
 
 	kv := client.KV()
 	token := d.Get("token").(string)
@@ -76,7 +83,7 @@ func dataSourceConsulKeyPrefixRead(d *schema.ResourceData, meta interface{}) err
 		return err
 	}
 
-	keyClient := newKeyClient(kv, dc, token)
+	keyClient := newKeyClient(kv, dc, token, namespace)
 
 	pathPrefix := d.Get("path_prefix").(string)
 
