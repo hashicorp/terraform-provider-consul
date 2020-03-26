@@ -1,4 +1,20 @@
-## 2.6.2 (Unreleased)
+## 2.7.0 (Unreleased)
+
+NEW FEATURES:
+
+* The `consul_acl_role` can now be imported ([[#182](https://github.com/terraform-providers/terraform-provider-consul/issues/182)]).
+* Roles can be attached to `consul_acl_token` using the new `roles` attribute ([[#178](https://github.com/terraform-providers/terraform-provider-consul/issues/178)] and [[#180](https://github.com/terraform-providers/terraform-provider-consul/issues/180)]]).
+* The `consul_namespace` resource can now be used to manage namespaces in a Consul Enterprise cluster ([[#183](https://github.com/terraform-providers/terraform-provider-consul/issues/183)]).
+* The `consul_acl_auth_method`, `consul_acl_binding_rule`, `consul_acl_policy`, `consul_acl_role`, `consul_acl_token`, `consul_intention`, `consul_key_prefix`, `consul_keys` and `consul_service` can now be associated to a namespace in a Consul Enterprise cluster ([[#183](https://github.com/terraform-providers/terraform-provider-consul/issues/183)]).
+* The `consul_acl_auth_method`, `consul_acl_policy`, `consul_acl_role`, `consul_acl_token`, `consul_key_prefix`, `consul_keys`, `consul_nodes`, `consul_service`, `consul_services` datasources can now be used to query a specific namespace in a Consul Enterprise cluster ([[#183](https://github.com/terraform-providers/terraform-provider-consul/issues/183)]).
+* The `consul_license` resource can now be used to manage automatically the license of a Consul Enterprise cluster ([[#172](https://github.com/terraform-providers/terraform-provider-consul/issues/172)] and [[#173](https://github.com/terraform-providers/terraform-provider-consul/issues/173)]).
+* The `consul_network_area` and `consul_network_area_members` can now be used to manage the network areas of a Consul Enterprise cluster ([[#175](https://github.com/terraform-providers/terraform-provider-consul/issues/175)]).
+* The `consul_network_segments` can now be used to manage the network segments of a Consul Enterprise cluster ([[#175](https://github.com/terraform-providers/terraform-provider-consul/issues/175)]).
+
+BUG FIXES:
+
+* Importing `consul_key_prefix` no longer delete and replace all keys ([[#169](https://github.com/terraform-providers/terraform-provider-consul/issues/169)] and [[#171](https://github.com/terraform-providers/terraform-provider-consul/issues/171)]).
+
 ## 2.6.1 (December 07, 2019)
 
 IMPROVEMENTS:
