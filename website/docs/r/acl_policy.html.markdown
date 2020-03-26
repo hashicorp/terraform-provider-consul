@@ -33,6 +33,7 @@ The following arguments are supported:
 * `description` - (Optional) The description of the policy.
 * `rules` - (Required) The rules of the policy.
 * `datacenters` - (Optional) The datacenters of the policy.
+* `namespace` - (Optional, Enterprise Only) The namespace to create the policy within.
 
 ## Attributes Reference
 

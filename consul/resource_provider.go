@@ -81,23 +81,30 @@ func Provider() terraform.ResourceProvider {
 					"CONSUL_HTTP_TOKEN",
 				}, ""),
 			},
+
+			"namespace": {
+				Type:     schema.TypeString,
+				Optional: true,
+			},
 		},
 
 		DataSourcesMap: map[string]*schema.Resource{
-			"consul_agent_self":          dataSourceConsulAgentSelf(),
-			"consul_agent_config":        dataSourceConsulAgentConfig(),
-			"consul_autopilot_health":    dataSourceConsulAutopilotHealth(),
-			"consul_nodes":               dataSourceConsulNodes(),
-			"consul_service":             dataSourceConsulService(),
-			"consul_service_health":      dataSourceConsulServiceHealth(),
-			"consul_services":            dataSourceConsulServices(),
-			"consul_keys":                dataSourceConsulKeys(),
-			"consul_key_prefix":          dataSourceConsulKeyPrefix(),
-			"consul_acl_auth_method":     dataSourceConsulACLAuthMethod(),
-			"consul_acl_policy":          dataSourceConsulACLPolicy(),
-			"consul_acl_role":            dataSourceConsulACLRole(),
-			"consul_acl_token":           dataSourceConsulACLToken(),
-			"consul_acl_token_secret_id": dataSourceConsulACLTokenSecretID(),
+			"consul_agent_self":           dataSourceConsulAgentSelf(),
+			"consul_agent_config":         dataSourceConsulAgentConfig(),
+			"consul_autopilot_health":     dataSourceConsulAutopilotHealth(),
+			"consul_nodes":                dataSourceConsulNodes(),
+			"consul_service":              dataSourceConsulService(),
+			"consul_service_health":       dataSourceConsulServiceHealth(),
+			"consul_services":             dataSourceConsulServices(),
+			"consul_keys":                 dataSourceConsulKeys(),
+			"consul_key_prefix":           dataSourceConsulKeyPrefix(),
+			"consul_acl_auth_method":      dataSourceConsulACLAuthMethod(),
+			"consul_acl_policy":           dataSourceConsulACLPolicy(),
+			"consul_acl_role":             dataSourceConsulACLRole(),
+			"consul_acl_token":            dataSourceConsulACLToken(),
+			"consul_acl_token_secret_id":  dataSourceConsulACLTokenSecretID(),
+			"consul_network_segments":     dataSourceConsulNetworkSegments(),
+			"consul_network_area_members": dataSourceConsulNetworkAreaMembers(),
 
 			// Aliases to limit the impact of rename of catalog
 			// datasources
@@ -119,11 +126,13 @@ func Provider() terraform.ResourceProvider {
 			"consul_keys":                        resourceConsulKeys(),
 			"consul_key_prefix":                  resourceConsulKeyPrefix(),
 			"consul_license":                     resourceConsulLicense(),
+			"consul_namespace":                   resourceConsulNamespace(),
 			"consul_node":                        resourceConsulNode(),
 			"consul_prepared_query":              resourceConsulPreparedQuery(),
 			"consul_autopilot_config":            resourceConsulAutopilotConfig(),
 			"consul_service":                     resourceConsulService(),
 			"consul_intention":                   resourceConsulIntention(),
+			"consul_network_area":                resourceConsulNetworkArea(),
 		},
 
 		ConfigureFunc: providerConfigure,
@@ -149,4 +158,12 @@ func getClient(meta interface{}) *consulapi.Client {
 	// We can ignore err since we checked the configuration in providerConfigure()
 	client, _ := meta.(*Config).Client()
 	return client
+}
+
+func getNamespace(d *schema.ResourceData, meta interface{}) string {
+	namespace := d.Get("namespace").(string)
+	if namespace != "" {
+		return namespace
+	}
+	return meta.(*Config).Namespace
 }

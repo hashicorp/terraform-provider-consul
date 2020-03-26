@@ -36,6 +36,12 @@ func dataSourceConsulACLAuthMethod() *schema.Resource {
 					Type: schema.TypeString,
 				},
 			},
+
+			"namespace": {
+				Type:     schema.TypeString,
+				Optional: true,
+				ForceNew: true,
+			},
 		},
 	}
 }
@@ -49,6 +55,7 @@ func dataSourceConsulACLAuthMethodRead(d *schema.ResourceData, meta interface{})
 	}
 	qOpts := &consulapi.QueryOptions{
 		Datacenter: dc,
+		Namespace:  getNamespace(d, meta),
 	}
 
 	authMethod, _, err := client.ACL().AuthMethodRead(name, qOpts)

@@ -32,7 +32,7 @@ func dataSourceConsulNodes() *schema.Resource {
 		Read: dataSourceConsulNodesRead,
 		Schema: map[string]*schema.Schema{
 			// Filters
-			catalogNodesQueryOpts: schemaQueryOpts,
+			catalogNodesQueryOpts: schemaQueryOpts(),
 
 			// Out parameters
 			catalogNodesDatacenter: {

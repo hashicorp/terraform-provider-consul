@@ -42,6 +42,12 @@ func resourceConsulACLAuthMethod() *schema.Resource {
 					Type: schema.TypeString,
 				},
 			},
+
+			"namespace": {
+				Type:     schema.TypeString,
+				Optional: true,
+				ForceNew: true,
+			},
 		},
 	}
 }
@@ -49,12 +55,14 @@ func resourceConsulACLAuthMethod() *schema.Resource {
 func resourceConsulACLAuthMethodCreate(d *schema.ResourceData, meta interface{}) error {
 	ACL := getClient(meta).ACL()
 	wOpts := &consulapi.WriteOptions{}
+	namespace := getNamespace(d, meta)
 
 	authMethod := &consulapi.ACLAuthMethod{
 		Name:        d.Get("name").(string),
 		Type:        d.Get("type").(string),
 		Description: d.Get("description").(string),
 		Config:      d.Get("config").(map[string]interface{}),
+		Namespace:   namespace,
 	}
 
 	if _, _, err := ACL.AuthMethodCreate(authMethod, wOpts); err != nil {
@@ -66,7 +74,10 @@ func resourceConsulACLAuthMethodCreate(d *schema.ResourceData, meta interface{})
 
 func resourceConsulACLAuthMethodRead(d *schema.ResourceData, meta interface{}) error {
 	ACL := getClient(meta).ACL()
-	qOpts := &consulapi.QueryOptions{}
+	namespace := getNamespace(d, meta)
+	qOpts := &consulapi.QueryOptions{
+		Namespace: namespace,
+	}
 
 	name := d.Get("name").(string)
 	authMethod, _, err := ACL.AuthMethodRead(name, qOpts)
@@ -98,12 +109,14 @@ func resourceConsulACLAuthMethodRead(d *schema.ResourceData, meta interface{}) e
 func resourceConsulACLAuthMethodUpdate(d *schema.ResourceData, meta interface{}) error {
 	ACL := getClient(meta).ACL()
 	wOpts := &consulapi.WriteOptions{}
+	namespace := getNamespace(d, meta)
 
 	authMethod := &consulapi.ACLAuthMethod{
 		Name:        d.Get("name").(string),
 		Type:        d.Get("type").(string),
 		Description: d.Get("description").(string),
 		Config:      d.Get("config").(map[string]interface{}),
+		Namespace:   namespace,
 	}
 
 	if _, _, err := ACL.AuthMethodUpdate(authMethod, wOpts); err != nil {
@@ -115,7 +128,10 @@ func resourceConsulACLAuthMethodUpdate(d *schema.ResourceData, meta interface{})
 
 func resourceConsulACLAuthMethodDelete(d *schema.ResourceData, meta interface{}) error {
 	ACL := getClient(meta).ACL()
-	wOpts := &consulapi.WriteOptions{}
+	namespace := getNamespace(d, meta)
+	wOpts := &consulapi.WriteOptions{
+		Namespace: namespace,
+	}
 
 	authMethodName := d.Get("name").(string)
 	if _, err := ACL.AuthMethodDelete(authMethodName, wOpts); err != nil {

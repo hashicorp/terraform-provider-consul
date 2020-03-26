@@ -57,6 +57,30 @@ func TestAccConsulIntention_badAction(t *testing.T) {
 	})
 }
 
+func TestAccConsulIntention_namespaceCE(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		Providers: testAccProviders,
+		PreCheck:  func() { skipTestOnConsulEnterpriseEdition(t) },
+		Steps: []resource.TestStep{
+			{
+				Config: testAccConsulIntentionConfigNamespace,
+			},
+		},
+	})
+}
+
+func TestAccConsulIntention_namespaceEE(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		Providers: testAccProviders,
+		PreCheck:  func() { skipTestOnConsulCommunityEdition(t) },
+		Steps: []resource.TestStep{
+			{
+				Config: testAccConsulIntentionConfigNamespace,
+			},
+		},
+	})
+}
+
 func testAccCheckConsulIntentionDestroy(s *terraform.State) error {
 	client := getClient(testAccProvider.Meta())
 
@@ -132,5 +156,16 @@ resource "consul_intention" "example" {
 	source_name      = "api"
 	destination_name = "db"
 	action           = "foobar"
+}
+`
+
+const testAccConsulIntentionConfigNamespace = `
+resource "consul_intention" "example" {
+	source_name           = "api"
+	source_namespace      = "ns"
+	destination_name      = "db"
+	destination_namespace = "ns"
+
+	action = "allow"
 }
 `

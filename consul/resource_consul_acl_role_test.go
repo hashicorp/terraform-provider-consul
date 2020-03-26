@@ -2,6 +2,7 @@ package consul
 
 import (
 	"fmt"
+	"regexp"
 	"testing"
 
 	consulapi "github.com/hashicorp/consul/api"
@@ -38,6 +39,68 @@ func TestAccConsulACLAuthMethod_basic(t *testing.T) {
 	})
 }
 
+func TestAccConsulACLRole_import(t *testing.T) {
+	checkFn := func(s []*terraform.InstanceState) error {
+		if len(s) != 1 {
+			return fmt.Errorf("bad state: %s", s)
+		}
+		v, ok := s[0].Attributes["name"]
+		if !ok || v != "foo" {
+			return fmt.Errorf("bad name: %s", s)
+		}
+		v, ok = s[0].Attributes["description"]
+		if !ok || v != "bar" {
+			return fmt.Errorf("bad description: %s", s)
+		}
+		v, ok = s[0].Attributes["policies.#"]
+		if !ok || v != "1" {
+			return fmt.Errorf("bad policies: %s", s)
+		}
+
+		return nil
+	}
+
+	resource.Test(t, resource.TestCase{
+		Providers: testAccProviders,
+		PreCheck:  func() { testAccPreCheck(t) },
+		Steps: []resource.TestStep{
+			{
+				Config: testResourceACLRoleConfigBasic,
+			},
+			{
+				ResourceName:     "consul_acl_role.test",
+				ImportState:      true,
+				ImportStateCheck: checkFn,
+			},
+		},
+	})
+}
+
+func TestAccConsulACLRole_NamespaceCE(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		Providers: testAccProviders,
+		PreCheck:  func() { skipTestOnConsulEnterpriseEdition(t) },
+		Steps: []resource.TestStep{
+			{
+				Config:      testResourceACLRoleNamespaceCE,
+				ExpectError: regexp.MustCompile("Namespaces is a Consul Enterprise feature"),
+			},
+		},
+	})
+}
+
+func TestAccConsulACLRole_NamespaceEE(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		Providers: testAccProviders,
+		PreCheck:  func() { skipTestOnConsulCommunityEdition(t) },
+		Steps: []resource.TestStep{
+			{
+				Config: testResourceACLRoleNamespaceEE,
+			},
+		},
+	})
+}
+
 func testRoleDestroy(s *terraform.State) error {
 	ACL := getClient(testAccProvider.Meta()).ACL()
 	qOpts := &consulapi.QueryOptions{}
@@ -56,13 +119,13 @@ func testRoleDestroy(s *terraform.State) error {
 
 const testResourceACLRoleConfigBasic = `
 resource "consul_acl_policy" "test-read" {
-	name = "test"
-	rules = "node \"\" { policy = \"read\" }"
+	name        = "test"
+	rules       = "node \"\" { policy = \"read\" }"
 	datacenters = [ "dc1" ]
 }
 
 resource "consul_acl_role" "test" {
-	name = "foo"
+	name        = "foo"
 	description = "bar"
 
 	policies = [
@@ -82,3 +145,21 @@ resource "consul_acl_role" "test" {
 		service_name = "bar"
 	}
 }`
+
+const testResourceACLRoleNamespaceCE = `
+resource "consul_acl_role" "test" {
+  name      = "test"
+  namespace = "test-role"
+}
+`
+
+const testResourceACLRoleNamespaceEE = `
+resource "consul_namespace" "test" {
+  name = "test-role"
+}
+
+resource "consul_acl_role" "test" {
+  name      = "test-role"
+  namespace = consul_namespace.test.name
+}
+`

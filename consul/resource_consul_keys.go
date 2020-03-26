@@ -91,12 +91,19 @@ func resourceConsulKeys() *schema.Resource {
 					Type: schema.TypeString,
 				},
 			},
+
+			"namespace": {
+				Type:     schema.TypeString,
+				Optional: true,
+				ForceNew: true,
+			},
 		},
 	}
 }
 
 func resourceConsulKeysCreateUpdate(d *schema.ResourceData, meta interface{}) error {
 	client := getClient(meta)
+	namespace := getNamespace(d, meta)
 	kv := client.KV()
 	token := d.Get("token").(string)
 	dc, err := getDC(d, client, meta)
@@ -104,7 +111,7 @@ func resourceConsulKeysCreateUpdate(d *schema.ResourceData, meta interface{}) er
 		return err
 	}
 
-	keyClient := newKeyClient(kv, dc, token)
+	keyClient := newKeyClient(kv, dc, token, namespace)
 
 	if d.HasChange("key") {
 		o, n := d.GetChange("key")
@@ -192,6 +199,7 @@ func resourceConsulKeysCreateUpdate(d *schema.ResourceData, meta interface{}) er
 
 func resourceConsulKeysRead(d *schema.ResourceData, meta interface{}) error {
 	client := getClient(meta)
+	namespace := getNamespace(d, meta)
 	kv := client.KV()
 	token := d.Get("token").(string)
 	dc, err := getDC(d, client, meta)
@@ -199,7 +207,7 @@ func resourceConsulKeysRead(d *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
-	keyClient := newKeyClient(kv, dc, token)
+	keyClient := newKeyClient(kv, dc, token, namespace)
 
 	vars := make(map[string]string)
 
@@ -250,6 +258,7 @@ func resourceConsulKeysRead(d *schema.ResourceData, meta interface{}) error {
 
 func resourceConsulKeysDelete(d *schema.ResourceData, meta interface{}) error {
 	client := getClient(meta)
+	namespace := getNamespace(d, meta)
 	kv := client.KV()
 	token := d.Get("token").(string)
 	dc, err := getDC(d, client, meta)
@@ -257,7 +266,7 @@ func resourceConsulKeysDelete(d *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
-	keyClient := newKeyClient(kv, dc, token)
+	keyClient := newKeyClient(kv, dc, token, namespace)
 
 	// Clean up any keys that we're explicitly managing
 	keys := d.Get("key").(*schema.Set).List()

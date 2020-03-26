@@ -59,6 +59,12 @@ func dataSourceConsulACLRole() *schema.Resource {
 					},
 				},
 			},
+
+			"namespace": {
+				Type:     schema.TypeString,
+				Optional: true,
+				ForceNew: true,
+			},
 		},
 	}
 }
@@ -72,6 +78,7 @@ func datasourceConsulACLRoleRead(d *schema.ResourceData, meta interface{}) error
 	}
 	qOpts := &consulapi.QueryOptions{
 		Datacenter: dc,
+		Namespace:  getNamespace(d, meta),
 	}
 
 	role, _, err := client.ACL().RoleReadByName(name, qOpts)

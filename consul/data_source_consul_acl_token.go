@@ -3,6 +3,7 @@ package consul
 import (
 	"fmt"
 
+	consulapi "github.com/hashicorp/consul/api"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 )
 
@@ -45,6 +46,12 @@ func dataSourceConsulACLToken() *schema.Resource {
 				Type:     schema.TypeBool,
 				Optional: true,
 			},
+
+			"namespace": {
+				Type:     schema.TypeString,
+				Optional: true,
+				ForceNew: true,
+			},
 		},
 	}
 }
@@ -52,7 +59,10 @@ func dataSourceConsulACLToken() *schema.Resource {
 func dataSourceConsulACLTokenRead(d *schema.ResourceData, meta interface{}) error {
 	client := getClient(meta)
 	accessorID := d.Get("accessor_id").(string)
-	aclToken, _, err := client.ACL().TokenRead(accessorID, nil)
+	qOpts := &consulapi.QueryOptions{
+		Namespace: getNamespace(d, meta),
+	}
+	aclToken, _, err := client.ACL().TokenRead(accessorID, qOpts)
 	if err != nil {
 		return err
 	}
