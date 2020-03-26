@@ -8,7 +8,7 @@ description: |-
 
 # consul_license
 
-~> **NOTE:** This feature requires Consul Enterprise.
+~> **NOTE:** This feature requires [Consul Enterprise](https://www.consul.io/docs/enterprise/index.html).
 
 The `consul_license` resource provides datacenter-level management of
 the Consul Enterprise license. If ACLs are enabled then a token with operator
