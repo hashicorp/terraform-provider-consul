@@ -52,6 +52,7 @@ The following arguments are supported:
   generate a random uuid.
 * `description` - (Optional) The description of the token.
 * `policies` - (Optional) The list of policies attached to the token.
+* `roles` - (Optional) The list of roles attached to the token.
 * `local` - (Optional) The flag to set the token local to the current datacenter.
 * `namespace` - (Optional, Enterprise Only) The namespace to create the token within.
 
@@ -63,6 +64,7 @@ The following attributes are exported:
 * `accessor_id` - The token accessor ID.
 * `description` - The description of the token.
 * `policies` - The list of policies attached to the token.
+* `roles` - The list of roles attached to the token.
 * `local` - The flag to set the token local to the current datacenter.
 
 

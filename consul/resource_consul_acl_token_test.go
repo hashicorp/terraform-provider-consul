@@ -35,6 +35,7 @@ func TestAccConsulACLToken_basic(t *testing.T) {
 				Config: testResourceACLTokenConfigBasic,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("consul_acl_token.test", "description", "test"),
+					resource.TestCheckResourceAttr("consul_acl_token.test", "roles.#", "0"),
 					resource.TestCheckResourceAttr("consul_acl_token.test", "policies.#", "1"),
 					resource.TestCheckResourceAttr("consul_acl_token.test", "policies.1785148924", "test"),
 					resource.TestCheckResourceAttr("consul_acl_token.test", "local", "true"),
@@ -44,6 +45,7 @@ func TestAccConsulACLToken_basic(t *testing.T) {
 				Config: testResourceACLTokenConfigUpdate,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("consul_acl_token.test", "description", "test"),
+					resource.TestCheckResourceAttr("consul_acl_token.test", "roles.#", "0"),
 					resource.TestCheckResourceAttr("consul_acl_token.test", "policies.#", "1"),
 					resource.TestCheckResourceAttr("consul_acl_token.test", "policies.111830242", "test2"),
 					resource.TestCheckResourceAttr("consul_acl_token.test", "local", "false"),
@@ -51,6 +53,14 @@ func TestAccConsulACLToken_basic(t *testing.T) {
 			},
 			{
 				Config: testResourceACLTokenConfigUpdate,
+			},
+			{
+				Config: testResourceACLTokenConfigRole,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("consul_acl_token.test", "description", "test"),
+					resource.TestCheckResourceAttr("consul_acl_token.test", "roles.#", "1"),
+					resource.TestCheckResourceAttr("consul_acl_token.test", "roles.1785148924", "test"),
+				),
 			},
 		},
 	})
@@ -142,6 +152,16 @@ resource "consul_acl_policy" "test2" {
 resource "consul_acl_token" "test" {
 	description = "test"
 	policies = ["${consul_acl_policy.test2.name}"]
+}`
+
+const testResourceACLTokenConfigRole = `
+resource "consul_acl_role" "test" {
+    name = "test"
+}
+
+resource "consul_acl_token" "test" {
+	description = "test"
+	roles = [consul_acl_role.test.name]
 }`
 
 const testResourceACLTokenConfigNamespaceCE = `
