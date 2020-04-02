@@ -294,12 +294,6 @@ func resourceConsulKeyPrefixRead(d *schema.ResourceData, meta interface{}) error
 		return err
 	}
 
-	// If not keys under the prefix => The prefix does not exist.
-	if len(pairs) == 0 {
-		d.SetId("")
-		return nil
-	}
-
 	subKeys := make(map[string]string)
 	if subKeySet, ok := d.GetOk("subkey"); ok {
 		subkeyList := subKeySet.(*schema.Set).List()

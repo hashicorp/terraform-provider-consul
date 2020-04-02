@@ -22,6 +22,9 @@ func TestAccConsulKeyPrefix_basic(t *testing.T) {
 		),
 		Steps: []resource.TestStep{
 			{
+				Config: testAccConsulKeyPrefixNoKeys,
+			},
+			{
 				Config: testAccConsulKeyPrefixConfig,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConsulKeyPrefixKeyValue("cheese", "chevre", 0),
@@ -271,6 +274,12 @@ func testAccCheckConsulKeyPrefixKeyValue(name, value string, flags uint64) resou
 		return nil
 	}
 }
+
+const testAccConsulKeyPrefixNoKeys = `
+resource "consul_key_prefix" "app" {
+	datacenter = "dc1"
+	path_prefix = "prefix_test/"
+}`
 
 const testAccConsulKeyPrefixConfig = `
 resource "consul_key_prefix" "app" {
