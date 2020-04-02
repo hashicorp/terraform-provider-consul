@@ -47,8 +47,9 @@ func TestAccConsulKeyPrefix_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConsulKeyPrefixKeyValue("meat", "ham", 0),
 					testAccCheckConsulKeyPrefixKeyValue("bread", "batard", 0),
+					testAccCheckConsulKeyPrefixKeyValue("condiment/second", "mayonnaise", 4),
+					testAccCheckConsulKeyPrefixKeyValue("condiment/third", "onion", 0),
 					testAccCheckConsulKeyPrefixKeyAbsent("condiment/first"),
-					testAccCheckConsulKeyPrefixKeyAbsent("condiment/second"),
 					testAccCheckConsulKeyPrefixKeyAbsent("cheese"),
 					testAccCheckConsulKeyPrefixKeyAbsent("species"),
 				),
@@ -70,10 +71,10 @@ func TestAccCheckConsulKeyPrefix_Import(t *testing.T) {
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccConsulKeyPrefixConfig_Update,
+				Config: testAccConsulKeyPrefixConfig_Import,
 			},
 			{
-				Config:            testAccConsulKeyPrefixConfig_Update,
+				Config:            testAccConsulKeyPrefixConfig_Import,
 				ResourceName:      "consul_key_prefix.app",
 				ImportState:       true,
 				ImportStateVerify: true,
@@ -102,6 +103,79 @@ func TestAccConsulKeyPrefix_namespaceEE(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccConsulKeyPrefixConfig_namespaceEE,
+			},
+		},
+	})
+}
+
+// TestAccConsulKeyPrefix_deleted checks that resource will recreate keys
+// the consul_key_prefix resource if all the keys has been deleted on Consul
+func TestAccConsulKeyPrefix_deleted(t *testing.T) {
+	config := `
+resource "consul_key_prefix" "app" {
+	datacenter = "dc1"
+    path_prefix = "prefix_test/"
+
+	subkey {
+		path  = "first"
+		value = "plop"
+	}
+
+	subkey {
+		path  = "second"
+		value = "plip"
+	}
+}
+`
+	resource.Test(t, resource.TestCase{
+		PreCheck:  func() { testAccPreCheck(t) },
+		Providers: testAccProviders,
+		Steps: []resource.TestStep{
+			{
+				// Apply the config and remove the prefix in Consul
+				Config:             config,
+				ExpectNonEmptyPlan: true,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckConsulKeyPrefixKeyValue("first", "plop", 0),
+					testAccCheckConsulKeyPrefixKeyValue("second", "plip", 0),
+
+					// This will remove all the key_prefix in Consul
+					// causing a non-empty plan that wants to recreate it.
+					testAccDeleteConsulKeyPrefix("prefix_test/"),
+					testAccCheckConsulKeyPrefixKeyAbsent("first"),
+					testAccCheckConsulKeyPrefixKeyAbsent("second"),
+				),
+			},
+			{
+				// This step should recreate the missing keys
+				Config: config,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckConsulKeyPrefixKeyValue("first", "plop", 0),
+					testAccCheckConsulKeyPrefixKeyValue("second", "plip", 0),
+				),
+			},
+			{
+				// Apply again and remove one key under the prefix
+				Config:             config,
+				ExpectNonEmptyPlan: true,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckConsulKeyPrefixKeyValue("first", "plop", 0),
+					testAccCheckConsulKeyPrefixKeyValue("second", "plip", 0),
+
+					// Remove the first key, this should cause a non-empty plan
+					// to recreate it
+					testAccDeleteConsulKey("prefix_test/first"),
+					testAccCheckConsulKeyPrefixKeyAbsent("first"),
+					testAccCheckConsulKeyPrefixKeyValue("second", "plip", 0),
+				),
+			},
+			{
+				// This step should recreate the missing key
+				Config: config,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckConsulKeyPrefixKeyValue("first", "plop", 0),
+					testAccCheckConsulKeyPrefixKeyValue("second", "plip", 0),
+				),
 			},
 		},
 	})
@@ -155,6 +229,26 @@ func testAccAddConsulKeyPrefixRogue(name, value string) resource.TestCheckFunc {
 	}
 }
 
+// This one is actually not a check, but rather a mutation step.
+// It removes the prefix_test "folder" (all keys under this prefix)
+func testAccDeleteConsulKeyPrefix(prefix string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		kv := getClient(testAccProvider.Meta()).KV()
+		_, err := kv.DeleteTree(prefix, &consulapi.WriteOptions{Datacenter: "dc1"})
+		return err
+	}
+}
+
+// This one is actually not a check, but rather a mutation step.
+// It removes one key in Consul
+func testAccDeleteConsulKey(key string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		kv := getClient(testAccProvider.Meta()).KV()
+		_, err := kv.Delete(key, &consulapi.WriteOptions{Datacenter: "dc1"})
+		return err
+	}
+}
+
 func testAccCheckConsulKeyPrefixKeyValue(name, value string, flags uint64) resource.TestCheckFunc {
 	fullName := "prefix_test/" + name
 	return func(s *terraform.State) error {
@@ -204,6 +298,30 @@ resource "consul_key_prefix" "app" {
 `
 
 const testAccConsulKeyPrefixConfig_Update = `
+resource "consul_key_prefix" "app" {
+	datacenter = "dc1"
+
+    path_prefix = "prefix_test/"
+
+    subkeys = {
+        bread = "batard"
+        meat = "ham"
+    }
+
+	subkey {
+		path  = "condiment/second"
+		value = "mayonnaise"
+		flags = 4
+	}
+
+	subkey {
+		path  = "condiment/third"
+		value = "onion"
+	}
+}
+`
+
+const testAccConsulKeyPrefixConfig_Import = `
 resource "consul_key_prefix" "app" {
 	datacenter = "dc1"
 

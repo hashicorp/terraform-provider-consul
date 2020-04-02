@@ -223,23 +223,33 @@ func resourceConsulKeyPrefixUpdate(d *schema.ResourceData, meta interface{}) err
 
 	// Update and remove keys from `subkey` attribute
 	if d.HasChange("subkey") {
-		o, n := d.GetChange("subkey")
-		if o == nil {
-			o = &schema.Set{}
+		oldKeys, newKeys := d.GetChange("subkey")
+		if oldKeys == nil {
+			oldKeys = &schema.Set{}
 		}
-		if n == nil {
-			n = &schema.Set{}
+		if newKeys == nil {
+			newKeys = &schema.Set{}
 		}
-		os := o.(*schema.Set)
-		ns := n.(*schema.Set)
-		nSubkeyList := ns.List()
-		oSubkeyList := os.List()
 
-		for _, rawSubkey := range nSubkeyList {
-			subkeyData := rawSubkey.(map[string]interface{})
-			name := subkeyData["path"].(string)
-			value := subkeyData["value"].(string)
-			flags := subkeyData["flags"].(int)
+		// Create a map with old paths (no values)
+		// We'll use it to determine which keys need to be deleted.
+		// (the ones which are not in the new list)
+		oldSubKeys := map[string]struct{}{}
+		for _, rawKey := range oldKeys.(*schema.Set).List() {
+			key := rawKey.(map[string]interface{})
+			oldSubKeys[key["path"].(string)] = struct{}{}
+		}
+
+		// Upsert the new keys
+		for _, rawSubkey := range newKeys.(*schema.Set).List() {
+			key := rawSubkey.(map[string]interface{})
+
+			name := key["path"].(string)
+			value := key["value"].(string)
+			flags := key["flags"].(int)
+
+			// Delete from old keys (if exists) so it will not be removed in last step
+			delete(oldSubKeys, name)
 
 			fullPath := pathPrefix + name
 			err := keyClient.Put(fullPath, value, flags)
@@ -248,18 +258,9 @@ func resourceConsulKeyPrefixUpdate(d *schema.ResourceData, meta interface{}) err
 			}
 		}
 
-		for _, rawSubkey := range oSubkeyList {
-			subkeyData := rawSubkey.(map[string]interface{})
-			name := subkeyData["path"].(string)
-
-			for _, rawNSubKey := range nSubkeyList {
-				nSubkeyData := rawNSubKey.(map[string]interface{})
-				if name == nSubkeyData["path"].(string) {
-					continue
-				}
-			}
-
-			fullPath := pathPrefix + name
+		// Remove remaining old subkey
+		for path := range oldSubKeys {
+			fullPath := pathPrefix + path
 			err := keyClient.Delete(fullPath)
 			if err != nil {
 				return fmt.Errorf("error while deleting %s: %s", fullPath, err)
@@ -293,9 +294,20 @@ func resourceConsulKeyPrefixRead(d *schema.ResourceData, meta interface{}) error
 		return err
 	}
 
+	// If not keys under the prefix => The prefix does not exist.
+	if len(pairs) == 0 {
+		d.SetId("")
+		return nil
+	}
+
 	subKeys := make(map[string]string)
 	if subKeySet, ok := d.GetOk("subkey"); ok {
 		subkeyList := subKeySet.(*schema.Set).List()
+
+		// Recreate the subKeySet from scratch so it will represent the exact state in Consul
+		// and subkeys which are in the Terraform definition but not in Consul will be recreated.
+		subKeySet = schema.NewSet(subKeySet.(*schema.Set).F, []interface{}{})
+
 		// We need to split subkeys fetched between the subkey and subkeys attributes:
 		//   - everything whose path matches a given subkey goes in subkeySet
 		//   - everything else goes into the subkeys attribute
