@@ -295,58 +295,50 @@ func resourceConsulKeyPrefixRead(d *schema.ResourceData, meta interface{}) error
 	}
 
 	subKeys := make(map[string]string)
-	if subKeySet, ok := d.GetOk("subkey"); ok {
-		subkeyList := subKeySet.(*schema.Set).List()
+	subKeySet := make([]interface{}, 0)
 
-		// Recreate the subKeySet from scratch so it will represent the exact state in Consul
-		// and subkeys which are in the Terraform definition but not in Consul will be recreated.
-		subKeySet = schema.NewSet(subKeySet.(*schema.Set).F, []interface{}{})
+	// We need to split subkeys fetched between the subkey and subkeys attributes:
+	//   - everything whose path matches a given subkey in subkeyList goes in subkeySet
+	//   - everything else goes into the subkeys attribute
+	subkeyList := d.Get("subkey").(*schema.Set).List()
+	for _, pair := range pairs {
+		name := pair.Key[len(pathPrefix):]
+		value := string(pair.Value)
+		flags := int(pair.Flags)
+		isSubkey := false
 
-		// We need to split subkeys fetched between the subkey and subkeys attributes:
-		//   - everything whose path matches a given subkey goes in subkeySet
-		//   - everything else goes into the subkeys attribute
-		for _, pair := range pairs {
-			name := pair.Key[len(pathPrefix):]
-			value := string(pair.Value)
-			flags := int(pair.Flags)
-			isSubkey := false
-
-			for _, rawSubkey := range subkeyList {
-				subkeyData := rawSubkey.(map[string]interface{})
-				if name == subkeyData["path"] {
-					isSubkey = true
-					subkey := map[string]interface{}{
-						"path":  name,
-						"value": value,
-						"flags": flags,
-					}
-					subKeySet.(*schema.Set).Add(subkey)
-					break
+		for _, rawSubkey := range subkeyList {
+			subkeyData := rawSubkey.(map[string]interface{})
+			if name == subkeyData["path"] {
+				isSubkey = true
+				subkey := map[string]interface{}{
+					"path":  name,
+					"value": value,
+					"flags": flags,
 				}
+				subKeySet = append(subKeySet, subkey)
+				break
 			}
+		}
 
-			if !isSubkey {
-				subKeys[name] = string(value)
-			}
-		}
-		d.Set("subkey", subKeySet)
-	} else {
-		for _, pair := range pairs {
-			name := pair.Key[len(pathPrefix):]
-			value := string(pair.Value)
-			subKeys[name] = value
+		if !isSubkey {
+			subKeys[name] = string(value)
 		}
 	}
-	if err := d.Set("subkeys", subKeys); err != nil {
-		return err
+
+	if err := d.Set("subkey", subKeySet); err != nil {
+		return fmt.Errorf("failed to set 'subkey': %v", err)
 	}
+
 	if err := d.Set("subkeys", subKeys); err != nil {
-		return err
+		return fmt.Errorf("failed to set 'subkeys': %v", err)
 	}
 
 	// Store the datacenter on this resource, which can be helpful for reference
 	// in case it was read from the provider
-	d.Set("datacenter", dc)
+	if err := d.Set("datacenter", dc); err != nil {
+		return fmt.Errorf("failed to set 'datacenter': %v", err)
+	}
 
 	return nil
 }
