@@ -114,44 +114,24 @@ func TestAccConsulKeyPrefix_namespaceEE(t *testing.T) {
 // TestAccConsulKeyPrefix_deleted checks that resource will recreate keys
 // the consul_key_prefix resource if all the keys has been deleted on Consul
 func TestAccConsulKeyPrefix_deleted(t *testing.T) {
-	config := `
-resource "consul_key_prefix" "app" {
-	datacenter = "dc1"
-    path_prefix = "prefix_test/"
-
-	subkey {
-		path  = "first"
-		value = "plop"
-	}
-
-	subkey {
-		path  = "second"
-		value = "plip"
-	}
-}
-`
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
 			{
 				// Apply the config and remove the prefix in Consul
-				Config:             config,
-				ExpectNonEmptyPlan: true,
+				Config: testAccConsulKeyPrefixConfig_deleted,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConsulKeyPrefixKeyValue("first", "plop", 0),
 					testAccCheckConsulKeyPrefixKeyValue("second", "plip", 0),
-
-					// This will remove all the key_prefix in Consul
-					// causing a non-empty plan that wants to recreate it.
-					testAccDeleteConsulKeyPrefix("prefix_test/"),
-					testAccCheckConsulKeyPrefixKeyAbsent("first"),
-					testAccCheckConsulKeyPrefixKeyAbsent("second"),
 				),
 			},
 			{
+				// This will remove all the key_prefix in Consul
+				// causing a non-empty plan that wants to recreate it.
+				PreConfig: testAccDeleteConsulKeyPrefix(t, "prefix_test/"),
 				// This step should recreate the missing keys
-				Config: config,
+				Config: testAccConsulKeyPrefixConfig_deleted,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConsulKeyPrefixKeyValue("first", "plop", 0),
 					testAccCheckConsulKeyPrefixKeyValue("second", "plip", 0),
@@ -159,22 +139,18 @@ resource "consul_key_prefix" "app" {
 			},
 			{
 				// Apply again and remove one key under the prefix
-				Config:             config,
-				ExpectNonEmptyPlan: true,
+				Config: testAccConsulKeyPrefixConfig_deleted,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConsulKeyPrefixKeyValue("first", "plop", 0),
-					testAccCheckConsulKeyPrefixKeyValue("second", "plip", 0),
-
-					// Remove the first key, this should cause a non-empty plan
-					// to recreate it
-					testAccDeleteConsulKey("prefix_test/first"),
-					testAccCheckConsulKeyPrefixKeyAbsent("first"),
 					testAccCheckConsulKeyPrefixKeyValue("second", "plip", 0),
 				),
 			},
 			{
+				// Remove the first key, this should cause a non-empty plan
+				// to recreate it
+				PreConfig: testAccDeleteConsulKey(t, "prefix_test/first"),
 				// This step should recreate the missing key
-				Config: config,
+				Config: testAccConsulKeyPrefixConfig_deleted,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConsulKeyPrefixKeyValue("first", "plop", 0),
 					testAccCheckConsulKeyPrefixKeyValue("second", "plip", 0),
@@ -234,21 +210,25 @@ func testAccAddConsulKeyPrefixRogue(name, value string) resource.TestCheckFunc {
 
 // This one is actually not a check, but rather a mutation step.
 // It removes the prefix_test "folder" (all keys under this prefix)
-func testAccDeleteConsulKeyPrefix(prefix string) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
+func testAccDeleteConsulKeyPrefix(t *testing.T, prefix string) func() {
+	return func() {
 		kv := getClient(testAccProvider.Meta()).KV()
 		_, err := kv.DeleteTree(prefix, &consulapi.WriteOptions{Datacenter: "dc1"})
-		return err
+		if err != nil {
+			t.Fatalf("failed to delete tree: %v", err)
+		}
 	}
 }
 
 // This one is actually not a check, but rather a mutation step.
 // It removes one key in Consul
-func testAccDeleteConsulKey(key string) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
+func testAccDeleteConsulKey(t *testing.T, key string) func() {
+	return func() {
 		kv := getClient(testAccProvider.Meta()).KV()
 		_, err := kv.Delete(key, &consulapi.WriteOptions{Datacenter: "dc1"})
-		return err
+		if err != nil {
+			t.Fatalf("failed to delete key %q: %v", key, err)
+		}
 	}
 }
 
@@ -368,3 +348,20 @@ resource "consul_key_prefix" "test" {
     meat = "ham"
   }
 }`
+
+const testAccConsulKeyPrefixConfig_deleted = `
+resource "consul_key_prefix" "app" {
+	datacenter = "dc1"
+    path_prefix = "prefix_test/"
+
+	subkey {
+		path  = "first"
+		value = "plop"
+	}
+
+	subkey {
+		path  = "second"
+		value = "plip"
+	}
+}
+`
