@@ -223,23 +223,33 @@ func resourceConsulKeyPrefixUpdate(d *schema.ResourceData, meta interface{}) err
 
 	// Update and remove keys from `subkey` attribute
 	if d.HasChange("subkey") {
-		o, n := d.GetChange("subkey")
-		if o == nil {
-			o = &schema.Set{}
+		oldKeys, newKeys := d.GetChange("subkey")
+		if oldKeys == nil {
+			oldKeys = &schema.Set{}
 		}
-		if n == nil {
-			n = &schema.Set{}
+		if newKeys == nil {
+			newKeys = &schema.Set{}
 		}
-		os := o.(*schema.Set)
-		ns := n.(*schema.Set)
-		nSubkeyList := ns.List()
-		oSubkeyList := os.List()
 
-		for _, rawSubkey := range nSubkeyList {
-			subkeyData := rawSubkey.(map[string]interface{})
-			name := subkeyData["path"].(string)
-			value := subkeyData["value"].(string)
-			flags := subkeyData["flags"].(int)
+		// Create a map with old paths (no values)
+		// We'll use it to determine which keys need to be deleted.
+		// (the ones which are not in the new list)
+		oldSubKeys := map[string]struct{}{}
+		for _, rawKey := range oldKeys.(*schema.Set).List() {
+			key := rawKey.(map[string]interface{})
+			oldSubKeys[key["path"].(string)] = struct{}{}
+		}
+
+		// Upsert the new keys
+		for _, rawSubkey := range newKeys.(*schema.Set).List() {
+			key := rawSubkey.(map[string]interface{})
+
+			name := key["path"].(string)
+			value := key["value"].(string)
+			flags := key["flags"].(int)
+
+			// Delete from old keys (if exists) so it will not be removed in last step
+			delete(oldSubKeys, name)
 
 			fullPath := pathPrefix + name
 			err := keyClient.Put(fullPath, value, flags)
@@ -248,18 +258,9 @@ func resourceConsulKeyPrefixUpdate(d *schema.ResourceData, meta interface{}) err
 			}
 		}
 
-		for _, rawSubkey := range oSubkeyList {
-			subkeyData := rawSubkey.(map[string]interface{})
-			name := subkeyData["path"].(string)
-
-			for _, rawNSubKey := range nSubkeyList {
-				nSubkeyData := rawNSubKey.(map[string]interface{})
-				if name == nSubkeyData["path"].(string) {
-					continue
-				}
-			}
-
-			fullPath := pathPrefix + name
+		// Remove remaining old subkey
+		for path := range oldSubKeys {
+			fullPath := pathPrefix + path
 			err := keyClient.Delete(fullPath)
 			if err != nil {
 				return fmt.Errorf("error while deleting %s: %s", fullPath, err)
@@ -294,53 +295,50 @@ func resourceConsulKeyPrefixRead(d *schema.ResourceData, meta interface{}) error
 	}
 
 	subKeys := make(map[string]string)
-	if subKeySet, ok := d.GetOk("subkey"); ok {
-		subkeyList := subKeySet.(*schema.Set).List()
-		// We need to split subkeys fetched between the subkey and subkeys attributes:
-		//   - everything whose path matches a given subkey goes in subkeySet
-		//   - everything else goes into the subkeys attribute
-		for _, pair := range pairs {
-			name := pair.Key[len(pathPrefix):]
-			value := string(pair.Value)
-			flags := int(pair.Flags)
-			isSubkey := false
+	subKeySet := make([]interface{}, 0)
 
-			for _, rawSubkey := range subkeyList {
-				subkeyData := rawSubkey.(map[string]interface{})
-				if name == subkeyData["path"] {
-					isSubkey = true
-					subkey := map[string]interface{}{
-						"path":  name,
-						"value": value,
-						"flags": flags,
-					}
-					subKeySet.(*schema.Set).Add(subkey)
-					break
+	// We need to split subkeys fetched between the subkey and subkeys attributes:
+	//   - everything whose path matches a given subkey in subkeyList goes in subkeySet
+	//   - everything else goes into the subkeys attribute
+	subkeyList := d.Get("subkey").(*schema.Set).List()
+	for _, pair := range pairs {
+		name := pair.Key[len(pathPrefix):]
+		value := string(pair.Value)
+		flags := int(pair.Flags)
+		isSubkey := false
+
+		for _, rawSubkey := range subkeyList {
+			subkeyData := rawSubkey.(map[string]interface{})
+			if name == subkeyData["path"] {
+				isSubkey = true
+				subkey := map[string]interface{}{
+					"path":  name,
+					"value": value,
+					"flags": flags,
 				}
+				subKeySet = append(subKeySet, subkey)
+				break
 			}
+		}
 
-			if !isSubkey {
-				subKeys[name] = string(value)
-			}
-		}
-		d.Set("subkey", subKeySet)
-	} else {
-		for _, pair := range pairs {
-			name := pair.Key[len(pathPrefix):]
-			value := string(pair.Value)
-			subKeys[name] = value
+		if !isSubkey {
+			subKeys[name] = string(value)
 		}
 	}
-	if err := d.Set("subkeys", subKeys); err != nil {
-		return err
+
+	if err := d.Set("subkey", subKeySet); err != nil {
+		return fmt.Errorf("failed to set 'subkey': %v", err)
 	}
+
 	if err := d.Set("subkeys", subKeys); err != nil {
-		return err
+		return fmt.Errorf("failed to set 'subkeys': %v", err)
 	}
 
 	// Store the datacenter on this resource, which can be helpful for reference
 	// in case it was read from the provider
-	d.Set("datacenter", dc)
+	if err := d.Set("datacenter", dc); err != nil {
+		return fmt.Errorf("failed to set 'datacenter': %v", err)
+	}
 
 	return nil
 }
