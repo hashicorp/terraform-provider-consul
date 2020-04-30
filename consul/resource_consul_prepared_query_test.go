@@ -2,8 +2,10 @@ package consul
 
 import (
 	"fmt"
+	"reflect"
 	"testing"
 
+	"github.com/hashicorp/consul/api"
 	consulapi "github.com/hashicorp/consul/api"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/terraform"
@@ -66,6 +68,15 @@ func TestAccConsulPreparedQuery_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("consul_prepared_query.foo", "failover.#", "0"),
 					resource.TestCheckResourceAttr("consul_prepared_query.foo", "template.#", "0"),
 					resource.TestCheckResourceAttr("consul_prepared_query.foo", "dns.#", "0"),
+					resource.TestCheckResourceAttr("consul_prepared_query.foo", "ignore_check_ids.#", "3"),
+					resource.TestCheckResourceAttr("consul_prepared_query.foo", "ignore_check_ids.0", "1"),
+					resource.TestCheckResourceAttr("consul_prepared_query.foo", "ignore_check_ids.1", "2"),
+					resource.TestCheckResourceAttr("consul_prepared_query.foo", "ignore_check_ids.2", "3"),
+					resource.TestCheckResourceAttr("consul_prepared_query.foo", "node_meta.%", "1"),
+					resource.TestCheckResourceAttr("consul_prepared_query.foo", "node_meta.foo", "bar"),
+					resource.TestCheckResourceAttr("consul_prepared_query.foo", "service_meta.%", "1"),
+					resource.TestCheckResourceAttr("consul_prepared_query.foo", "service_meta.spam", "ham"),
+					testAccCheckConsulPreparedQueryAttributes,
 				),
 			},
 		},
@@ -128,10 +139,10 @@ func TestAccConsulPreparedQuery_blocks(t *testing.T) {
 	})
 }
 
-func checkPreparedQueryExists(s *terraform.State) bool {
+func getPreparedQuery(s *terraform.State) (*api.PreparedQueryDefinition, error) {
 	rn, ok := s.RootModule().Resources["consul_prepared_query.foo"]
 	if !ok {
-		return false
+		return nil, fmt.Errorf("Counld not find resource in state")
 	}
 	id := rn.Primary.ID
 
@@ -139,7 +150,43 @@ func checkPreparedQueryExists(s *terraform.State) bool {
 	client := c.PreparedQuery()
 	opts := &consulapi.QueryOptions{Datacenter: "dc1"}
 	pq, _, err := client.Get(id, opts)
+	if len(pq) != 1 {
+		return nil, fmt.Errorf("Wrong number of prepared queries")
+	}
+	return pq[0], err
+}
+
+func checkPreparedQueryExists(s *terraform.State) bool {
+	pq, err := getPreparedQuery(s)
 	return err == nil && pq != nil
+}
+
+func testAccCheckConsulPreparedQueryAttributes(s *terraform.State) error {
+	pq, err := getPreparedQuery(s)
+
+	if err != nil {
+		return err
+	}
+
+	if pq.Token != "" {
+		return fmt.Errorf("Wrong value for 'stored_token': %v", pq.Token)
+	}
+	if pq.Service.Near != "" {
+		return fmt.Errorf("Wrong value for 'near': %v", pq.Service.Near)
+	}
+	if len(pq.Service.Tags) != 0 {
+		return fmt.Errorf("Wrong value for 'tags': %v", pq.Service.Tags)
+	}
+	if !reflect.DeepEqual(pq.Service.IgnoreCheckIDs, []string{"1", "2", "3"}) {
+		return fmt.Errorf("Wrong value for 'ignore_check_ids': %v", pq.Service.IgnoreCheckIDs)
+	}
+	if !reflect.DeepEqual(pq.Service.ServiceMeta, map[string]string{"spam": "ham"}) {
+		return fmt.Errorf("Wrong value for 'service_meta': %v", pq.Service.ServiceMeta)
+	}
+	if !reflect.DeepEqual(pq.Service.NodeMeta, map[string]string{"foo": "bar"}) {
+		return fmt.Errorf("Wrong value for 'node_meta': %v", pq.Service.NodeMeta)
+	}
+	return nil
 }
 
 func testAccCheckConsulPreparedQueryDestroy(s *terraform.State) error {
@@ -237,8 +284,17 @@ resource "consul_prepared_query" "foo" {
 
 const testAccConsulPreparedQueryConfigUpdate2 = `
 resource "consul_prepared_query" "foo" {
-	name = "baz"
-	service = "memcached"
+	name             = "baz"
+	service          = "memcached"
+	ignore_check_ids = ["1", "2", "3"]
+
+	node_meta = {
+		foo = "bar"
+	}
+
+	service_meta = {
+		spam = "ham"
+	}
 }
 `
 
