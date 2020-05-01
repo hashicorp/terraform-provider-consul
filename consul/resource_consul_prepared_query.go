@@ -73,6 +73,24 @@ func resourceConsulPreparedQuery() *schema.Resource {
 				Optional: true,
 			},
 
+			"ignore_check_ids": {
+				Type:     schema.TypeList,
+				Optional: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+			},
+
+			"node_meta": {
+				Type:     schema.TypeMap,
+				Optional: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+			},
+
+			"service_meta": {
+				Type:     schema.TypeMap,
+				Optional: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+			},
+
 			"failover": {
 				Type:     schema.TypeList,
 				Optional: true,
@@ -208,6 +226,15 @@ func resourceConsulPreparedQueryRead(d *schema.ResourceData, meta interface{}) e
 	if err = d.Set("tags", pq.Service.Tags); err != nil {
 		return fmt.Errorf("Failed to set 'tags': %v", err)
 	}
+	if err = d.Set("ignore_check_ids", pq.Service.IgnoreCheckIDs); err != nil {
+		return fmt.Errorf("Failed to set 'ignore_check_ids': %v", err)
+	}
+	if err = d.Set("node_meta", pq.Service.NodeMeta); err != nil {
+		return fmt.Errorf("Failed to set 'node_meta': %v", err)
+	}
+	if err = d.Set("service_meta", pq.Service.ServiceMeta); err != nil {
+		return fmt.Errorf("Failed to set 'service_meta': %v", err)
+	}
 
 	// Since failover and dns are implemented with an optionnal list instead of a
 	// sub-resource, writing those attributes to the state is more involved that
@@ -295,6 +322,22 @@ func preparedQueryDefinitionFromResourceData(d *schema.ResourceData) *consulapi.
 	pq.Service.Tags = make([]string, len(tags))
 	for i, v := range tags {
 		pq.Service.Tags[i] = v.(string)
+	}
+
+	pq.Service.NodeMeta = make(map[string]string)
+	for k, v := range d.Get("node_meta").(map[string]interface{}) {
+		pq.Service.NodeMeta[k] = v.(string)
+	}
+
+	pq.Service.ServiceMeta = make(map[string]string)
+	for k, v := range d.Get("service_meta").(map[string]interface{}) {
+		pq.Service.ServiceMeta[k] = v.(string)
+	}
+
+	ignoreCheckIDs := d.Get("ignore_check_ids").([]interface{})
+	pq.Service.IgnoreCheckIDs = make([]string, len(ignoreCheckIDs))
+	for i, id := range ignoreCheckIDs {
+		pq.Service.IgnoreCheckIDs[i] = id.(string)
 	}
 
 	if _, ok := d.GetOk("failover.0"); ok {

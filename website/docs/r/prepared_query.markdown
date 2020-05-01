@@ -112,6 +112,22 @@ The following arguments are supported:
   `_agent` value can be used to always sort nearest the node servicing the
   request.
 
+* `ignore_check_ids` - (Optional) Specifies a list of check IDs that should be
+  ignored when filtering unhealthy instances. This is mostly useful in an
+  emergency or as a temporary measure when a health check is found to be
+  unreliable. Being able to ignore it in centrally-defined queries can be
+  simpler than de-registering the check as an interim solution until the check
+  can be fixed.
+
+* `node_meta` - (Optional) Specifies a list of user-defined key/value pairs that
+  will be used for filtering the query results to nodes with the given metadata
+  values present.
+
+* `service_meta` - (Optional) Specifies a list of user-defined key/value pairs
+  that will be used for filtering the query results to services with the given
+  metadata values present.
+
+
 * `failover` - (Optional) Options for controlling behavior when no healthy
   nodes are available in the local DC.
 
