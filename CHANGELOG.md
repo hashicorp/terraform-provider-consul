@@ -1,4 +1,13 @@
 ## 2.8.0 (Unreleased)
+
+NEW FEATURES:
+
+* The `ignore_check_ids`, `node_meta` and `service_meta` have been added to the `consul_prepared_query` resource ([[#192](https://github.com/terraform-providers/terraform-provider-consul/issues/192)] and [[#193](https://github.com/terraform-providers/terraform-provider-consul/issues/193)]).
+
+BUG FIXES:
+
+* The `subkey` attribute of the `consul_key_prefix` resource now detects external changes ([[#189](https://github.com/terraform-providers/terraform-provider-consul/issues/189)]).
+
 ## 2.7.0 (March 26, 2020)
 
 NEW FEATURES:
