@@ -44,7 +44,7 @@ resource "consul_service" "google" {
 }
 ```
 
-Register an health-check:
+Register a health-check:
 
 ```hcl
 resource "consul_service" "redis" {
