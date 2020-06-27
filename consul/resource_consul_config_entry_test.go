@@ -26,6 +26,8 @@ func TestAccConsulConfigEntry_basic(t *testing.T) {
 	configJSONServiceRouter := "{\"Routes\":[{\"Destination\":{\"Service\":\"admin\"},\"Match\":{\"HTTP\":{\"PathPrefix\":\"/admin\"}}}]}"
 	configJSONServiceSplitter := "{\"Splits\":[{\"ServiceSubset\":\"v1\",\"Weight\":90},{\"ServiceSubset\":\"v2\",\"Weight\":10}]}"
 	configJSONServiceResolver := "{\"DefaultSubset\":\"v1\",\"Subsets\":{\"v1\":{\"Filter\":\"Service.Meta.version == v1\"},\"v2\":{\"Filter\":\"Service.Meta.version == v2\"}}}"
+	configJSONIngressGateway := "{\"Listeners\":[{\"Port\":8000,\"Protocol\":\"http\",\"Services\":[{\"Hosts\":null,\"Name\":\"*\"}]}],\"TLS\":{\"Enabled\":true}}"
+	configJSONTerminatingGateway := "{\"Services\":[{\"Name\":\"billing\"}]}"
 
 	if !serverIsConsulCommunityEdition(t) {
 		extraConf = `Namespace: "default"`
@@ -34,6 +36,8 @@ func TestAccConsulConfigEntry_basic(t *testing.T) {
 		configJSONServiceRouter = "{\"Namespace\":\"default\",\"Routes\":[{\"Destination\":{\"Service\":\"admin\"},\"Match\":{\"HTTP\":{\"PathPrefix\":\"/admin\"}}}]}"
 		configJSONServiceSplitter = "{\"Namespace\":\"default\",\"Splits\":[{\"ServiceSubset\":\"v1\",\"Weight\":90},{\"ServiceSubset\":\"v2\",\"Weight\":10}]}"
 		configJSONServiceResolver = "{\"DefaultSubset\":\"v1\",\"Namespace\":\"default\",\"Subsets\":{\"v1\":{\"Filter\":\"Service.Meta.version == v1\"},\"v2\":{\"Filter\":\"Service.Meta.version == v2\"}}}"
+		configJSONIngressGateway = "{\"Listeners\":[{\"Port\":8000,\"Protocol\":\"http\",\"Services\":[{\"Hosts\":null,\"Name\":\"*\",\"Namespace\":\"default\"}]}],\"Namespace\":\"default\",\"TLS\":{\"Enabled\":true}}"
+		configJSONTerminatingGateway = "{\"Namespace\":\"default\",\"Services\":[{\"Name\":\"billing\",\"Namespace\":\"default\"}]}"
 	}
 
 	resource.Test(t, resource.TestCase{
@@ -97,6 +101,22 @@ func TestAccConsulConfigEntry_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("consul_config_entry.service_resolver", "name", "web"),
 					resource.TestCheckResourceAttr("consul_config_entry.service_resolver", "kind", "service-resolver"),
 					resource.TestCheckResourceAttr("consul_config_entry.service_resolver", "config_json", configJSONServiceResolver),
+				),
+			},
+			{
+				Config: testAccConsulConfigEntry_IngressGateway(extraConf),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("consul_config_entry.ingress_gateway", "name", "foo"),
+					resource.TestCheckResourceAttr("consul_config_entry.ingress_gateway", "kind", "ingress-gateway"),
+					resource.TestCheckResourceAttr("consul_config_entry.ingress_gateway", "config_json", configJSONIngressGateway),
+				),
+			},
+			{
+				Config: testAccConsulConfigEntry_TerminatingGateway(extraConf),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("consul_config_entry.terminating_gateway", "name", "foo"),
+					resource.TestCheckResourceAttr("consul_config_entry.terminating_gateway", "kind", "terminating-gateway"),
+					resource.TestCheckResourceAttr("consul_config_entry.terminating_gateway", "config_json", configJSONTerminatingGateway),
 				),
 			},
 		},
@@ -318,3 +338,45 @@ resource "consul_config_entry" "foo" {
 	})
 }
 `
+
+func testAccConsulConfigEntry_IngressGateway(extraConf string) string {
+	return fmt.Sprintf(`
+resource "consul_config_entry" "ingress_gateway" {
+	name = "foo"
+	kind = "ingress-gateway"
+
+	config_json = jsonencode({
+		%s
+		TLS = {
+			Enabled = true
+		}
+		Listeners = [{
+			Port     = 8000
+			Protocol = "http"
+			Services = [{
+				Hosts = null
+				Name  = "*"
+				%s
+			}]
+		}]
+	})
+}
+`, extraConf, extraConf)
+}
+
+func testAccConsulConfigEntry_TerminatingGateway(extraConf string) string {
+	return fmt.Sprintf(`
+resource "consul_config_entry" "terminating_gateway" {
+	name = "foo"
+	kind = "terminating-gateway"
+
+	config_json = jsonencode({
+		%s
+		Services = [{
+			Name = "billing"
+			%s
+		}]
+	})
+}
+`, extraConf, extraConf)
+}
