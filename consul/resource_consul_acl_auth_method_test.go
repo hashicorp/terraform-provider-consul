@@ -21,8 +21,11 @@ func TestAccConsulACLRole_basic(t *testing.T) {
 				Config: testResourceACLAuthMethodConfigBasic,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("consul_acl_auth_method.test", "name", "minikube"),
+					resource.TestCheckResourceAttr("consul_acl_auth_method.test", "display_name", "Minikube Auth Method"),
 					resource.TestCheckResourceAttr("consul_acl_auth_method.test", "type", "kubernetes"),
 					resource.TestCheckResourceAttr("consul_acl_auth_method.test", "description", "dev minikube cluster"),
+					resource.TestCheckResourceAttr("consul_acl_auth_method.test", "max_token_ttl", "2m0s"),
+					resource.TestCheckResourceAttr("consul_acl_auth_method.test", "token_locality", "global"),
 					resource.TestCheckResourceAttr("consul_acl_auth_method.test", "config.%", "3"),
 					resource.TestCheckResourceAttr("consul_acl_auth_method.test", "config.Host", "https://192.0.2.42:8443"),
 					resource.TestCheckResourceAttr("consul_acl_auth_method.test", "config.CACert", testCert+"\n"),
@@ -33,7 +36,10 @@ func TestAccConsulACLRole_basic(t *testing.T) {
 				Config: testResourceACLAuthMethodConfigBasic_Update,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("consul_acl_auth_method.test", "name", "minikube2"),
+					resource.TestCheckResourceAttr("consul_acl_auth_method.test", "display_name", ""),
 					resource.TestCheckResourceAttr("consul_acl_auth_method.test", "type", "kubernetes"),
+					resource.TestCheckResourceAttr("consul_acl_auth_method.test", "max_token_ttl", "0s"),
+					resource.TestCheckResourceAttr("consul_acl_auth_method.test", "token_locality", ""),
 					resource.TestCheckResourceAttr("consul_acl_auth_method.test", "description", ""),
 					resource.TestCheckResourceAttr("consul_acl_auth_method.test", "config.%", "3"),
 					resource.TestCheckResourceAttr("consul_acl_auth_method.test", "config.Host", "https://localhost:8443"),
@@ -65,6 +71,21 @@ func TestAccConsulACLAuthMethod_namespaceEE(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testResourceACLAuthMethodNamespaceEE,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("consul_acl_auth_method.test", "name", "minikube"),
+					resource.TestCheckResourceAttr("consul_acl_auth_method.test", "namespace", "test-auth-method"),
+					resource.TestCheckResourceAttr("consul_acl_auth_method.test", "namespace_rule.#", "0"),
+				),
+			},
+			{
+				Config: testResourceACLAuthMethodNamespaceEE_namespaceRule,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("consul_acl_auth_method.test", "name", "minikube"),
+					resource.TestCheckResourceAttr("consul_acl_auth_method.test", "namespace", "default"),
+					resource.TestCheckResourceAttr("consul_acl_auth_method.test", "namespace_rule.#", "1"),
+					resource.TestCheckResourceAttr("consul_acl_auth_method.test", "namespace_rule.0.selector", "serviceaccount.namespace==default and serviceaccount.name!=vault"),
+					resource.TestCheckResourceAttr("consul_acl_auth_method.test", "namespace_rule.0.bind_namespace", "prefixed-${serviceaccount.name}"),
+				),
 			},
 		},
 	})
@@ -88,9 +109,12 @@ func testAuthMethodDestroy(s *terraform.State) error {
 
 const testResourceACLAuthMethodConfigBasic = `
 resource "consul_acl_auth_method" "test" {
-	name        = "minikube"
-    type        = "kubernetes"
-    description = "dev minikube cluster"
+	name           = "minikube"
+	display_name   = "Minikube Auth Method"
+    type           = "kubernetes"
+	description    = "dev minikube cluster"
+	max_token_ttl  = "120s"
+	token_locality = "global"
 
 	config = {
         Host = "https://192.0.2.42:8443"
@@ -177,4 +201,29 @@ resource "consul_acl_auth_method" "test" {
     EOF
     ServiceAccountJWT = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c"
   }
+}`
+
+const testResourceACLAuthMethodNamespaceEE_namespaceRule = `
+resource "consul_namespace" "test" {
+	name = "test-auth-method"
+}
+
+resource "consul_acl_auth_method" "test" {
+	name        = "minikube"
+	type        = "kubernetes"
+	description = "dev minikube cluster"
+	namespace   = "default"
+
+	namespace_rule {
+		selector       = "serviceaccount.namespace==default and serviceaccount.name!=vault"
+		bind_namespace = "prefixed-$${serviceaccount.name}"
+	}
+
+	config = {
+		Host = "https://192.0.2.42:8443"
+		CACert = <<-EOF
+` + testCert + `
+		EOF
+		ServiceAccountJWT = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c"
+	}
 }`

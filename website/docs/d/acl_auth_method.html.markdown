@@ -38,3 +38,10 @@ The following attributes are exported:
 * `description` - The description of the ACL Auth Method.
 * `type` - The type of the ACL Auth Method.
 * `config` - The configuration options of the ACL Auth Method.
+* `display_name` - An optional name to use instead of the name attribute when
+  displaying information about this auth method.
+* `max_token_ttl` - The maximum life of any token created by this auth method.
+* `token_locality` - The kind of token that this auth method produces. This can
+  be either 'local' or 'global'.
+* `namespace_rule` - (Enterprise Only) A set of rules that control which
+  namespace tokens created via this auth method will be created within
