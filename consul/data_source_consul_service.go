@@ -26,6 +26,7 @@ const (
 	catalogServiceServiceTags              = "tags"
 	catalogServiceServiceMeta              = "meta"
 	catalogServiceTaggedAddresses          = "tagged_addresses"
+	catalogServiceFilter                   = "filter"
 
 	// Filters
 	catalogServiceName = "name"
@@ -59,6 +60,10 @@ func dataSourceConsulService() *schema.Resource {
 			},
 			catalogServiceName: {
 				Required: true,
+				Type:     schema.TypeString,
+			},
+			catalogServiceFilter: {
+				Optional: true,
 				Type:     schema.TypeString,
 			},
 			catalogNodesQueryOpts: queryOpts,

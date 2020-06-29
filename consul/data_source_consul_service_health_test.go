@@ -11,7 +11,7 @@ func TestAccDataConsulServiceHealth(t *testing.T) {
 		PreCheck:  func() { testAccPreCheck(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccDataConsulServiceHealth,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDataSourceValue("data.consul_service_health.consul", "name", "consul"),
@@ -53,6 +53,12 @@ func TestAccDataConsulServiceHealth(t *testing.T) {
 					testAccCheckDataSourceValue("data.consul_service_health.consul", "results.0.checks.0.service_tags.#", "0"),
 				),
 			},
+			{
+				Config: testAccDataConsulServiceHealth_wrongFilter,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDataSourceValue("data.consul_service_health.consul", "results.#", "0"),
+				),
+			},
 		},
 	})
 }
@@ -62,11 +68,11 @@ func TestAccDataConsulServiceHealthPassing(t *testing.T) {
 		PreCheck:  func() { testAccPreCheck(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccDataConsulServiceHealthPassingSetup,
 				Check:  resource.ComposeTestCheckFunc(),
 			},
-			resource.TestStep{
+			{
 				Config: testAccDataConsulServiceHealthPassingFalse,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDataSourceValue("data.consul_service_health.google", "name", "google"),
@@ -74,7 +80,7 @@ func TestAccDataConsulServiceHealthPassing(t *testing.T) {
 					testAccCheckDataSourceValue("data.consul_service_health.google", "results.#", "2"),
 				),
 			},
-			resource.TestStep{
+			{
 				Config: testAccDataConsulServiceHealthPassingTrue,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDataSourceValue("data.consul_service_health.google", "name", "google"),
@@ -88,7 +94,20 @@ func TestAccDataConsulServiceHealthPassing(t *testing.T) {
 
 const testAccDataConsulServiceHealth = `
 data "consul_service_health" "consul" {
-	name = "consul"
+	name   = "consul"
+	filter = "Service.ID == consul"
+
+	node_meta = {
+		// Consul development server has this node meta information
+		consul-network-segment = ""
+	}
+}
+`
+
+const testAccDataConsulServiceHealth_wrongFilter = `
+data "consul_service_health" "consul" {
+	name   = "consul"
+	filter = "Service.ID != consul"
 
 	node_meta = {
 		// Consul development server has this node meta information

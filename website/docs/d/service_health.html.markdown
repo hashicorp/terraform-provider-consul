@@ -51,6 +51,9 @@ The following arguments are supported:
 * `passing` - (Optional) Whether to return only nodes with all checks in the
   passing state. Defaults to `true`.
 
+* `filter` - (Optional) A filter expression to refine the list of results, see
+  https://www.consul.io/api-docs/features/filtering and https://www.consul.io/api-docs/health#filtering-2.
+
 ## Attributes Reference
 
 The following attributes are exported:

@@ -16,53 +16,50 @@ func dataSourceConsulServiceHealth() *schema.Resource {
 		Read: dataSourceConsulServiceHealthRead,
 		Schema: map[string]*schema.Schema{
 			// Filter parameters
-			"datacenter": &schema.Schema{
+			"datacenter": {
 				Optional: true,
 				Type:     schema.TypeString,
-				// ForceNew: true,
 			},
-			"name": &schema.Schema{
+			"name": {
 				Required: true,
 				Type:     schema.TypeString,
-				// ForceNew: true,
 			},
-			"near": &schema.Schema{
+			"near": {
 				Optional: true,
 				Type:     schema.TypeString,
-				// ForceNew: true,
 			},
-			"tag": &schema.Schema{
+			"tag": {
 				Optional: true,
 				Type:     schema.TypeString,
-				// ForceNew: true,
 			},
-			"node_meta": &schema.Schema{
+			"node_meta": {
 				Optional: true,
 				Type:     schema.TypeMap,
 				Elem: &schema.Schema{
 					Type: schema.TypeString,
 				},
-				// ForceNew: true,
 			},
-			"passing": &schema.Schema{
+			"passing": {
 				Optional: true,
 				Type:     schema.TypeBool,
-				// ForceNew: true,
-				Default: true,
+				Default:  true,
 			},
-			"wait_for": &schema.Schema{
+			"wait_for": {
 				Optional: true,
 				Type:     schema.TypeString,
-				// ForceNew: true,
+			},
+			"filter": {
+				Optional: true,
+				Type:     schema.TypeString,
 			},
 
 			// Out parameters
-			"results": &schema.Schema{
+			"results": {
 				Computed: true,
 				Type:     schema.TypeList,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"node": &schema.Schema{
+						"node": {
 							Computed: true,
 							Type:     schema.TypeList,
 							MaxItems: 1,
@@ -70,30 +67,30 @@ func dataSourceConsulServiceHealth() *schema.Resource {
 							// a version for Terraform 0.12
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"id": &schema.Schema{
+									"id": {
 										Computed: true,
 										Type:     schema.TypeString,
 									},
-									"name": &schema.Schema{
+									"name": {
 										Computed: true,
 										Type:     schema.TypeString,
 									},
-									"address": &schema.Schema{
+									"address": {
 										Computed: true,
 										Type:     schema.TypeString,
 									},
-									"datacenter": &schema.Schema{
+									"datacenter": {
 										Computed: true,
 										Type:     schema.TypeString,
 									},
-									"tagged_addresses": &schema.Schema{
+									"tagged_addresses": {
 										Computed: true,
 										Type:     schema.TypeMap,
 										Elem: &schema.Schema{
 											Type: schema.TypeString,
 										},
 									},
-									"meta": &schema.Schema{
+									"meta": {
 										Computed: true,
 										Type:     schema.TypeMap,
 										Elem: &schema.Schema{
@@ -103,7 +100,7 @@ func dataSourceConsulServiceHealth() *schema.Resource {
 								},
 							},
 						},
-						"service": &schema.Schema{
+						"service": {
 							Computed: true,
 							Type:     schema.TypeList,
 							MaxItems: 1,
@@ -111,77 +108,77 @@ func dataSourceConsulServiceHealth() *schema.Resource {
 							// a version for Terraform 0.12
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"id": &schema.Schema{
+									"id": {
 										Computed: true,
 										Type:     schema.TypeString,
 									},
-									"name": &schema.Schema{
+									"name": {
 										Computed: true,
 										Type:     schema.TypeString,
 									},
-									"tags": &schema.Schema{
+									"tags": {
 										Computed: true,
 										Type:     schema.TypeList,
 										Elem: &schema.Schema{
 											Type: schema.TypeString,
 										},
 									},
-									"address": &schema.Schema{
+									"address": {
 										Computed: true,
 										Type:     schema.TypeString,
 									},
-									"meta": &schema.Schema{
+									"meta": {
 										Computed: true,
 										Type:     schema.TypeMap,
 										Elem: &schema.Schema{
 											Type: schema.TypeString,
 										},
 									},
-									"port": &schema.Schema{
+									"port": {
 										Computed: true,
 										Type:     schema.TypeInt,
 									},
 								},
 							},
 						},
-						"checks": &schema.Schema{
+						"checks": {
 							Computed: true,
 							Type:     schema.TypeList,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"node": &schema.Schema{
+									"node": {
 										Computed: true,
 										Type:     schema.TypeString,
 									},
-									"id": &schema.Schema{
+									"id": {
 										Computed: true,
 										Type:     schema.TypeString,
 									},
-									"name": &schema.Schema{
+									"name": {
 										Computed: true,
 										Type:     schema.TypeString,
 									},
-									"status": &schema.Schema{
+									"status": {
 										Computed: true,
 										Type:     schema.TypeString,
 									},
-									"notes": &schema.Schema{
+									"notes": {
 										Computed: true,
 										Type:     schema.TypeString,
 									},
-									"output": &schema.Schema{
+									"output": {
 										Computed: true,
 										Type:     schema.TypeString,
 									},
-									"service_id": &schema.Schema{
+									"service_id": {
 										Computed: true,
 										Type:     schema.TypeString,
 									},
-									"service_name": &schema.Schema{
+									"service_name": {
 										Computed: true,
 										Type:     schema.TypeString,
 									},
-									"service_tags": &schema.Schema{
+									"service_tags": {
 										Computed: true,
 										Type:     schema.TypeList,
 										Elem: &schema.Schema{
@@ -226,6 +223,7 @@ func dataSourceConsulServiceHealthRead(d *schema.ResourceData, meta interface{})
 		Near:       near,
 		NodeMeta:   queryNodeMeta,
 		Datacenter: dc,
+		Filter:     d.Get("filter").(string),
 	}
 	var err error
 	var serviceEntries []*consulapi.ServiceEntry
