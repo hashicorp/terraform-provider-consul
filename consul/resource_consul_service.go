@@ -181,6 +181,11 @@ func resourceConsulService() *schema.Resource {
 				Optional: true,
 				ForceNew: true,
 			},
+
+			"enable_tag_override": {
+				Type:     schema.TypeBool,
+				Optional: true,
+			},
 		},
 	}
 }
@@ -198,83 +203,16 @@ func resourceConsulServiceCreate(d *schema.ResourceData, meta interface{}) error
 		dc = d.Get("datacenter").(string)
 	}
 
-	// Check to see if the node exists. We do this because
-	// the Consul API will upsert nodes that don't exist, but
-	// Terraform won't be able to track that. Requiring
-	// them to exist either ensures that it is knowlingly tracked
-	// outside of TF state or that it is referencing a node
-	// managed by the consul_node resource (or datasource)
-	nodeCheck, _, err := client.Catalog().Node(node, &consulapi.QueryOptions{Datacenter: dc})
-	if err != nil {
-		return fmt.Errorf("Cannot retrieve node '%s': %v", node, err)
-	}
-	if nodeCheck == nil {
-		return fmt.Errorf("Node does not exist: '%s'", node)
-	}
-
 	// Setup the operations using the datacenter
 	wOpts := consulapi.WriteOptions{
 		Datacenter: dc,
 		Namespace:  namespace,
 	}
 
-	registration := &consulapi.CatalogRegistration{
-		Datacenter: dc,
-		Node:       node,
-		Service: &consulapi.AgentService{
-			Service: name,
-		},
-		// Creating a service should not modify the node
-		// See https://github.com/terraform-providers/terraform-provider-consul/issues/101
-		SkipNodeUpdate: true,
-	}
-
-	// By default, the ID will match the name of the service
-	// which we use later to query the catalog entry
-	ident := name
-
-	// If the address is not specified, use the nodes
-	if address, ok := d.GetOk("address"); ok {
-		registration.Address = address.(string)
-		registration.Service.Address = address.(string)
-	} else {
-		registration.Address = nodeCheck.Node.Address
-		registration.Service.Address = nodeCheck.Node.Address
-	}
-
-	if serviceID, ok := d.GetOk("service_id"); ok {
-		registration.Service.ID = serviceID.(string)
-		// If we are specifying an ID, we need to
-		// query it as such
-		ident = serviceID.(string)
-	}
-
-	if port, ok := d.GetOk("port"); ok {
-		registration.Service.Port = port.(int)
-	}
-
-	if v, ok := d.GetOk("tags"); ok {
-		vs := v.([]interface{})
-		s := make([]string, len(vs))
-		for i, raw := range vs {
-			s[i] = raw.(string)
-		}
-		registration.Service.Tags = s
-	}
-
-	checks, err := parseChecks(node, ident, d)
+	registration, ident, err := getCatalogRegistration(d, meta, dc)
 	if err != nil {
-		return fmt.Errorf("Failed to fetch health-checks: %v", err)
+		return err
 	}
-	registration.Checks = checks
-
-	serviceMeta := map[string]string{
-		consulSourceKey: consulSourceValue,
-	}
-	for k, v := range d.Get("meta").(map[string]interface{}) {
-		serviceMeta[k] = v.(string)
-	}
-	registration.Service.Meta = serviceMeta
 
 	if _, err := catalog.Register(registration, &wOpts); err != nil {
 		return fmt.Errorf("Failed to register service (dc: '%s'): %v", dc, err)
@@ -296,9 +234,6 @@ func resourceConsulServiceUpdate(d *schema.ResourceData, meta interface{}) error
 	catalog := getClient(meta).Catalog()
 	namespace := getNamespace(d, meta)
 
-	name := d.Get("name").(string)
-	node := d.Get("node").(string)
-
 	dc := ""
 	if _, ok := d.GetOk("datacenter"); ok {
 		dc = d.Get("datacenter").(string)
@@ -310,55 +245,10 @@ func resourceConsulServiceUpdate(d *schema.ResourceData, meta interface{}) error
 		Namespace:  namespace,
 	}
 
-	registration := &consulapi.CatalogRegistration{
-		Datacenter: dc,
-		Node:       node,
-		Service: &consulapi.AgentService{
-			Service: name,
-		},
-		// Updating a service should not modify the node
-		SkipNodeUpdate: true,
-	}
-
-	// If we have a service_id
-	if serviceID, ok := d.GetOk("service_id"); ok {
-		registration.Service.ID = serviceID.(string)
-	}
-
-	if address, ok := d.GetOk("address"); ok {
-		registration.Address = address.(string)
-		registration.Service.Address = address.(string)
-	} else {
-		// If we don't have an address, skip updating the node
-		registration.SkipNodeUpdate = true
-	}
-
-	if port, ok := d.GetOk("port"); ok {
-		registration.Service.Port = port.(int)
-	}
-
-	if v, ok := d.GetOk("tags"); ok {
-		vs := v.([]interface{})
-		s := make([]string, len(vs))
-		for i, raw := range vs {
-			s[i] = raw.(string)
-		}
-		registration.Service.Tags = s
-	}
-
-	checks, err := parseChecks(node, registration.Service.ID, d)
+	registration, _, err := getCatalogRegistration(d, meta, dc)
 	if err != nil {
-		return fmt.Errorf("Failed to fetch health-checks: %v", err)
+		return err
 	}
-	registration.Checks = checks
-
-	serviceMeta := map[string]string{
-		consulSourceKey: consulSourceValue,
-	}
-	for k, v := range d.Get("meta").(map[string]interface{}) {
-		serviceMeta[k] = v.(string)
-	}
-	registration.Service.Meta = serviceMeta
 
 	if _, err := catalog.Register(registration, &wOpts); err != nil {
 		return fmt.Errorf("Failed to update service (dc: '%s'): %v", dc, err)
@@ -460,6 +350,11 @@ func resourceConsulServiceRead(d *schema.ResourceData, meta interface{}) error {
 	if err := d.Set("check", checks); err != nil {
 		return errwrap.Wrapf("Unable to store checks: {{err}}", err)
 	}
+
+	if err = d.Set("enable_tag_override", service.ServiceEnableTagOverride); err != nil {
+		return fmt.Errorf("Failed to set 'enable_tag_override': %v", err)
+	}
+
 	return nil
 }
 
@@ -626,4 +521,83 @@ func parseHeaders(check map[string]interface{}) (map[string][]string, error) {
 		}
 	}
 	return headers, nil
+}
+
+func getCatalogRegistration(d *schema.ResourceData, meta interface{}, dc string) (*consulapi.CatalogRegistration, string, error) {
+	client := getClient(meta)
+
+	name := d.Get("name").(string)
+	node := d.Get("node").(string)
+	ident := name
+
+	// Check to see if the node exists. We do this because
+	// the Consul API will upsert nodes that don't exist, but
+	// Terraform won't be able to track that. Requiring
+	// them to exist either ensures that it is knowlingly tracked
+	// outside of TF state or that it is referencing a node
+	// managed by the consul_node resource (or datasource)
+	nodeCheck, _, err := client.Catalog().Node(node, &consulapi.QueryOptions{Datacenter: dc})
+	if err != nil {
+		return nil, "", fmt.Errorf("Cannot retrieve node '%s': %v", node, err)
+	}
+	if nodeCheck == nil {
+		return nil, "", fmt.Errorf("Node does not exist: '%s'", node)
+	}
+
+	registration := &consulapi.CatalogRegistration{
+		Datacenter: dc,
+		Node:       node,
+		Service: &consulapi.AgentService{
+			Service: name,
+		},
+		// Creating a service should not modify the node
+		// See https://github.com/terraform-providers/terraform-provider-consul/issues/101
+		SkipNodeUpdate: true,
+	}
+
+	// If we have a service_id
+	if serviceID, ok := d.GetOk("service_id"); ok {
+		registration.Service.ID = serviceID.(string)
+		ident = serviceID.(string)
+	}
+
+	// If the address is not specified, use the nodes
+	if address, ok := d.GetOk("address"); ok {
+		registration.Address = address.(string)
+		registration.Service.Address = address.(string)
+	} else {
+		registration.Address = nodeCheck.Node.Address
+		registration.Service.Address = nodeCheck.Node.Address
+	}
+
+	if port, ok := d.GetOk("port"); ok {
+		registration.Service.Port = port.(int)
+	}
+
+	if v, ok := d.GetOk("tags"); ok {
+		vs := v.([]interface{})
+		s := make([]string, len(vs))
+		for i, raw := range vs {
+			s[i] = raw.(string)
+		}
+		registration.Service.Tags = s
+	}
+
+	checks, err := parseChecks(node, ident, d)
+	if err != nil {
+		return nil, "", fmt.Errorf("Failed to fetch health-checks: %v", err)
+	}
+	registration.Checks = checks
+
+	serviceMeta := map[string]string{
+		consulSourceKey: consulSourceValue,
+	}
+	for k, v := range d.Get("meta").(map[string]interface{}) {
+		serviceMeta[k] = v.(string)
+	}
+	registration.Service.Meta = serviceMeta
+
+	registration.Service.EnableTagOverride = d.Get("enable_tag_override").(bool)
+
+	return registration, ident, nil
 }
