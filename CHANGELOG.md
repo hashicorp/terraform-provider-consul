@@ -4,7 +4,7 @@ NEW FEATURES:
 
 * The new `consul_certificate_authority` can be used to manage the Consul Connect Certificate Authority ([[#205](https://github.com/terraform-providers/terraform-provider-consul/issues/205)]).
 
-* The `consul_acl_auth_method` new support the `display_name`, `max_token_ttl`, `token_locality` and `namespace_rule` attributes ([[#204](https://github.com/terraform-providers/terraform-provider-consul/issues/204)]).
+* `consul_acl_auth_method` now supports the `display_name`, `max_token_ttl`, `token_locality` and `namespace_rule` attributes ([[#204](https://github.com/terraform-providers/terraform-provider-consul/issues/204)]).
 
 * The `consul_service` and `consul_service_health` data sources now support filter expressions ([[#203](https://github.com/terraform-providers/terraform-provider-consul/issues/203)]).
 
@@ -12,6 +12,9 @@ NEW FEATURES:
 
 * The `consul_service` resource now has a `enable_tag_override` attribute ([[#201](https://github.com/terraform-providers/terraform-provider-consul/issues/201)]).
 
+* The `consul_acl_auth_method` resource now has a `config_json` attribute to use an arbitrary complex configuration. The `config` attribute has been deprecated and will be removed in a future release ([[#208](https://github.com/terraform-providers/terraform-provider-consul/issues/208)] and [[#209](https://github.com/terraform-providers/terraform-provider-consul/issues/209)]).
+
+* The `consul_acl_auth_method` data source now has a `config_json` attribute. The `config` attribute has been deprecated as it will be blank when the configuration is too complex and it will be removed in a future release ([[#208](https://github.com/terraform-providers/terraform-provider-consul/issues/208)] and [[#209](https://github.com/terraform-providers/terraform-provider-consul/issues/209)]).
 
 ## 2.8.0 (May 21, 2020)
 
