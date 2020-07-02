@@ -28,7 +28,6 @@ func dataSourceConsulACLTokenSecretID() *schema.Resource {
 
 			"pgp_key": {
 				Type:     schema.TypeString,
-				ForceNew: true,
 				Optional: true,
 			},
 

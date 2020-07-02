@@ -13,7 +13,6 @@ func dataSourceConsulKeyPrefix() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
-				ForceNew: true,
 			},
 
 			"token": {
@@ -69,7 +68,6 @@ func dataSourceConsulKeyPrefix() *schema.Resource {
 			"namespace": {
 				Type:     schema.TypeString,
 				Optional: true,
-				ForceNew: true,
 			},
 		},
 	}
