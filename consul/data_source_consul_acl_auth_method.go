@@ -1,6 +1,7 @@
 package consul
 
 import (
+	"encoding/json"
 	"fmt"
 
 	consulapi "github.com/hashicorp/consul/api"
@@ -21,20 +22,27 @@ func dataSourceConsulACLAuthMethod() *schema.Resource {
 			// Out parameters
 			"type": {
 				Type:     schema.TypeString,
-				Optional: true,
+				Computed: true,
 			},
 
 			"description": {
 				Type:     schema.TypeString,
-				Optional: true,
+				Computed: true,
 			},
 
 			"config": {
-				Type:     schema.TypeMap,
-				Optional: true,
+				Type:       schema.TypeMap,
+				Computed:   true,
+				Deprecated: "The config attribute is deprecated, please use config_json instead.",
 				Elem: &schema.Schema{
 					Type: schema.TypeString,
 				},
+			},
+
+			"config_json": {
+				Type:        schema.TypeString,
+				Computed:    true,
+				Description: "The raw configuration for this ACL auth method.",
 			},
 
 			"namespace": {
@@ -73,8 +81,28 @@ func dataSourceConsulACLAuthMethodRead(d *schema.ResourceData, meta interface{})
 	if err = d.Set("description", authMethod.Description); err != nil {
 		return fmt.Errorf("Failed to set 'description': %v", err)
 	}
+
+	configJson, err := json.Marshal(authMethod.Config)
+	if err != nil {
+		return fmt.Errorf("Failed to marshal 'config_json': %v", err)
+	}
+	if err = d.Set("config_json", string(configJson)); err != nil {
+		return fmt.Errorf("Failed to set 'config_json': %v", err)
+	}
+
 	if err = d.Set("config", authMethod.Config); err != nil {
-		return fmt.Errorf("Failed to set 'config': %v", err)
+		// When a complex configuration is used we can fail to set config as it
+		// will not support fields with maps or lists in them. In this case it
+		// means that the user used the 'config_json' field, and since we
+		// succeeded to set that and 'config' is deprecated, we can just use
+		// an empty placeholder value and ignore the error.
+		if c := d.Get("config_json").(string); c != "" {
+			if err = d.Set("config", map[string]interface{}{}); err != nil {
+				return fmt.Errorf("Failed to set 'config': %v", err)
+			}
+		} else {
+			return fmt.Errorf("Failed to set 'config': %v", err)
+		}
 	}
 	return nil
 }
