@@ -37,4 +37,8 @@ The following attributes are exported:
 
 * `description` - The description of the ACL Auth Method.
 * `type` - The type of the ACL Auth Method.
-* `config` - The configuration options of the ACL Auth Method.
+* `config_json` - The configuration options of the ACL Auth Method.
+* `config` - The configuration options of the ACL Auth Method. This attribute is
+  deprecated and will be removed in a future version. If the configuration is
+  too complex to be represented as a map of strings, it will be blank.
+  `config_json` should be used instead.
