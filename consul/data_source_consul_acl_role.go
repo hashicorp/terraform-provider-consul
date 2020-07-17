@@ -63,7 +63,6 @@ func dataSourceConsulACLRole() *schema.Resource {
 			"namespace": {
 				Type:     schema.TypeString,
 				Optional: true,
-				ForceNew: true,
 			},
 		},
 	}

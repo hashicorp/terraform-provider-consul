@@ -50,7 +50,6 @@ func dataSourceConsulACLToken() *schema.Resource {
 			"namespace": {
 				Type:     schema.TypeString,
 				Optional: true,
-				ForceNew: true,
 			},
 		},
 	}

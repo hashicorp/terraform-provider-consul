@@ -36,7 +36,6 @@ func dataSourceConsulServices() *schema.Resource {
 				// changes.
 				Computed: true,
 				Type:     schema.TypeString,
-				ForceNew: true,
 			},
 			catalogNodesQueryOpts: queryOpts,
 
