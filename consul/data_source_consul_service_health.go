@@ -65,9 +65,6 @@ func dataSourceConsulServiceHealth() *schema.Resource {
 						"node": &schema.Schema{
 							Computed: true,
 							Type:     schema.TypeList,
-							MaxItems: 1,
-							// TODO(remi): set AsSingle when releasing
-							// a version for Terraform 0.12
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"id": &schema.Schema{
@@ -106,9 +103,6 @@ func dataSourceConsulServiceHealth() *schema.Resource {
 						"service": &schema.Schema{
 							Computed: true,
 							Type:     schema.TypeList,
-							MaxItems: 1,
-							// TODO(remi): set AsSingle when releasing
-							// a version for Terraform 0.12
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"id": &schema.Schema{

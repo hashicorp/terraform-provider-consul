@@ -35,7 +35,6 @@ func dataSourceConsulACLPolicy() *schema.Resource {
 			"namespace": {
 				Type:     schema.TypeString,
 				Optional: true,
-				ForceNew: true,
 			},
 		},
 	}

@@ -48,14 +48,12 @@ func dataSourceConsulService() *schema.Resource {
 				// changes.
 				Optional: true,
 				Type:     schema.TypeString,
-				ForceNew: true,
 			},
 			catalogServiceTag: {
 				// Used in the query, must be stored and force a refresh if the value
 				// changes.
 				Optional: true,
 				Type:     schema.TypeString,
-				ForceNew: true,
 			},
 			catalogServiceName: {
 				Required: true,

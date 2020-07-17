@@ -10,7 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 )
 
-func TestAccConsulACLRole_basic(t *testing.T) {
+func TestAccConsulACLAuthMethod_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		Providers: testAccProviders,
 
@@ -35,7 +35,7 @@ func TestAccConsulACLRole_basic(t *testing.T) {
 			{
 				Config: testResourceACLAuthMethodConfigBasic_Update,
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("consul_acl_auth_method.test", "name", "minikube2"),
+					resource.TestCheckResourceAttr("consul_acl_auth_method.test", "name", "auth_method"),
 					resource.TestCheckResourceAttr("consul_acl_auth_method.test", "display_name", ""),
 					resource.TestCheckResourceAttr("consul_acl_auth_method.test", "type", "kubernetes"),
 					resource.TestCheckResourceAttr("consul_acl_auth_method.test", "max_token_ttl", "0s"),
@@ -45,6 +45,16 @@ func TestAccConsulACLRole_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("consul_acl_auth_method.test", "config.Host", "https://localhost:8443"),
 					resource.TestCheckResourceAttr("consul_acl_auth_method.test", "config.CACert", testCert2+"\n"),
 					resource.TestCheckResourceAttr("consul_acl_auth_method.test", "config.ServiceAccountJWT", "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0IiwibmFtZSI6InRlc3QiLCJpYXQiOjE1MTYyMzkwMjJ9.uOnQsCs6ZAqj2F1VMA09tdgRZyFT1GQH2DwIC4TTn-A"),
+					resource.TestCheckResourceAttr("consul_acl_auth_method.test", "config_json", "{\"CACert\":\"-----BEGIN CERTIFICATE-----\\nMIIBsTCCARoCCQCOgZn2+rDWSDANBgkqhkiG9w0BAQsFADAdMQswCQYDVQQGEwJG\\nUjEOMAwGA1UECAwFUGFyaXMwHhcNMTkwNjI4MTA1NzA4WhcNMjAwNjI3MTA1NzA4\\nWjAdMQswCQYDVQQGEwJGUjEOMAwGA1UECAwFUGFyaXMwgZ8wDQYJKoZIhvcNAQEB\\nBQADgY0AMIGJAoGBAMMBf+kSoZYon8fGBWqoyY7QzPXbg3GWMt2bxVxc6EmV/tcN\\nPIWGFFlycjnzDWwaGqzdqWkUrfi/o1VdlQobnzr4i+qcZpxlrZi2oa7FmkJMimsX\\nVmjXaeqpZA4JXLUzGHi+oCl2zX8wVGaUf7avcUxI3FVLCiibjWofpOf2pyUTAgMB\\nAAEwDQYJKoZIhvcNAQELBQADgYEAMddaDm4csxGnT47sths8CDxtzNdBhIXVIOLy\\njfvmBQ0aqC46gaUEoqNSzBPTTKJQGHxlGrF6fcnoUyjMcgHYZDrVySgmQpcfL9Uo\\nh61wQqlvkoFb/qPC/gvxdoQKUcddd7IhEujJjaddo9TV0w4nYX4Cq2Ybd5N3hgED\\n8GuzduY=\\n-----END CERTIFICATE-----\\n\\n\",\"Host\":\"https://localhost:8443\",\"ServiceAccountJWT\":\"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0IiwibmFtZSI6InRlc3QiLCJpYXQiOjE1MTYyMzkwMjJ9.uOnQsCs6ZAqj2F1VMA09tdgRZyFT1GQH2DwIC4TTn-A\"}"),
+				),
+			},
+			{
+				Config: testResourceACLAuthMethodConfigBasicConfigJSON,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("consul_acl_auth_method.test", "name", "auth_method"),
+					resource.TestCheckResourceAttr("consul_acl_auth_method.test", "type", "jwt"),
+					resource.TestCheckResourceAttr("consul_acl_auth_method.test", "config.%", "0"),
+					resource.TestCheckResourceAttr("consul_acl_auth_method.test", "config_json", "{\"BoundIssuer\":\"corp-issuer\",\"ClaimMappings\":{\"http://example.com/first_name\":\"first_name\",\"http://example.com/last_name\":\"last_name\"},\"JWTValidationPubKeys\":[\"-----BEGIN PUBLIC KEY-----\\nMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAryQICCl6NZ5gDKrnSztO\\n3Hy8PEUcuyvg/ikC+VcIo2SFFSf18a3IMYldIugqqqZCs4/4uVW3sbdLs/6PfgdX\\n7O9D22ZiFWHPYA2k2N744MNiCD1UE+tJyllUhSblK48bn+v1oZHCM0nYQ2NqUkvS\\nj+hwUU3RiWl7x3D2s9wSdNt7XUtW05a/FXehsPSiJfKvHJJnGOX0BgTvkLnkAOTd\\nOrUZ/wK69Dzu4IvrN4vs9Nes8vbwPa/ddZEzGR0cQMt0JBkhk9kU/qwqUseP1QRJ\\n5I1jR4g8aYPL/ke9K35PxZWuDp3U0UPAZ3PjFAh+5T+fc7gzCs9dPzSHloruU+gl\\nFQIDAQAB\\n-----END PUBLIC KEY-----\"],\"ListClaimMappings\":{\"http://example.com/groups\":\"groups\"}}"),
 				),
 			},
 		},
@@ -127,7 +137,7 @@ resource "consul_acl_auth_method" "test" {
 
 const testResourceACLAuthMethodConfigBasic_Update = `
 resource "consul_acl_auth_method" "test" {
-	name        = "minikube2"
+	name        = "auth_method"
     type        = "kubernetes"
 
 	config = {
@@ -137,6 +147,26 @@ resource "consul_acl_auth_method" "test" {
 		EOF
         ServiceAccountJWT = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0IiwibmFtZSI6InRlc3QiLCJpYXQiOjE1MTYyMzkwMjJ9.uOnQsCs6ZAqj2F1VMA09tdgRZyFT1GQH2DwIC4TTn-A"
     }
+}`
+
+const testResourceACLAuthMethodConfigBasicConfigJSON = `
+resource "consul_acl_auth_method" "test" {
+	name        = "auth_method"
+    type        = "jwt"
+
+	config_json = jsonencode({
+		BoundIssuer = "corp-issuer"
+		JWTValidationPubKeys = [
+			"-----BEGIN PUBLIC KEY-----\nMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAryQICCl6NZ5gDKrnSztO\n3Hy8PEUcuyvg/ikC+VcIo2SFFSf18a3IMYldIugqqqZCs4/4uVW3sbdLs/6PfgdX\n7O9D22ZiFWHPYA2k2N744MNiCD1UE+tJyllUhSblK48bn+v1oZHCM0nYQ2NqUkvS\nj+hwUU3RiWl7x3D2s9wSdNt7XUtW05a/FXehsPSiJfKvHJJnGOX0BgTvkLnkAOTd\nOrUZ/wK69Dzu4IvrN4vs9Nes8vbwPa/ddZEzGR0cQMt0JBkhk9kU/qwqUseP1QRJ\n5I1jR4g8aYPL/ke9K35PxZWuDp3U0UPAZ3PjFAh+5T+fc7gzCs9dPzSHloruU+gl\nFQIDAQAB\n-----END PUBLIC KEY-----"
+		]
+		ClaimMappings = {
+			"http://example.com/first_name" = "first_name"
+			"http://example.com/last_name" = "last_name"
+		}
+		ListClaimMappings = {
+			"http://example.com/groups" = "groups"
+		}
+	})
 }`
 
 const testCert = `-----BEGIN CERTIFICATE-----
