@@ -3,6 +3,7 @@ package consul
 import (
 	"encoding/json"
 	"fmt"
+	"time"
 
 	consulapi "github.com/hashicorp/consul/api"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
@@ -30,6 +31,36 @@ func resourceConsulACLAuthMethod() *schema.Resource {
 				Description: "The type of the ACL auth method.",
 			},
 
+			"display_name": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "An optional name to use instead of the name attribute when displaying information about this auth method.",
+			},
+
+			"max_token_ttl": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Default:     "0s",
+				Description: "The maximum life of any token created by this auth method.",
+				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+					o, err := time.ParseDuration(old)
+					if err != nil {
+						return false
+					}
+					n, err := time.ParseDuration(new)
+					if err != nil {
+						return false
+					}
+					return o.Seconds() == n.Seconds()
+				},
+			},
+
+			"token_locality": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "The kind of token that this auth method produces. This can be either 'local' or 'global'.",
+			},
+
 			"description": {
 				Type:        schema.TypeString,
 				Optional:    true,
@@ -55,6 +86,23 @@ func resourceConsulACLAuthMethod() *schema.Resource {
 				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
 					config := d.Get("config").(map[string]interface{})
 					return len(config) != 0
+				},
+			},
+
+			"namespace_rule": {
+				Type:     schema.TypeList,
+				Optional: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"selector": {
+							Type:     schema.TypeString,
+							Optional: true,
+						},
+						"bind_namespace": {
+							Type:     schema.TypeString,
+							Required: true,
+						},
+					},
 				},
 			},
 
@@ -133,6 +181,29 @@ func resourceConsulACLAuthMethodRead(d *schema.ResourceData, meta interface{}) e
 		}
 	}
 
+	if err = d.Set("display_name", authMethod.DisplayName); err != nil {
+		return fmt.Errorf("Failed to set 'display_name': %#v", err)
+	}
+
+	if err = d.Set("max_token_ttl", authMethod.MaxTokenTTL.String()); err != nil {
+		return fmt.Errorf("Failed to set 'max_token_ttl': %#v", err)
+	}
+
+	if err = d.Set("token_locality", authMethod.TokenLocality); err != nil {
+		return fmt.Errorf("Failed to set 'token_locality': %#v", err)
+	}
+
+	rules := make([]interface{}, 0)
+	for _, rule := range authMethod.NamespaceRules {
+		rules = append(rules, map[string]interface{}{
+			"selector":       rule.Selector,
+			"bind_namespace": rule.BindNamespace,
+		})
+	}
+	if err = d.Set("namespace_rule", rules); err != nil {
+		return fmt.Errorf("Failed to set 'namespace_rule': %v", err)
+	}
+
 	return nil
 }
 
@@ -181,11 +252,33 @@ func getAuthMethod(d *schema.ResourceData, meta interface{}) (*consulapi.ACLAuth
 		config = d.Get("config").(map[string]interface{})
 	}
 
-	return &consulapi.ACLAuthMethod{
-		Name:        d.Get("name").(string),
-		Type:        d.Get("type").(string),
-		Description: d.Get("description").(string),
-		Config:      config,
-		Namespace:   namespace,
-	}, nil
+	authMethod := &consulapi.ACLAuthMethod{
+		Name:          d.Get("name").(string),
+		DisplayName:   d.Get("display_name").(string),
+		TokenLocality: d.Get("token_locality").(string),
+		Type:          d.Get("type").(string),
+		Description:   d.Get("description").(string),
+		Config:        config,
+		Namespace:     namespace,
+	}
+
+	if mtt, ok := d.GetOk("max_token_ttl"); ok {
+		maxTokenTTL, err := time.ParseDuration(mtt.(string))
+		if err != nil {
+			return nil, err
+		}
+		authMethod.MaxTokenTTL = maxTokenTTL
+	}
+
+	authMethod.NamespaceRules = make([]*consulapi.ACLAuthMethodNamespaceRule, 0)
+	for _, r := range d.Get("namespace_rule").([]interface{}) {
+		rule := r.(map[string]interface{})
+		namespaceRule := &consulapi.ACLAuthMethodNamespaceRule{
+			Selector:      rule["selector"].(string),
+			BindNamespace: rule["bind_namespace"].(string),
+		}
+		authMethod.NamespaceRules = append(authMethod.NamespaceRules, namespaceRule)
+	}
+
+	return authMethod, nil
 }
