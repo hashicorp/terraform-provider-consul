@@ -20,12 +20,20 @@ func resourceConsulACLToken() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
+			"secret_id": {
+				Type:        schema.TypeString,
+				ForceNew:    true,
+				Computed:    true,
+				Optional:    true,
+				Sensitive:   true,
+				Description: "The token secret id.",
+			},
 			"accessor_id": {
 				Type:        schema.TypeString,
 				ForceNew:    true,
 				Computed:    true,
 				Optional:    true,
-				Description: "The token id.",
+				Description: "The token accessor id.",
 			},
 			"description": {
 				Type:        schema.TypeString,
@@ -187,6 +195,7 @@ func resourceConsulACLTokenDelete(d *schema.ResourceData, meta interface{}) erro
 func getToken(d *schema.ResourceData) *consulapi.ACLToken {
 	aclToken := &consulapi.ACLToken{
 		AccessorID:  d.Get("accessor_id").(string),
+		SecretID:    d.Get("secret_id").(string),
 		Description: d.Get("description").(string),
 		Local:       d.Get("local").(bool),
 	}
