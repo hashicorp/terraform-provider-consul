@@ -194,8 +194,8 @@ func resourceConsulACLTokenDelete(d *schema.ResourceData, meta interface{}) erro
 
 func getToken(d *schema.ResourceData) *consulapi.ACLToken {
 	aclToken := &consulapi.ACLToken{
-		AccessorID:  d.Get("accessor_id").(string),
 		SecretID:    d.Get("secret_id").(string),
+		AccessorID:  d.Get("accessor_id").(string),
 		Description: d.Get("description").(string),
 		Local:       d.Get("local").(bool),
 	}
