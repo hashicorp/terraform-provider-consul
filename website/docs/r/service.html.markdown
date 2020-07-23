@@ -98,6 +98,9 @@ of the `name` attribute.
 * `tags` - (Optional, set of strings) A list of values that are opaque to Consul,
   but can be used to distinguish between services or nodes.
 
+* `enable_tag_override` - (Optional, boolean) Specifies to disable the
+  anti-entropy feature for this service's tags. Defaults to `false`.
+
 * `datacenter` - (Optional) The datacenter to use. This overrides the
   agent's default datacenter and the datacenter in the provider setup.
 

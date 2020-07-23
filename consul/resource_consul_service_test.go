@@ -53,6 +53,7 @@ func TestAccConsulService_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("consul_service.example", "address", "www.hashicorptest.com"),
 					resource.TestCheckResourceAttr("consul_service.example", "node", "compute-example"),
 					resource.TestCheckResourceAttr("consul_service.example", "port", "80"),
+					resource.TestCheckResourceAttr("consul_service.example", "enable_tag_override", "true"),
 					resource.TestCheckResourceAttr("consul_service.example", "tags.#", "1"),
 					resource.TestCheckResourceAttr("consul_service.example", "tags.0", "tag0"),
 					resource.TestCheckResourceAttr("consul_service.example", "meta.%", "1"),
@@ -455,10 +456,12 @@ resource "consul_node" "compute" {
 
 const testAccConsulServiceConfigBasicMeta = `
 resource "consul_service" "example" {
-  name    = "example"
-  node    = "${consul_node.compute.name}"
-  port    = 80
-  tags    = ["tag0"]
+  name                = "example"
+  node                = "${consul_node.compute.name}"
+  port                = 80
+  tags                = ["tag0"]
+  enable_tag_override = true
+
   meta    = {
 	test  = "test"
   }

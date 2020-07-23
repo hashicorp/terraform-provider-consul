@@ -19,7 +19,7 @@ func TestAccDataConsulService_basic(t *testing.T) {
 					testAccCheckDataSourceValue("data.consul_service.read", "service.#", "1"),
 					testAccCheckDataSourceValue("data.consul_service.read", "service.0.address", "<all>"),
 					testAccCheckDataSourceValue("data.consul_service.read", "service.0.create_index", "<any>"),
-					testAccCheckDataSourceValue("data.consul_service.read", "service.0.enable_tag_override", "<any>"),
+					testAccCheckDataSourceValue("data.consul_service.read", "service.0.enable_tag_override", "false"),
 					testAccCheckDataSourceValue("data.consul_service.read", "service.0.id", "<any>"),
 					testAccCheckDataSourceValue("data.consul_service.read", "service.0.modify_index", "<any>"),
 					testAccCheckDataSourceValue("data.consul_service.read", "service.0.name", "<any>"),
@@ -49,7 +49,7 @@ func TestAccDataConsulService_filtered(t *testing.T) {
 					testAccCheckDataSourceValue("data.consul_service.read_f", "service.#", "1"),
 					testAccCheckDataSourceValue("data.consul_service.read_f", "service.0.address", "192.168.10.10"),
 					testAccCheckDataSourceValue("data.consul_service.read_f", "service.0.create_index", "<any>"),
-					testAccCheckDataSourceValue("data.consul_service.read_f", "service.0.enable_tag_override", "<any>"),
+					testAccCheckDataSourceValue("data.consul_service.read_f", "service.0.enable_tag_override", "true"),
 					testAccCheckDataSourceValue("data.consul_service.read_f", "service.0.id", "redis2"),
 					testAccCheckDataSourceValue("data.consul_service.read_f", "service.0.modify_index", "<any>"),
 					testAccCheckDataSourceValue("data.consul_service.read_f", "service.0.name", "redis"),
@@ -137,10 +137,12 @@ resource "consul_service" "service2" {
 	node = "${consul_node.node.name}"
 	datacenter = "dc1"
 
-	service_id = "redis2"
-	name       = "redis"
-	port       = 8000
-	tags       = ["master", "v1"]
+	service_id          = "redis2"
+	name                = "redis"
+	port                = 8000
+	tags                = ["master", "v1"]
+	enable_tag_override = true
+
 	meta       = {
 		test  = "test"
 	}
