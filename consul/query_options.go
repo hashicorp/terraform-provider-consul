@@ -78,6 +78,10 @@ func schemaQueryOpts() *schema.Schema {
 func getQueryOpts(d *schema.ResourceData, client *consulapi.Client, meta interface{}) (*consulapi.QueryOptions, error) {
 	queryOpts := &consulapi.QueryOptions{}
 
+	if filter, ok := d.GetOk("filter"); ok {
+		queryOpts.Filter = filter.(string)
+	}
+
 	if v, ok := d.GetOk(catalogNodesQueryOpts); ok {
 		for _, config := range v.(*schema.Set).List() {
 			queryOptions := config.(map[string]interface{})
