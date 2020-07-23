@@ -70,11 +70,11 @@ Enterprise server. It is possible to use the Consul Enterprise Docker image
 which has a license valid for six hours during development:
 
 ```sh
-$ docker run --rm
-             -d
-             --name consul-test
-             -v $PWD/consul_test.hcl:/consul_test.hcl:ro
-             -p 8500:8500
+$ docker run --rm \
+             -d \
+             --name consul-test \
+             -v $PWD/consul_test.hcl:/consul_test.hcl:ro \
+             -p 8500:8500 \
              hashicorp/consul-enterprise:latest consul agent -dev -config-file consul_test.hcl -client=0.0.0.0
 $ export CONSUL_HTTP_ADDR=localhost:8500
 $ export CONSUL_HTTP_TOKEN=master-token

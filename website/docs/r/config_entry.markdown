@@ -103,7 +103,31 @@ resource "consul_config_entry" "service_router" {
       # NOTE: a default catch-all will send unmatched traffic to "web"
     ]
   })
+}
 
+resource "consul_config_entry" "ingress_gateway" {
+	name = "us-east-ingress"
+	kind = "ingress-gateway"
+
+	config_json = jsonencode({
+		TLS = {
+			Enabled = true
+		}
+		Listeners = [{
+			Port     = 8000
+			Protocol = "http"
+			Services = [{ Name  = "*" }]
+		}]
+	})
+}
+
+resource "consul_config_entry" "terminating_gateway" {
+	name = "us-west-gateway"
+	kind = "terminating-gateway"
+
+	config_json = jsonencode({
+		Services = [{ Name = "billing" }]
+	})
 }
 ```
 
