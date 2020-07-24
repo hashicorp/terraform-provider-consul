@@ -1,6 +1,6 @@
 ---
 layout: "consul"
-page_title: "Consul: certificate_authority"
+page_title: "Consul: consul_certificate_authority"
 sidebar_current: "docs-consul-resource-certificate-authority"
 description: |-
     A resource that manage the Consul Connect Certificate Authority
@@ -8,7 +8,7 @@ description: |-
 
 # certificate_authority
 
-The `certificate_authority` resource can be used to manage the configuration of
+The `consul_certificate_authority` resource can be used to manage the configuration of
 the Certificate Authority used by [Consul Connect](https://www.consul.io/docs/connect/ca).
 
 ## Example Usage
@@ -16,7 +16,7 @@ the Certificate Authority used by [Consul Connect](https://www.consul.io/docs/co
 Use the built-in CA with specific TTL:
 
 ```hcl
-resource "certificate_authority" "connect" {
+resource "consul_certificate_authority" "connect" {
   connect_provider = "consul"
 
   config = {
@@ -30,7 +30,7 @@ resource "certificate_authority" "connect" {
 Use Vault to manage and sign certificates:
 
 ```hcl
-resource "certificate_authority" "connect" {
+resource "consul_certificate_authority" "connect" {
   connect_provider = "vault"
 
   config = {
@@ -45,7 +45,7 @@ resource "certificate_authority" "connect" {
 Use the [AWS Certificate Manager Private Certificate Authority](https://aws.amazon.com/certificate-manager/private-certificate-authority/):
 
 ```hcl
-resource "certificate_authority" "connect" {
+resource "consul_certificate_authority" "connect" {
   connect_provider = "aws-pca"
 
   config = {
