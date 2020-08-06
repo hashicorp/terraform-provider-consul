@@ -27,6 +27,13 @@ func resourceConsulIntention() *schema.Resource {
 				Default:  "default",
 			},
 
+			"datacenter": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+				ForceNew: true,
+			},
+
 			"destination_name": {
 				Type:     schema.TypeString,
 				Required: true,
@@ -65,10 +72,16 @@ func resourceConsulIntentionCreate(d *schema.ResourceData, meta interface{}) err
 	client := getClient(meta)
 	connect := client.Connect()
 
-	dc := ""
-	if _, ok := d.GetOk("datacenter"); ok {
-		dc = d.Get("datacenter").(string)
+	var dc string
+	if v, ok := d.GetOk("datacenter"); ok {
+		dc = v.(string)
+	} else {
+		var err error
+		if dc, err = getDC(d, client, meta); err != nil {
+			return err
+		}
 	}
+
 	wOpts := consulapi.WriteOptions{Datacenter: dc}
 
 	intention, err := getIntention(d)
@@ -114,9 +127,9 @@ func resourceConsulIntentionRead(d *schema.ResourceData, meta interface{}) error
 	client := getClient(meta)
 	connect := client.Connect()
 
-	dc := ""
-	if _, ok := d.GetOk("datacenter"); ok {
-		dc = d.Get("datacenter").(string)
+	var dc string
+	if v, ok := d.GetOk("datacenter"); ok {
+		dc = v.(string)
 	}
 
 	id := d.Id()
@@ -162,9 +175,14 @@ func resourceConsulIntentionDelete(d *schema.ResourceData, meta interface{}) err
 	connect := client.Connect()
 	id := d.Id()
 
-	dc := ""
-	if _, ok := d.GetOk("datacenter"); ok {
-		dc = d.Get("datacenter").(string)
+	var dc string
+	if v, ok := d.GetOk("datacenter"); ok {
+		dc = v.(string)
+	} else {
+		var err error
+		if dc, err = getDC(d, client, meta); err != nil {
+			return err
+		}
 	}
 
 	// Setup the operations using the datacenter

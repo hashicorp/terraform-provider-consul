@@ -20,6 +20,7 @@ func TestAccConsulIntention_basic(t *testing.T) {
 				Config: testAccConsulIntentionConfigBasic,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("consul_intention.example", "source_name", "api"),
+					resource.TestCheckResourceAttr("consul_intention.example", "datacenter", "nyc3"),
 					resource.TestCheckResourceAttr("consul_intention.example", "destination_name", "db"),
 					resource.TestCheckResourceAttr("consul_intention.example", "action", "allow"),
 					resource.TestCheckResourceAttr("consul_intention.example", "description", "something about example"),
@@ -32,6 +33,7 @@ func TestAccConsulIntention_basic(t *testing.T) {
 				Config:    testAccConsulIntentionConfigBasic,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("consul_intention.example", "source_name", "api"),
+					resource.TestCheckResourceAttr("consul_intention.example", "datacenter", "nyc3"),
 					resource.TestCheckResourceAttr("consul_intention.example", "destination_name", "db"),
 					resource.TestCheckResourceAttr("consul_intention.example", "action", "allow"),
 					resource.TestCheckResourceAttr("consul_intention.example", "description", "something about example"),
@@ -136,9 +138,39 @@ func testAccRemoveConsulIntention(t *testing.T) func() {
 	}
 }
 
+func TestAccConsulIntention_dc(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() {},
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckConsulIntentionDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccConsulIntentionDcFallback,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("consul_intention.example", "source_name", "api"),
+					resource.TestCheckResourceAttr("consul_intention.example", "datacenter", "dc1"),
+					resource.TestCheckResourceAttr("consul_intention.example", "destination_name", "db"),
+					resource.TestCheckResourceAttr("consul_intention.example", "action", "allow"),
+				),
+			},
+			{
+				PreConfig: testAccRemoveConsulIntention(t),
+				Config:    testAccConsulIntentionConfigBasic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("consul_intention.example", "source_name", "api"),
+					resource.TestCheckResourceAttr("consul_intention.example", "datacenter", "dc1"),
+					resource.TestCheckResourceAttr("consul_intention.example", "destination_name", "db"),
+					resource.TestCheckResourceAttr("consul_intention.example", "action", "allow"),
+				),
+			},
+		},
+	})
+}
+
 const testAccConsulIntentionConfigBasic = `
 resource "consul_intention" "example" {
 	source_name      = "api"
+	datacenter       = "nyc3"
 	destination_name = "db"
 	action           = "allow"
 
@@ -166,6 +198,15 @@ resource "consul_intention" "example" {
 	destination_name      = "db"
 	destination_namespace = "ns"
 
+	action = "allow"
+}
+`
+
+const testAccConsulIntentionDcFallback = `
+resource "consul_intention" "example" {
+	source_name           = "api"
+	destination_name      = "db"
+	
 	action = "allow"
 }
 `
