@@ -72,14 +72,9 @@ func resourceConsulIntentionCreate(d *schema.ResourceData, meta interface{}) err
 	client := getClient(meta)
 	connect := client.Connect()
 
-	var dc string
-	if v, ok := d.GetOk("datacenter"); ok {
-		dc = v.(string)
-	} else {
-		var err error
-		if dc, err = getDC(d, client, meta); err != nil {
-			return err
-		}
+	dc, err := getDC(d, client, meta)
+	if err != nil {
+		return fmt.Errorf("Failed to get DC: %v", err)
 	}
 
 	wOpts := consulapi.WriteOptions{Datacenter: dc}
@@ -104,9 +99,9 @@ func resourceConsulIntentionUpdate(d *schema.ResourceData, meta interface{}) err
 	connect := client.Connect()
 
 	// Setup the operations using the datacenter
-	dc := ""
-	if _, ok := d.GetOk("datacenter"); ok {
-		dc = d.Get("datacenter").(string)
+	dc, err := getDC(d, client, meta)
+	if err != nil {
+		return fmt.Errorf("Failed to get DC: %v", err)
 	}
 	wOpts := consulapi.WriteOptions{Datacenter: dc}
 
@@ -127,9 +122,9 @@ func resourceConsulIntentionRead(d *schema.ResourceData, meta interface{}) error
 	client := getClient(meta)
 	connect := client.Connect()
 
-	var dc string
-	if v, ok := d.GetOk("datacenter"); ok {
-		dc = v.(string)
+	dc, err := getDC(d, client, meta)
+	if err != nil {
+		return fmt.Errorf("Failed to get DC: %v", err)
 	}
 
 	id := d.Id()
@@ -175,14 +170,9 @@ func resourceConsulIntentionDelete(d *schema.ResourceData, meta interface{}) err
 	connect := client.Connect()
 	id := d.Id()
 
-	var dc string
-	if v, ok := d.GetOk("datacenter"); ok {
-		dc = v.(string)
-	} else {
-		var err error
-		if dc, err = getDC(d, client, meta); err != nil {
-			return err
-		}
+	dc, err := getDC(d, client, meta)
+	if err != nil {
+		return fmt.Errorf("Failed to get DC: %v", err)
 	}
 
 	// Setup the operations using the datacenter
