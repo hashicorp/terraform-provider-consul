@@ -238,7 +238,7 @@ func TestAccConsulService_NamespaceCE(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccConsulServiceNamespaceCE,
-				ExpectError: regexp.MustCompile("Namespaces is a Consul Enterprise feature"),
+				ExpectError: namespaceEnterpriseFeature,
 			},
 		},
 	})

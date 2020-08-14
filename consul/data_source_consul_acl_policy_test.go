@@ -37,7 +37,7 @@ func TestAccDataACLPolicy_namespaceCE(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccDataSourceACLPolicyNamespaceCE,
-				ExpectError: regexp.MustCompile("Namespaces is a Consul Enterprise feature"),
+				ExpectError: namespaceEnterpriseFeature,
 			},
 		},
 	})

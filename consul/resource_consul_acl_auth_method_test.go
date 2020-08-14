@@ -2,7 +2,6 @@ package consul
 
 import (
 	"fmt"
-	"regexp"
 	"testing"
 
 	consulapi "github.com/hashicorp/consul/api"
@@ -68,7 +67,7 @@ func TestAccConsulACLAuthMethod_namespaceCE(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config:      testResourceACLAuthMethodNamespaceCE,
-				ExpectError: regexp.MustCompile("Namespaces is a Consul Enterprise feature"),
+				ExpectError: namespaceEnterpriseFeature,
 			},
 		},
 	})

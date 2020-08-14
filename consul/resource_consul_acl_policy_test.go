@@ -2,7 +2,6 @@ package consul
 
 import (
 	"fmt"
-	"regexp"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
@@ -101,7 +100,7 @@ func TestAccConsulACLPolicy_NamespaceCE(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config:      testResourceACLPolicyNamespaceCE,
-				ExpectError: regexp.MustCompile("Namespaces is a Consul Enterprise feature"),
+				ExpectError: namespaceEnterpriseFeature,
 			},
 		},
 	})
