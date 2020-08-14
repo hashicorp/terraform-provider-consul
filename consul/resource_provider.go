@@ -33,7 +33,7 @@ func Provider() terraform.ResourceProvider {
 				DefaultFunc: schema.MultiEnvDefaultFunc([]string{
 					"CONSUL_SCHEME",
 					"CONSUL_HTTP_SCHEME",
-				}, "http"),
+				}, ""),
 			},
 
 			"http_auth": {
