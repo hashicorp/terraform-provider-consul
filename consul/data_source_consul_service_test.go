@@ -1,7 +1,6 @@
 package consul
 
 import (
-	"regexp"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
@@ -91,7 +90,7 @@ func TestAccDataConsulService_namespaceCE(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccDataConsulServiceNamespaceCE,
-				ExpectError: regexp.MustCompile("Namespaces is a Consul Enterprise feature"),
+				ExpectError: namespaceEnterpriseFeature,
 			},
 		},
 	})
