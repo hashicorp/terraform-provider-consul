@@ -57,8 +57,11 @@ The following arguments are supported:
 * `datacenter` - (Optional) The datacenter to use. Defaults to that of the agent.
 * `token` - (Optional) The ACL token to use by default when making requests to the agent. Can also be specified with `CONSUL_HTTP_TOKEN` or `CONSUL_TOKEN` as an environment variable.
 * `ca_file` - (Optional) A path to a PEM-encoded certificate authority used to verify the remote agent's certificate.
-* `cert_file` - (Optional) A path to a PEM-encoded certificate provided to the remote agent; requires use of `key_file`.
-* `key_file`- (Optional) A path to a PEM-encoded private key, required if `cert_file` is specified.
+* `ca_pem` - (Optional) PEM-encoded certificate authority used to verify the remote agent's certificate.
+* `cert_file` - (Optional) A path to a PEM-encoded certificate provided to the remote agent; requires use of `key_file` or `key_pem`.
+* `cert_pem` - (Optional) PEM-encoded certificate provided to the remote agent; requires use of `key_file` or `key_pem`.
+* `key_file`- (Optional) A path to a PEM-encoded private key, required if `cert_file` or `cert_pem` is specified.
+* `key_pem`- (Optional) PEM-encoded private key, required if `cert_file` or `cert_pem` is specified.
 * `ca_path` - (Optional) A path to a directory of PEM-encoded certificate authority files to use to check the authenticity of client and server connections. Can also be specified with the `CONSUL_CAPATH` environment variable.
 * `insecure_https`- (Optional) Boolean value to disable SSL certificate verification; setting this value to true is not recommended for production use. Only use this with scheme set to "https".
 

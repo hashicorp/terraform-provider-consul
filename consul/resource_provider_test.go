@@ -1,6 +1,7 @@
 package consul
 
 import (
+	"io/ioutil"
 	"os"
 	"testing"
 
@@ -56,6 +57,37 @@ func TestResourceProvider_ConfigureTLS(t *testing.T) {
 	}
 
 	err := rp.Configure(terraform.NewResourceConfigRaw(raw))
+	if err != nil {
+		t.Fatalf("err: %s", err)
+	}
+}
+
+func TestResourceProvider_ConfigureTLSPem(t *testing.T) {
+	rp := Provider()
+
+	caPem, err := ioutil.ReadFile("test-fixtures/cacert.pem")
+	if err != nil {
+		t.Fatalf("err: %s", err)
+	}
+	certPem, err := ioutil.ReadFile("test-fixtures/usercert.pem")
+	if err != nil {
+		t.Fatalf("err: %s", err)
+	}
+	keyPem, err := ioutil.ReadFile("test-fixtures/userkey.pem")
+	if err != nil {
+		t.Fatalf("err: %s", err)
+	}
+
+	raw := map[string]interface{}{
+		"address":    "demo.consul.io:80",
+		"ca_pem":     string(caPem),
+		"cert_pem":   string(certPem),
+		"datacenter": "nyc3",
+		"key_pem":    string(keyPem),
+		"scheme":     "https",
+	}
+
+	err = rp.Configure(terraform.NewResourceConfigRaw(raw))
 	if err != nil {
 		t.Fatalf("err: %s", err)
 	}

@@ -16,8 +16,11 @@ type Config struct {
 	HttpAuth      string `mapstructure:"http_auth"`
 	Token         string `mapstructure:"token"`
 	CAFile        string `mapstructure:"ca_file"`
+	CAPem         string `mapstructure:"ca_pem"`
 	CertFile      string `mapstructure:"cert_file"`
+	CertPEM       string `mapstructure:"cert_pem"`
 	KeyFile       string `mapstructure:"key_file"`
+	KeyPEM        string `mapstructure:"key_pem"`
 	CAPath        string `mapstructure:"ca_path"`
 	InsecureHttps bool   `mapstructure:"insecure_https"`
 	Namespace     string `mapstructure:"namespace"`
@@ -39,11 +42,20 @@ func (c *Config) Client() (*consulapi.Client, error) {
 	if c.CAFile != "" {
 		config.TLSConfig.CAFile = c.CAFile
 	}
+	if c.CAPem != "" {
+		config.TLSConfig.CAPem = []byte(c.CAPem)
+	}
 	if c.CertFile != "" {
 		config.TLSConfig.CertFile = c.CertFile
 	}
+	if c.CertPEM != "" {
+		config.TLSConfig.CertPEM = []byte(c.CertPEM)
+	}
 	if c.KeyFile != "" {
 		config.TLSConfig.KeyFile = c.KeyFile
+	}
+	if c.KeyPEM != "" {
+		config.TLSConfig.KeyPEM = []byte(c.KeyPEM)
 	}
 	if c.CAPath != "" {
 		config.TLSConfig.CAPath = c.CAPath
