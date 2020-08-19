@@ -75,6 +75,10 @@ The following attributes are exported:
 
 * `id` - The ID of the intention.
 * `source_name` - The source for the intention.
+* `source_namespace` - The source namespace of the intention.
 * `destination_name` - The destination for the intention.
+* `destination_namespace` - The destination namespace of the intention.
+* `action` - The intention action.
 * `description` - A description of the intention.
 * `meta` - Key/value pairs associated with the intention.
+* `datacenter` - The datacenter in which the intention is created.
