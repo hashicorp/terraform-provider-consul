@@ -13,7 +13,7 @@ func resourceConsulAgentService() *schema.Resource {
 		Update:             resourceConsulAgentServiceCreate,
 		Read:               resourceConsulAgentServiceRead,
 		Delete:             resourceConsulAgentServiceDelete,
-		DeprecationMessage: "The consul_agent_service resource will be deprecated and removed in a future version. More information: https://github.com/terraform-providers/terraform-provider-consul/issues/46",
+		DeprecationMessage: "The consul_agent_service resource will be deprecated and removed in a future version. More information: https://github.com/hashicorp/terraform-provider-consul/issues/46",
 
 		Schema: map[string]*schema.Schema{
 			"address": {

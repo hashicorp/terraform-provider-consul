@@ -588,7 +588,7 @@ resource "consul_service" "google2" {
 `
 
 // Regression test, creating a service used to make changes to the associated node
-// See https://github.com/terraform-providers/terraform-provider-consul/issues/101
+// See https://github.com/hashicorp/terraform-provider-consul/issues/101
 const testAccConsulServiceDontOverrideNodeMeta = `
 resource "consul_node" "compute" {
 	name    = "compute-example"
@@ -607,7 +607,7 @@ resource "consul_service" "example" {
 `
 
 // Removing one instance of a service used to make Terraform complains when refreshing the plan
-// See https://github.com/terraform-providers/terraform-provider-consul/issues/146
+// See https://github.com/hashicorp/terraform-provider-consul/issues/146
 const testAccConsulServiceMultipleInstances = `
 resource "consul_node" "redis1" {
 	name = "redis/redis1"

@@ -551,7 +551,7 @@ func getCatalogRegistration(d *schema.ResourceData, meta interface{}, dc string)
 			Service: name,
 		},
 		// Creating a service should not modify the node
-		// See https://github.com/terraform-providers/terraform-provider-consul/issues/101
+		// See https://github.com/hashicorp/terraform-provider-consul/issues/101
 		SkipNodeUpdate: true,
 	}
 

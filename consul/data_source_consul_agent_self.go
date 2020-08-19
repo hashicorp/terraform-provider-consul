@@ -168,7 +168,7 @@ const (
 func dataSourceConsulAgentSelf() *schema.Resource {
 	return &schema.Resource{
 		Read:               dataSourceConsulAgentSelfRead,
-		DeprecationMessage: "The consul_agent_self resource will be deprecated and removed in a future version. More information: https://github.com/terraform-providers/terraform-provider-consul/issues/46",
+		DeprecationMessage: "The consul_agent_self resource will be deprecated and removed in a future version. More information: https://github.com/hashicorp/terraform-provider-consul/issues/46",
 		Schema: map[string]*schema.Schema{
 			agentSelfACLDatacenter: {
 				Computed: true,

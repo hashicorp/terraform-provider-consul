@@ -1,4 +1,4 @@
-module github.com/terraform-providers/terraform-provider-consul
+module github.com/hashicorp/terraform-provider-consul
 
 require (
 	github.com/apparentlymart/go-dump v0.0.0-20190214190832-042adf3cf4a0 // indirect
