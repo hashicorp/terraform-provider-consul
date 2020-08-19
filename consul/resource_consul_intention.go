@@ -27,6 +27,13 @@ func resourceConsulIntention() *schema.Resource {
 				Default:  "default",
 			},
 
+			"datacenter": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+				ForceNew: true,
+			},
+
 			"destination_name": {
 				Type:     schema.TypeString,
 				Required: true,
@@ -65,10 +72,11 @@ func resourceConsulIntentionCreate(d *schema.ResourceData, meta interface{}) err
 	client := getClient(meta)
 	connect := client.Connect()
 
-	dc := ""
-	if _, ok := d.GetOk("datacenter"); ok {
-		dc = d.Get("datacenter").(string)
+	dc, err := getDC(d, client, meta)
+	if err != nil {
+		return fmt.Errorf("Failed to get DC: %v", err)
 	}
+
 	wOpts := consulapi.WriteOptions{Datacenter: dc}
 
 	intention, err := getIntention(d)
@@ -91,9 +99,9 @@ func resourceConsulIntentionUpdate(d *schema.ResourceData, meta interface{}) err
 	connect := client.Connect()
 
 	// Setup the operations using the datacenter
-	dc := ""
-	if _, ok := d.GetOk("datacenter"); ok {
-		dc = d.Get("datacenter").(string)
+	dc, err := getDC(d, client, meta)
+	if err != nil {
+		return fmt.Errorf("Failed to get DC: %v", err)
 	}
 	wOpts := consulapi.WriteOptions{Datacenter: dc}
 
@@ -114,9 +122,9 @@ func resourceConsulIntentionRead(d *schema.ResourceData, meta interface{}) error
 	client := getClient(meta)
 	connect := client.Connect()
 
-	dc := ""
-	if _, ok := d.GetOk("datacenter"); ok {
-		dc = d.Get("datacenter").(string)
+	dc, err := getDC(d, client, meta)
+	if err != nil {
+		return fmt.Errorf("Failed to get DC: %v", err)
 	}
 
 	id := d.Id()
@@ -132,6 +140,9 @@ func resourceConsulIntentionRead(d *schema.ResourceData, meta interface{}) error
 		return nil
 	}
 
+	if err = d.Set("datacenter", dc); err != nil {
+		return fmt.Errorf("failed to set 'datacenter': %v", err)
+	}
 	if err = d.Set("source_name", intention.SourceName); err != nil {
 		return fmt.Errorf("failed to set 'source_name': %v", err)
 	}
@@ -162,9 +173,9 @@ func resourceConsulIntentionDelete(d *schema.ResourceData, meta interface{}) err
 	connect := client.Connect()
 	id := d.Id()
 
-	dc := ""
-	if _, ok := d.GetOk("datacenter"); ok {
-		dc = d.Get("datacenter").(string)
+	dc, err := getDC(d, client, meta)
+	if err != nil {
+		return fmt.Errorf("Failed to get DC: %v", err)
 	}
 
 	// Setup the operations using the datacenter

@@ -114,7 +114,7 @@ func TestAccConsulConfigEntry_basic(t *testing.T) {
 			{
 				Config: testAccConsulConfigEntry_TerminatingGateway(extraConf),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("consul_config_entry.terminating_gateway", "name", "foo"),
+					resource.TestCheckResourceAttr("consul_config_entry.terminating_gateway", "name", "foo-egress"),
 					resource.TestCheckResourceAttr("consul_config_entry.terminating_gateway", "kind", "terminating-gateway"),
 					resource.TestCheckResourceAttr("consul_config_entry.terminating_gateway", "config_json", configJSONTerminatingGateway),
 				),
@@ -367,7 +367,7 @@ resource "consul_config_entry" "ingress_gateway" {
 func testAccConsulConfigEntry_TerminatingGateway(extraConf string) string {
 	return fmt.Sprintf(`
 resource "consul_config_entry" "terminating_gateway" {
-	name = "foo"
+	name = "foo-egress"
 	kind = "terminating-gateway"
 
 	config_json = jsonencode({
