@@ -33,7 +33,6 @@ script:
 - make testacc TESTARGS="-count=1"
 - docker stop consul-test
 - make vet
-- make website-test
 
 branches:
   only:
