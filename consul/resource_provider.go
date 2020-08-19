@@ -43,42 +43,36 @@ func Provider() terraform.ResourceProvider {
 			},
 
 			"ca_file": {
-				Type:          schema.TypeString,
-				Optional:      true,
-				DefaultFunc:   schema.EnvDefaultFunc("CONSUL_CA_FILE", ""),
-				ConflictsWith: []string{"ca_pem"},
+				Type:        schema.TypeString,
+				Optional:    true,
+				DefaultFunc: schema.EnvDefaultFunc("CONSUL_CA_FILE", ""),
 			},
 
 			"ca_pem": {
-				Type:          schema.TypeString,
-				Optional:      true,
-				ConflictsWith: []string{"ca_file"},
+				Type:     schema.TypeString,
+				Optional: true,
 			},
 
 			"cert_file": {
-				Type:          schema.TypeString,
-				Optional:      true,
-				DefaultFunc:   schema.EnvDefaultFunc("CONSUL_CERT_FILE", ""),
-				ConflictsWith: []string{"cert_pem"},
+				Type:        schema.TypeString,
+				Optional:    true,
+				DefaultFunc: schema.EnvDefaultFunc("CONSUL_CERT_FILE", ""),
 			},
 
 			"cert_pem": {
-				Type:          schema.TypeString,
-				Optional:      true,
-				ConflictsWith: []string{"cert_file"},
+				Type:     schema.TypeString,
+				Optional: true,
 			},
 
 			"key_file": {
-				Type:          schema.TypeString,
-				Optional:      true,
-				DefaultFunc:   schema.EnvDefaultFunc("CONSUL_KEY_FILE", ""),
-				ConflictsWith: []string{"key_pem"},
+				Type:        schema.TypeString,
+				Optional:    true,
+				DefaultFunc: schema.EnvDefaultFunc("CONSUL_KEY_FILE", ""),
 			},
 
 			"key_pem": {
-				Type:          schema.TypeString,
-				Optional:      true,
-				ConflictsWith: []string{"key_file"},
+				Type:     schema.TypeString,
+				Optional: true,
 			},
 
 			"ca_path": {
