@@ -140,6 +140,9 @@ func resourceConsulIntentionRead(d *schema.ResourceData, meta interface{}) error
 		return nil
 	}
 
+	if err = d.Set("datacenter", dc); err != nil {
+		return fmt.Errorf("failed to set 'datacenter': %v", err)
+	}
 	if err = d.Set("source_name", intention.SourceName); err != nil {
 		return fmt.Errorf("failed to set 'source_name': %v", err)
 	}
