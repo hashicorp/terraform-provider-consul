@@ -17,7 +17,7 @@ func resourceConsulCatalogEntry() *schema.Resource {
 		Update:             resourceConsulCatalogEntryCreate,
 		Read:               resourceConsulCatalogEntryRead,
 		Delete:             resourceConsulCatalogEntryDelete,
-		DeprecationMessage: "The consul_catalog_entry resource will be deprecated and removed in a future version. More information: https://github.com/terraform-providers/terraform-provider-consul/issues/46",
+		DeprecationMessage: "The consul_catalog_entry resource will be deprecated and removed in a future version. More information: https://github.com/hashicorp/terraform-provider-consul/issues/46",
 
 		Schema: map[string]*schema.Schema{
 			"address": {
