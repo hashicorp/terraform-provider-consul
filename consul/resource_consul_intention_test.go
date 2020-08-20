@@ -20,6 +20,7 @@ func TestAccConsulIntention_basic(t *testing.T) {
 				Config: testAccConsulIntentionConfigBasic,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("consul_intention.example", "source_name", "api"),
+					resource.TestCheckResourceAttr("consul_intention.example", "datacenter", "dc1"),
 					resource.TestCheckResourceAttr("consul_intention.example", "destination_name", "db"),
 					resource.TestCheckResourceAttr("consul_intention.example", "action", "allow"),
 					resource.TestCheckResourceAttr("consul_intention.example", "description", "something about example"),
@@ -32,6 +33,7 @@ func TestAccConsulIntention_basic(t *testing.T) {
 				Config:    testAccConsulIntentionConfigBasic,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("consul_intention.example", "source_name", "api"),
+					resource.TestCheckResourceAttr("consul_intention.example", "datacenter", "dc1"),
 					resource.TestCheckResourceAttr("consul_intention.example", "destination_name", "db"),
 					resource.TestCheckResourceAttr("consul_intention.example", "action", "allow"),
 					resource.TestCheckResourceAttr("consul_intention.example", "description", "something about example"),
@@ -126,7 +128,7 @@ func testAccRemoveConsulIntention(t *testing.T) func() {
 		}
 
 		if iid == "" {
-			t.Errorf("Failed to find the intention created by Terraform")
+			t.Fatalf("Failed to find the intention created by Terraform")
 		}
 
 		_, err = connect.IntentionDelete(iid, &consulapi.WriteOptions{})
@@ -134,6 +136,20 @@ func testAccRemoveConsulIntention(t *testing.T) func() {
 			t.Errorf("Failed to delete the intention. err: %s", err)
 		}
 	}
+}
+
+func TestAccConsulIntention_dc(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() {},
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckConsulIntentionDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccConsulIntentionDc,
+				ExpectError: regexp.MustCompile("No path to datacenter"),
+			},
+		},
+	})
 }
 
 const testAccConsulIntentionConfigBasic = `
@@ -167,5 +183,18 @@ resource "consul_intention" "example" {
 	destination_namespace = "ns"
 
 	action = "allow"
+}
+`
+
+const testAccConsulIntentionDc = `
+resource "consul_intention" "example" {
+	datacenter       = "ny3"
+	source_name      = "api"
+	destination_name = "db"
+	action           = "allow"
+
+	meta = {
+		is_tf_acc_test = "yes"
+	}
 }
 `
