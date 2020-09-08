@@ -1,7 +1,9 @@
 package consul
 
 import (
+	"fmt"
 	"log"
+	"strings"
 
 	consulapi "github.com/hashicorp/consul/api"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
@@ -167,4 +169,31 @@ func getNamespace(d *schema.ResourceData, meta interface{}) string {
 		return namespace
 	}
 	return meta.(*Config).Namespace
+}
+
+type stateWriter struct {
+	d      *schema.ResourceData
+	errors []string
+}
+
+func newStateWriter(d *schema.ResourceData) *stateWriter {
+	return &stateWriter{d: d}
+}
+
+func (sw *stateWriter) set(key string, value interface{}) {
+	err := sw.d.Set(key, value)
+	if err != nil {
+		sw.errors = append(
+			sw.errors,
+			fmt.Sprintf(" - failed to set '%s': %v", key, err),
+		)
+	}
+}
+
+func (sw *stateWriter) error() error {
+	if sw.errors == nil {
+		return nil
+	}
+	errors := strings.Join(sw.errors, "\n")
+	return fmt.Errorf("Failed to write the state:\n%s", errors)
 }
