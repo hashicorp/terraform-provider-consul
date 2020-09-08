@@ -41,7 +41,7 @@ data "consul_acl_token_secret_id" "read" {
 }
 
 output "consul_acl_token_secret_id" {
-  value = data.consul_acl_token.read.encrypted_secret_id
+  value = data.consul_acl_token_secret_id.read.encrypted_secret_id
 }
 ```
 
