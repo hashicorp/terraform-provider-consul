@@ -39,6 +39,6 @@ The following arguments are supported:
 
 The following attributes are exported:
 
-* `address` - The address of the service.
-* `name` - The name of the service.
+* `address` - The address of the node.
+* `name` - The name of the node.
 * `meta` - (Optional, map) Key/value pairs that are associated with the node.
