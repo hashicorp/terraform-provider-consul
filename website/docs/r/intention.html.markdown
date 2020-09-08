@@ -82,3 +82,11 @@ The following attributes are exported:
 * `description` - A description of the intention.
 * `meta` - Key/value pairs associated with the intention.
 * `datacenter` - The datacenter in which the intention is created.
+
+## Import
+
+`consul_intention` can be imported:
+
+```
+$ terraform import consul_intention.database 657a57d6-0d56-57e2-31cb-e9f1ed3c18dd
+```

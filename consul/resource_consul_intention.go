@@ -14,6 +14,9 @@ func resourceConsulIntention() *schema.Resource {
 		Update: resourceConsulIntentionUpdate,
 		Read:   resourceConsulIntentionRead,
 		Delete: resourceConsulIntentionDelete,
+		Importer: &schema.ResourceImporter{
+			State: schema.ImportStatePassthrough,
+		},
 
 		Schema: map[string]*schema.Schema{
 			"source_name": {
