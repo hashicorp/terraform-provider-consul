@@ -45,7 +45,7 @@ func Provider() terraform.ResourceProvider {
 			"ca_file": {
 				Type:          schema.TypeString,
 				Optional:      true,
-				DefaultFunc:   schema.EnvDefaultFunc("CONSUL_CA_FILE", ""),
+				DefaultFunc:   schema.EnvDefaultFunc("CONSUL_CA_FILE", nil),
 				ConflictsWith: []string{"ca_pem"},
 			},
 
@@ -58,7 +58,7 @@ func Provider() terraform.ResourceProvider {
 			"cert_file": {
 				Type:          schema.TypeString,
 				Optional:      true,
-				DefaultFunc:   schema.EnvDefaultFunc("CONSUL_CERT_FILE", ""),
+				DefaultFunc:   schema.EnvDefaultFunc("CONSUL_CERT_FILE", nil),
 				ConflictsWith: []string{"cert_pem"},
 			},
 
@@ -71,7 +71,7 @@ func Provider() terraform.ResourceProvider {
 			"key_file": {
 				Type:          schema.TypeString,
 				Optional:      true,
-				DefaultFunc:   schema.EnvDefaultFunc("CONSUL_KEY_FILE", ""),
+				DefaultFunc:   schema.EnvDefaultFunc("CONSUL_KEY_FILE", nil),
 				ConflictsWith: []string{"key_pem"},
 			},
 
