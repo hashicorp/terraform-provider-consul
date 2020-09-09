@@ -42,6 +42,5 @@ The following attributes are exported:
 * `start_time` - The start time of the license.
 * `expiration_time` - The expiration time of the license.
 * `product` - The product for which the license is valid.
-* `flags` - The metadata attached to the license.
 * `features` - The features for which the license is valid.
 * `warnings` - A list of warning messages regarding the license validity.
