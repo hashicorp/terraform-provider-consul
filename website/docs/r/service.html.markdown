@@ -13,8 +13,9 @@ is appropriate for registering [external services](https://www.consul.io/docs/gu
 can be used to create services addressable by Consul that cannot be registered
 with a [local agent](https://www.consul.io/docs/agent/basics.html).
 
-If the Consul agent is running on the node where this service is registered, it is
-not recommended to use this resource.
+-> **NOTE:** If a Consul agent is running on the node where this service is
+registered, it is not recommended to use this resource as the service will be
+removed during the next [anti-entropy synchronisation](https://www.consul.io/docs/architecture/anti-entropy).
 
 ## Example Usage
 
