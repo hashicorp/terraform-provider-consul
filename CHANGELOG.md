@@ -1,4 +1,17 @@
 ## 2.10.0 (Unreleased)
+
+NEW FEATURES:
+
+* The TLS configuration of the provider can now be given directly as strings instead of using files ([[#220](https://github.com/hashicorp/terraform-provider-consul/issues/220)] and [[#5](https://github.com/hashicorp/terraform-provider-consul/issues/5)]).
+* The `consul_intention` resource now has a `datacenter` argument ([[#213](https://github.com/hashicorp/terraform-provider-consul/issues/213)] and [[#214](https://github.com/hashicorp/terraform-provider-consul/issues/214)]).
+* The `consul_intention` resource can now be imported ([[#222](https://github.com/hashicorp/terraform-provider-consul/issues/222)] and [[#225](https://github.com/hashicorp/terraform-provider-consul/issues/225)]).
+
+BUG FIXES:
+
+* The `consul_acl_binding_rule` now delegates the validation of `bind_type` to Consul and supports the `node` bind type ([[#217](https://github.com/hashicorp/terraform-provider-consul/issues/217)] and [[#218](https://github.com/hashicorp/terraform-provider-consul/issues/218)]).
+* The `CONSUL_HTTP_SSL` environment variable can now be used to force the use of SSL like it does for the Consul CLI ([[#215](https://github.com/hashicorp/terraform-provider-consul/issues/215)] and [[#219](https://github.com/hashicorp/terraform-provider-consul/issues/219)]).
+* The `flags` attribute has been removed from the `consul_license` resource to make it work with Consul 1.8 ([[#223](https://github.com/hashicorp/terraform-provider-consul/issues/223)] and [[#227](https://github.com/hashicorp/terraform-provider-consul/issues/227)]).
+
 ## 2.9.0 (July 23, 2020)
 
 NEW FEATURES:
