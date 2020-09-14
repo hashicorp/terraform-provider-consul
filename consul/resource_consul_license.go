@@ -63,13 +63,6 @@ func resourceConsulLicense() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"flags": {
-				Type:     schema.TypeMap,
-				Computed: true,
-				Elem: &schema.Schema{
-					Type: schema.TypeString,
-				},
-			},
 			"features": {
 				Type:     schema.TypeList,
 				Computed: true,
@@ -130,41 +123,19 @@ func resourceConsulLicenseRead(d *schema.ResourceData, meta interface{}) error {
 
 	d.SetId(licenseReply.License.LicenseID)
 
-	if err = d.Set("valid", licenseReply.Valid); err != nil {
-		return fmt.Errorf("failed to set 'valid': %v", err)
-	}
-	if err = d.Set("license_id", licenseReply.License.LicenseID); err != nil {
-		return fmt.Errorf("failed to set 'license_id': %v", err)
-	}
-	if err = d.Set("customer_id", licenseReply.License.CustomerID); err != nil {
-		return fmt.Errorf("failed to set 'customer_id': %v", err)
-	}
-	if err = d.Set("installation_id", licenseReply.License.InstallationID); err != nil {
-		return fmt.Errorf("failed to set 'installation_id': %v", err)
-	}
-	if err = d.Set("issue_time", licenseReply.License.IssueTime.String()); err != nil {
-		return fmt.Errorf("failed to set 'issue_time': %v", err)
-	}
-	if err = d.Set("start_time", licenseReply.License.StartTime.String()); err != nil {
-		return fmt.Errorf("failed to set 'start_time': %v", err)
-	}
-	if err = d.Set("expiration_time", licenseReply.License.ExpirationTime.String()); err != nil {
-		return fmt.Errorf("failed to set 'expiration_time': %v", err)
-	}
-	if err = d.Set("product", licenseReply.License.Product); err != nil {
-		return fmt.Errorf("failed to set 'product': %v", err)
-	}
-	if err = d.Set("flags", licenseReply.License.Flags); err != nil {
-		return fmt.Errorf("failed to set 'flags': %v", err)
-	}
-	if err = d.Set("features", licenseReply.License.Features); err != nil {
-		return fmt.Errorf("failed to set 'features': %v", err)
-	}
-	if err = d.Set("warnings", licenseReply.Warnings); err != nil {
-		return fmt.Errorf("failed to set 'warnings': %v", err)
-	}
+	sw := newStateWriter(d)
+	sw.set("valid", licenseReply.Valid)
+	sw.set("license_id", licenseReply.License.LicenseID)
+	sw.set("customer_id", licenseReply.License.CustomerID)
+	sw.set("installation_id", licenseReply.License.InstallationID)
+	sw.set("issue_time", licenseReply.License.IssueTime.String())
+	sw.set("start_time", licenseReply.License.StartTime.String())
+	sw.set("expiration_time", licenseReply.License.ExpirationTime.String())
+	sw.set("product", licenseReply.License.Product)
+	sw.set("features", licenseReply.License.Features)
+	sw.set("warnings", licenseReply.Warnings)
 
-	return nil
+	return sw.error()
 }
 
 func resourceConsulLicenseDelete(d *schema.ResourceData, meta interface{}) error {
