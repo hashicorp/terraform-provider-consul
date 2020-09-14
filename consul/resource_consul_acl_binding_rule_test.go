@@ -2,6 +2,7 @@ package consul
 
 import (
 	"fmt"
+	"regexp"
 	"testing"
 
 	consulapi "github.com/hashicorp/consul/api"
@@ -35,6 +36,20 @@ func TestAccConsulACLBindingRule_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("consul_acl_binding_rule.test", "bind_type", "role"),
 					resource.TestCheckResourceAttr("consul_acl_binding_rule.test", "bind_name", "minikube2"),
 				),
+			},
+			{
+				Config: testResourceACLBindingRuleConfig_node,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("consul_acl_binding_rule.test", "auth_method", "minikube2"),
+					resource.TestCheckResourceAttr("consul_acl_binding_rule.test", "description", ""),
+					resource.TestCheckResourceAttr("consul_acl_binding_rule.test", "selector", "serviceaccount.namespace==default2"),
+					resource.TestCheckResourceAttr("consul_acl_binding_rule.test", "bind_type", "node"),
+					resource.TestCheckResourceAttr("consul_acl_binding_rule.test", "bind_name", "minikube2"),
+				),
+			},
+			{
+				Config:      testResourceACLBindingRuleConfig_wrongType,
+				ExpectError: regexp.MustCompile(`Invalid Binding Rule: unknown BindType "foobar"`),
 			},
 		},
 	})
@@ -177,4 +192,48 @@ resource "consul_acl_binding_rule" "test" {
 	bind_type   = "service"
 	bind_name   = "minikube"
 	namespace   = consul_namespace.test.name
+}`
+
+const testResourceACLBindingRuleConfig_node = `
+resource "consul_acl_auth_method" "test" {
+	name        = "minikube2"
+    type        = "kubernetes"
+    description = "dev minikube cluster"
+
+	config = {
+        Host = "https://192.0.2.42:8443"
+		CACert = <<-EOF
+` + testCert + `
+		EOF
+        ServiceAccountJWT = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c"
+    }
+}
+
+resource "consul_acl_binding_rule" "test" {
+	auth_method = "${consul_acl_auth_method.test.name}"
+	selector    = "serviceaccount.namespace==default2"
+	bind_type   = "node"
+	bind_name   = "minikube2"
+}`
+
+const testResourceACLBindingRuleConfig_wrongType = `
+resource "consul_acl_auth_method" "test" {
+	name        = "minikube2"
+    type        = "kubernetes"
+    description = "dev minikube cluster"
+
+	config = {
+        Host = "https://192.0.2.42:8443"
+		CACert = <<-EOF
+` + testCert + `
+		EOF
+        ServiceAccountJWT = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c"
+    }
+}
+
+resource "consul_acl_binding_rule" "test" {
+	auth_method = "${consul_acl_auth_method.test.name}"
+	selector    = "serviceaccount.namespace==default2"
+	bind_type   = "foobar"
+	bind_name   = "minikube2"
 }`
