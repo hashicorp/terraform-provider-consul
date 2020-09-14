@@ -41,6 +41,12 @@ func TestAccConsulIntention_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("consul_intention.example", "meta.baz", "bat"),
 				),
 			},
+			{
+				Config:            testAccConsulIntentionConfigBasic,
+				ResourceName:      "consul_intention.example",
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
 		},
 	})
 }
@@ -93,7 +99,7 @@ func testAccCheckConsulIntentionDestroy(s *terraform.State) error {
 	}
 
 	if len(intentions) > 0 {
-		return fmt.Errorf("Intentions still exsist: %v", intentions)
+		return fmt.Errorf("Intentions still exist: %v", intentions)
 	}
 
 	return nil
