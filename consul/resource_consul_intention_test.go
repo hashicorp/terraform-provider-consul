@@ -71,7 +71,8 @@ func TestAccConsulIntention_namespaceCE(t *testing.T) {
 		PreCheck:  func() { skipTestOnConsulEnterpriseEdition(t) },
 		Steps: []resource.TestStep{
 			{
-				Config: testAccConsulIntentionConfigNamespace,
+				Config:      testAccConsulIntentionConfigNamespace,
+				ExpectError: regexp.MustCompile("Namespaces is a Consul Enterprise feature"),
 			},
 		},
 	})
@@ -142,20 +143,6 @@ func testAccRemoveConsulIntention(t *testing.T) func() {
 			t.Errorf("Failed to delete the intention. err: %s", err)
 		}
 	}
-}
-
-func TestAccConsulIntention_dc(t *testing.T) {
-	resource.Test(t, resource.TestCase{
-		PreCheck:     func() {},
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckConsulIntentionDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config:      testAccConsulIntentionDc,
-				ExpectError: regexp.MustCompile("No path to datacenter"),
-			},
-		},
-	})
 }
 
 const testAccConsulIntentionConfigBasic = `
