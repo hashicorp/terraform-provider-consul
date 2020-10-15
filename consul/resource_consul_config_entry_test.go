@@ -119,6 +119,41 @@ func TestAccConsulConfigEntry_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("consul_config_entry.terminating_gateway", "config_json", configJSONTerminatingGateway),
 				),
 			},
+			{
+				Config: testAccConsulConfigEntry_ServiceConfigL4(extraConf),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("consul_config_entry.service_intentions", "name", "api-service"),
+					resource.TestCheckResourceAttr("consul_config_entry.service_intentions", "kind", "service-intentions"),
+				),
+			},
+			{
+				Config: testAccConsulConfigEntry_ServiceConfigL7(extraConf),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("consul_config_entry.service_intentions", "name", "fort-knox"),
+					resource.TestCheckResourceAttr("consul_config_entry.service_intentions", "kind", "service-intentions"),
+				),
+			},
+			{
+				Config: testAccConsulConfigEntry_ServiceConfigL7b(extraConf),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("consul_config_entry.service_intentions", "name", "api"),
+					resource.TestCheckResourceAttr("consul_config_entry.service_intentions", "kind", "service-intentions"),
+				),
+			},
+			{
+				Config: testAccConsulConfigEntry_ServiceConfigL7gRPC(extraConf),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("consul_config_entry.service_intentions", "name", "billing"),
+					resource.TestCheckResourceAttr("consul_config_entry.service_intentions", "kind", "service-intentions"),
+				),
+			},
+			{
+				Config: testAccConsulConfigEntry_ServiceConfigL7Mixed(extraConf),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("consul_config_entry.service_intentions", "name", "api"),
+					resource.TestCheckResourceAttr("consul_config_entry.service_intentions", "kind", "service-intentions"),
+				),
+			},
 		},
 	})
 }
@@ -379,4 +414,241 @@ resource "consul_config_entry" "terminating_gateway" {
 	})
 }
 `, extraConf, extraConf)
+}
+
+func testAccConsulConfigEntry_ServiceConfigL4(extraConf string) string {
+	return `
+resource "consul_config_entry" "service_intentions" {
+	name = "api-service"
+	kind = "service-intentions"
+
+	config_json = jsonencode({
+		Sources = [
+			{
+				Action     = "allow"
+				Name       = "frontend-webapp"
+				Precedence = 9
+				Type       = "consul"
+			},
+            {
+				Action     = "allow"
+				Name       = "nightly-cronjob"
+				Precedence = 9
+				Type       = "consul"
+			}
+		]
+	})
+}
+`
+}
+
+func testAccConsulConfigEntry_ServiceConfigL7(extraConf string) string {
+	return `
+resource "consul_config_entry" "sd" {
+	name = "fort-knox"
+	kind = "service-defaults"
+
+	config_json = jsonencode({
+		Protocol = "http"
+	})
+}
+
+resource "consul_config_entry" "service_intentions" {
+	name = consul_config_entry.sd.name
+	kind = "service-intentions"
+
+	config_json = jsonencode({
+		Sources = [
+			{
+				Name        = "contractor-webapp"
+				Permissions = [
+					{
+						Action = "allow"
+						HTTP   = {
+							Methods   = ["GET", "HEAD"]
+							PathExact = "/healtz"
+						}
+					}
+				]
+				Precedence = 9
+				Type       = "consul"
+			},
+			{
+				Name        = "admin-dashboard-webapp",
+				Permissions = [
+					{
+						Action = "deny",
+						HTTP = {
+							PathPrefix= "/debugz"
+						}
+					},
+					{
+						Action= "allow"
+						HTTP = {
+							PathPrefix= "/"
+						}
+					}
+				],
+				Precedence = 9
+				Type       = "consul"
+			}
+		]
+	})
+}
+`
+}
+
+func testAccConsulConfigEntry_ServiceConfigL7b(extraConf string) string {
+	return `
+resource "consul_config_entry" "sd" {
+	name = "api"
+	kind = "service-defaults"
+
+	config_json = jsonencode({
+		Protocol = "http"
+	})
+}
+
+resource "consul_config_entry" "service_intentions" {
+	name = consul_config_entry.sd.name
+	kind = "service-intentions"
+
+	config_json = jsonencode({
+		Sources = [
+			{
+				Name        = "admin-dashboard"
+				Permissions = [
+					{
+						Action = "allow"
+						HTTP = {
+							Methods    = ["GET", "PUT", "POST", "DELETE", "HEAD"]
+							PathPrefix = "/v2"
+						}
+					}
+				],
+				Precedence = 9
+				Type = "consul"
+			},
+			{
+				Name = "report-generator"
+				Permissions = [
+					{
+						Action = "allow"
+						HTTP = {
+							Methods = ["GET"]
+							PathPrefix = "/v2/widgets"
+						}
+					}
+				],
+				Precedence = 9,
+				Type = "consul"
+			}
+		]
+	})
+}
+`
+}
+
+func testAccConsulConfigEntry_ServiceConfigL7gRPC(extraConf string) string {
+	return `
+resource "consul_config_entry" "sd" {
+	name = "billing"
+	kind = "service-defaults"
+
+	config_json = jsonencode({
+		Protocol = "grpc"
+	})
+}
+
+resource "consul_config_entry" "service_intentions" {
+	name = consul_config_entry.sd.name
+	kind = "service-intentions"
+
+	config_json = jsonencode({
+		Sources = [
+			{
+				Name = "frontend-web"
+				Permissions = [
+					{
+						Action = "deny"
+						HTTP = {
+							PathExact = "/mycompany.BillingService/IssueRefund"
+						}
+					},
+					{
+						Action = "allow"
+						HTTP = {
+							PathPrefix = "/mycompany.BillingService/"
+						}
+					}
+				],
+				Precedence = 9
+				Type = "consul"
+			},
+			{
+				Name = "support-portal"
+				Permissions = [
+					{
+						Action = "allow"
+						HTTP = {
+							PathPrefix = "/mycompany.BillingService/"
+						}
+					}
+				],
+				Precedence = 9
+				Type = "consul"
+			}
+		]
+	})
+}
+`
+}
+
+func testAccConsulConfigEntry_ServiceConfigL7Mixed(extraConf string) string {
+	return `
+resource "consul_config_entry" "sd" {
+	name = "api"
+	kind = "service-defaults"
+
+	config_json = jsonencode({
+		Protocol = "grpc"
+	})
+}
+
+resource "consul_config_entry" "service_intentions" {
+	name = consul_config_entry.sd.name
+	kind = "service-intentions"
+
+	config_json = jsonencode({
+		Sources = [
+			{
+				Action     = "deny"
+				Name       = "hackathon-project"
+				Precedence = 9
+				Type       = "consul"
+			},
+			{
+				Action     = "allow"
+				Name       = "web"
+				Precedence = 9
+				Type       = "consul"
+			},
+			{
+				Name = "nightly-reconciler"
+				Permissions = [
+					{
+						Action = "allow"
+						HTTP = {
+							Methods   = ["POST"]
+							PathExact = "/v1/reconcile-data"
+						}
+					}
+				]
+				Precedence = 9
+				Type       = "consul"
+			}
+		]
+	})
+}
+`
 }
