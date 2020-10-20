@@ -24,6 +24,7 @@ type Config struct {
 	CAPath        string `mapstructure:"ca_path"`
 	InsecureHttps bool   `mapstructure:"insecure_https"`
 	Namespace     string `mapstructure:"namespace"`
+	client        *consulapi.Client
 }
 
 // Client returns a new client for accessing consul.
