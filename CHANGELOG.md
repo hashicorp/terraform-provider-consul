@@ -1,4 +1,9 @@
 ## 2.10.1 (Unreleased)
+
+BUG FIXES:
+
+* The same API client is now reused accross all operations
+
 ## 2.10.0 (September 18, 2020)
 
 NEW FEATURES:
