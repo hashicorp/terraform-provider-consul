@@ -43,7 +43,7 @@ data "consul_keys" "app" {
 
 # Use our variable from Consul
 resource "aws_instance" "app" {
-  ami = "${data.consul_keys.app.var.ami}"
+  ami = data.consul_keys.app.var.ami
 }
 ```
 
