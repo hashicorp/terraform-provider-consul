@@ -1,3 +1,9 @@
+## 2.11.0 (Unreleased)
+
+NEW FEATURES:
+
+* The `consul_config_entry` can now be used to manage Consul service intentions ([[#232](https://github.com/hashicorp/terraform-provider-consul/issues/232)] and [[#235](https://github.com/hashicorp/terraform-provider-consul/issues/235)]).
+
 ## 2.10.1 (October 22, 2020)
 
 BUG FIXES:
