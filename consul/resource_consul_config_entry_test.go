@@ -23,7 +23,7 @@ func TestAccConsulConfigEntry_basic(t *testing.T) {
 	extraConf := ""
 	configJSONServiceDefaults := "{\"Expose\":{},\"MeshGateway\":{},\"Protocol\":\"https\"}"
 	configJSONProxyDefaults := "{\"Config\":{\"foo\":\"bar\"},\"Expose\":{},\"MeshGateway\":{}}"
-	configJSONServiceRouter := "{\"Routes\":[{\"Destination\":{\"Service\":\"admin\"},\"Match\":{\"HTTP\":{\"PathPrefix\":\"/admin\"}}}]}"
+	configJSONServiceRouter := "{\"Routes\":[{\"Destination\":{\"Namespace\":\"default\",\"Service\":\"admin\"},\"Match\":{\"HTTP\":{\"PathPrefix\":\"/admin\"}}}]}"
 	configJSONServiceSplitter := "{\"Splits\":[{\"ServiceSubset\":\"v1\",\"Weight\":90},{\"ServiceSubset\":\"v2\",\"Weight\":10}]}"
 	configJSONServiceResolver := "{\"DefaultSubset\":\"v1\",\"Subsets\":{\"v1\":{\"Filter\":\"Service.Meta.version == v1\"},\"v2\":{\"Filter\":\"Service.Meta.version == v2\"}}}"
 	configJSONIngressGateway := "{\"Listeners\":[{\"Port\":8000,\"Protocol\":\"http\",\"Services\":[{\"Hosts\":null,\"Name\":\"*\"}]}],\"TLS\":{\"Enabled\":true}}"
@@ -33,7 +33,7 @@ func TestAccConsulConfigEntry_basic(t *testing.T) {
 		extraConf = `Namespace: "default"`
 		configJSONServiceDefaults = "{\"Expose\":{},\"MeshGateway\":{},\"Namespace\":\"default\",\"Protocol\":\"https\"}"
 		configJSONProxyDefaults = "{\"Config\":{\"foo\":\"bar\"},\"Expose\":{},\"MeshGateway\":{},\"Namespace\":\"default\"}"
-		configJSONServiceRouter = "{\"Namespace\":\"default\",\"Routes\":[{\"Destination\":{\"Service\":\"admin\"},\"Match\":{\"HTTP\":{\"PathPrefix\":\"/admin\"}}}]}"
+		configJSONServiceRouter = "{\"Namespace\":\"default\",\"Routes\":[{\"Destination\":{\"Namespace\":\"default\",\"Service\":\"admin\"},\"Match\":{\"HTTP\":{\"PathPrefix\":\"/admin\"}}}]}"
 		configJSONServiceSplitter = "{\"Namespace\":\"default\",\"Splits\":[{\"ServiceSubset\":\"v1\",\"Weight\":90},{\"ServiceSubset\":\"v2\",\"Weight\":10}]}"
 		configJSONServiceResolver = "{\"DefaultSubset\":\"v1\",\"Namespace\":\"default\",\"Subsets\":{\"v1\":{\"Filter\":\"Service.Meta.version == v1\"},\"v2\":{\"Filter\":\"Service.Meta.version == v2\"}}}"
 		configJSONIngressGateway = "{\"Listeners\":[{\"Port\":8000,\"Protocol\":\"http\",\"Services\":[{\"Hosts\":null,\"Name\":\"*\",\"Namespace\":\"default\"}]}],\"Namespace\":\"default\",\"TLS\":{\"Enabled\":true}}"
@@ -265,7 +265,8 @@ resource "consul_config_entry" "service_router" {
 				}
 
 				Destination = {
-					Service = consul_config_entry.admin_service_defaults.name
+					Namespace = "default"
+					Service   = consul_config_entry.admin_service_defaults.name
 				}
 			}
 			# NOTE: a default catch-all will send unmatched traffic to "web"
@@ -417,20 +418,23 @@ resource "consul_config_entry" "terminating_gateway" {
 }
 
 func testAccConsulConfigEntry_ServiceConfigL4(extraConf string) string {
-	return `
+	return fmt.Sprintf(`
 resource "consul_config_entry" "service_intentions" {
 	name = "api-service"
 	kind = "service-intentions"
 
 	config_json = jsonencode({
+		%s
 		Sources = [
 			{
+				%s
 				Action     = "allow"
 				Name       = "frontend-webapp"
 				Precedence = 9
 				Type       = "consul"
 			},
             {
+				%s
 				Action     = "allow"
 				Name       = "nightly-cronjob"
 				Precedence = 9
@@ -439,16 +443,17 @@ resource "consul_config_entry" "service_intentions" {
 		]
 	})
 }
-`
+`, extraConf, extraConf, extraConf)
 }
 
 func testAccConsulConfigEntry_ServiceConfigL7(extraConf string) string {
-	return `
+	return fmt.Sprintf(`
 resource "consul_config_entry" "sd" {
 	name = "fort-knox"
 	kind = "service-defaults"
 
 	config_json = jsonencode({
+		%s
 		Protocol = "http"
 	})
 }
@@ -458,8 +463,10 @@ resource "consul_config_entry" "service_intentions" {
 	kind = "service-intentions"
 
 	config_json = jsonencode({
+		%s
 		Sources = [
 			{
+				%s
 				Name        = "contractor-webapp"
 				Permissions = [
 					{
@@ -474,6 +481,7 @@ resource "consul_config_entry" "service_intentions" {
 				Type       = "consul"
 			},
 			{
+				%s
 				Name        = "admin-dashboard-webapp",
 				Permissions = [
 					{
@@ -495,16 +503,17 @@ resource "consul_config_entry" "service_intentions" {
 		]
 	})
 }
-`
+`, extraConf, extraConf, extraConf, extraConf)
 }
 
 func testAccConsulConfigEntry_ServiceConfigL7b(extraConf string) string {
-	return `
+	return fmt.Sprintf(`
 resource "consul_config_entry" "sd" {
 	name = "api"
 	kind = "service-defaults"
 
 	config_json = jsonencode({
+		%s
 		Protocol = "http"
 	})
 }
@@ -514,8 +523,10 @@ resource "consul_config_entry" "service_intentions" {
 	kind = "service-intentions"
 
 	config_json = jsonencode({
+		%s
 		Sources = [
 			{
+				%s
 				Name        = "admin-dashboard"
 				Permissions = [
 					{
@@ -530,6 +541,7 @@ resource "consul_config_entry" "service_intentions" {
 				Type = "consul"
 			},
 			{
+				%s
 				Name = "report-generator"
 				Permissions = [
 					{
@@ -546,16 +558,17 @@ resource "consul_config_entry" "service_intentions" {
 		]
 	})
 }
-`
+`, extraConf, extraConf, extraConf, extraConf)
 }
 
 func testAccConsulConfigEntry_ServiceConfigL7gRPC(extraConf string) string {
-	return `
+	return fmt.Sprintf(`
 resource "consul_config_entry" "sd" {
 	name = "billing"
 	kind = "service-defaults"
 
 	config_json = jsonencode({
+		%s
 		Protocol = "grpc"
 	})
 }
@@ -565,8 +578,10 @@ resource "consul_config_entry" "service_intentions" {
 	kind = "service-intentions"
 
 	config_json = jsonencode({
+		%s
 		Sources = [
 			{
+				%s
 				Name = "frontend-web"
 				Permissions = [
 					{
@@ -586,6 +601,7 @@ resource "consul_config_entry" "service_intentions" {
 				Type = "consul"
 			},
 			{
+				%s
 				Name = "support-portal"
 				Permissions = [
 					{
@@ -601,16 +617,17 @@ resource "consul_config_entry" "service_intentions" {
 		]
 	})
 }
-`
+`, extraConf, extraConf, extraConf, extraConf)
 }
 
 func testAccConsulConfigEntry_ServiceConfigL7Mixed(extraConf string) string {
-	return `
+	return fmt.Sprintf(`
 resource "consul_config_entry" "sd" {
 	name = "api"
 	kind = "service-defaults"
 
 	config_json = jsonencode({
+		%s
 		Protocol = "grpc"
 	})
 }
@@ -620,20 +637,24 @@ resource "consul_config_entry" "service_intentions" {
 	kind = "service-intentions"
 
 	config_json = jsonencode({
+		%s
 		Sources = [
 			{
+				%s
 				Action     = "deny"
 				Name       = "hackathon-project"
 				Precedence = 9
 				Type       = "consul"
 			},
 			{
+				%s
 				Action     = "allow"
 				Name       = "web"
 				Precedence = 9
 				Type       = "consul"
 			},
 			{
+				%s
 				Name = "nightly-reconciler"
 				Permissions = [
 					{
@@ -650,5 +671,5 @@ resource "consul_config_entry" "service_intentions" {
 		]
 	})
 }
-`
+`, extraConf, extraConf, extraConf, extraConf, extraConf)
 }

@@ -71,7 +71,7 @@ func TestAccConsulIntention_namespaceCE(t *testing.T) {
 		PreCheck:  func() { skipTestOnConsulEnterpriseEdition(t) },
 		Steps: []resource.TestStep{
 			{
-				Config:      testAccConsulIntentionConfigNamespace,
+				Config:      testAccConsulIntentionConfigNamespaceCE,
 				ExpectError: regexp.MustCompile("Namespaces is a Consul Enterprise feature"),
 			},
 		},
@@ -84,7 +84,7 @@ func TestAccConsulIntention_namespaceEE(t *testing.T) {
 		PreCheck:  func() { skipTestOnConsulCommunityEdition(t) },
 		Steps: []resource.TestStep{
 			{
-				Config: testAccConsulIntentionConfigNamespace,
+				Config: testAccConsulIntentionConfigNamespaceEE,
 			},
 		},
 	})
@@ -168,12 +168,27 @@ resource "consul_intention" "example" {
 }
 `
 
-const testAccConsulIntentionConfigNamespace = `
+const testAccConsulIntentionConfigNamespaceCE = `
 resource "consul_intention" "example" {
 	source_name           = "api"
 	source_namespace      = "ns"
 	destination_name      = "db"
 	destination_namespace = "ns"
+
+	action = "allow"
+}
+`
+
+const testAccConsulIntentionConfigNamespaceEE = `
+resource "consul_namespace" "ns" {
+	name = "ns"
+}
+
+resource "consul_intention" "example" {
+	source_name           = "api"
+	source_namespace      = consul_namespace.ns.name
+	destination_name      = "db"
+	destination_namespace = consul_namespace.ns.name
 
 	action = "allow"
 }
