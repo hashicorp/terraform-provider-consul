@@ -170,18 +170,16 @@ func providerConfigure(d *schema.ResourceData) (interface{}, error) {
 		return nil, err
 	}
 	log.Printf("[INFO] Initializing Consul client")
-	if _, err := config.Client(); err != nil {
-		// The provider must error if the configuration is incorrect. We must
-		// check this here.
+	client, err := config.Client()
+	if err != nil {
 		return nil, err
 	}
+	config.client = client
 	return config, nil
 }
 
 func getClient(meta interface{}) *consulapi.Client {
-	// We can ignore err since we checked the configuration in providerConfigure()
-	client, _ := meta.(*Config).Client()
-	return client
+	return meta.(*Config).client
 }
 
 func getNamespace(d *schema.ResourceData, meta interface{}) string {
