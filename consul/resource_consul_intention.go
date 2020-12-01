@@ -18,6 +18,9 @@ func resourceConsulIntention() *schema.Resource {
 			State: schema.ImportStatePassthrough,
 		},
 
+		DeprecationMessage: `The consul_intention resource is deprecated in favor of the consul_config_entry resource.
+Please see https://registry.terraform.io/providers/hashicorp/consul/latest/docs/guides/upgrading#upgrading-to-2110 on instructions to upgrade.`,
+
 		Schema: map[string]*schema.Schema{
 			"source_name": {
 				Type:     schema.TypeString,
@@ -39,11 +42,13 @@ func resourceConsulIntention() *schema.Resource {
 
 			"destination_name": {
 				Type:     schema.TypeString,
+				ForceNew: true,
 				Required: true,
 			},
 
 			"destination_namespace": {
 				Type:     schema.TypeString,
+				ForceNew: true,
 				Optional: true,
 				Default:  "default",
 			},

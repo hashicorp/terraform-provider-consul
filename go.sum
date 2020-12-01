@@ -88,9 +88,13 @@ github.com/hashicorp/consul/api v1.5.0 h1:Yo2bneoGy68A7aNwmuETFnPhjyBEm7n3vzRacE
 github.com/hashicorp/consul/api v1.5.0/go.mod h1:LqwrLNW876eYSuUOo4ZLHBcdKc038txr/IMfbLPATa4=
 github.com/hashicorp/consul/api v1.7.0 h1:tGs8Oep67r8CcA2Ycmb/8BLBcJ70St44mF2X10a/qPg=
 github.com/hashicorp/consul/api v1.7.0/go.mod h1:1NSuaUUkFaJzMasbfq/11wKYWSR67Xn6r2DXKhuDNFg=
+github.com/hashicorp/consul/api v1.8.0 h1:/djwFfq2mSyZeP6iqRpmYUzsJtzG5I9SlP3FJvSlbTE=
+github.com/hashicorp/consul/api v1.8.0/go.mod h1:sDjTOq0yUyv5G4h+BqSea7Fn6BU+XbolEz1952UB+mk=
 github.com/hashicorp/consul/sdk v0.5.0 h1:WC4594Wp/LkEeML/OdQKEC1yqBmEYkRp6i7X5u0zDAs=
 github.com/hashicorp/consul/sdk v0.5.0/go.mod h1:fY08Y9z5SvJqevyZNy6WWPXiG3KwBPAvlcdx16zZ0fM=
 github.com/hashicorp/consul/sdk v0.6.0/go.mod h1:fY08Y9z5SvJqevyZNy6WWPXiG3KwBPAvlcdx16zZ0fM=
+github.com/hashicorp/consul/sdk v0.7.0 h1:H6R9d008jDcHPQPAqPNuydAshJ4v5/8URdFnUvK/+sc=
+github.com/hashicorp/consul/sdk v0.7.0/go.mod h1:fY08Y9z5SvJqevyZNy6WWPXiG3KwBPAvlcdx16zZ0fM=
 github.com/hashicorp/errwrap v0.0.0-20180715044906-d6c0cd880357/go.mod h1:YH+1FKiLXxHSkmPseP+kNlulaMuP3n2brvKWEqk/Jc4=
 github.com/hashicorp/errwrap v1.0.0 h1:hLrqtEDnRye3+sgx6z4qVLNuviH3MR5aQ0ykNJa/UYA=
 github.com/hashicorp/errwrap v1.0.0/go.mod h1:YH+1FKiLXxHSkmPseP+kNlulaMuP3n2brvKWEqk/Jc4=
@@ -150,6 +154,7 @@ github.com/hashicorp/logutils v1.0.0/go.mod h1:QIAnNjmIWmVIIkWDTG1z5v++HQmx9WQRO
 github.com/hashicorp/mdns v1.0.1/go.mod h1:4gW7WsVCke5TE7EPeYliwHlRUyBtfCwuFwuMg2DmyNY=
 github.com/hashicorp/memberlist v0.2.0 h1:WeeNspppWi5s1OFefTviPQueC/Bq8dONfvNjPhiEQKE=
 github.com/hashicorp/memberlist v0.2.0/go.mod h1:MS2lj3INKhZjWNqd3N0m3J+Jxf3DAOnAH9VT3Sh9MUE=
+github.com/hashicorp/memberlist v0.2.2 h1:5+RffWKwqJ71YPu9mWsF7ZOscZmwfasdA8kbdC7AO2g=
 github.com/hashicorp/memberlist v0.2.2/go.mod h1:MS2lj3INKhZjWNqd3N0m3J+Jxf3DAOnAH9VT3Sh9MUE=
 github.com/hashicorp/serf v0.9.0 h1:+Zd/16AJ9lxk9RzfTDyv/TLhZ8UerqYS0/+JGCIDaa0=
 github.com/hashicorp/serf v0.9.0/go.mod h1:YL0HO+FifKOW2u1ke99DGVu1zhcpZzNwrLIqBC7vbYU=
