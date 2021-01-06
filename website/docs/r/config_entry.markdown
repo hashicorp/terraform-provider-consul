@@ -106,28 +106,108 @@ resource "consul_config_entry" "service_router" {
 }
 
 resource "consul_config_entry" "ingress_gateway" {
-	name = "us-east-ingress"
-	kind = "ingress-gateway"
+  name = "us-east-ingress"
+  kind = "ingress-gateway"
 
-	config_json = jsonencode({
-		TLS = {
-			Enabled = true
-		}
-		Listeners = [{
-			Port     = 8000
-			Protocol = "http"
-			Services = [{ Name  = "*" }]
-		}]
-	})
+  config_json = jsonencode({
+    TLS = {
+      Enabled = true
+    }
+    Listeners = [{
+      Port     = 8000
+      Protocol = "http"
+      Services = [{ Name  = "*" }]
+    }]
+  })
 }
 
 resource "consul_config_entry" "terminating_gateway" {
-	name = "us-west-gateway"
-	kind = "terminating-gateway"
+  name = "us-west-gateway"
+  kind = "terminating-gateway"
 
-	config_json = jsonencode({
-		Services = [{ Name = "billing" }]
-	})
+  config_json = jsonencode({
+    Services = [{ Name = "billing" }]
+  })
+}
+```
+
+### `service-intentions` config entry
+
+```hcl
+resource "consul_config_entry" "service_intentions" {
+  name = "api-service"
+  kind = "service-intentions"
+
+  config_json = jsonencode({
+    Sources = [
+      {
+        Action     = "allow"
+        Name       = "frontend-webapp"
+        Precedence = 9
+        Type       = "consul"
+      },
+      {
+        Action     = "allow"
+        Name       = "nightly-cronjob"
+        Precedence = 9
+        Type       = "consul"
+      }
+    ]
+  })
+}
+```
+
+```hcl
+resource "consul_config_entry" "sd" {
+  name = "fort-knox"
+  kind = "service-defaults"
+
+  config_json = jsonencode({
+    Protocol = "http"
+  })
+}
+
+resource "consul_config_entry" "service_intentions" {
+  name = consul_config_entry.sd.name
+  kind = "service-intentions"
+
+  config_json = jsonencode({
+    Sources = [
+      {
+        Name        = "contractor-webapp"
+        Permissions = [
+          {
+            Action = "allow"
+            HTTP   = {
+              Methods   = ["GET", "HEAD"]
+              PathExact = "/healtz"
+            }
+          }
+        ]
+        Precedence = 9
+        Type       = "consul"
+      },
+      {
+        Name        = "admin-dashboard-webapp",
+        Permissions = [
+          {
+            Action = "deny",
+            HTTP = {
+              PathPrefix= "/debugz"
+            }
+          },
+          {
+            Action= "allow"
+            HTTP = {
+              PathPrefix= "/"
+            }
+          }
+        ],
+        Precedence = 9
+        Type       = "consul"
+      }
+    ]
+  })
 }
 ```
 

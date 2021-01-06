@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"reflect"
 	"strings"
+	"time"
 
 	consulapi "github.com/hashicorp/consul/api"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
@@ -53,7 +54,7 @@ func resourceConsulConfigEntryUpdate(d *schema.ResourceData, meta interface{}) e
 
 	wOpts := &consulapi.WriteOptions{}
 	if _, _, err := configEntries.Set(configEntry, wOpts); err != nil {
-		return fmt.Errorf("Failed to set '%s' config entry: %#v", name, err)
+		return fmt.Errorf("Failed to set '%s' config entry: %v", name, err)
 	}
 	qOpts := &consulapi.QueryOptions{}
 	_, _, err = configEntries.Get(configEntry.GetKind(), configEntry.GetName(), qOpts)
@@ -208,7 +209,10 @@ func decodeConfigEntry(raw map[string]interface{}) (consulapi.ConfigEntry, error
 	}
 
 	decodeConf := &mapstructure.DecoderConfig{
-		DecodeHook:       mapstructure.StringToTimeDurationHookFunc(),
+		DecodeHook: mapstructure.ComposeDecodeHookFunc(
+			mapstructure.StringToTimeDurationHookFunc(),
+			mapstructure.StringToTimeHookFunc(time.RFC3339),
+		),
 		Result:           &entry,
 		WeaklyTypedInput: true,
 		ErrorUnused:      true,

@@ -12,6 +12,37 @@ This page includes details on our compatibility promise and guidelines to
 follow when upgrading between versions of the provider. Whenever possible,
 we recommend verifying upgrades in isolated test environments.
 
+## Upgrading to 2.11.0
+
+The `consul_config_entry` resource now supports the `service-intentions` kind to
+define configuration entries. The `consul_intention` resource used to manage
+Consul intentions until Consul 1.9 have now been deprecated. It is recommended
+to migrate `consul_intention` to `consul_config_entry`:
+
+```terraform
+# This was correct in version 2.10.0
+resource "consul_intention" "database" {
+  source_name      = "api"
+  destination_name = "db"
+  action           = "allow"
+}
+
+# This is now the correct configuration starting version 2.11.0
+resource "consul_config_entry" "database" {
+  name = "db"
+  kind = "service-intentions"
+
+  config_json = jsonencode({
+    Sources = [{
+      Action     = "allow"
+      Name       = "api"
+      Precedence = 9
+      Type       = "consul"
+    }]
+  })
+}
+```
+
 ## Upgrading to 2.4.0
 
 ### Changes to consul_service
@@ -23,22 +54,22 @@ can be done by setting the meta attribute on the `consul_node` resource:
 ``` terraform
 # This was working in 2.3.0
 resource "consul_node" "compute" {
-	name    = "compute-example"
-	address = "www.hashicorptest.com"
+  name    = "compute-example"
+  address = "www.hashicorptest.com"
 }
 
 resource "consul_service" "example1" {
-	name = "example"
-	node = "${consul_node.compute.name}"
-	port = 80
+  name = "example"
+  node = "${consul_node.compute.name}"
+  port = 80
 
-	external = true
+  external = true
 }
 
 # This is working in 2.4.0
 resource "consul_node" "compute" {
-	name    = "compute-example"
-	address = "www.hashicorptest.com"
+  name    = "compute-example"
+  address = "www.hashicorptest.com"
 
   meta = {
     "external-node" = "true"
@@ -47,9 +78,9 @@ resource "consul_node" "compute" {
 }
 
 resource "consul_service" "example1" {
-	name = "example"
-	node = "${consul_node.compute.name}"
-	port = 80
+  name = "example"
+  node = "${consul_node.compute.name}"
+  port = 80
 }
 ```
 
