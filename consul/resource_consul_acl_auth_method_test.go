@@ -139,13 +139,14 @@ resource "consul_acl_auth_method" "test" {
 	name        = "auth_method"
     type        = "kubernetes"
 
-	config = {
+	config_json  = jsonencode({
         Host = "https://localhost:8443"
 		CACert = <<-EOF
 ` + testCert2 + `
 		EOF
         ServiceAccountJWT = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0IiwibmFtZSI6InRlc3QiLCJpYXQiOjE1MTYyMzkwMjJ9.uOnQsCs6ZAqj2F1VMA09tdgRZyFT1GQH2DwIC4TTn-A"
     }
+	)
 }`
 
 const testResourceACLAuthMethodConfigBasicConfigJSON = `
