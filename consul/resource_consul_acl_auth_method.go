@@ -3,7 +3,6 @@ package consul
 import (
 	"encoding/json"
 	"fmt"
-	"log"
 	"time"
 
 	consulapi "github.com/hashicorp/consul/api"
