@@ -3,6 +3,7 @@ package consul
 import (
 	"fmt"
 	"log"
+	"net/http"
 	"strings"
 
 	consulapi "github.com/hashicorp/consul/api"
@@ -109,6 +110,27 @@ func Provider() terraform.ResourceProvider {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
+
+			"headers": {
+				Type:        schema.TypeList,
+				Optional:    true,
+				Sensitive:   true,
+				Description: "The headers to send with each Consul request.",
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"name": {
+							Type:        schema.TypeString,
+							Required:    true,
+							Description: "The header name",
+						},
+						"value": {
+							Type:        schema.TypeString,
+							Required:    true,
+							Description: "The header value",
+						},
+					},
+				},
+			},
 		},
 
 		DataSourcesMap: map[string]*schema.Resource{
@@ -176,6 +198,22 @@ func providerConfigure(d *schema.ResourceData) (interface{}, error) {
 		return nil, err
 	}
 	config.client = client
+
+	// Set headers if provided
+	headers := d.Get("headers").([]interface{})
+	parsedHeaders := client.Headers().Clone()
+
+	if parsedHeaders == nil {
+		parsedHeaders = make(http.Header)
+	}
+
+	for _, h := range headers {
+		header := h.(map[string]interface{})
+		if name, ok := header["name"]; ok {
+			parsedHeaders.Add(name.(string), header["value"].(string))
+		}
+	}
+	client.SetHeaders(parsedHeaders)
 	return config, nil
 }
 
