@@ -1,11 +1,13 @@
 package consul
 
 import (
+	"fmt"
 	"io/ioutil"
 	"os"
 	"strings"
 	"testing"
 
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 )
@@ -227,4 +229,41 @@ func skipTestOnConsulEnterpriseEdition(t *testing.T) {
 	if !serverIsConsulCommunityEdition(t) {
 		t.Skip("Test skipped on Consul Enterprise Edition. Use a Consul Community server to run this test.")
 	}
+}
+
+func TestTokenReadProviderConfigureWithHeaders(t *testing.T) {
+	rootProvider := Provider().(*schema.Provider)
+
+	rootProviderResource := &schema.Resource{
+		Schema: rootProvider.Schema,
+	}
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() { testAccPreCheck(t) },
+		Steps: []resource.TestStep{
+			{
+				Config: testHeaderConfig("auth", "123"),
+			},
+		},
+	})
+
+	rootProviderData := rootProviderResource.TestResourceData()
+	if _, err := providerConfigure(rootProviderData); err != nil {
+		t.Fatal(err)
+	}
+}
+
+func testHeaderConfig(headerName, headerValue string) string {
+	providerConfig := fmt.Sprintf(`
+ 	provider "consul" {
+ 		headers {
+ 			name  = "%s" 
+ 			value = "%s"
+ 		}
+ 	}
+
+	data "consul_key_prefix" "read" {
+		path_prefix = "foo/"
+	}
+ 	`, headerName, headerValue)
+	return providerConfig
 }
