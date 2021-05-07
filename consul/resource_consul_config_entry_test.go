@@ -31,13 +31,13 @@ func TestAccConsulConfigEntry_basic(t *testing.T) {
 
 	if !serverIsConsulCommunityEdition(t) {
 		extraConf = `Namespace: "default"`
-		configJSONServiceDefaults = "{\"Expose\":{},\"MeshGateway\":{},\"Namespace\":\"default\",\"Protocol\":\"https\"}"
-		configJSONProxyDefaults = "{\"Config\":{\"foo\":\"bar\"},\"Expose\":{},\"MeshGateway\":{},\"Namespace\":\"default\"}"
-		configJSONServiceRouter = "{\"Namespace\":\"default\",\"Routes\":[{\"Destination\":{\"Namespace\":\"default\",\"Service\":\"admin\"},\"Match\":{\"HTTP\":{\"PathPrefix\":\"/admin\"}}}]}"
-		configJSONServiceSplitter = "{\"Namespace\":\"default\",\"Splits\":[{\"ServiceSubset\":\"v1\",\"Weight\":90},{\"ServiceSubset\":\"v2\",\"Weight\":10}]}"
-		configJSONServiceResolver = "{\"DefaultSubset\":\"v1\",\"Namespace\":\"default\",\"Subsets\":{\"v1\":{\"Filter\":\"Service.Meta.version == v1\"},\"v2\":{\"Filter\":\"Service.Meta.version == v2\"}}}"
-		configJSONIngressGateway = "{\"Listeners\":[{\"Port\":8000,\"Protocol\":\"http\",\"Services\":[{\"Hosts\":null,\"Name\":\"*\",\"Namespace\":\"default\"}]}],\"Namespace\":\"default\",\"TLS\":{\"Enabled\":true}}"
-		configJSONTerminatingGateway = "{\"Namespace\":\"default\",\"Services\":[{\"Name\":\"billing\",\"Namespace\":\"default\"}]}"
+		configJSONServiceDefaults = "{\"Expose\":{},\"MeshGateway\":{},\"Protocol\":\"https\"}"
+		configJSONProxyDefaults = "{\"Config\":{\"foo\":\"bar\"},\"Expose\":{},\"MeshGateway\":{}}"
+		configJSONServiceRouter = "{\"Routes\":[{\"Destination\":{\"Namespace\":\"default\",\"Service\":\"admin\"},\"Match\":{\"HTTP\":{\"PathPrefix\":\"/admin\"}}}]}"
+		configJSONServiceSplitter = "{\"Splits\":[{\"ServiceSubset\":\"v1\",\"Weight\":90},{\"ServiceSubset\":\"v2\",\"Weight\":10}]}"
+		configJSONServiceResolver = "{\"DefaultSubset\":\"v1\",\"Subsets\":{\"v1\":{\"Filter\":\"Service.Meta.version == v1\"},\"v2\":{\"Filter\":\"Service.Meta.version == v2\"}}}"
+		configJSONIngressGateway = "{\"Listeners\":[{\"Port\":8000,\"Protocol\":\"http\",\"Services\":[{\"Hosts\":null,\"Name\":\"*\",\"Namespace\":\"default\"}]}],\"TLS\":{\"Enabled\":true}}"
+		configJSONTerminatingGateway = "{\"Services\":[{\"Name\":\"billing\",\"Namespace\":\"default\"}]}"
 	}
 
 	resource.Test(t, resource.TestCase{
@@ -166,6 +166,45 @@ func TestAccConsulConfigEntry_Errors(t *testing.T) {
 			{
 				Config:      testAccConsulConfigEntry_ProxyDefaultsWrongName,
 				ExpectError: regexp.MustCompile("failed to read config entry after setting it.\nThis may happen when some attributes have an unexpected value.\nRead the documentation at https://www.consul.io/docs/agent/config-entries/proxy-defaults.html\nto see what values are expected."),
+			},
+		},
+	})
+}
+
+func TestAccConsulConfigEntry_NamespaceCE(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:  func() { skipTestOnConsulEnterpriseEdition(t) },
+		Providers: testAccProviders,
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccConsulConfigEntry_DefaultNamespace,
+				ExpectError: namespaceEnterpriseFeature,
+			},
+		},
+	})
+}
+
+func TestAccConsulConfigEntry_NamespaceEE(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:  func() { skipTestOnConsulCommunityEdition(t) },
+		Providers: testAccProviders,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccConsulConfigEntry_DefaultNamespace,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("consul_config_entry.foo", "name", "foo"),
+					resource.TestCheckResourceAttr("consul_config_entry.foo", "namespace", "default"),
+					resource.TestCheckResourceAttr("consul_config_entry.foo", "kind", "service-defaults"),
+				),
+			},
+			{
+				Config: testAccConsulConfigEntry_Namespace,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("consul_config_entry.test_intentions", "name", "destination-service"),
+					resource.TestCheckResourceAttr("consul_config_entry.test_intentions", "namespace", "example"),
+					resource.TestCheckResourceAttr("consul_config_entry.test_intentions", "kind", "service-intentions"),
+					resource.TestCheckResourceAttr("consul_config_entry.test_intentions", "config_json", "{\"Meta\":{\"foo\":\"bar\"},\"Sources\":[{\"Action\":\"allow\",\"Name\":\"source-service\",\"Namespace\":\"example\",\"Precedence\":9,\"Type\":\"consul\"}]}"),
+				),
 			},
 		},
 	})
@@ -382,7 +421,6 @@ resource "consul_config_entry" "ingress_gateway" {
 	kind = "ingress-gateway"
 
 	config_json = jsonencode({
-		%s
 		TLS = {
 			Enabled = true
 		}
@@ -390,14 +428,14 @@ resource "consul_config_entry" "ingress_gateway" {
 			Port     = 8000
 			Protocol = "http"
 			Services = [{
-				Hosts = null
-				Name  = "*"
+				Hosts     = null
+				Name      = "*"
 				%s
 			}]
 		}]
 	})
 }
-`, extraConf, extraConf)
+`, extraConf)
 }
 
 func testAccConsulConfigEntry_TerminatingGateway(extraConf string) string {
@@ -407,14 +445,13 @@ resource "consul_config_entry" "terminating_gateway" {
 	kind = "terminating-gateway"
 
 	config_json = jsonencode({
-		%s
 		Services = [{
-			Name = "billing"
+			Name      = "billing"
 			%s
 		}]
 	})
 }
-`, extraConf, extraConf)
+`, extraConf)
 }
 
 func testAccConsulConfigEntry_ServiceConfigL4(extraConf string) string {
@@ -424,7 +461,6 @@ resource "consul_config_entry" "service_intentions" {
 	kind = "service-intentions"
 
 	config_json = jsonencode({
-		%s
 		Sources = [
 			{
 				%s
@@ -443,7 +479,7 @@ resource "consul_config_entry" "service_intentions" {
 		]
 	})
 }
-`, extraConf, extraConf, extraConf)
+`, extraConf, extraConf)
 }
 
 func testAccConsulConfigEntry_ServiceConfigL7(extraConf string) string {
@@ -453,7 +489,6 @@ resource "consul_config_entry" "sd" {
 	kind = "service-defaults"
 
 	config_json = jsonencode({
-		%s
 		Protocol = "http"
 	})
 }
@@ -463,7 +498,6 @@ resource "consul_config_entry" "service_intentions" {
 	kind = "service-intentions"
 
 	config_json = jsonencode({
-		%s
 		Sources = [
 			{
 				%s
@@ -503,7 +537,7 @@ resource "consul_config_entry" "service_intentions" {
 		]
 	})
 }
-`, extraConf, extraConf, extraConf, extraConf)
+`, extraConf, extraConf)
 }
 
 func testAccConsulConfigEntry_ServiceConfigL7b(extraConf string) string {
@@ -513,7 +547,6 @@ resource "consul_config_entry" "sd" {
 	kind = "service-defaults"
 
 	config_json = jsonencode({
-		%s
 		Protocol = "http"
 	})
 }
@@ -523,7 +556,6 @@ resource "consul_config_entry" "service_intentions" {
 	kind = "service-intentions"
 
 	config_json = jsonencode({
-		%s
 		Sources = [
 			{
 				%s
@@ -542,7 +574,7 @@ resource "consul_config_entry" "service_intentions" {
 			},
 			{
 				%s
-				Name = "report-generator"
+				Name      = "report-generator"
 				Permissions = [
 					{
 						Action = "allow"
@@ -558,7 +590,7 @@ resource "consul_config_entry" "service_intentions" {
 		]
 	})
 }
-`, extraConf, extraConf, extraConf, extraConf)
+`, extraConf, extraConf)
 }
 
 func testAccConsulConfigEntry_ServiceConfigL7gRPC(extraConf string) string {
@@ -568,7 +600,6 @@ resource "consul_config_entry" "sd" {
 	kind = "service-defaults"
 
 	config_json = jsonencode({
-		%s
 		Protocol = "grpc"
 	})
 }
@@ -578,7 +609,6 @@ resource "consul_config_entry" "service_intentions" {
 	kind = "service-intentions"
 
 	config_json = jsonencode({
-		%s
 		Sources = [
 			{
 				%s
@@ -617,7 +647,7 @@ resource "consul_config_entry" "service_intentions" {
 		]
 	})
 }
-`, extraConf, extraConf, extraConf, extraConf)
+`, extraConf, extraConf)
 }
 
 func testAccConsulConfigEntry_ServiceConfigL7Mixed(extraConf string) string {
@@ -637,7 +667,6 @@ resource "consul_config_entry" "service_intentions" {
 	kind = "service-intentions"
 
 	config_json = jsonencode({
-		%s
 		Sources = [
 			{
 				%s
@@ -671,5 +700,47 @@ resource "consul_config_entry" "service_intentions" {
 		]
 	})
 }
-`, extraConf, extraConf, extraConf, extraConf, extraConf)
+`, extraConf, extraConf, extraConf, extraConf)
 }
+
+const testAccConsulConfigEntry_DefaultNamespace = `
+resource "consul_config_entry" "foo" {
+	name      = "foo"
+	kind      = "service-defaults"
+	namespace = "default"
+
+	config_json = jsonencode({
+		MeshGateway = {}
+		Protocol    = "https"
+		Namespace   = "default"
+	})
+}
+`
+
+const testAccConsulConfigEntry_Namespace = `
+resource "consul_namespace" "example_namespace" {
+	name = "example"
+	description = "Example namespace"
+}
+
+resource "consul_config_entry" "test_intentions" {
+	name = "destination-service"
+	kind = "service-intentions"
+	namespace = consul_namespace.example_namespace.name
+
+	config_json = jsonencode({
+		Sources = [
+		  {
+			Action     = "allow"
+			Name       = "source-service"
+			Namespace  = "example"
+			Precedence = 9
+			Type       = "consul"
+		  }
+		]
+		Meta = {
+			foo = "bar"
+		}
+	  })
+}
+`
