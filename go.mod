@@ -15,4 +15,4 @@ require (
 
 replace github.com/hashicorp/consul => github.com/hashicorp/consul v1.5.0
 
-go 1.12
+go 1.16
