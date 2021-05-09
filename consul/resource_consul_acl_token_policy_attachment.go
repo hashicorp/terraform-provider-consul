@@ -78,7 +78,7 @@ func resourceConsulACLTokenPolicyAttachmentRead(d *schema.ResourceData, meta int
 	id := d.Id()
 	log.Printf("[DEBUG] Reading ACL token policy attachment '%q'", id)
 
-	tokenID, policyName, err := parseTwoPartID(id)
+	tokenID, policyName, err := parseTwoPartID(id, "policy")
 	if err != nil {
 		return fmt.Errorf("Invalid ACL token policy attachment id '%q'", id)
 	}
@@ -124,7 +124,7 @@ func resourceConsulACLTokenPolicyAttachmentDelete(d *schema.ResourceData, meta i
 	id := d.Id()
 	log.Printf("[DEBUG] Reading ACL token policy attachment '%q'", id)
 
-	tokenID, policyName, err := parseTwoPartID(id)
+	tokenID, policyName, err := parseTwoPartID(id, "policy")
 	if err != nil {
 		return fmt.Errorf("Invalid ACL token policy attachment id '%q'", id)
 	}
@@ -151,10 +151,10 @@ func resourceConsulACLTokenPolicyAttachmentDelete(d *schema.ResourceData, meta i
 }
 
 // return the pieces of id `a:b` as a, b
-func parseTwoPartID(id string) (string, string, error) {
+func parseTwoPartID(id, name string) (string, string, error) {
 	parts := strings.SplitN(id, ":", 2)
 	if len(parts) != 2 {
-		return "", "", fmt.Errorf("Unexpected ID format (%q). Expected token_id:policy_name", id)
+		return "", "", fmt.Errorf("Unexpected ID format (%q). Expected token_id:%s_name", id, name)
 	}
 
 	return parts[0], parts[1], nil

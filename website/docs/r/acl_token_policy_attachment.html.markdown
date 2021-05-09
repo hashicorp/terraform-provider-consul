@@ -8,7 +8,7 @@ description: |-
 
 # consul_acl_token_policy_attachment
 
-The `consul_acl_token_attachment` resource links a Consul Token and an ACL
+The `consul_acl_token_policy_attachment` resource links a Consul Token and an ACL
 policy. The link is implemented through an update to the Consul ACL token.
 
 ~> **NOTE:** This resource is only useful to attach policies to an ACL token
