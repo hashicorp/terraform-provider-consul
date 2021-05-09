@@ -147,7 +147,7 @@ resource "consul_acl_policy" "test" {
 
 resource "consul_acl_token" "test" {
   description = "test"
-  policies    = ["${consul_acl_policy.test.name}"]
+  policies    = [consul_acl_policy.test.name]
   local       = true
   namespace   = consul_namespace.test.name
 }
