@@ -16,6 +16,15 @@ func resourceConsulACLAuthMethod() *schema.Resource {
 		Update: resourceConsulACLAuthMethodUpdate,
 		Delete: resourceConsulACLAuthMethodDelete,
 
+		CustomizeDiff: func(d *schema.ResourceDiff, meta interface{}) error {
+			new := d.Get("config").(map[string]interface{})
+			jsonNew := d.Get("config_json").(string)
+			if len(new) == 0 && jsonNew == "" {
+				return fmt.Errorf("One of 'config' or 'config_json' must be set")
+			}
+			return nil
+		},
+
 		Schema: map[string]*schema.Schema{
 			"name": {
 				Type:        schema.TypeString,
@@ -76,6 +85,9 @@ func resourceConsulACLAuthMethod() *schema.Resource {
 					Type: schema.TypeString,
 				},
 				ConflictsWith: []string{"config_json"},
+				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+					return new == "" || new == "0"
+				},
 			},
 
 			"config_json": {
@@ -84,8 +96,7 @@ func resourceConsulACLAuthMethod() *schema.Resource {
 				Description:   "The raw configuration for this ACL auth method.",
 				ConflictsWith: []string{"config"},
 				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-					config := d.Get("config").(map[string]interface{})
-					return len(config) != 0
+					return new == "" || new == "0"
 				},
 			},
 
