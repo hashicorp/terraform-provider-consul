@@ -2,6 +2,8 @@ package consul
 
 import (
 	"fmt"
+	"regexp"
+	"strings"
 	"testing"
 
 	consulapi "github.com/hashicorp/consul/api"
@@ -17,6 +19,10 @@ func TestAccConsulACLAuthMethod_basic(t *testing.T) {
 		CheckDestroy: testAuthMethodDestroy,
 		Steps: []resource.TestStep{
 			{
+				Config:      testResourceACLAuthMethodConfigBasic_NoConfig,
+				ExpectError: regexp.MustCompile("One of 'config' or 'config_json' must be set"),
+			},
+			{
 				Config: testResourceACLAuthMethodConfigBasic,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("consul_acl_auth_method.test", "name", "minikube"),
@@ -29,6 +35,7 @@ func TestAccConsulACLAuthMethod_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("consul_acl_auth_method.test", "config.Host", "https://192.0.2.42:8443"),
 					resource.TestCheckResourceAttr("consul_acl_auth_method.test", "config.CACert", testCert+"\n"),
 					resource.TestCheckResourceAttr("consul_acl_auth_method.test", "config.ServiceAccountJWT", "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c"),
+					testAuthMethodCACert("minikube", testCert),
 				),
 			},
 			{
@@ -45,7 +52,16 @@ func TestAccConsulACLAuthMethod_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("consul_acl_auth_method.test", "config.CACert", testCert2+"\n"),
 					resource.TestCheckResourceAttr("consul_acl_auth_method.test", "config.ServiceAccountJWT", "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0IiwibmFtZSI6InRlc3QiLCJpYXQiOjE1MTYyMzkwMjJ9.uOnQsCs6ZAqj2F1VMA09tdgRZyFT1GQH2DwIC4TTn-A"),
 					resource.TestCheckResourceAttr("consul_acl_auth_method.test", "config_json", "{\"CACert\":\"-----BEGIN CERTIFICATE-----\\nMIIBsTCCARoCCQCOgZn2+rDWSDANBgkqhkiG9w0BAQsFADAdMQswCQYDVQQGEwJG\\nUjEOMAwGA1UECAwFUGFyaXMwHhcNMTkwNjI4MTA1NzA4WhcNMjAwNjI3MTA1NzA4\\nWjAdMQswCQYDVQQGEwJGUjEOMAwGA1UECAwFUGFyaXMwgZ8wDQYJKoZIhvcNAQEB\\nBQADgY0AMIGJAoGBAMMBf+kSoZYon8fGBWqoyY7QzPXbg3GWMt2bxVxc6EmV/tcN\\nPIWGFFlycjnzDWwaGqzdqWkUrfi/o1VdlQobnzr4i+qcZpxlrZi2oa7FmkJMimsX\\nVmjXaeqpZA4JXLUzGHi+oCl2zX8wVGaUf7avcUxI3FVLCiibjWofpOf2pyUTAgMB\\nAAEwDQYJKoZIhvcNAQELBQADgYEAMddaDm4csxGnT47sths8CDxtzNdBhIXVIOLy\\njfvmBQ0aqC46gaUEoqNSzBPTTKJQGHxlGrF6fcnoUyjMcgHYZDrVySgmQpcfL9Uo\\nh61wQqlvkoFb/qPC/gvxdoQKUcddd7IhEujJjaddo9TV0w4nYX4Cq2Ybd5N3hgED\\n8GuzduY=\\n-----END CERTIFICATE-----\\n\\n\",\"Host\":\"https://localhost:8443\",\"ServiceAccountJWT\":\"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0IiwibmFtZSI6InRlc3QiLCJpYXQiOjE1MTYyMzkwMjJ9.uOnQsCs6ZAqj2F1VMA09tdgRZyFT1GQH2DwIC4TTn-A\"}"),
+					testAuthMethodCACert("auth_method", testCert2),
 				),
+			},
+			{
+				Config: testResourceACLAuthMethodConfigBasic_ConfigJSON,
+				Check:  testAuthMethodCACert("auth_method", testCert),
+			},
+			{
+				Config: testResourceACLAuthMethodConfigBasic_ConfigJSONUpdate,
+				Check:  testAuthMethodCACert("auth_method", testCert2),
 			},
 			{
 				Config: testResourceACLAuthMethodConfigBasicConfigJSON,
@@ -100,6 +116,29 @@ func TestAccConsulACLAuthMethod_namespaceEE(t *testing.T) {
 	})
 }
 
+func testAuthMethodCACert(name, v string) func(s *terraform.State) error {
+	return func(s *terraform.State) error {
+		ACL := getClient(testAccProvider.Meta()).ACL()
+
+		authMethod, _, err := ACL.AuthMethodRead(name, nil)
+		if err != nil {
+			return err
+		}
+
+		if authMethod == nil {
+			return fmt.Errorf("Auth method %q does not exists", name)
+		}
+
+		cert := strings.TrimSpace(authMethod.Config["CACert"].(string))
+		v = strings.TrimSpace(v)
+		if cert != v {
+			return fmt.Errorf("Wrong value for CACert: %q != %q", cert, v)
+		}
+
+		return nil
+	}
+}
+
 func testAuthMethodDestroy(s *terraform.State) error {
 	ACL := getClient(testAccProvider.Meta()).ACL()
 	qOpts := &consulapi.QueryOptions{}
@@ -115,6 +154,12 @@ func testAuthMethodDestroy(s *terraform.State) error {
 
 	return nil
 }
+
+const testResourceACLAuthMethodConfigBasic_NoConfig = `
+resource "consul_acl_auth_method" "test" {
+	name        = "auth_method"
+    type        = "kubernetes"
+}`
 
 const testResourceACLAuthMethodConfigBasic = `
 resource "consul_acl_auth_method" "test" {
@@ -147,6 +192,34 @@ resource "consul_acl_auth_method" "test" {
         ServiceAccountJWT = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0IiwibmFtZSI6InRlc3QiLCJpYXQiOjE1MTYyMzkwMjJ9.uOnQsCs6ZAqj2F1VMA09tdgRZyFT1GQH2DwIC4TTn-A"
     }
 	)
+}`
+
+const testResourceACLAuthMethodConfigBasic_ConfigJSON = `
+resource "consul_acl_auth_method" "test" {
+	name        = "auth_method"
+    type        = "kubernetes"
+
+	config_json = jsonencode({
+        Host = "https://localhost:8443"
+		CACert = <<-EOF
+` + testCert + `
+		EOF
+        ServiceAccountJWT = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0IiwibmFtZSI6InRlc3QiLCJpYXQiOjE1MTYyMzkwMjJ9.uOnQsCs6ZAqj2F1VMA09tdgRZyFT1GQH2DwIC4TTn-A"
+    })
+}`
+
+const testResourceACLAuthMethodConfigBasic_ConfigJSONUpdate = `
+resource "consul_acl_auth_method" "test" {
+	name        = "auth_method"
+    type        = "kubernetes"
+
+	config_json = jsonencode({
+        Host = "https://localhost:8443"
+		CACert = <<-EOF
+` + testCert2 + `
+		EOF
+        ServiceAccountJWT = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0IiwibmFtZSI6InRlc3QiLCJpYXQiOjE1MTYyMzkwMjJ9.uOnQsCs6ZAqj2F1VMA09tdgRZyFT1GQH2DwIC4TTn-A"
+    })
 }`
 
 const testResourceACLAuthMethodConfigBasicConfigJSON = `
