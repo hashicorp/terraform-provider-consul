@@ -15,7 +15,7 @@ func testAccCheckConsulACLTokenRoleAttachmentDestroy(s *terraform.State) error {
 		if rs.Type != "consul_acl_token_role_attachment" {
 			continue
 		}
-		tokenID, roleName, err := parseTwoPartID(rs.Primary.ID)
+		tokenID, roleName, err := parseTwoPartID(rs.Primary.ID, "role")
 		if err != nil {
 			return fmt.Errorf("Invalid ACL token role attachment id '%q'", rs.Primary.ID)
 		}
@@ -130,7 +130,7 @@ func TestAccConsulACLTokenRoleAttachment_import(t *testing.T) {
 const testResourceACLTokenRoleAttachmentConfigBasic = `
 resource "consul_acl_role" "test" {
 	name = "test"
-	
+
 	service_identities {
         service_name = "foo"
     }
@@ -155,7 +155,7 @@ const testResourceACLTokenRoleAttachmentConfigUpdate = `
 // Using another resource to force the update of consul_acl_token
 resource "consul_acl_role" "test2" {
 	name = "test2"
-	
+
 	service_identities {
         service_name = "bar"
     }

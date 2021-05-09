@@ -72,7 +72,7 @@ resource "consul_acl_token_role_attachment" "attachment" {
 ```
 **NOTE**: `consul_acl_token` would attempt to enforce an empty set of roles,
 because its `roles` attribute is empty. For this reason it is necessary to add
-the lifecycle clause to prevent Terraform from attempting to empty the set of
+the lifecycle clause to prevent Terraform from attempting to clear the set of
 roles associated to the token.
 
 ## Argument Reference
