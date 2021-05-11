@@ -10,6 +10,7 @@ IMPROVEMENTS:
 * The `consul_acl_token_secret_id` datasource can now look for a token in a namespace ([#242](https://github.com/hashicorp/terraform-provider-consul/issues/242)).
 * The `Content-Type` header is now present in all `PUT` and `POST` HTTP requests sent by the provider ([#255](https://github.com/hashicorp/terraform-provider-consul/issues/255)).
 * The `consul_config_entry` can now asssociate a config entry with a namespace ([#246](https://github.com/hashicorp/terraform-provider-consul/issues/246) and [#256](https://github.com/hashicorp/terraform-provider-consul/issues/256)).
+* The `consul_key_prefix` can now be used to manage keys at the root of the key-value store ([#258](https://github.com/hashicorp/terraform-provider-consul/issues/258)).
 
 BUG FIXES:
 
