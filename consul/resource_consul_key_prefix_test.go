@@ -64,6 +64,13 @@ func TestAccConsulKeyPrefix_basic(t *testing.T) {
 					testAccAddConsulKeyPrefixRogue("species", "gorilla"),
 				),
 			},
+			{
+				PreConfig: func() {
+					kv := getClient(testAccProvider.Meta()).KV()
+					kv.DeleteTree("", nil)
+				},
+				Config: testAccConsulKeyPrefixConfig_root,
+			},
 		},
 	})
 }
@@ -362,6 +369,17 @@ resource "consul_key_prefix" "app" {
 	subkey {
 		path  = "second"
 		value = "plip"
+	}
+}
+`
+
+const testAccConsulKeyPrefixConfig_root = `
+resource "consul_key_prefix" "root" {
+    path_prefix = ""
+
+	subkey {
+		path  = "foo"
+		value = "bar"
 	}
 }
 `
