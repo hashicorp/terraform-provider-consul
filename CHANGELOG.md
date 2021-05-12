@@ -1,4 +1,4 @@
-## 2.12.0 (Unreleased)
+## 2.12.0 (May 12, 2021)
 
 NEW FEATURES:
 
