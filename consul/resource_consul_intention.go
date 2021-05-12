@@ -77,24 +77,17 @@ Please see https://registry.terraform.io/providers/hashicorp/consul/latest/docs/
 }
 
 func resourceConsulIntentionCreate(d *schema.ResourceData, meta interface{}) error {
-	client := getClient(meta)
+	client, _, wOpts := getClient(d, meta)
 	connect := client.Connect()
-
-	dc, err := getDC(d, client, meta)
-	if err != nil {
-		return fmt.Errorf("Failed to get DC: %v", err)
-	}
-
-	wOpts := consulapi.WriteOptions{Datacenter: dc}
 
 	intention, err := getIntention(d)
 	if err != nil {
 		return err
 	}
 
-	id, _, err := connect.IntentionCreate(intention, &wOpts)
+	id, _, err := connect.IntentionCreate(intention, wOpts)
 	if err != nil {
-		return fmt.Errorf("Failed to create intention (dc: '%s'): %v", dc, err)
+		return fmt.Errorf("Failed to create intention (dc: '%s'): %v", wOpts.Datacenter, err)
 	}
 
 	d.SetId(id)
@@ -103,15 +96,8 @@ func resourceConsulIntentionCreate(d *schema.ResourceData, meta interface{}) err
 }
 
 func resourceConsulIntentionUpdate(d *schema.ResourceData, meta interface{}) error {
-	client := getClient(meta)
+	client, _, wOpts := getClient(d, meta)
 	connect := client.Connect()
-
-	// Setup the operations using the datacenter
-	dc, err := getDC(d, client, meta)
-	if err != nil {
-		return fmt.Errorf("Failed to get DC: %v", err)
-	}
-	wOpts := consulapi.WriteOptions{Datacenter: dc}
 
 	intention, err := getIntention(d)
 	if err != nil {
@@ -119,28 +105,22 @@ func resourceConsulIntentionUpdate(d *schema.ResourceData, meta interface{}) err
 	}
 	intention.ID = d.Id()
 
-	if _, err := connect.IntentionUpdate(intention, &wOpts); err != nil {
-		return fmt.Errorf("Failed to update intention (dc: '%s'): %v", dc, err)
+	if _, err := connect.IntentionUpdate(intention, wOpts); err != nil {
+		return fmt.Errorf("Failed to update intention (dc: '%s'): %v", wOpts.Datacenter, err)
 	}
 
 	return resourceConsulIntentionRead(d, meta)
 }
 
 func resourceConsulIntentionRead(d *schema.ResourceData, meta interface{}) error {
-	client := getClient(meta)
+	client, qOpts, _ := getClient(d, meta)
 	connect := client.Connect()
-
-	dc, err := getDC(d, client, meta)
-	if err != nil {
-		return fmt.Errorf("Failed to get DC: %v", err)
-	}
 
 	id := d.Id()
 
-	qOpts := consulapi.QueryOptions{Datacenter: dc}
-	intention, _, err := connect.IntentionGet(id, &qOpts)
+	intention, _, err := connect.IntentionGet(id, qOpts)
 	if err != nil {
-		return fmt.Errorf("Failed to retrieve intention (dc: '%s'): %v", dc, err)
+		return fmt.Errorf("Failed to retrieve intention (dc: '%s'): %v", qOpts.Datacenter, err)
 	}
 
 	if intention == nil {
@@ -148,7 +128,7 @@ func resourceConsulIntentionRead(d *schema.ResourceData, meta interface{}) error
 		return nil
 	}
 
-	if err = d.Set("datacenter", dc); err != nil {
+	if err = d.Set("datacenter", qOpts.Datacenter); err != nil {
 		return fmt.Errorf("failed to set 'datacenter': %v", err)
 	}
 	if err = d.Set("source_name", intention.SourceName); err != nil {
@@ -177,21 +157,13 @@ func resourceConsulIntentionRead(d *schema.ResourceData, meta interface{}) error
 }
 
 func resourceConsulIntentionDelete(d *schema.ResourceData, meta interface{}) error {
-	client := getClient(meta)
+	client, _, wOpts := getClient(d, meta)
 	connect := client.Connect()
 	id := d.Id()
 
-	dc, err := getDC(d, client, meta)
-	if err != nil {
-		return fmt.Errorf("Failed to get DC: %v", err)
-	}
-
-	// Setup the operations using the datacenter
-	wOpts := consulapi.WriteOptions{Datacenter: dc}
-
-	if _, err := connect.IntentionDelete(id, &wOpts); err != nil {
+	if _, err := connect.IntentionDelete(id, wOpts); err != nil {
 		return fmt.Errorf("Failed to delete intention with id '%s' in %s: %v",
-			id, dc, err)
+			id, wOpts.Datacenter, err)
 	}
 
 	// Clear the ID

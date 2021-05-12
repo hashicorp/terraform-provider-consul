@@ -56,8 +56,8 @@ func resourceConsulACLBindingRule() *schema.Resource {
 }
 
 func resourceConsulACLBindingRuleCreate(d *schema.ResourceData, meta interface{}) error {
-	ACL := getClient(meta).ACL()
-	wOpts := &consulapi.WriteOptions{}
+	client, _, wOpts := getClient(d, meta)
+	ACL := client.ACL()
 
 	rule := getBindingRule(d, meta)
 
@@ -72,11 +72,8 @@ func resourceConsulACLBindingRuleCreate(d *schema.ResourceData, meta interface{}
 }
 
 func resourceConsulACLBindingRuleRead(d *schema.ResourceData, meta interface{}) error {
-	ACL := getClient(meta).ACL()
-	namespace := getNamespace(d, meta)
-	qOpts := &consulapi.QueryOptions{
-		Namespace: namespace,
-	}
+	client, qOpts, _ := getClient(d, meta)
+	ACL := client.ACL()
 
 	rule, _, err := ACL.BindingRuleRead(d.Id(), qOpts)
 	if err != nil {
@@ -107,8 +104,8 @@ func resourceConsulACLBindingRuleRead(d *schema.ResourceData, meta interface{}) 
 }
 
 func resourceConsulACLBindingRuleUpdate(d *schema.ResourceData, meta interface{}) error {
-	ACL := getClient(meta).ACL()
-	wOpts := &consulapi.WriteOptions{}
+	client, _, wOpts := getClient(d, meta)
+	ACL := client.ACL()
 
 	rule := getBindingRule(d, meta)
 
@@ -121,11 +118,8 @@ func resourceConsulACLBindingRuleUpdate(d *schema.ResourceData, meta interface{}
 }
 
 func resourceConsulACLBindingRuleDelete(d *schema.ResourceData, meta interface{}) error {
-	ACL := getClient(meta).ACL()
-	namespace := getNamespace(d, meta)
-	wOpts := &consulapi.WriteOptions{
-		Namespace: namespace,
-	}
+	client, _, wOpts := getClient(d, meta)
+	ACL := client.ACL()
 
 	if _, err := ACL.BindingRuleDelete(d.Id(), wOpts); err != nil {
 		return fmt.Errorf("Failed to delete binding rule '%s': %v", d.Id(), err)
@@ -137,6 +131,7 @@ func resourceConsulACLBindingRuleDelete(d *schema.ResourceData, meta interface{}
 }
 
 func getBindingRule(d *schema.ResourceData, meta interface{}) *consulapi.ACLBindingRule {
+	_, _, wOpts := getClient(d, meta)
 	return &consulapi.ACLBindingRule{
 		ID:          d.Id(),
 		Description: d.Get("description").(string),
@@ -144,6 +139,6 @@ func getBindingRule(d *schema.ResourceData, meta interface{}) *consulapi.ACLBind
 		Selector:    d.Get("selector").(string),
 		BindName:    d.Get("bind_name").(string),
 		BindType:    consulapi.BindingRuleBindType(d.Get("bind_type").(string)),
-		Namespace:   getNamespace(d, meta),
+		Namespace:   wOpts.Namespace,
 	}
 }

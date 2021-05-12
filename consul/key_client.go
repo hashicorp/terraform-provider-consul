@@ -5,6 +5,7 @@ import (
 	"log"
 
 	consulapi "github.com/hashicorp/consul/api"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 )
 
 // keyClient is a wrapper around the upstream Consul client that is
@@ -15,20 +16,11 @@ type keyClient struct {
 	wOpts  *consulapi.WriteOptions
 }
 
-func newKeyClient(realClient *consulapi.KV, dc, token, namespace string) *keyClient {
-	qOpts := &consulapi.QueryOptions{
-		Datacenter: dc,
-		Token:      token,
-		Namespace:  namespace,
-	}
-	wOpts := &consulapi.WriteOptions{
-		Datacenter: dc,
-		Token:      token,
-		Namespace:  namespace,
-	}
+func newKeyClient(d *schema.ResourceData, meta interface{}) *keyClient {
+	client, qOpts, wOpts := getClient(d, meta)
 
 	return &keyClient{
-		client: realClient,
+		client: client.KV(),
 		qOpts:  qOpts,
 		wOpts:  wOpts,
 	}

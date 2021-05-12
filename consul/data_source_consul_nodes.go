@@ -7,73 +7,53 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 )
 
-const (
-	catalogNodesElem       = "nodes"
-	catalogNodesDatacenter = "datacenter"
-	catalogNodesQueryOpts  = "query_options"
-
-	catalogNodesNodeID              = "id"
-	catalogNodesNodeAddress         = "address"
-	catalogNodesNodeMeta            = "meta"
-	catalogNodesNodeName            = "name"
-	catalogNodesNodeTaggedAddresses = "tagged_addresses"
-
-	catalogNodesNodeIDs   = "node_ids"
-	catalogNodesNodeNames = "node_names"
-
-	catalogNodesAPITaggedLAN    = "lan"
-	catalogNodesAPITaggedWAN    = "wan"
-	catalogNodesSchemaTaggedLAN = "lan"
-	catalogNodesSchemaTaggedWAN = "wan"
-)
-
 func dataSourceConsulNodes() *schema.Resource {
 	return &schema.Resource{
 		Read: dataSourceConsulNodesRead,
 		Schema: map[string]*schema.Schema{
 			// Filters
-			catalogNodesQueryOpts: schemaQueryOpts(),
+			"query_options": schemaQueryOpts(),
 
 			// Out parameters
-			catalogNodesDatacenter: {
+			"datacenter": {
 				Computed: true,
 				Type:     schema.TypeString,
 			},
-			catalogNodesNodeIDs: {
+			"node_ids": {
 				Computed: true,
 				Type:     schema.TypeList,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			catalogNodesNodeNames: {
+			"node_names": {
 				Computed: true,
 				Type:     schema.TypeList,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			catalogNodesElem: {
+			"nodes": {
 				Computed: true,
 				Type:     schema.TypeList,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						catalogNodesNodeID: {
+						"id": {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						catalogNodesNodeName: {
+						"name": {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						catalogNodesNodeAddress: {
+						"address": {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						catalogNodesNodeMeta: {
+						"meta": {
 							Type:     schema.TypeMap,
 							Computed: true,
 							Elem: &schema.Schema{
 								Type: schema.TypeString,
 							},
 						},
-						catalogNodesNodeTaggedAddresses: {
+						"tagged_addresses": {
 							Type:     schema.TypeMap,
 							Computed: true,
 							Elem: &schema.Schema{
@@ -88,15 +68,11 @@ func dataSourceConsulNodes() *schema.Resource {
 }
 
 func dataSourceConsulNodesRead(d *schema.ResourceData, meta interface{}) error {
-	client := getClient(meta)
-
+	client, qOpts, _ := getClient(d, meta)
 	// Parse out data source filters to populate Consul's query options
-	queryOpts, err := getQueryOpts(d, client, meta)
-	if err != nil {
-		return errwrap.Wrapf("unable to get query options for fetching catalog nodes: {{err}}", err)
-	}
+	getQueryOpts(qOpts, d, meta)
 
-	nodes, meta, err := client.Catalog().Nodes(queryOpts)
+	nodes, meta, err := client.Catalog().Nodes(qOpts)
 	if err != nil {
 		return err
 	}
@@ -117,28 +93,28 @@ func dataSourceConsulNodesRead(d *schema.ResourceData, meta interface{}) error {
 		nodeIDs = append(nodeIDs, id)
 		nodeNames = append(nodeNames, node.Node)
 
-		m[catalogNodesNodeAddress] = node.Address
-		m[catalogNodesNodeID] = id
-		m[catalogNodesNodeName] = node.Node
-		m[catalogNodesNodeMeta] = node.Meta
-		m[catalogNodesNodeTaggedAddresses] = node.TaggedAddresses
+		m["address"] = node.Address
+		m["id"] = id
+		m["name"] = node.Node
+		m["meta"] = node.Meta
+		m["tagged_addresses"] = node.TaggedAddresses
 
 		l = append(l, m)
 	}
 
 	const idKeyFmt = "catalog-nodes-%s"
-	d.SetId(fmt.Sprintf(idKeyFmt, queryOpts.Datacenter))
+	d.SetId(fmt.Sprintf(idKeyFmt, qOpts.Datacenter))
 
-	d.Set(catalogNodesDatacenter, queryOpts.Datacenter)
-	if err := d.Set(catalogNodesNodeIDs, nodeIDs); err != nil {
+	d.Set("datacenter", qOpts.Datacenter)
+	if err := d.Set("node_ids", nodeIDs); err != nil {
 		return errwrap.Wrapf("Unable to store node IDs: {{err}}", err)
 	}
 
-	if err := d.Set(catalogNodesNodeNames, nodeNames); err != nil {
+	if err := d.Set("node_names", nodeNames); err != nil {
 		return errwrap.Wrapf("Unable to store node names: {{err}}", err)
 	}
 
-	if err := d.Set(catalogNodesElem, l); err != nil {
+	if err := d.Set("nodes", l); err != nil {
 		return errwrap.Wrapf("Unable to store nodes: {{err}}", err)
 	}
 

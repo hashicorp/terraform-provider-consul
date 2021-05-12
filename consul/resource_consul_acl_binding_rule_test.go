@@ -81,7 +81,7 @@ func TestAccConsulACLBindingRule_namespaceEE(t *testing.T) {
 }
 
 func testBindingRuleDestroy(s *terraform.State) error {
-	ACL := getClient(testAccProvider.Meta()).ACL()
+	ACL := getTestClient(testAccProvider.Meta()).ACL()
 	qOpts := &consulapi.QueryOptions{}
 
 	rules, _, err := ACL.BindingRuleList("minikube2", qOpts)

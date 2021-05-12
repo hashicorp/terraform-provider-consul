@@ -41,16 +41,8 @@ func dataSourceConsulACLPolicy() *schema.Resource {
 }
 
 func dataSourceConsulACLPolicyRead(d *schema.ResourceData, meta interface{}) error {
-	client := getClient(meta)
+	client, qOpts, _ := getClient(d, meta)
 	name := d.Get("name").(string)
-	dc, err := getDC(d, client, meta)
-	if err != nil {
-		return fmt.Errorf("Failed to get DC: %v", err)
-	}
-	qOpts := &consulapi.QueryOptions{
-		Datacenter: dc,
-		Namespace:  getNamespace(d, meta),
-	}
 
 	var policyEntry *consulapi.ACLPolicyListEntry
 	policyEntries, _, err := client.ACL().PolicyList(qOpts)

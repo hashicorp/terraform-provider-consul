@@ -31,9 +31,7 @@ func TestAccDataConsulCatalogServices_alias(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDataConsulCatalogServicesConfig,
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("data.consul_services.read", "services.%", "1"),
-				),
+				Check:  resource.TestCheckResourceAttr("data.consul_services.read", "services.%", "1"),
 			},
 		},
 	})
@@ -77,6 +75,19 @@ func TestAccDataConsulServices_namespaceEE(t *testing.T) {
 	})
 }
 
+func TestAccDataConsulServices_datacenter(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		Providers: testAccProviders,
+		PreCheck:  func() { testAccRemoteDatacenterPreCheck(t) },
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDataConsulCatalogServicesDatacenter,
+				Check:  testAccCheckDataSourceValue("data.consul_services.read", "services.%", "2"),
+			},
+		},
+	})
+}
+
 const testAccDataConsulCatalogServicesConfig = `
 data "consul_services" "read" {
   query_options {
@@ -114,5 +125,26 @@ data "consul_services" "read" {
   query_options {
     namespace = "test-data-services"
   }
+}
+`
+
+const testAccDataConsulCatalogServicesDatacenter = `
+resource "consul_node" "test" {
+	datacenter = "dc2"
+	name       = "test"
+	address    = "test.com"
+}
+
+resource "consul_service" "test" {
+	datacenter = "dc2"
+	name       = "test"
+	node       = consul_node.test.name
+	port       = 80
+}
+
+data "consul_services" "read" {
+  	query_options {
+	  	datacenter = consul_service.test.datacenter
+  	}
 }
 `

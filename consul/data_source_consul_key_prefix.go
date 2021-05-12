@@ -74,17 +74,7 @@ func dataSourceConsulKeyPrefix() *schema.Resource {
 }
 
 func dataSourceConsulKeyPrefixRead(d *schema.ResourceData, meta interface{}) error {
-	client := getClient(meta)
-	namespace := getNamespace(d, meta)
-
-	kv := client.KV()
-	token := d.Get("token").(string)
-	dc, err := getDC(d, client, meta)
-	if err != nil {
-		return err
-	}
-
-	keyClient := newKeyClient(kv, dc, token, namespace)
+	keyClient := newKeyClient(d, meta)
 
 	pathPrefix := d.Get("path_prefix").(string)
 
@@ -126,7 +116,7 @@ func dataSourceConsulKeyPrefixRead(d *schema.ResourceData, meta interface{}) err
 
 	// Store the datacenter on this resource, which can be helpful for reference
 	// in case it was read from the provider
-	d.Set("datacenter", dc)
+	d.Set("datacenter", keyClient.qOpts.Datacenter)
 	d.Set("path_prefix", pathPrefix)
 
 	d.SetId("-")

@@ -114,3 +114,14 @@ locally and then run it in development mode:
 ```
 $ consul agent -dev
 ```
+
+It is also possible to run additional tests to test the provider with multiple
+datacenters:
+
+```sh
+$ consul agent -dev -config-file ./consul_test_dc2.hcl &
+$ consul agent -dev -config-file ./consul_test.hcl &
+$ export CONSUL_HTTP_ADDR=localhost:8500
+$ export CONSUL_HTTP_TOKEN=master-token
+$ TEST_REMOTE_DATACENTER=1 make testacc
+```

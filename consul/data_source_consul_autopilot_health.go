@@ -12,70 +12,70 @@ func dataSourceConsulAutopilotHealth() *schema.Resource {
 		Read: dataSourceConsulAutopilotHealthRead,
 		Schema: map[string]*schema.Schema{
 			// Filters
-			"datacenter": &schema.Schema{
+			"datacenter": {
 				Optional: true,
 				Type:     schema.TypeString,
 			},
 
 			// Out parameters
-			"healthy": &schema.Schema{
+			"healthy": {
 				Computed: true,
 				Type:     schema.TypeBool,
 			},
-			"failure_tolerance": &schema.Schema{
+			"failure_tolerance": {
 				Computed: true,
 				Type:     schema.TypeInt,
 			},
-			"servers": &schema.Schema{
+			"servers": {
 				Computed: true,
 				Type:     schema.TypeList,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"id": &schema.Schema{
+						"id": {
 							Computed: true,
 							Type:     schema.TypeString,
 						},
-						"name": &schema.Schema{
+						"name": {
 							Computed: true,
 							Type:     schema.TypeString,
 						},
-						"address": &schema.Schema{
+						"address": {
 							Computed: true,
 							Type:     schema.TypeString,
 						},
-						"serf_status": &schema.Schema{
+						"serf_status": {
 							Computed: true,
 							Type:     schema.TypeString,
 						},
-						"version": &schema.Schema{
+						"version": {
 							Computed: true,
 							Type:     schema.TypeString,
 						},
-						"leader": &schema.Schema{
+						"leader": {
 							Computed: true,
 							Type:     schema.TypeBool,
 						},
-						"last_contact": &schema.Schema{
+						"last_contact": {
 							Computed: true,
 							Type:     schema.TypeString,
 						},
-						"last_term": &schema.Schema{
+						"last_term": {
 							Computed: true,
 							Type:     schema.TypeInt,
 						},
-						"last_index": &schema.Schema{
+						"last_index": {
 							Computed: true,
 							Type:     schema.TypeInt,
 						},
-						"healthy": &schema.Schema{
+						"healthy": {
 							Computed: true,
 							Type:     schema.TypeBool,
 						},
-						"voter": &schema.Schema{
+						"voter": {
 							Computed: true,
 							Type:     schema.TypeBool,
 						},
-						"stable_since": &schema.Schema{
+						"stable_since": {
 							Computed: true,
 							Type:     schema.TypeString,
 						},
@@ -87,23 +87,16 @@ func dataSourceConsulAutopilotHealth() *schema.Resource {
 }
 
 func dataSourceConsulAutopilotHealthRead(d *schema.ResourceData, meta interface{}) error {
-	client := getClient(meta)
+	client, qOpts, _ := getClient(d, meta)
 	operator := client.Operator()
+	getQueryOpts(qOpts, d, meta)
 
-	queryOpts, err := getQueryOpts(d, client, meta)
-	if err != nil {
-		return err
-	}
-	if datacenter, ok := d.GetOk("datacenter"); ok {
-		queryOpts.Datacenter = datacenter.(string)
-	}
-
-	health, err := operator.AutopilotServerHealth(queryOpts)
+	health, err := operator.AutopilotServerHealth(qOpts)
 	if err != nil {
 		return err
 	}
 	const idKeyFmt = "autopilot-health-%s"
-	d.SetId(fmt.Sprintf(idKeyFmt, queryOpts.Datacenter))
+	d.SetId(fmt.Sprintf(idKeyFmt, qOpts.Datacenter))
 
 	d.Set("healthy", health.Healthy)
 	d.Set("failure_tolerance", health.FailureTolerance)

@@ -53,33 +53,15 @@ func resourceConsulNode() *schema.Resource {
 }
 
 func resourceConsulNodeCreate(d *schema.ResourceData, meta interface{}) error {
-	client := getClient(meta)
+	client, qOpts, wOpts := getClient(d, meta)
 	catalog := client.Catalog()
-
-	var dc string
-	if v, ok := d.GetOk("datacenter"); ok {
-		dc = v.(string)
-	} else {
-		var err error
-		if dc, err = getDC(d, client, meta); err != nil {
-			return err
-		}
-	}
-
-	var token string
-	if v, ok := d.GetOk("token"); ok {
-		token = v.(string)
-	}
-
-	// Setup the operations using the datacenter
-	wOpts := consulapi.WriteOptions{Datacenter: dc, Token: token}
 
 	address := d.Get("address").(string)
 	name := d.Get("name").(string)
 
 	registration := &consulapi.CatalogRegistration{
 		Address:    address,
-		Datacenter: dc,
+		Datacenter: wOpts.Datacenter,
 		Node:       name,
 	}
 
@@ -91,18 +73,17 @@ func resourceConsulNodeCreate(d *schema.ResourceData, meta interface{}) error {
 		registration.NodeMeta = nodeMeta
 	}
 
-	if _, err := catalog.Register(registration, &wOpts); err != nil {
+	if _, err := catalog.Register(registration, wOpts); err != nil {
 		return fmt.Errorf("Failed to register Consul catalog node with name '%s' at address '%s' in %s: %v",
-			name, address, dc, err)
+			name, address, wOpts.Datacenter, err)
 	}
 
 	// Update the resource
-	qOpts := consulapi.QueryOptions{Datacenter: dc}
-	if _, _, err := catalog.Node(name, &qOpts); err != nil {
+	if _, _, err := catalog.Node(name, qOpts); err != nil {
 		return fmt.Errorf("Failed to read Consul catalog node with name '%s' at address '%s' in %s: %v",
-			name, address, dc, err)
+			name, address, qOpts.Datacenter, err)
 	} else {
-		d.Set("datacenter", dc)
+		d.Set("datacenter", qOpts.Datacenter)
 	}
 
 	d.SetId(fmt.Sprintf("%s-%s", name, address))
@@ -111,21 +92,12 @@ func resourceConsulNodeCreate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceConsulNodeRead(d *schema.ResourceData, meta interface{}) error {
-	client := getClient(meta)
+	client, qOpts, _ := getClient(d, meta)
 	catalog := client.Catalog()
-
-	// Get the DC, error if not available.
-	var dc string
-	if v, ok := d.GetOk("datacenter"); ok {
-		dc = v.(string)
-	}
 
 	name := d.Get("name").(string)
 
-	// Setup the operations using the datacenter
-	qOpts := consulapi.QueryOptions{Datacenter: dc}
-
-	n, _, err := catalog.Node(name, &qOpts)
+	n, _, err := catalog.Node(name, qOpts)
 	if err != nil {
 		return fmt.Errorf("Failed to get name '%s' from Consul catalog: %v", name, err)
 	}
@@ -145,39 +117,21 @@ func resourceConsulNodeRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceConsulNodeDelete(d *schema.ResourceData, meta interface{}) error {
-	client := getClient(meta)
+	client, _, wOpts := getClient(d, meta)
 	catalog := client.Catalog()
-
-	var dc string
-	if v, ok := d.GetOk("datacenter"); ok {
-		dc = v.(string)
-	} else {
-		var err error
-		if dc, err = getDC(d, client, meta); err != nil {
-			return err
-		}
-	}
-
-	var token string
-	if v, ok := d.GetOk("token"); ok {
-		token = v.(string)
-	}
-
-	// Setup the operations using the datacenter
-	wOpts := consulapi.WriteOptions{Datacenter: dc, Token: token}
 
 	address := d.Get("address").(string)
 	name := d.Get("name").(string)
 
 	deregistration := consulapi.CatalogDeregistration{
 		Address:    address,
-		Datacenter: dc,
+		Datacenter: wOpts.Datacenter,
 		Node:       name,
 	}
 
-	if _, err := catalog.Deregister(&deregistration, &wOpts); err != nil {
+	if _, err := catalog.Deregister(&deregistration, wOpts); err != nil {
 		return fmt.Errorf("Failed to deregister Consul catalog node with name '%s' at address '%s' in %s: %v",
-			name, address, dc, err)
+			name, address, wOpts.Datacenter, err)
 	}
 
 	// Clear the ID

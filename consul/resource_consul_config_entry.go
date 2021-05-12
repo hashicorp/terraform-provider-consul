@@ -42,7 +42,8 @@ func resourceConsulConfigEntry() *schema.Resource {
 }
 
 func resourceConsulConfigEntryUpdate(d *schema.ResourceData, meta interface{}) error {
-	configEntries := getClient(meta).ConfigEntries()
+	client, _, wOpts := getClient(d, meta)
+	configEntries := client.ConfigEntries()
 
 	kind := d.Get("kind").(string)
 	name := d.Get("name").(string)
@@ -52,7 +53,6 @@ func resourceConsulConfigEntryUpdate(d *schema.ResourceData, meta interface{}) e
 		return err
 	}
 
-	wOpts := &consulapi.WriteOptions{}
 	if _, _, err := configEntries.Set(configEntry, wOpts); err != nil {
 		return fmt.Errorf("Failed to set '%s' config entry: %v", name, err)
 	}
@@ -73,11 +73,11 @@ to see what values are expected.`, configEntry.GetKind())
 }
 
 func resourceConsulConfigEntryRead(d *schema.ResourceData, meta interface{}) error {
-	configEntries := getClient(meta).ConfigEntries()
+	client, qOpts, _ := getClient(d, meta)
+	configEntries := client.ConfigEntries()
 	configKind := d.Get("kind").(string)
 	configName := d.Get("name").(string)
 
-	qOpts := &consulapi.QueryOptions{}
 	configEntry, _, err := configEntries.Get(configKind, configName, qOpts)
 	if err != nil {
 		if strings.Contains(err.Error(), "Unexpected response code: 404") {
@@ -101,11 +101,11 @@ func resourceConsulConfigEntryRead(d *schema.ResourceData, meta interface{}) err
 }
 
 func resourceConsulConfigEntryDelete(d *schema.ResourceData, meta interface{}) error {
-	configEntries := getClient(meta).ConfigEntries()
+	client, _, wOpts := getClient(d, meta)
+	configEntries := client.ConfigEntries()
 	configKind := d.Get("kind").(string)
 	configName := d.Get("name").(string)
 
-	wOpts := &consulapi.WriteOptions{}
 	if _, err := configEntries.Delete(configKind, configName, wOpts); err != nil {
 		return fmt.Errorf("Failed to delete '%s' config entry: %#v", configName, err)
 	}

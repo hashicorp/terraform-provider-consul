@@ -47,6 +47,22 @@ func TestAccDataConsulKeys_namespaceEE(t *testing.T) {
 	})
 }
 
+func TestAccDataConsulKeys_datacenter(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		Providers: testAccProviders,
+		PreCheck:  func() { testAccRemoteDatacenterPreCheck(t) },
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDataConsulKeysConfigDatacenter,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckConsulKeysValue("data.consul_keys.dc1", "read", ""),
+					testAccCheckConsulKeysValue("data.consul_keys.dc2", "read", "dc2"),
+				),
+			},
+		},
+	})
+}
+
 const testAccDataConsulKeysConfig = `
 resource "consul_keys" "write" {
     datacenter = "dc1"
@@ -102,3 +118,31 @@ data "consul_keys" "read" {
     name = "read"
   }
 }`
+
+const testAccDataConsulKeysConfigDatacenter = `
+resource "consul_keys" "write" {
+    datacenter = "dc2"
+
+    key {
+        path   = "test/dc"
+        value  = "dc2"
+		delete = true
+    }
+}
+
+data "consul_keys" "dc1" {
+    key {
+        path = "test/dc"
+        name = "read"
+    }
+}
+
+data "consul_keys" "dc2" {
+    datacenter = consul_keys.write.datacenter
+
+    key {
+        path = "test/dc"
+        name = "read"
+    }
+}
+`

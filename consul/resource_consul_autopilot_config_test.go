@@ -16,7 +16,7 @@ func TestAccConsulAutopilotConfig_basic(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testFinalConfiguration,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccConsulAutopilotConfigBasic,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("consul_autopilot_config.config", "id", "consul-autopilot-dc1"),
@@ -29,7 +29,7 @@ func TestAccConsulAutopilotConfig_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("consul_autopilot_config.config", "upgrade_version_tag", ""),
 				),
 			},
-			resource.TestStep{
+			{
 				Config: testAccConsulAutopilotConfig,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("consul_autopilot_config.config", "id", "consul-autopilot-dc1"),
@@ -52,9 +52,43 @@ func TestAccConsulAutopilotConfig_parseduration(t *testing.T) {
 		PreCheck:  func() { testAccPreCheck(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config:      testAccConsulAutopilotConfigParseDuration,
 				ExpectError: errorRegexp,
+			},
+		},
+	})
+}
+
+func TestAccConsulAutopilogConfig_datacenter(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:  func() { testAccRemoteDatacenterPreCheck(t) },
+		Providers: testAccProviders,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccConsulAutopilotDatacenter,
+				Check: func(s *terraform.State) error {
+					test := func(dc string, expected int) error {
+						c := getTestClient(testAccProvider.Meta()).Operator()
+						opts := &consulapi.QueryOptions{
+							Datacenter: dc,
+						}
+						autopilot, err := c.AutopilotGetConfiguration(opts)
+						if err != nil {
+							return err
+						}
+
+						if autopilot.MaxTrailingLogs != uint64(expected) {
+							return fmt.Errorf("wrong value: %d", autopilot.MaxTrailingLogs)
+						}
+						return nil
+					}
+
+					if err := test("dc1", 100); err != nil {
+						return err
+					}
+					return test("dc2", 10)
+				},
 			},
 		},
 	})
@@ -63,7 +97,7 @@ func TestAccConsulAutopilotConfig_parseduration(t *testing.T) {
 // when destroying the consul_autopilot_config resource, the configuration
 // should not be changed
 func testFinalConfiguration(s *terraform.State) error {
-	client := getClient(testAccProvider.Meta())
+	client := getTestClient(testAccProvider.Meta())
 	operator := client.Operator()
 	qOpts := &consulapi.QueryOptions{}
 	config, err := operator.AutopilotGetConfiguration(qOpts)
@@ -112,5 +146,12 @@ resource "consul_autopilot_config" "config" {
 const testAccConsulAutopilotConfigParseDuration = `
 resource "consul_autopilot_config" "config" {
 	last_contact_threshold = "one minute"
+}
+`
+
+const testAccConsulAutopilotDatacenter = `
+resource "consul_autopilot_config" "config" {
+	datacenter        = "dc2"
+	max_trailing_logs = 10
 }
 `

@@ -101,7 +101,7 @@ func TestAccConsulACLRole_NamespaceEE(t *testing.T) {
 }
 
 func testRoleDestroy(s *terraform.State) error {
-	ACL := getClient(testAccProvider.Meta()).ACL()
+	ACL := getTestClient(testAccProvider.Meta()).ACL()
 	qOpts := &consulapi.QueryOptions{}
 
 	role, _, err := ACL.RoleReadByName("baz", qOpts)

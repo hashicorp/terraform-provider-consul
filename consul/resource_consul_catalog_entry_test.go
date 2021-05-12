@@ -64,7 +64,7 @@ func TestAccConsulCatalogEntry_extremove(t *testing.T) {
 }
 
 func testAccCheckConsulCatalogEntryDestroy(s *terraform.State) error {
-	client := getClient(testAccProvider.Meta())
+	client := getTestClient(testAccProvider.Meta())
 	catalog := client.Catalog()
 	qOpts := consulapi.QueryOptions{}
 	services, _, err := catalog.Services(&qOpts)
@@ -80,7 +80,7 @@ func testAccCheckConsulCatalogEntryDestroy(s *terraform.State) error {
 
 func testAccCheckConsulCatalogEntryDeregister(node string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		client := getClient(testAccProvider.Meta())
+		client := getTestClient(testAccProvider.Meta())
 		catalog := client.Catalog()
 		wOpts := consulapi.WriteOptions{}
 
@@ -107,7 +107,7 @@ func testAccCheckConsulCatalogEntryDeregister(node string) resource.TestCheckFun
 
 func testAccCheckConsulCatalogEntryExists() resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		client := getClient(testAccProvider.Meta())
+		client := getTestClient(testAccProvider.Meta())
 		catalog := client.Catalog()
 		qOpts := consulapi.QueryOptions{}
 		services, _, err := catalog.Services(&qOpts)

@@ -46,11 +46,10 @@ func resourceConsulNamespace() *schema.Resource {
 }
 
 func resourceConsulNamespaceCreate(d *schema.ResourceData, meta interface{}) error {
-	client := getClient(meta).Namespaces()
-	wOpts := &consulapi.WriteOptions{}
+	client, _, wOpts := getClient(d, meta)
 
 	namespace := getNamespaceFromResourceData(d)
-	namespace, _, err := client.Create(namespace, wOpts)
+	namespace, _, err := client.Namespaces().Create(namespace, wOpts)
 	if err != nil {
 		return fmt.Errorf("failed to create namespace: %v", err)
 	}
@@ -59,11 +58,10 @@ func resourceConsulNamespaceCreate(d *schema.ResourceData, meta interface{}) err
 }
 
 func resourceConsulNamespaceRead(d *schema.ResourceData, meta interface{}) error {
-	client := getClient(meta).Namespaces()
-	qOpts := &consulapi.QueryOptions{}
+	client, qOpts, _ := getClient(d, meta)
 	name := d.Id()
 
-	namespace, _, err := client.Read(name, qOpts)
+	namespace, _, err := client.Namespaces().Read(name, qOpts)
 	if namespace == nil {
 		d.SetId("")
 		return nil
@@ -97,11 +95,10 @@ func resourceConsulNamespaceRead(d *schema.ResourceData, meta interface{}) error
 }
 
 func resourceConsulNamespaceUpdate(d *schema.ResourceData, meta interface{}) error {
-	client := getClient(meta).Namespaces()
-	wOpts := &consulapi.WriteOptions{}
+	client, _, wOpts := getClient(d, meta)
 
 	namespace := getNamespaceFromResourceData(d)
-	namespace, _, err := client.Update(namespace, wOpts)
+	namespace, _, err := client.Namespaces().Update(namespace, wOpts)
 	if err != nil {
 		return fmt.Errorf("failed to update namespace '%s': %v", namespace.Name, err)
 	}
@@ -110,10 +107,9 @@ func resourceConsulNamespaceUpdate(d *schema.ResourceData, meta interface{}) err
 }
 
 func resourceConsulNamespaceDelete(d *schema.ResourceData, meta interface{}) error {
-	client := getClient(meta).Namespaces()
-	wOpts := &consulapi.WriteOptions{}
+	client, _, wOpts := getClient(d, meta)
 
-	_, err := client.Delete(d.Id(), wOpts)
+	_, err := client.Namespaces().Delete(d.Id(), wOpts)
 	if err != nil {
 		return fmt.Errorf("failed to delete namespace '%s': %v", d.Id(), err)
 	}

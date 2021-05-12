@@ -3,7 +3,6 @@ package consul
 import (
 	"fmt"
 
-	consulapi "github.com/hashicorp/consul/api"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 )
 
@@ -69,16 +68,8 @@ func dataSourceConsulACLRole() *schema.Resource {
 }
 
 func datasourceConsulACLRoleRead(d *schema.ResourceData, meta interface{}) error {
-	client := getClient(meta)
+	client, qOpts, _ := getClient(d, meta)
 	name := d.Get("name").(string)
-	dc, err := getDC(d, client, meta)
-	if err != nil {
-		return fmt.Errorf("Failed to get DC: %v", err)
-	}
-	qOpts := &consulapi.QueryOptions{
-		Datacenter: dc,
-		Namespace:  getNamespace(d, meta),
-	}
 
 	role, _, err := client.ACL().RoleReadByName(name, qOpts)
 	if err != nil {

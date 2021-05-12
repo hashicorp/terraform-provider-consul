@@ -146,15 +146,10 @@ func resourceConsulPreparedQuery() *schema.Resource {
 }
 
 func resourceConsulPreparedQueryCreate(d *schema.ResourceData, meta interface{}) error {
-	client := getClient(meta)
-	wo := &consulapi.WriteOptions{
-		Datacenter: d.Get("datacenter").(string),
-		Token:      d.Get("token").(string),
-	}
-
+	client, _, wOpts := getClient(d, meta)
 	pq := preparedQueryDefinitionFromResourceData(d)
 
-	id, _, err := client.PreparedQuery().Create(pq, wo)
+	id, _, err := client.PreparedQuery().Create(pq, wOpts)
 	if err != nil {
 		return err
 	}
@@ -164,15 +159,10 @@ func resourceConsulPreparedQueryCreate(d *schema.ResourceData, meta interface{})
 }
 
 func resourceConsulPreparedQueryUpdate(d *schema.ResourceData, meta interface{}) error {
-	client := getClient(meta)
-	wo := &consulapi.WriteOptions{
-		Datacenter: d.Get("datacenter").(string),
-		Token:      d.Get("token").(string),
-	}
-
+	client, _, wOpts := getClient(d, meta)
 	pq := preparedQueryDefinitionFromResourceData(d)
 
-	if _, err := client.PreparedQuery().Update(pq, wo); err != nil {
+	if _, err := client.PreparedQuery().Update(pq, wOpts); err != nil {
 		return err
 	}
 
@@ -180,13 +170,9 @@ func resourceConsulPreparedQueryUpdate(d *schema.ResourceData, meta interface{})
 }
 
 func resourceConsulPreparedQueryRead(d *schema.ResourceData, meta interface{}) error {
-	client := getClient(meta)
-	qo := &consulapi.QueryOptions{
-		Datacenter: d.Get("datacenter").(string),
-		Token:      d.Get("token").(string),
-	}
+	client, qOpts, _ := getClient(d, meta)
 
-	queries, _, err := client.PreparedQuery().Get(d.Id(), qo)
+	queries, _, err := client.PreparedQuery().Get(d.Id(), qOpts)
 	if err != nil {
 		// Check for a 404/not found, these are returned as errors.
 		if strings.Contains(err.Error(), "not found") {
@@ -290,13 +276,9 @@ func resourceConsulPreparedQueryRead(d *schema.ResourceData, meta interface{}) e
 }
 
 func resourceConsulPreparedQueryDelete(d *schema.ResourceData, meta interface{}) error {
-	client := getClient(meta)
-	writeOpts := &consulapi.WriteOptions{
-		Datacenter: d.Get("datacenter").(string),
-		Token:      d.Get("token").(string),
-	}
+	client, _, wOpts := getClient(d, meta)
 
-	if _, err := client.PreparedQuery().Delete(d.Id(), writeOpts); err != nil {
+	if _, err := client.PreparedQuery().Delete(d.Id(), wOpts); err != nil {
 		return err
 	}
 

@@ -9,7 +9,7 @@ import (
 )
 
 func testAccCheckConsulACLTokenPolicyAttachmentDestroy(s *terraform.State) error {
-	client := getClient(testAccProvider.Meta())
+	client := getTestClient(testAccProvider.Meta())
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "consul_acl_token_policy_attachment" {
@@ -42,7 +42,7 @@ func testAccCheckTokenPolicyID(s *terraform.State) error {
 		return fmt.Errorf("No token ID is set")
 	}
 
-	client := getClient(testAccProvider.Meta())
+	client := getTestClient(testAccProvider.Meta())
 	_, _, err := client.ACL().TokenRead(tokenID, nil)
 	if err != nil {
 		return fmt.Errorf("Unable to retrieve token %q", tokenID)

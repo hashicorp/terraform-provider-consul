@@ -83,16 +83,7 @@ func resourceConsulKeyPrefix() *schema.Resource {
 }
 
 func resourceConsulKeyPrefixCreate(d *schema.ResourceData, meta interface{}) error {
-	client := getClient(meta)
-	namespace := getNamespace(d, meta)
-	kv := client.KV()
-	token := d.Get("token").(string)
-	dc, err := getDC(d, client, meta)
-	if err != nil {
-		return err
-	}
-
-	keyClient := newKeyClient(kv, dc, token, namespace)
+	keyClient := newKeyClient(d, meta)
 
 	type subKey struct {
 		value string
@@ -145,7 +136,7 @@ func resourceConsulKeyPrefixCreate(d *schema.ResourceData, meta interface{}) err
 
 	// Store the datacenter on this resource, which can be helpful for reference
 	// in case it was read from the provider
-	d.Set("datacenter", dc)
+	d.Set("datacenter", keyClient.qOpts.Datacenter)
 
 	// Now we can just write in all the initial values, since we can expect
 	// that nothing should need deleting yet, as long as there isn't some
@@ -163,16 +154,7 @@ func resourceConsulKeyPrefixCreate(d *schema.ResourceData, meta interface{}) err
 }
 
 func resourceConsulKeyPrefixUpdate(d *schema.ResourceData, meta interface{}) error {
-	client := getClient(meta)
-	namespace := getNamespace(d, meta)
-	kv := client.KV()
-	token := d.Get("token").(string)
-	dc, err := getDC(d, client, meta)
-	if err != nil {
-		return err
-	}
-
-	keyClient := newKeyClient(kv, dc, token, namespace)
+	keyClient := newKeyClient(d, meta)
 
 	pathPrefix := d.Id()
 
@@ -270,22 +252,13 @@ func resourceConsulKeyPrefixUpdate(d *schema.ResourceData, meta interface{}) err
 
 	// Store the datacenter on this resource, which can be helpful for reference
 	// in case it was read from the provider
-	d.Set("datacenter", dc)
+	d.Set("datacenter", keyClient.qOpts.Datacenter)
 
 	return nil
 }
 
 func resourceConsulKeyPrefixRead(d *schema.ResourceData, meta interface{}) error {
-	client := getClient(meta)
-	namespace := getNamespace(d, meta)
-	kv := client.KV()
-	token := d.Get("token").(string)
-	dc, err := getDC(d, client, meta)
-	if err != nil {
-		return err
-	}
-
-	keyClient := newKeyClient(kv, dc, token, namespace)
+	keyClient := newKeyClient(d, meta)
 
 	pathPrefix := d.Id()
 
@@ -336,7 +309,7 @@ func resourceConsulKeyPrefixRead(d *schema.ResourceData, meta interface{}) error
 
 	// Store the datacenter on this resource, which can be helpful for reference
 	// in case it was read from the provider
-	if err := d.Set("datacenter", dc); err != nil {
+	if err := d.Set("datacenter", keyClient.qOpts.Datacenter); err != nil {
 		return fmt.Errorf("failed to set 'datacenter': %v", err)
 	}
 
@@ -344,22 +317,13 @@ func resourceConsulKeyPrefixRead(d *schema.ResourceData, meta interface{}) error
 }
 
 func resourceConsulKeyPrefixDelete(d *schema.ResourceData, meta interface{}) error {
-	client := getClient(meta)
-	namespace := getNamespace(d, meta)
-	kv := client.KV()
-	token := d.Get("token").(string)
-	dc, err := getDC(d, client, meta)
-	if err != nil {
-		return err
-	}
-
-	keyClient := newKeyClient(kv, dc, token, namespace)
+	keyClient := newKeyClient(d, meta)
 
 	pathPrefix := d.Id()
 
 	// Delete everything under our prefix, since the entire set of keys under
 	// the given prefix is considered to be managed exclusively by Terraform.
-	err = keyClient.DeleteUnderPrefix(pathPrefix)
+	err := keyClient.DeleteUnderPrefix(pathPrefix)
 	if err != nil {
 		return err
 	}

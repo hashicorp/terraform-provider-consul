@@ -91,7 +91,7 @@ func TestAccConsulIntention_namespaceEE(t *testing.T) {
 }
 
 func testAccCheckConsulIntentionDestroy(s *terraform.State) error {
-	client := getClient(testAccProvider.Meta())
+	client := getTestClient(testAccProvider.Meta())
 
 	qOpts := consulapi.QueryOptions{}
 	intentions, _, err := client.Connect().Intentions(&qOpts)
@@ -108,7 +108,7 @@ func testAccCheckConsulIntentionDestroy(s *terraform.State) error {
 
 func testAccRemoveConsulIntention(t *testing.T) func() {
 	return func() {
-		client := getClient(testAccProvider.Meta())
+		client := getTestClient(testAccProvider.Meta())
 		connect := client.Connect()
 		qOpts := &consulapi.QueryOptions{}
 		iM := &consulapi.IntentionMatch{

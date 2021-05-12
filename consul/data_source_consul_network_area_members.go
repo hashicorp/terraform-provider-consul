@@ -3,7 +3,6 @@ package consul
 import (
 	"fmt"
 
-	consulapi "github.com/hashicorp/consul/api"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 )
 
@@ -84,22 +83,12 @@ func dataSourceConsulNetworkAreaMembers() *schema.Resource {
 }
 
 func datasourceConsulNetworkAreaMembersRead(d *schema.ResourceData, meta interface{}) error {
-	client := getClient(meta)
+	client, qOpts, _ := getClient(d, meta)
 	operator := client.Operator()
 
 	uuid := d.Get("uuid").(string)
 	d.SetId(fmt.Sprintf("consul-network-area-members-%s", uuid))
 
-	token := d.Get("token").(string)
-	dc, err := getDC(d, client, meta)
-	if err != nil {
-		return err
-	}
-
-	qOpts := &consulapi.QueryOptions{
-		Token:      token,
-		Datacenter: dc,
-	}
 	members, _, err := operator.AreaMembers(uuid, qOpts)
 	if err != nil {
 		return fmt.Errorf("Failed to fetch the list of members: %v", err)

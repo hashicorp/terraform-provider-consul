@@ -256,8 +256,48 @@ func TestAccConsulService_NamespaceEE(t *testing.T) {
 	})
 }
 
+func TestAccConsulService_datacenter(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:  func() { testAccRemoteDatacenterPreCheck(t) },
+		Providers: testAccProviders,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccConsulServiceDatacenter,
+				Check: func(s *terraform.State) error {
+					test := func(dc string, expected bool) error {
+						c := getTestClient(testAccProvider.Meta()).Catalog()
+						opts := &consulapi.QueryOptions{
+							Datacenter: dc,
+						}
+						svc, _, err := c.Services(opts)
+						if err != nil {
+							return err
+						}
+
+						var found bool
+						for s := range svc {
+							if s == "test" {
+								found = true
+							}
+						}
+						if found != expected {
+							return fmt.Errorf("unexpected result: %v, %v", found, expected)
+						}
+						return nil
+					}
+
+					if err := test("dc1", false); err != nil {
+						return err
+					}
+					return test("dc2", true)
+				},
+			},
+		},
+	})
+}
+
 func testAccConsulExternalSource(s *terraform.State) error {
-	client := getClient(testAccProvider.Meta())
+	client := getTestClient(testAccProvider.Meta())
 	qOpts := consulapi.QueryOptions{}
 
 	service, _, err := client.Catalog().Service("example", "", &qOpts)
@@ -275,7 +315,7 @@ func testAccConsulExternalSource(s *terraform.State) error {
 }
 
 func testAccCheckConsulServiceDestroy(s *terraform.State) error {
-	client := getClient(testAccProvider.Meta())
+	client := getTestClient(testAccProvider.Meta())
 	qOpts := consulapi.QueryOptions{}
 	services, _, err := client.Catalog().Services(&qOpts)
 	if err != nil {
@@ -291,7 +331,7 @@ func testAccCheckConsulServiceDestroy(s *terraform.State) error {
 
 func testAccRemoveConsulService(t *testing.T, node, serviceID string) func() {
 	return func() {
-		client := getClient(testAccProvider.Meta())
+		client := getTestClient(testAccProvider.Meta())
 		catalog := client.Catalog()
 		wOpts := &consulapi.WriteOptions{}
 		dereg := &consulapi.CatalogDeregistration{
@@ -686,5 +726,20 @@ data "consul_service" "test" {
   query_options {
     namespace = consul_namespace.test.name
   }
+}
+`
+
+const testAccConsulServiceDatacenter = `
+resource "consul_node" "test" {
+	datacenter = "dc2"
+	name       = "test"
+	address    = "test.com"
+}
+
+resource "consul_service" "test" {
+	datacenter = "dc2"
+	name       = "test"
+	node       = consul_node.test.name
+	port       = 80
 }
 `

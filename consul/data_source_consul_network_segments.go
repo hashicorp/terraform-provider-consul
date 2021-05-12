@@ -3,7 +3,6 @@ package consul
 import (
 	"fmt"
 
-	consulapi "github.com/hashicorp/consul/api"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 )
 
@@ -36,25 +35,15 @@ func dataSourceConsulNetworkSegments() *schema.Resource {
 }
 
 func dataSourceConsulNetworkSegmentsRead(d *schema.ResourceData, meta interface{}) error {
-	client := getClient(meta)
+	client, qOpts, _ := getClient(d, meta)
 	operator := client.Operator()
 
-	token := d.Get("token").(string)
-	dc, err := getDC(d, client, meta)
-	if err != nil {
-		return err
-	}
-
-	qOpts := &consulapi.QueryOptions{
-		Token:      token,
-		Datacenter: dc,
-	}
 	segments, _, err := operator.SegmentList(qOpts)
 	if err != nil {
 		return fmt.Errorf("Failed to get segment list: %v", err)
 	}
 
-	d.SetId(fmt.Sprintf("consul-segments-%s", dc))
+	d.SetId(fmt.Sprintf("consul-segments-%s", qOpts.Datacenter))
 	if err := d.Set("segments", segments); err != nil {
 		return fmt.Errorf("Failed to set 'segments': %v", err)
 	}

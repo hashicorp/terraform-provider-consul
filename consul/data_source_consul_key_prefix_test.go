@@ -59,6 +59,22 @@ func TestAccDataConsulKeyPrefix_namespaceEE(t *testing.T) {
 	})
 }
 
+func TestAccDataConsulKeyPrefix_datacenter(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		Providers: testAccProviders,
+		PreCheck:  func() { testAccRemoteDatacenterPreCheck(t) },
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDataConsulKeyPrefixConfigDatacenter,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckConsulKeyPrefixAttribute("data.consul_key_prefix.dc1", "subkeys.%", "0"),
+					testAccCheckConsulKeyPrefixAttribute("data.consul_key_prefix.dc2", "subkeys.%", "1"),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckConsulKeyPrefixAttribute(n, attr, val string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rn, ok := s.RootModule().Resources[n]
@@ -144,5 +160,25 @@ resource "consul_key_prefix" "write" {
 data "consul_key_prefix" "read" {
   path_prefix = "consul_key_prefix.write.path_prefix"
   namespace   = "test-key-prefix"
+}
+`
+
+const testAccDataConsulKeyPrefixConfigDatacenter = `
+resource "consul_key_prefix" "dc2" {
+	datacenter  = "dc2"
+	path_prefix = "test/"
+
+	subkeys = {
+		"dc"       = "dc2"
+	}
+}
+
+data "consul_key_prefix" "dc1" {
+	path_prefix = consul_key_prefix.dc2.path_prefix
+}
+
+data "consul_key_prefix" "dc2" {
+	datacenter  = "dc2"
+	path_prefix = consul_key_prefix.dc2.path_prefix
 }
 `
