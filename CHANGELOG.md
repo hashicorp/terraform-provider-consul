@@ -15,6 +15,7 @@ IMPROVEMENTS:
 BUG FIXES:
 
 * The `consul_acl_auth_method` now correctly detects changes in the configuration ([#240](https://github.com/hashicorp/terraform-provider-consul/issues/240) and [#244](https://github.com/hashicorp/terraform-provider-consul/issues/244)).
+* All resources and datasources now properly inherit the `datacenter`, `token` and `namespace` configuration from the provider when they are not set in the resource ([#8](https://github.com/hashicorp/terraform-provider-consul/issues/8) and [#259](https://github.com/hashicorp/terraform-provider-consul/issues/259))
 
 ## 2.11.0 (January 14, 2021)
 
