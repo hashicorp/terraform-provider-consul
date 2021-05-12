@@ -219,6 +219,8 @@ The following arguments are supported:
 
 * `name` - (Required) The name of the configuration entry being registred.
 
+* `namespace` - (Optional, Enterprise Only) The namespace to create the config entry within.
+
 * `config_json` - (Optional) An arbitrary map of configuration values.
 
 ## Attributes Reference

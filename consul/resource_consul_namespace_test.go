@@ -7,7 +7,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 )
 
-var namespaceEnterpriseFeature = regexp.MustCompile("Namespaces .* Consul Enterprise feature")
+var namespaceEnterpriseFeature = regexp.MustCompile("(?i)Namespaces .* Consul Enterprise feature")
 
 func TestAccConsulNamespace_FailOnCommunityEdition(t *testing.T) {
 	resource.Test(t, resource.TestCase{

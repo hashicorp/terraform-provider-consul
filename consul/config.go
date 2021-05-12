@@ -3,6 +3,7 @@ package consul
 import (
 	"fmt"
 	"log"
+	"net/http"
 	"strings"
 
 	consulapi "github.com/hashicorp/consul/api"
@@ -68,10 +69,20 @@ func (c *Config) Client() (*consulapi.Client, error) {
 		config.TLSConfig.InsecureSkipVerify = c.InsecureHttps
 	}
 
-	var err error
-	config.HttpClient, err = consulapi.NewHttpClient(config.Transport, config.TLSConfig)
-	if err != nil {
-		return nil, fmt.Errorf("Failed to create http client: %s", err)
+	// This is a temporary workaround to add the Content-Type header when
+	// needed until the fix is released in the Consul api client.
+	config.HttpClient = &http.Client{
+		Transport: transport{config.Transport},
+	}
+
+	if config.Transport.TLSClientConfig == nil {
+		tlsClientConfig, err := consulapi.SetupTLSConfig(&config.TLSConfig)
+
+		if err != nil {
+			return nil, fmt.Errorf("failed to create http client: %s", err)
+		}
+
+		config.Transport.TLSClientConfig = tlsClientConfig
 	}
 
 	if c.HttpAuth != "" {
@@ -98,4 +109,22 @@ func (c *Config) Client() (*consulapi.Client, error) {
 		return nil, err
 	}
 	return client, nil
+}
+
+// transport adds the Content-Type header to all requests that might need it
+// until we update the API client to a version with
+// https://github.com/hashicorp/consul/pull/10204 at which time we will be able
+// to remove this hack.
+type transport struct {
+	http.RoundTripper
+}
+
+func (t transport) RoundTrip(req *http.Request) (*http.Response, error) {
+	if req.Body != nil {
+		// This will not be the appropriate Content-Type for the license and
+		// snapshot endpoints but this is only temporary and Consul does not
+		// actually use the header anyway.
+		req.Header.Add("Content-Type", "application/json")
+	}
+	return t.RoundTripper.RoundTrip(req)
 }
