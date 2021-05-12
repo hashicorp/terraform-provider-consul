@@ -64,7 +64,7 @@ func dataSourceConsulService() *schema.Resource {
 				Optional: true,
 				Type:     schema.TypeString,
 			},
-			catalogNodesQueryOpts: queryOpts,
+			"query_options": queryOpts,
 
 			// Out parameters
 			catalogServiceElem: {
@@ -146,13 +146,10 @@ func dataSourceConsulService() *schema.Resource {
 }
 
 func dataSourceConsulServiceRead(d *schema.ResourceData, meta interface{}) error {
-	client := getClient(meta)
+	client, qOpts, _ := getClient(d, meta)
 
 	// Parse out data source filters to populate Consul's query options
-	queryOpts, err := getQueryOpts(d, client, meta)
-	if err != nil {
-		return errwrap.Wrapf("unable to get query options for fetching catalog services: {{err}}", err)
-	}
+	getQueryOpts(qOpts, d, meta)
 
 	var serviceName string
 	if v, ok := d.GetOk(catalogServiceName); ok {
@@ -164,8 +161,7 @@ func dataSourceConsulServiceRead(d *schema.ResourceData, meta interface{}) error
 		serviceTag = v.(string)
 	}
 
-	// services, meta, err := client.Catalog().Services(queryOpts)
-	services, meta, err := client.Catalog().Service(serviceName, serviceTag, queryOpts)
+	services, meta, err := client.Catalog().Service(serviceName, serviceTag, qOpts)
 	if err != nil {
 		return err
 	}
@@ -200,9 +196,9 @@ func dataSourceConsulServiceRead(d *schema.ResourceData, meta interface{}) error
 	}
 
 	const idKeyFmt = "catalog-service-%s-%q-%q"
-	d.SetId(fmt.Sprintf(idKeyFmt, queryOpts.Datacenter, serviceName, serviceTag))
+	d.SetId(fmt.Sprintf(idKeyFmt, qOpts.Datacenter, serviceName, serviceTag))
 
-	d.Set(catalogServiceDatacenter, queryOpts.Datacenter)
+	d.Set(catalogServiceDatacenter, qOpts.Datacenter)
 	d.Set(catalogServiceName, serviceName)
 	d.Set(catalogServiceTag, serviceTag)
 	if err := d.Set(catalogServiceElem, l); err != nil {

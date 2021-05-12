@@ -48,23 +48,19 @@ func resourceConsulConfigEntry() *schema.Resource {
 }
 
 func resourceConsulConfigEntryUpdate(d *schema.ResourceData, meta interface{}) error {
-	configEntries := getClient(meta).ConfigEntries()
+	client, qOpts, wOpts := getClient(d, meta)
+	configEntries := client.ConfigEntries()
 
 	kind := d.Get("kind").(string)
 	name := d.Get("name").(string)
-	namespace := getNamespace(d, meta)
 
-	configEntry, err := makeConfigEntry(kind, name, d.Get("config_json").(string), namespace)
+	configEntry, err := makeConfigEntry(kind, name, d.Get("config_json").(string), wOpts.Namespace)
 	if err != nil {
 		return err
 	}
 
-	wOpts := &consulapi.WriteOptions{}
 	if _, _, err := configEntries.Set(configEntry, wOpts); err != nil {
 		return fmt.Errorf("Failed to set '%s' config entry: %v", name, err)
-	}
-	qOpts := &consulapi.QueryOptions{
-		Namespace: namespace,
 	}
 	_, _, err = configEntries.Get(configEntry.GetKind(), configEntry.GetName(), qOpts)
 	if err != nil {
@@ -82,14 +78,11 @@ to see what values are expected.`, configEntry.GetKind())
 }
 
 func resourceConsulConfigEntryRead(d *schema.ResourceData, meta interface{}) error {
-	configEntries := getClient(meta).ConfigEntries()
+	client, qOpts, _ := getClient(d, meta)
+	configEntries := client.ConfigEntries()
 	configKind := d.Get("kind").(string)
 	configName := d.Get("name").(string)
-	namespace := getNamespace(d, meta)
 
-	qOpts := &consulapi.QueryOptions{
-		Namespace: namespace,
-	}
 	configEntry, _, err := configEntries.Get(configKind, configName, qOpts)
 	if err != nil {
 		if strings.Contains(err.Error(), "Unexpected response code: 404") {
@@ -113,13 +106,11 @@ func resourceConsulConfigEntryRead(d *schema.ResourceData, meta interface{}) err
 }
 
 func resourceConsulConfigEntryDelete(d *schema.ResourceData, meta interface{}) error {
-	configEntries := getClient(meta).ConfigEntries()
+	client, _, wOpts := getClient(d, meta)
+	configEntries := client.ConfigEntries()
 	configKind := d.Get("kind").(string)
 	configName := d.Get("name").(string)
 
-	wOpts := &consulapi.WriteOptions{
-		Namespace: getNamespace(d, meta),
-	}
 	if _, err := configEntries.Delete(configKind, configName, wOpts); err != nil {
 		return fmt.Errorf("Failed to delete '%s' config entry: %#v", configName, err)
 	}

@@ -66,7 +66,7 @@ func TestAccConsulKeyPrefix_basic(t *testing.T) {
 			},
 			{
 				PreConfig: func() {
-					kv := getClient(testAccProvider.Meta()).KV()
+					kv := getTestClient(testAccProvider.Meta()).KV()
 					kv.DeleteTree("", nil)
 				},
 				Config: testAccConsulKeyPrefixConfig_root,
@@ -167,8 +167,21 @@ func TestAccConsulKeyPrefix_deleted(t *testing.T) {
 	})
 }
 
+func TestAccConsulKeyPrefix_datacenter(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		Providers: testAccProviders,
+		PreCheck:  func() { testAccRemoteDatacenterPreCheck(t) },
+		Steps: []resource.TestStep{
+			{
+				Config: testAccConsulKeyPrefixConfig_datacenter,
+				Check:  testAccCheckConsulKeysDatacenter,
+			},
+		},
+	})
+}
+
 func testAccCheckConsulKeyPrefixDestroy(s *terraform.State) error {
-	client := getClient(testAccProvider.Meta())
+	client := getTestClient(testAccProvider.Meta())
 	kv := client.KV()
 	opts := &consulapi.QueryOptions{Datacenter: "dc1"}
 	pair, _, err := kv.Get("test/set", opts)
@@ -184,7 +197,7 @@ func testAccCheckConsulKeyPrefixDestroy(s *terraform.State) error {
 func testAccCheckConsulKeyPrefixKeyAbsent(name string) resource.TestCheckFunc {
 	fullName := "prefix_test/" + name
 	return func(s *terraform.State) error {
-		client := getClient(testAccProvider.Meta())
+		client := getTestClient(testAccProvider.Meta())
 		kv := client.KV()
 		opts := &consulapi.QueryOptions{Datacenter: "dc1"}
 		pair, _, err := kv.Get(fullName, opts)
@@ -203,7 +216,7 @@ func testAccCheckConsulKeyPrefixKeyAbsent(name string) resource.TestCheckFunc {
 func testAccAddConsulKeyPrefixRogue(name, value string) resource.TestCheckFunc {
 	fullName := "prefix_test/" + name
 	return func(s *terraform.State) error {
-		client := getClient(testAccProvider.Meta())
+		client := getTestClient(testAccProvider.Meta())
 		kv := client.KV()
 		opts := &consulapi.WriteOptions{Datacenter: "dc1"}
 		pair := &consulapi.KVPair{
@@ -219,7 +232,7 @@ func testAccAddConsulKeyPrefixRogue(name, value string) resource.TestCheckFunc {
 // It removes the prefix_test "folder" (all keys under this prefix)
 func testAccDeleteConsulKeyPrefix(t *testing.T, prefix string) func() {
 	return func() {
-		kv := getClient(testAccProvider.Meta()).KV()
+		kv := getTestClient(testAccProvider.Meta()).KV()
 		_, err := kv.DeleteTree(prefix, &consulapi.WriteOptions{Datacenter: "dc1"})
 		if err != nil {
 			t.Fatalf("failed to delete tree: %v", err)
@@ -231,7 +244,7 @@ func testAccDeleteConsulKeyPrefix(t *testing.T, prefix string) func() {
 // It removes one key in Consul
 func testAccDeleteConsulKey(t *testing.T, key string) func() {
 	return func() {
-		kv := getClient(testAccProvider.Meta()).KV()
+		kv := getTestClient(testAccProvider.Meta()).KV()
 		_, err := kv.Delete(key, &consulapi.WriteOptions{Datacenter: "dc1"})
 		if err != nil {
 			t.Fatalf("failed to delete key %q: %v", key, err)
@@ -242,7 +255,7 @@ func testAccDeleteConsulKey(t *testing.T, key string) func() {
 func testAccCheckConsulKeyPrefixKeyValue(name, value string, flags uint64) resource.TestCheckFunc {
 	fullName := "prefix_test/" + name
 	return func(s *terraform.State) error {
-		client := getClient(testAccProvider.Meta())
+		client := getTestClient(testAccProvider.Meta())
 		kv := client.KV()
 		opts := &consulapi.QueryOptions{Datacenter: "dc1"}
 		pair, _, err := kv.Get(fullName, opts)
@@ -369,6 +382,27 @@ resource "consul_key_prefix" "app" {
 	subkey {
 		path  = "second"
 		value = "plip"
+	}
+}
+`
+
+const testAccConsulKeyPrefixConfig_datacenter = `
+resource "consul_key_prefix" "dc1" {
+    path_prefix = "foo/"
+
+	subkey {
+		path  = "dc"
+		value = "dc1"
+	}
+}
+
+resource "consul_key_prefix" "dc2" {
+	datacenter = "dc2"
+    path_prefix = "foo/"
+
+	subkey {
+		path  = "dc"
+		value = "dc2"
 	}
 }
 `

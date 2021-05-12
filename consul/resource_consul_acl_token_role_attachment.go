@@ -36,13 +36,13 @@ func resourceConsulACLTokenRoleAttachment() *schema.Resource {
 }
 
 func resourceConsulACLTokenRoleAttachmentCreate(d *schema.ResourceData, meta interface{}) error {
-	client := getClient(meta)
+	client, qOpts, wOpts := getClient(d, meta)
 
 	log.Printf("[DEBUG] Creating ACL token role attachment")
 
 	tokenID := d.Get("token_id").(string)
 
-	aclToken, _, err := client.ACL().TokenRead(tokenID, nil)
+	aclToken, _, err := client.ACL().TokenRead(tokenID, qOpts)
 	if err != nil {
 		return fmt.Errorf("Token '%s' not found", tokenID)
 	}
@@ -58,7 +58,7 @@ func resourceConsulACLTokenRoleAttachmentCreate(d *schema.ResourceData, meta int
 		Name: roleName,
 	})
 
-	_, _, err = client.ACL().TokenUpdate(aclToken, nil)
+	_, _, err = client.ACL().TokenUpdate(aclToken, wOpts)
 	if err != nil {
 		return fmt.Errorf("Error updating ACL token '%q' to set new role attachment: '%s'", tokenID, err)
 	}
@@ -73,7 +73,7 @@ func resourceConsulACLTokenRoleAttachmentCreate(d *schema.ResourceData, meta int
 }
 
 func resourceConsulACLTokenRoleAttachmentRead(d *schema.ResourceData, meta interface{}) error {
-	client := getClient(meta)
+	client, qOpts, _ := getClient(d, meta)
 
 	id := d.Id()
 	log.Printf("[DEBUG] Reading ACL token role attachment '%q'", id)
@@ -83,7 +83,7 @@ func resourceConsulACLTokenRoleAttachmentRead(d *schema.ResourceData, meta inter
 		return fmt.Errorf("Invalid ACL token role attachment id '%q'", id)
 	}
 
-	aclToken, _, err := client.ACL().TokenRead(tokenID, nil)
+	aclToken, _, err := client.ACL().TokenRead(tokenID, qOpts)
 	if err != nil {
 		if strings.Contains(err.Error(), "ACL not found") {
 			log.Printf("[WARN] ACL token not found, removing from state")
@@ -119,7 +119,7 @@ func resourceConsulACLTokenRoleAttachmentRead(d *schema.ResourceData, meta inter
 }
 
 func resourceConsulACLTokenRoleAttachmentDelete(d *schema.ResourceData, meta interface{}) error {
-	client := getClient(meta)
+	client, qOpts, wOpts := getClient(d, meta)
 
 	id := d.Id()
 	log.Printf("[DEBUG] Reading ACL token role attachment '%q'", id)
@@ -129,7 +129,7 @@ func resourceConsulACLTokenRoleAttachmentDelete(d *schema.ResourceData, meta int
 		return fmt.Errorf("Invalid ACL token role attachment id '%q'", id)
 	}
 
-	aclToken, _, err := client.ACL().TokenRead(tokenID, nil)
+	aclToken, _, err := client.ACL().TokenRead(tokenID, qOpts)
 	if err != nil {
 		return fmt.Errorf("Token '%s' not found", tokenID)
 	}
@@ -141,7 +141,7 @@ func resourceConsulACLTokenRoleAttachmentDelete(d *schema.ResourceData, meta int
 		}
 	}
 
-	_, _, err = client.ACL().TokenUpdate(aclToken, nil)
+	_, _, err = client.ACL().TokenUpdate(aclToken, wOpts)
 	if err != nil {
 		return fmt.Errorf("Error updating ACL token '%q' to set new role attachment: '%s'", tokenID, err)
 	}

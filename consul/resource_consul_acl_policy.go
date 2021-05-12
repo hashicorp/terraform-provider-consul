@@ -52,7 +52,7 @@ func resourceConsulACLPolicy() *schema.Resource {
 }
 
 func resourceConsulACLPolicyCreate(d *schema.ResourceData, meta interface{}) error {
-	client := getClient(meta)
+	client, _, wOpts := getClient(d, meta)
 
 	log.Printf("[DEBUG] Creating ACL policy")
 
@@ -60,7 +60,7 @@ func resourceConsulACLPolicyCreate(d *schema.ResourceData, meta interface{}) err
 		Name:        d.Get("name").(string),
 		Description: d.Get("description").(string),
 		Rules:       d.Get("rules").(string),
-		Namespace:   getNamespace(d, meta),
+		Namespace:   wOpts.Namespace,
 	}
 
 	if v, ok := d.GetOk("datacenters"); ok {
@@ -72,7 +72,7 @@ func resourceConsulACLPolicyCreate(d *schema.ResourceData, meta interface{}) err
 		aclPolicy.Datacenters = s
 	}
 
-	policy, _, err := client.ACL().PolicyCreate(&aclPolicy, nil)
+	policy, _, err := client.ACL().PolicyCreate(&aclPolicy, wOpts)
 	if err != nil {
 		return fmt.Errorf("error creating ACL policy: %s", err)
 	}
@@ -85,10 +85,7 @@ func resourceConsulACLPolicyCreate(d *schema.ResourceData, meta interface{}) err
 }
 
 func resourceConsulACLPolicyRead(d *schema.ResourceData, meta interface{}) error {
-	client := getClient(meta)
-	qOpts := &consulapi.QueryOptions{
-		Namespace: getNamespace(d, meta),
-	}
+	client, qOpts, _ := getClient(d, meta)
 
 	id := d.Id()
 	log.Printf("[DEBUG] Reading ACL policy %q", id)
@@ -128,7 +125,7 @@ func resourceConsulACLPolicyRead(d *schema.ResourceData, meta interface{}) error
 }
 
 func resourceConsulACLPolicyUpdate(d *schema.ResourceData, meta interface{}) error {
-	client := getClient(meta)
+	client, _, wOpts := getClient(d, meta)
 
 	id := d.Id()
 	log.Printf("[DEBUG] Updating ACL policy %q", id)
@@ -138,7 +135,7 @@ func resourceConsulACLPolicyUpdate(d *schema.ResourceData, meta interface{}) err
 		Name:        d.Get("name").(string),
 		Description: d.Get("description").(string),
 		Rules:       d.Get("rules").(string),
-		Namespace:   getNamespace(d, meta),
+		Namespace:   wOpts.Namespace,
 	}
 
 	if v, ok := d.GetOk("datacenters"); ok {
@@ -150,7 +147,7 @@ func resourceConsulACLPolicyUpdate(d *schema.ResourceData, meta interface{}) err
 		aclPolicy.Datacenters = s
 	}
 
-	_, _, err := client.ACL().PolicyUpdate(&aclPolicy, nil)
+	_, _, err := client.ACL().PolicyUpdate(&aclPolicy, wOpts)
 	if err != nil {
 		return fmt.Errorf("error updating ACL policy %q: %s", id, err)
 	}
@@ -160,10 +157,7 @@ func resourceConsulACLPolicyUpdate(d *schema.ResourceData, meta interface{}) err
 }
 
 func resourceConsulACLPolicyDelete(d *schema.ResourceData, meta interface{}) error {
-	client := getClient(meta)
-	wOpts := &consulapi.WriteOptions{
-		Namespace: getNamespace(d, meta),
-	}
+	client, _, wOpts := getClient(d, meta)
 
 	id := d.Id()
 

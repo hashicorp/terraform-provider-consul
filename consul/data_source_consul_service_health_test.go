@@ -92,6 +92,19 @@ func TestAccDataConsulServiceHealthPassing(t *testing.T) {
 	})
 }
 
+func TestAccDataConsulServiceHealthDatacenter(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:  func() { testAccRemoteDatacenterPreCheck(t) },
+		Providers: testAccProviders,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDataConsulServiceHealthDatacenter,
+				Check:  testAccCheckDataSourceValue("data.consul_service_health.consul", "results.0.node.0.datacenter", "dc2"),
+			},
+		},
+	})
+}
+
 const testAccDataConsulServiceHealth = `
 data "consul_service_health" "consul" {
 	name   = "consul"
@@ -196,5 +209,12 @@ const testAccDataConsulServiceHealthPassingTrue = testAccDataConsulServiceHealth
 data "consul_service_health" "google" {
 	name     = "google"
 	// wait_for = "10s"
+}
+`
+
+const testAccDataConsulServiceHealthDatacenter = `
+data "consul_service_health" "consul" {
+	name       = "consul"
+	datacenter = "dc2"
 }
 `

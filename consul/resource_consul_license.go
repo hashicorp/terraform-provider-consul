@@ -3,7 +3,6 @@ package consul
 import (
 	"fmt"
 
-	consulapi "github.com/hashicorp/consul/api"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 )
 
@@ -82,20 +81,12 @@ func resourceConsulLicense() *schema.Resource {
 }
 
 func resourceConsulLicenseCreate(d *schema.ResourceData, meta interface{}) error {
-	client := getClient(meta)
+	client, _, wOpts := getClient(d, meta)
 	operator := client.Operator()
 
 	license := d.Get("license").(string)
-	datacenter, err := getDC(d, client, meta)
-	if err != nil {
-		return fmt.Errorf("failed to read datacenter: %v", err)
-	}
 
-	wOpts := &consulapi.WriteOptions{
-		Datacenter: datacenter,
-	}
-
-	_, err = operator.LicensePut(license, wOpts)
+	_, err := operator.LicensePut(license, wOpts)
 	if err != nil {
 		return fmt.Errorf("failed to set license: %v", err)
 	}
@@ -104,17 +95,8 @@ func resourceConsulLicenseCreate(d *schema.ResourceData, meta interface{}) error
 }
 
 func resourceConsulLicenseRead(d *schema.ResourceData, meta interface{}) error {
-	client := getClient(meta)
+	client, qOpts, _ := getClient(d, meta)
 	operator := client.Operator()
-
-	datacenter, err := getDC(d, client, meta)
-	if err != nil {
-		return fmt.Errorf("failed to read datacenter: %v", err)
-	}
-
-	qOpts := &consulapi.QueryOptions{
-		Datacenter: datacenter,
-	}
 
 	licenseReply, err := operator.LicenseGet(qOpts)
 	if err != nil {
@@ -139,19 +121,10 @@ func resourceConsulLicenseRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceConsulLicenseDelete(d *schema.ResourceData, meta interface{}) error {
-	client := getClient(meta)
+	client, _, wOpts := getClient(d, meta)
 	operator := client.Operator()
 
-	datacenter, err := getDC(d, client, meta)
-	if err != nil {
-		return fmt.Errorf("failed to read datacenter: %v", err)
-	}
-
-	wOpts := &consulapi.WriteOptions{
-		Datacenter: datacenter,
-	}
-
-	_, err = operator.LicenseReset(wOpts)
+	_, err := operator.LicenseReset(wOpts)
 	if err != nil {
 		return fmt.Errorf("failed to remove license: %v", err)
 	}

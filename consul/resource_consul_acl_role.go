@@ -71,9 +71,9 @@ func resourceConsulACLRole() *schema.Resource {
 }
 
 func resourceConsulACLRoleCreate(d *schema.ResourceData, meta interface{}) error {
-	ACL := getClient(meta).ACL()
+	client, _, wOpts := getClient(d, meta)
+	ACL := client.ACL()
 	role := getRole(d, meta)
-	wOpts := &consulapi.WriteOptions{}
 
 	name := role.Name
 	role, _, err := ACL.RoleCreate(role, wOpts)
@@ -86,10 +86,8 @@ func resourceConsulACLRoleCreate(d *schema.ResourceData, meta interface{}) error
 }
 
 func resourceConsulACLRoleRead(d *schema.ResourceData, meta interface{}) error {
-	ACL := getClient(meta).ACL()
-	qOpts := &consulapi.QueryOptions{
-		Namespace: getNamespace(d, meta),
-	}
+	client, qOpts, _ := getClient(d, meta)
+	ACL := client.ACL()
 
 	role, _, err := ACL.RoleRead(d.Id(), qOpts)
 	if err != nil {
@@ -138,9 +136,9 @@ func resourceConsulACLRoleRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceConsulACLRoleUpdate(d *schema.ResourceData, meta interface{}) error {
-	ACL := getClient(meta).ACL()
+	client, _, wOpts := getClient(d, meta)
+	ACL := client.ACL()
 	role := getRole(d, meta)
-	wOpts := &consulapi.WriteOptions{}
 
 	role.ID = d.Id()
 
@@ -154,8 +152,8 @@ func resourceConsulACLRoleUpdate(d *schema.ResourceData, meta interface{}) error
 }
 
 func resourceConsulACLRoleDelete(d *schema.ResourceData, meta interface{}) error {
-	ACL := getClient(meta).ACL()
-	wOpts := &consulapi.WriteOptions{}
+	client, _, wOpts := getClient(d, meta)
+	ACL := client.ACL()
 
 	if _, err := ACL.RoleDelete(d.Id(), wOpts); err != nil {
 		return fmt.Errorf("Failed to delete role '%s': %s", d.Id(), err)
@@ -166,12 +164,12 @@ func resourceConsulACLRoleDelete(d *schema.ResourceData, meta interface{}) error
 }
 
 func getRole(d *schema.ResourceData, meta interface{}) *consulapi.ACLRole {
-	namespace := getNamespace(d, meta)
+	_, qOpts, _ := getClient(d, meta)
 	roleName := d.Get("name").(string)
 	role := &consulapi.ACLRole{
 		Name:        roleName,
 		Description: d.Get("description").(string),
-		Namespace:   namespace,
+		Namespace:   qOpts.Namespace,
 	}
 	policies := make([]*consulapi.ACLRolePolicyLink, 0)
 	for _, raw := range d.Get("policies").(*schema.Set).List() {

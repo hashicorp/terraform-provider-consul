@@ -3,6 +3,7 @@ package consul
 import (
 	"io/ioutil"
 	"os"
+	"strings"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
@@ -186,11 +187,44 @@ func TestResourceProvider_ConfigureTLSInsecureHttpsMismatch(t *testing.T) {
 // }
 
 func testAccPreCheck(t *testing.T) {
-	if v := os.Getenv("CONSUL_HTTP_ADDR"); v != "" {
+	if os.Getenv("CONSUL_HTTP_ADDR") != "" {
 		return
 	}
-	if v := os.Getenv("CONSUL_ADDRESS"); v != "" {
+	if os.Getenv("CONSUL_ADDRESS") != "" {
 		return
 	}
 	t.Fatal("Either CONSUL_ADDRESS or CONSUL_HTTP_ADDR must be set for acceptance tests")
+}
+
+func testAccRemoteDatacenterPreCheck(t *testing.T) {
+	testAccPreCheck(t)
+
+	if os.Getenv("TEST_REMOTE_DATACENTER") == "" {
+		t.Skip("Test skipped. Set TEST_REMOTE_DATACENTER to run this test.")
+	}
+}
+
+func serverIsConsulCommunityEdition(t *testing.T) bool {
+	client := getTestClient(testAccProvider.Meta())
+	self, err := client.Agent().Self()
+	if err != nil {
+		t.Fatalf("failed to get agent information: %v", err)
+	}
+	return !strings.HasSuffix(self["Config"]["Version"].(string), "+ent")
+}
+
+func skipTestOnConsulCommunityEdition(t *testing.T) {
+	testAccPreCheck(t)
+
+	if serverIsConsulCommunityEdition(t) {
+		t.Skip("Test skipped on Consul Community Edition. Use a Consul Enterprise server to run this test.")
+	}
+}
+
+func skipTestOnConsulEnterpriseEdition(t *testing.T) {
+	testAccPreCheck(t)
+
+	if !serverIsConsulCommunityEdition(t) {
+		t.Skip("Test skipped on Consul Enterprise Edition. Use a Consul Community server to run this test.")
+	}
 }

@@ -50,7 +50,7 @@ func resourceConsulNetworkArea() *schema.Resource {
 }
 
 func resourceConsulNetworkAreaCreate(d *schema.ResourceData, meta interface{}) error {
-	client := getClient(meta)
+	client, _, wOpts := getClient(d, meta)
 	operator := client.Operator()
 
 	area := &consulapi.Area{
@@ -67,16 +67,6 @@ func resourceConsulNetworkAreaCreate(d *schema.ResourceData, meta interface{}) e
 		area.RetryJoin = s
 	}
 
-	token := d.Get("token").(string)
-	dc, err := getDC(d, client, meta)
-	if err != nil {
-		return err
-	}
-
-	wOpts := &consulapi.WriteOptions{
-		Token:      token,
-		Datacenter: dc,
-	}
 	id, _, err := operator.AreaCreate(area, wOpts)
 	if err != nil {
 		return fmt.Errorf("Failed to create network area: %v", err)
@@ -87,21 +77,11 @@ func resourceConsulNetworkAreaCreate(d *schema.ResourceData, meta interface{}) e
 }
 
 func resourceConsulNetworkAreaRead(d *schema.ResourceData, meta interface{}) error {
-	client := getClient(meta)
+	client, qOpts, _ := getClient(d, meta)
 	operator := client.Operator()
 
 	id := d.Id()
 
-	token := d.Get("token").(string)
-	dc, err := getDC(d, client, meta)
-	if err != nil {
-		return err
-	}
-
-	qOpts := &consulapi.QueryOptions{
-		Token:      token,
-		Datacenter: dc,
-	}
 	area, _, err := operator.AreaGet(id, qOpts)
 	if err != nil {
 		return fmt.Errorf("Failed to get %s area: %v", id, err)
@@ -134,7 +114,7 @@ func resourceConsulNetworkAreaRead(d *schema.ResourceData, meta interface{}) err
 }
 
 func resourceConsulNetworkAreaUpdate(d *schema.ResourceData, meta interface{}) error {
-	client := getClient(meta)
+	client, _, wOpts := getClient(d, meta)
 	operator := client.Operator()
 
 	id := d.Id()
@@ -157,16 +137,6 @@ func resourceConsulNetworkAreaUpdate(d *schema.ResourceData, meta interface{}) e
 		area.RetryJoin = s
 	}
 
-	token := d.Get("token").(string)
-	dc, err := getDC(d, client, meta)
-	if err != nil {
-		return err
-	}
-
-	wOpts := &consulapi.WriteOptions{
-		Token:      token,
-		Datacenter: dc,
-	}
 	_id, _, err := operator.AreaUpdate(id, area, wOpts)
 	if err != nil {
 		return fmt.Errorf("Failed to update '%s' network area: %v", id, err)
@@ -181,22 +151,12 @@ func resourceConsulNetworkAreaUpdate(d *schema.ResourceData, meta interface{}) e
 }
 
 func resourceConsulNetworkAreaDelete(d *schema.ResourceData, meta interface{}) error {
-	client := getClient(meta)
+	client, _, wOpts := getClient(d, meta)
 	operator := client.Operator()
 
 	id := d.Id()
 
-	token := d.Get("token").(string)
-	dc, err := getDC(d, client, meta)
-	if err != nil {
-		return err
-	}
-
-	wOpts := &consulapi.WriteOptions{
-		Token:      token,
-		Datacenter: dc,
-	}
-	_, err = operator.AreaDelete(id, wOpts)
+	_, err := operator.AreaDelete(id, wOpts)
 	if err != nil {
 		return fmt.Errorf("Failed to delete '%s' network area: %v", err, id)
 	}

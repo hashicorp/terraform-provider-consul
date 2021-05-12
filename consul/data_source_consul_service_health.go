@@ -190,7 +190,7 @@ func dataSourceConsulServiceHealth() *schema.Resource {
 }
 
 func dataSourceConsulServiceHealthRead(d *schema.ResourceData, meta interface{}) error {
-	client := getClient(meta)
+	client, qOps, _ := getClient(d, meta)
 	health := client.Health()
 
 	serviceName := d.Get("name").(string)
@@ -199,26 +199,15 @@ func dataSourceConsulServiceHealthRead(d *schema.ResourceData, meta interface{})
 	near := d.Get("near").(string)
 	nodeMeta := d.Get("node_meta").(map[string]interface{})
 
-	dc := d.Get("datacenter").(string)
-	if dc == "" {
-		var err error
-		dc, err = getDC(d, client, meta)
-		if err != nil {
-			return err
-		}
-	}
-
 	queryNodeMeta := map[string]string{}
 	for key, value := range nodeMeta {
 		queryNodeMeta[key] = value.(string)
 	}
 
-	qOps := &consulapi.QueryOptions{
-		Near:       near,
-		NodeMeta:   queryNodeMeta,
-		Datacenter: dc,
-		Filter:     d.Get("filter").(string),
-	}
+	qOps.Near = near
+	qOps.NodeMeta = queryNodeMeta
+	qOps.Filter = d.Get("filter").(string)
+
 	var err error
 	var serviceEntries []*consulapi.ServiceEntry
 	if d.Get("wait_for").(string) == "" || !passingOnly {
@@ -298,8 +287,8 @@ func dataSourceConsulServiceHealthRead(d *schema.ResourceData, meta interface{})
 	}
 
 	const idKeyFmt = "service-health-%s-%q-%q"
-	d.SetId(fmt.Sprintf(idKeyFmt, dc, serviceName, serviceTag))
-	if err = d.Set("datacenter", dc); err != nil {
+	d.SetId(fmt.Sprintf(idKeyFmt, qOps.Datacenter, serviceName, serviceTag))
+	if err = d.Set("datacenter", qOps.Datacenter); err != nil {
 		return fmt.Errorf("Failed to set 'datacenter': %s", err)
 	}
 	if err = d.Set("near", near); err != nil {

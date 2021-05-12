@@ -36,6 +36,28 @@ func TestAccConsulNetworkSegments_CommunityEdition(t *testing.T) {
 	})
 }
 
+func TestAccConsulNetworkSegments_datacenter(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() {
+			testAccRemoteDatacenterPreCheck(t)
+			skipTestOnConsulCommunityEdition(t)
+		},
+		Providers: testAccProviders,
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccConsulNetworkSegmentsDatacenter,
+				ExpectError: regexp.MustCompile("Failed to get segment list"),
+			},
+		},
+	})
+}
+
 const testAccConsulNetworkSegmentsBasic = `
 data "consul_network_segments" "test" {}
+`
+
+const testAccConsulNetworkSegmentsDatacenter = `
+data "consul_network_segments" "test" {
+	datacenter = "dc3"
+}
 `

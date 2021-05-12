@@ -1,4 +1,5 @@
 ui = true
+datacenter = "dc2"
 primary_datacenter = "dc1"
 
 limits = {
@@ -11,8 +12,15 @@ acl = {
     down_policy = "extend-cache"
 
     tokens = {
-        master = "master-token"
+        replication = "master-token"
     }
 }
 
-retry_join_wan = ["127.0.0.1:8307"]
+ports = {
+    dns = -1
+    grpc = -1
+    http = 8501
+    server = 8305
+    serf_lan = 8306
+    serf_wan = 8307
+}

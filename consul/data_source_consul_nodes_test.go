@@ -23,6 +23,7 @@ func TestAccDataConsulNodes_basic(t *testing.T) {
 		},
 	})
 }
+
 func TestAccDataConsulNodes_alias(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
@@ -32,6 +33,21 @@ func TestAccDataConsulNodes_alias(t *testing.T) {
 				Config: testAccDataConsulNodesAlias,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("data.consul_catalog_nodes.read", "nodes.#", "1"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccDataConsulNodes_datacenter(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:  func() { testAccRemoteDatacenterPreCheck(t) },
+		Providers: testAccProviders,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDataConsulNodesDatacenter,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.consul_catalog_nodes.read", "nodes.#", "2"),
 				),
 			},
 		},
@@ -51,4 +67,18 @@ data "consul_nodes" "read" {
 `
 const testAccDataConsulNodesAlias = `
 data "consul_catalog_nodes" "read" {}
+`
+
+const testAccDataConsulNodesDatacenter = `
+resource "consul_node" "dc2" {
+	datacenter = "dc2"
+	name 	   = "dc2"
+	address    = "127.0.0.1"
+}
+
+data "consul_catalog_nodes" "read" {
+	query_options {
+		datacenter = consul_node.dc2.datacenter
+	}
+}
 `

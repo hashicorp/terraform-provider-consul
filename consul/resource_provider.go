@@ -179,16 +179,47 @@ func providerConfigure(d *schema.ResourceData) (interface{}, error) {
 	return config, nil
 }
 
-func getClient(meta interface{}) *consulapi.Client {
-	return meta.(*Config).client
+func getClient(d *schema.ResourceData, meta interface{}) (*consulapi.Client, *consulapi.QueryOptions, *consulapi.WriteOptions) {
+	client := getTestClient(meta)
+	var dc, token, namespace string
+	if v, ok := d.GetOk("datacenter"); ok {
+		dc = v.(string)
+	}
+	if v, ok := d.GetOk("namespace"); ok {
+		namespace = v.(string)
+	}
+	if v, ok := d.GetOk("token"); ok {
+		token = v.(string)
+	}
+
+	if dc == "" {
+		if meta.(*Config).Datacenter != "" {
+			dc = meta.(*Config).Datacenter
+		} else {
+			info, _ := client.Agent().Self()
+			if info != nil {
+				dc = info["Config"]["Datacenter"].(string)
+			}
+		}
+	}
+
+	qOpts := &consulapi.QueryOptions{
+		Datacenter: dc,
+		Namespace:  namespace,
+		Token:      token,
+	}
+	wOpts := &consulapi.WriteOptions{
+		Datacenter: dc,
+		Namespace:  namespace,
+		Token:      token,
+	}
+	return client, qOpts, wOpts
 }
 
-func getNamespace(d *schema.ResourceData, meta interface{}) string {
-	namespace := d.Get("namespace").(string)
-	if namespace != "" {
-		return namespace
-	}
-	return meta.(*Config).Namespace
+// during the tests we only have access to the definition of the provider, not
+// the ResourceData
+func getTestClient(meta interface{}) *consulapi.Client {
+	return meta.(*Config).client
 }
 
 type stateWriter struct {

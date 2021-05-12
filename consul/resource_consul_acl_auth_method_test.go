@@ -118,7 +118,7 @@ func TestAccConsulACLAuthMethod_namespaceEE(t *testing.T) {
 
 func testAuthMethodCACert(name, v string) func(s *terraform.State) error {
 	return func(s *terraform.State) error {
-		ACL := getClient(testAccProvider.Meta()).ACL()
+		ACL := getTestClient(testAccProvider.Meta()).ACL()
 
 		authMethod, _, err := ACL.AuthMethodRead(name, nil)
 		if err != nil {
@@ -140,7 +140,7 @@ func testAuthMethodCACert(name, v string) func(s *terraform.State) error {
 }
 
 func testAuthMethodDestroy(s *terraform.State) error {
-	ACL := getClient(testAccProvider.Meta()).ACL()
+	ACL := getTestClient(testAccProvider.Meta()).ACL()
 	qOpts := &consulapi.QueryOptions{}
 
 	role, _, err := ACL.AuthMethodRead("minikube2", qOpts)

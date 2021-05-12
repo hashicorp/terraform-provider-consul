@@ -51,7 +51,8 @@ func dataSourceConsulAgentConfig() *schema.Resource {
 }
 
 func dataSourceConsulAgentConfigRead(d *schema.ResourceData, meta interface{}) error {
-	agentSelf, err := getClient(meta).Agent().Self()
+	client, _, _ := getClient(d, meta)
+	agentSelf, err := client.Agent().Self()
 	if err != nil {
 		return err
 	}

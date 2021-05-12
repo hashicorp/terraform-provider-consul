@@ -9,7 +9,7 @@ import (
 )
 
 func testAccCheckConsulACLPolicyDestroy(s *terraform.State) error {
-	client := getClient(testAccProvider.Meta())
+	client := getTestClient(testAccProvider.Meta())
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "consul_acl_policy" {

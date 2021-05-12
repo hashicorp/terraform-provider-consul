@@ -76,26 +76,21 @@ func TestAccConsulKeys_NamespaceEE(t *testing.T) {
 	})
 }
 
-func testAccCheckConsulKeysFlags(path string, flags int) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		kv := testAccProvider.Meta().(*consulapi.Client).KV()
-		opts := &consulapi.QueryOptions{Datacenter: "dc1"}
-		pair, _, err := kv.Get(path, opts)
-		if err != nil {
-			return err
-		}
-		if pair == nil {
-			return fmt.Errorf("Key '%v' does not exist", path)
-		}
-		if int(pair.Flags) != flags {
-			return fmt.Errorf("Wrong flags for '%v': %v != %v", path, int(pair.Flags), flags)
-		}
-		return nil
-	}
+func TestAccConsulKeys_Datacenter(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		Providers: testAccProviders,
+		PreCheck:  func() { testAccRemoteDatacenterPreCheck(t) },
+		Steps: []resource.TestStep{
+			{
+				Config: testAccConsulKeysDatacenter,
+				Check:  testAccCheckConsulKeysDatacenter,
+			},
+		},
+	})
 }
 
 func testAccCheckConsulKeysDestroy(s *terraform.State) error {
-	client := getClient(testAccProvider.Meta())
+	client := getTestClient(testAccProvider.Meta())
 	kv := client.KV()
 	opts := &consulapi.QueryOptions{Datacenter: "dc1"}
 	pair, _, err := kv.Get("test/set", opts)
@@ -110,7 +105,7 @@ func testAccCheckConsulKeysDestroy(s *terraform.State) error {
 
 func testAccCheckConsulKeysExists() resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		client := getClient(testAccProvider.Meta())
+		client := getTestClient(testAccProvider.Meta())
 		kv := client.KV()
 		opts := &consulapi.QueryOptions{Datacenter: "dc1"}
 		pair, _, err := kv.Get("test/set", opts)
@@ -156,6 +151,32 @@ func testAccCheckConsulKeysRemoved(n, attr string) resource.TestCheckFunc {
 		}
 		return nil
 	}
+}
+
+func testAccCheckConsulKeysDatacenter(s *terraform.State) error {
+	test := func(dc string) error {
+		kv := getTestClient(testAccProvider.Meta()).KV()
+		opts := &consulapi.QueryOptions{
+			Datacenter: dc,
+		}
+		pair, _, err := kv.Get("foo/dc", opts)
+		if err != nil {
+			return err
+		}
+		if kv == nil {
+			return fmt.Errorf("key 'dc' does not exist")
+		}
+		value := string(pair.Value)
+		if value != dc {
+			return fmt.Errorf("wrong value: %q", value)
+		}
+		return nil
+	}
+
+	if err := test("dc1"); err != nil {
+		return err
+	}
+	return test("dc2")
 }
 
 const testAccConsulKeysConfig = `
@@ -228,8 +249,28 @@ resource "consul_keys" "consul" {
   namespace = consul_namespace.test.name
 
   key {
-    path  = "test/set"
-    value = ""
+    path   = "test/set"
+    value  = ""
     delete = true
   }
 }`
+
+const testAccConsulKeysDatacenter = `
+resource "consul_keys" "dc1" {
+	key {
+		path   = "foo/dc"
+		value  = "dc1"
+		delete = true
+	}
+}
+
+resource "consul_keys" "dc2" {
+	datacenter = "dc2"
+
+	key {
+		path   = "foo/dc"
+		value  = "dc2"
+		delete = true
+	}
+}
+`

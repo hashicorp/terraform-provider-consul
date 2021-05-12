@@ -127,8 +127,8 @@ func resourceConsulACLAuthMethod() *schema.Resource {
 }
 
 func resourceConsulACLAuthMethodCreate(d *schema.ResourceData, meta interface{}) error {
-	ACL := getClient(meta).ACL()
-	wOpts := &consulapi.WriteOptions{}
+	client, _, wOpts := getClient(d, meta)
+	ACL := client.ACL()
 
 	authMethod, err := getAuthMethod(d, meta)
 	if err != nil {
@@ -143,11 +143,8 @@ func resourceConsulACLAuthMethodCreate(d *schema.ResourceData, meta interface{})
 }
 
 func resourceConsulACLAuthMethodRead(d *schema.ResourceData, meta interface{}) error {
-	ACL := getClient(meta).ACL()
-	namespace := getNamespace(d, meta)
-	qOpts := &consulapi.QueryOptions{
-		Namespace: namespace,
-	}
+	client, qOpts, _ := getClient(d, meta)
+	ACL := client.ACL()
 
 	name := d.Get("name").(string)
 	authMethod, _, err := ACL.AuthMethodRead(name, qOpts)
@@ -219,8 +216,8 @@ func resourceConsulACLAuthMethodRead(d *schema.ResourceData, meta interface{}) e
 }
 
 func resourceConsulACLAuthMethodUpdate(d *schema.ResourceData, meta interface{}) error {
-	ACL := getClient(meta).ACL()
-	wOpts := &consulapi.WriteOptions{}
+	client, _, wOpts := getClient(d, meta)
+	ACL := client.ACL()
 
 	authMethod, err := getAuthMethod(d, meta)
 	if err != nil {
@@ -235,11 +232,8 @@ func resourceConsulACLAuthMethodUpdate(d *schema.ResourceData, meta interface{})
 }
 
 func resourceConsulACLAuthMethodDelete(d *schema.ResourceData, meta interface{}) error {
-	ACL := getClient(meta).ACL()
-	namespace := getNamespace(d, meta)
-	wOpts := &consulapi.WriteOptions{
-		Namespace: namespace,
-	}
+	client, _, wOpts := getClient(d, meta)
+	ACL := client.ACL()
 
 	authMethodName := d.Get("name").(string)
 	if _, err := ACL.AuthMethodDelete(authMethodName, wOpts); err != nil {
@@ -251,7 +245,7 @@ func resourceConsulACLAuthMethodDelete(d *schema.ResourceData, meta interface{})
 }
 
 func getAuthMethod(d *schema.ResourceData, meta interface{}) (*consulapi.ACLAuthMethod, error) {
-	namespace := getNamespace(d, meta)
+	_, qOpts, _ := getClient(d, meta)
 
 	var config map[string]interface{}
 	if c := d.Get("config_json").(string); c != "" {
@@ -270,7 +264,7 @@ func getAuthMethod(d *schema.ResourceData, meta interface{}) (*consulapi.ACLAuth
 		Type:          d.Get("type").(string),
 		Description:   d.Get("description").(string),
 		Config:        config,
-		Namespace:     namespace,
+		Namespace:     qOpts.Namespace,
 	}
 
 	if mtt, ok := d.GetOk("max_token_ttl"); ok {

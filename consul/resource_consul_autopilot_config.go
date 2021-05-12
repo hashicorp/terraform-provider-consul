@@ -18,31 +18,31 @@ func resourceConsulAutopilotConfig() *schema.Resource {
 		Delete: resourceConsulAutopilotConfigDelete,
 
 		Schema: map[string]*schema.Schema{
-			"datacenter": &schema.Schema{
+			"datacenter": {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-			"cleanup_dead_servers": &schema.Schema{
+			"cleanup_dead_servers": {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Default:  true,
 			},
-			"last_contact_threshold": &schema.Schema{
+			"last_contact_threshold": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Default:  "200ms",
 			},
-			"max_trailing_logs": &schema.Schema{
+			"max_trailing_logs": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Default:  250,
 			},
-			"server_stabilization_time": &schema.Schema{
+			"server_stabilization_time": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Default:  "10s",
 			},
-			"redundancy_zone_tag": &schema.Schema{
+			"redundancy_zone_tag": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Default:  "",
@@ -66,13 +66,8 @@ func resourceConsulAutopilotConfigCreate(d *schema.ResourceData, meta interface{
 }
 
 func resourceConsulAutopilotConfigUpdate(d *schema.ResourceData, meta interface{}) error {
-	client := getClient(meta)
+	client, _, wOpts := getClient(d, meta)
 	operator := client.Operator()
-
-	dc, err := getDC(d, client, meta)
-	if err != nil {
-		return err
-	}
 
 	lastContactThreshold, err := time.ParseDuration(d.Get("last_contact_threshold").(string))
 	if err != nil {
@@ -92,9 +87,6 @@ func resourceConsulAutopilotConfigUpdate(d *schema.ResourceData, meta interface{
 		DisableUpgradeMigration: d.Get("disable_upgrade_migration").(bool),
 		UpgradeVersionTag:       d.Get("upgrade_version_tag").(string),
 	}
-	wOpts := &consulapi.WriteOptions{
-		Datacenter: dc,
-	}
 	err = operator.AutopilotSetConfiguration(config, wOpts)
 	if err != nil {
 		return fmt.Errorf("Failed to update autopilot configuration: %v", err)
@@ -104,23 +96,15 @@ func resourceConsulAutopilotConfigUpdate(d *schema.ResourceData, meta interface{
 }
 
 func resourceConsulAutopilotConfigRead(d *schema.ResourceData, meta interface{}) error {
-	client := getClient(meta)
+	client, qOpts, _ := getClient(d, meta)
 	operator := client.Operator()
 
-	dc, err := getDC(d, client, meta)
-	if err != nil {
-		return err
-	}
-
-	qOpts := &consulapi.QueryOptions{
-		Datacenter: dc,
-	}
 	config, err := operator.AutopilotGetConfiguration(qOpts)
 	if err != nil {
 		return fmt.Errorf("Failed to fetch autopilot configuration: %v", err)
 	}
 
-	d.SetId(fmt.Sprintf("consul-autopilot-%s", dc))
+	d.SetId(fmt.Sprintf("consul-autopilot-%s", qOpts.Datacenter))
 
 	if err = d.Set("cleanup_dead_servers", config.CleanupDeadServers); err != nil {
 		return errwrap.Wrapf("Unable to store cleanup_dead_servers: {{err}}", err)

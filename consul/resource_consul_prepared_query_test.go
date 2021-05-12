@@ -106,10 +106,10 @@ func TestAccConsulPreparedQuery_import(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckConsulPreparedQueryDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccConsulPreparedQueryConfig,
 			},
-			resource.TestStep{
+			{
 				ResourceName:     "consul_prepared_query.foo",
 				ImportState:      true,
 				ImportStateCheck: checkFn,
@@ -123,17 +123,53 @@ func TestAccConsulPreparedQuery_blocks(t *testing.T) {
 		PreCheck:  func() { testAccPreCheck(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccConsulPreparedQueryBlocks,
 			},
-			resource.TestStep{
+			{
 				Config: testAccConsulPreparedQueryBlocks2,
 			},
-			resource.TestStep{
+			{
 				Config: testAccConsulPreparedQueryBlocks3,
 			},
-			resource.TestStep{
+			{
 				Config: testAccConsulPreparedQueryBlocks4,
+			},
+		},
+	})
+}
+
+func TestAccConsulPreparedQuery_datacenter(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:  func() { testAccRemoteDatacenterPreCheck(t) },
+		Providers: testAccProviders,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccConsulPreparedQueryDatacenter,
+				Check: func(s *terraform.State) error {
+					test := func(dc string) error {
+						c := getTestClient(testAccProvider.Meta()).PreparedQuery()
+						opts := &consulapi.QueryOptions{
+							Datacenter: dc,
+						}
+						pq, _, err := c.List(opts)
+						if err != nil {
+							return err
+						}
+
+						if len(pq) != 1 {
+							return fmt.Errorf("wrong number of prepared queries: %#v", pq)
+						}
+						if pq[0].Name != dc {
+							return fmt.Errorf("unknown prepared query %q in datacenter %q", pq[0].Name, dc)
+						}
+						return nil
+					}
+					if err := test("dc1"); err != nil {
+						return err
+					}
+					return test("dc2")
+				},
 			},
 		},
 	})
@@ -146,7 +182,7 @@ func getPreparedQuery(s *terraform.State) (*api.PreparedQueryDefinition, error) 
 	}
 	id := rn.Primary.ID
 
-	c := getClient(testAccProvider.Meta())
+	c := getTestClient(testAccProvider.Meta())
 	client := c.PreparedQuery()
 	opts := &consulapi.QueryOptions{Datacenter: "dc1"}
 	pq, _, err := client.Get(id, opts)
@@ -207,7 +243,7 @@ func testAccCheckConsulPreparedQueryExists() resource.TestCheckFunc {
 
 func testAccConsulPreparedQueryNearestN(t *testing.T) func() {
 	return func() {
-		client := getClient(testAccProvider.Meta())
+		client := getTestClient(testAccProvider.Meta())
 		wOpts := &consulapi.WriteOptions{}
 		qOpts := &consulapi.QueryOptions{}
 
@@ -358,5 +394,18 @@ resource "consul_prepared_query" "foo" {
 		type   = ""
 		regexp = ""
 	}
+}
+`
+
+const testAccConsulPreparedQueryDatacenter = `
+resource "consul_prepared_query" "dc1" {
+	name = "dc1"
+	service = "redis"
+}
+
+resource "consul_prepared_query" "dc2" {
+	datacenter = "dc2"
+	name       = "dc2"
+	service    = "redis"
 }
 `

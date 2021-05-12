@@ -66,11 +66,7 @@ func resourceConsulACLToken() *schema.Resource {
 }
 
 func resourceConsulACLTokenCreate(d *schema.ResourceData, meta interface{}) error {
-	client := getClient(meta)
-	namespace := getNamespace(d, meta)
-	wOpts := &consulapi.WriteOptions{
-		Namespace: namespace,
-	}
+	client, _, wOpts := getClient(d, meta)
 
 	log.Printf("[DEBUG] Creating ACL token")
 
@@ -89,11 +85,7 @@ func resourceConsulACLTokenCreate(d *schema.ResourceData, meta interface{}) erro
 }
 
 func resourceConsulACLTokenRead(d *schema.ResourceData, meta interface{}) error {
-	client := getClient(meta)
-	namespace := getNamespace(d, meta)
-	qOpts := &consulapi.QueryOptions{
-		Namespace: namespace,
-	}
+	client, qOpts, _ := getClient(d, meta)
 
 	id := d.Id()
 	log.Printf("[DEBUG] Reading ACL token %q", id)
@@ -144,11 +136,7 @@ func resourceConsulACLTokenRead(d *schema.ResourceData, meta interface{}) error 
 }
 
 func resourceConsulACLTokenUpdate(d *schema.ResourceData, meta interface{}) error {
-	client := getClient(meta)
-	namespace := getNamespace(d, meta)
-	wOpts := &consulapi.WriteOptions{
-		Namespace: namespace,
-	}
+	client, _, wOpts := getClient(d, meta)
 
 	id := d.Id()
 	log.Printf("[DEBUG] Updating ACL token %q", id)
@@ -166,11 +154,7 @@ func resourceConsulACLTokenUpdate(d *schema.ResourceData, meta interface{}) erro
 }
 
 func resourceConsulACLTokenDelete(d *schema.ResourceData, meta interface{}) error {
-	client := getClient(meta)
-	namespace := getNamespace(d, meta)
-	wOpts := &consulapi.WriteOptions{
-		Namespace: namespace,
-	}
+	client, _, wOpts := getClient(d, meta)
 
 	id := d.Id()
 
