@@ -32,6 +32,12 @@ func resourceConsulConfigEntry() *schema.Resource {
 				ForceNew: true,
 			},
 
+			"namespace": {
+				Type:     schema.TypeString,
+				Optional: true,
+				ForceNew: true,
+			},
+
 			"config_json": {
 				Type:             schema.TypeString,
 				Optional:         true,
@@ -46,8 +52,9 @@ func resourceConsulConfigEntryUpdate(d *schema.ResourceData, meta interface{}) e
 
 	kind := d.Get("kind").(string)
 	name := d.Get("name").(string)
+	namespace := getNamespace(d, meta)
 
-	configEntry, err := makeConfigEntry(kind, name, d.Get("config_json").(string))
+	configEntry, err := makeConfigEntry(kind, name, d.Get("config_json").(string), namespace)
 	if err != nil {
 		return err
 	}
@@ -56,7 +63,9 @@ func resourceConsulConfigEntryUpdate(d *schema.ResourceData, meta interface{}) e
 	if _, _, err := configEntries.Set(configEntry, wOpts); err != nil {
 		return fmt.Errorf("Failed to set '%s' config entry: %v", name, err)
 	}
-	qOpts := &consulapi.QueryOptions{}
+	qOpts := &consulapi.QueryOptions{
+		Namespace: namespace,
+	}
 	_, _, err = configEntries.Get(configEntry.GetKind(), configEntry.GetName(), qOpts)
 	if err != nil {
 		if strings.Contains(err.Error(), "Unexpected response code: 404") {
@@ -76,8 +85,11 @@ func resourceConsulConfigEntryRead(d *schema.ResourceData, meta interface{}) err
 	configEntries := getClient(meta).ConfigEntries()
 	configKind := d.Get("kind").(string)
 	configName := d.Get("name").(string)
+	namespace := getNamespace(d, meta)
 
-	qOpts := &consulapi.QueryOptions{}
+	qOpts := &consulapi.QueryOptions{
+		Namespace: namespace,
+	}
 	configEntry, _, err := configEntries.Get(configKind, configName, qOpts)
 	if err != nil {
 		if strings.Contains(err.Error(), "Unexpected response code: 404") {
@@ -105,7 +117,9 @@ func resourceConsulConfigEntryDelete(d *schema.ResourceData, meta interface{}) e
 	configKind := d.Get("kind").(string)
 	configName := d.Get("name").(string)
 
-	wOpts := &consulapi.WriteOptions{}
+	wOpts := &consulapi.WriteOptions{
+		Namespace: getNamespace(d, meta),
+	}
 	if _, err := configEntries.Delete(configKind, configName, wOpts); err != nil {
 		return fmt.Errorf("Failed to delete '%s' config entry: %#v", configName, err)
 	}
@@ -113,7 +127,7 @@ func resourceConsulConfigEntryDelete(d *schema.ResourceData, meta interface{}) e
 	return nil
 }
 
-func makeConfigEntry(kind, name, config string) (consulapi.ConfigEntry, error) {
+func makeConfigEntry(kind, name, config, namespace string) (consulapi.ConfigEntry, error) {
 	var configMap map[string]interface{}
 	if err := json.Unmarshal([]byte(config), &configMap); err != nil {
 		return nil, fmt.Errorf("Failed to unmarshal configMap: %v", err)
@@ -121,6 +135,7 @@ func makeConfigEntry(kind, name, config string) (consulapi.ConfigEntry, error) {
 
 	configMap["kind"] = kind
 	configMap["name"] = name
+	configMap["Namespace"] = namespace
 
 	configEntry, err := decodeConfigEntry(configMap)
 	if err != nil {
@@ -147,6 +162,7 @@ func configEntryToMap(configEntry consulapi.ConfigEntry) (map[string]interface{}
 	delete(configMap, "ModifyIndex")
 	delete(configMap, "Kind")
 	delete(configMap, "Name")
+	delete(configMap, "Namespace")
 
 	return configMap, nil
 }
@@ -172,12 +188,13 @@ func parseConfigEntry(configEntry consulapi.ConfigEntry) (string, string, string
 func diffConfigJSON(k, old, new string, d *schema.ResourceData) bool {
 	kind := d.Get("kind").(string)
 	name := d.Get("name").(string)
+	namespace := d.Get("namespace").(string)
 
-	oldEntry, err := makeConfigEntry(kind, name, old)
+	oldEntry, err := makeConfigEntry(kind, name, old, namespace)
 	if err != nil {
 		return false
 	}
-	newEntry, err := makeConfigEntry(kind, name, new)
+	newEntry, err := makeConfigEntry(kind, name, new, namespace)
 	if err != nil {
 		return false
 	}
