@@ -141,7 +141,11 @@ func resourceConsulKeyPrefixCreate(d *schema.ResourceData, meta interface{}) err
 	// do anything and that way we can recover from errors by doing an
 	// Update on subsequent runs, rather than re-attempting Create with
 	// some keys possibly already present.
-	d.SetId(pathPrefix)
+	if pathPrefix == "" {
+		d.SetId("/")
+	} else {
+		d.SetId(pathPrefix)
+	}
 
 	// Store the datacenter on this resource, which can be helpful for reference
 	// in case it was read from the provider
@@ -174,7 +178,7 @@ func resourceConsulKeyPrefixUpdate(d *schema.ResourceData, meta interface{}) err
 
 	keyClient := newKeyClient(kv, dc, token, namespace)
 
-	pathPrefix := d.Id()
+	pathPrefix := d.Get("path_prefix").(string)
 
 	if d.HasChange("subkeys") {
 		o, n := d.GetChange("subkeys")
@@ -287,7 +291,7 @@ func resourceConsulKeyPrefixRead(d *schema.ResourceData, meta interface{}) error
 
 	keyClient := newKeyClient(kv, dc, token, namespace)
 
-	pathPrefix := d.Id()
+	pathPrefix := d.Get("path_prefix").(string)
 
 	pairs, err := keyClient.GetUnderPrefix(pathPrefix)
 	if err != nil {
@@ -355,7 +359,7 @@ func resourceConsulKeyPrefixDelete(d *schema.ResourceData, meta interface{}) err
 
 	keyClient := newKeyClient(kv, dc, token, namespace)
 
-	pathPrefix := d.Id()
+	pathPrefix := d.Get("path_prefix").(string)
 
 	// Delete everything under our prefix, since the entire set of keys under
 	// the given prefix is considered to be managed exclusively by Terraform.
