@@ -51,13 +51,13 @@ script:
              --name consul-test-dc2
              -v $PWD/consul_test_dc2.hcl:/consul_test_dc2.hcl:ro
              --net host
-             docker.mirror.hashicorp.services/consul-enterprise:latest consul agent -dev -config-file consul_test_dc2.hcl
+             docker.mirror.hashicorp.services/hashicorp/consul-enterprise:latest consul agent -dev -config-file consul_test_dc2.hcl
 - docker run --rm
              -d
              --name consul-test
              -v $PWD/consul_test.hcl:/consul_test.hcl:ro
              --net host
-             docker.mirror.hashicorp.services/consul-enterprise:latest consul agent -dev -config-file consul_test.hcl
+             docker.mirror.hashicorp.services/hashicorp/consul-enterprise:latest consul agent -dev -config-file consul_test.hcl
 - TEST_REMOTE_DATACENTER=1 make testacc TESTARGS="-count=1"
 - docker stop consul-test consul-test-dc2
 - make vet
