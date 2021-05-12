@@ -1,3 +1,22 @@
+## 2.12.0 (Unreleased)
+
+NEW FEATURES:
+
+* The darwin/arm64 platform is now supported ([#253](https://github.com/hashicorp/terraform-provider-consul/issues/253) and [#254](https://github.com/hashicorp/terraform-provider-consul/issues/254)).
+* The `consul_acl_token_role_attachment` can be used to attach a role to a token created outside the Terraform configuration ([#252](https://github.com/hashicorp/terraform-provider-consul/issues/252)).
+
+IMPROVEMENTS:
+
+* The `consul_acl_token_secret_id` datasource can now look for a token in a namespace ([#242](https://github.com/hashicorp/terraform-provider-consul/issues/242)).
+* The `Content-Type` header is now present in all `PUT` and `POST` HTTP requests sent by the provider ([#255](https://github.com/hashicorp/terraform-provider-consul/issues/255)).
+* The `consul_config_entry` can now asssociate a config entry with a namespace ([#246](https://github.com/hashicorp/terraform-provider-consul/issues/246) and [#256](https://github.com/hashicorp/terraform-provider-consul/issues/256)).
+* The `consul_key_prefix` can now be used to manage keys at the root of the key-value store ([#258](https://github.com/hashicorp/terraform-provider-consul/issues/258)).
+
+BUG FIXES:
+
+* The `consul_acl_auth_method` now correctly detects changes in the configuration ([#240](https://github.com/hashicorp/terraform-provider-consul/issues/240) and [#244](https://github.com/hashicorp/terraform-provider-consul/issues/244)).
+* All resources and datasources now properly inherit the `datacenter`, `token` and `namespace` configuration from the provider when they are not set in the resource ([#8](https://github.com/hashicorp/terraform-provider-consul/issues/8) and [#259](https://github.com/hashicorp/terraform-provider-consul/issues/259))
+
 ## 2.11.0 (January 14, 2021)
 
 NEW FEATURES:
