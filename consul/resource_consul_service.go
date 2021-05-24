@@ -3,6 +3,7 @@ package consul
 import (
 	"errors"
 	"fmt"
+	"strconv"
 	"time"
 
 	consulapi "github.com/hashicorp/consul/api"
@@ -104,7 +105,31 @@ func resourceConsulService() *schema.Resource {
 				Type: schema.TypeSet,
 				Set: func(v interface{}) int {
 					m := v.(map[string]interface{})
-					return hashcode.String(m["check_id"].(string))
+					headers := []string{}
+					for _, h := range m["header"].(*schema.Set).List() {
+						name := h.(map[string]interface{})["name"].(string)
+						value := ""
+						for _, v := range h.(map[string]interface{})["value"].([]interface{}) {
+							value += "-" + v.(string)
+						}
+						headers = append(headers, fmt.Sprintf("%s=%s", name, value))
+					}
+
+					attrs := []string{
+						m["check_id"].(string),
+						m["name"].(string),
+						m["notes"].(string),
+						m["tcp"].(string),
+						m["http"].(string),
+						strconv.FormatBool(m["tls_skip_verify"].(bool)),
+						m["method"].(string),
+						m["interval"].(string),
+						m["timeout"].(string),
+						m["deregister_critical_service_after"].(string),
+					}
+					attrs = append(attrs, headers...)
+
+					return hashcode.String(hashcode.Strings(attrs))
 				},
 				Optional: true,
 				Elem: &schema.Resource{
