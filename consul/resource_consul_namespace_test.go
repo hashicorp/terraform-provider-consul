@@ -49,6 +49,11 @@ func TestAccConsulNamespace(t *testing.T) {
 					resource.TestCheckResourceAttr("consul_namespace.test", "policy_defaults.0", "bar"),
 				),
 			},
+			{
+				ResourceName:      "consul_namespace.test",
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
 		},
 	})
 }
