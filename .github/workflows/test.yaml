@@ -78,7 +78,6 @@ jobs:
              -v $PWD/consul_test_dc2.hcl:/consul_test_dc2.hcl:ro \
              --net host \
              docker.mirror.hashicorp.services/hashicorp/consul-enterprise:latest consul agent -dev -config-file consul_test_dc2.hcl
-      run: |
         docker run --rm \
              -d \
              --name consul-test \
