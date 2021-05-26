@@ -15,7 +15,7 @@ func testAccCheckConsulACLTokenRoleAttachmentDestroy(s *terraform.State) error {
 		if rs.Type != "consul_acl_token_role_attachment" {
 			continue
 		}
-		tokenID, roleName, err := parseTwoPartID(rs.Primary.ID, "role")
+		tokenID, roleName, err := parseTwoPartID(rs.Primary.ID, "token", "role")
 		if err != nil {
 			return fmt.Errorf("Invalid ACL token role attachment id '%q'", rs.Primary.ID)
 		}

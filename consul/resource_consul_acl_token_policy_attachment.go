@@ -36,7 +36,7 @@ func resourceConsulACLTokenPolicyAttachment() *schema.Resource {
 }
 
 func resourceConsulACLTokenPolicyAttachmentCreate(d *schema.ResourceData, meta interface{}) error {
-	client, qOpts, _ := getClient(d, meta)
+	client, qOpts, wOpts := getClient(d, meta)
 
 	log.Printf("[DEBUG] Creating ACL token policy attachment")
 
@@ -58,7 +58,7 @@ func resourceConsulACLTokenPolicyAttachmentCreate(d *schema.ResourceData, meta i
 		Name: newPolicyName,
 	})
 
-	_, _, err = client.ACL().TokenUpdate(aclToken, nil)
+	_, _, err = client.ACL().TokenUpdate(aclToken, wOpts)
 	if err != nil {
 		return fmt.Errorf("Error updating ACL token '%q' to set new policy attachment: '%s'", tokenID, err)
 	}
@@ -78,7 +78,7 @@ func resourceConsulACLTokenPolicyAttachmentRead(d *schema.ResourceData, meta int
 	id := d.Id()
 	log.Printf("[DEBUG] Reading ACL token policy attachment '%q'", id)
 
-	tokenID, policyName, err := parseTwoPartID(id, "policy")
+	tokenID, policyName, err := parseTwoPartID(id, "token", "policy")
 	if err != nil {
 		return fmt.Errorf("Invalid ACL token policy attachment id '%q'", id)
 	}
@@ -124,7 +124,7 @@ func resourceConsulACLTokenPolicyAttachmentDelete(d *schema.ResourceData, meta i
 	id := d.Id()
 	log.Printf("[DEBUG] Reading ACL token policy attachment '%q'", id)
 
-	tokenID, policyName, err := parseTwoPartID(id, "policy")
+	tokenID, policyName, err := parseTwoPartID(id, "token", "policy")
 	if err != nil {
 		return fmt.Errorf("Invalid ACL token policy attachment id '%q'", id)
 	}
@@ -151,10 +151,10 @@ func resourceConsulACLTokenPolicyAttachmentDelete(d *schema.ResourceData, meta i
 }
 
 // return the pieces of id `a:b` as a, b
-func parseTwoPartID(id, name string) (string, string, error) {
+func parseTwoPartID(id, resource, name string) (string, string, error) {
 	parts := strings.SplitN(id, ":", 2)
 	if len(parts) != 2 {
-		return "", "", fmt.Errorf("Unexpected ID format (%q). Expected token_id:%s_name", id, name)
+		return "", "", fmt.Errorf("Unexpected ID format (%q). Expected %s_id:%s_name", id, resource, name)
 	}
 
 	return parts[0], parts[1], nil
