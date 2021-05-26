@@ -175,6 +175,7 @@ func Provider() terraform.ResourceProvider {
 			"consul_license":                     resourceConsulLicense(),
 			"consul_namespace":                   resourceConsulNamespace(),
 			"consul_namespace_policy_attachment": resourceConsulNamespacePolicyAttachment(),
+			"consul_namespace_role_attachment":   resourceConsulNamespaceRoleAttachment(),
 			"consul_node":                        resourceConsulNode(),
 			"consul_prepared_query":              resourceConsulPreparedQuery(),
 			"consul_autopilot_config":            resourceConsulAutopilotConfig(),

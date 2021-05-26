@@ -37,16 +37,13 @@ func resourceConsulNamespacePolicyAttachmentCreate(d *schema.ResourceData, meta 
 	client, qOpts, wOpts := getClient(d, meta)
 
 	name := d.Get("namespace").(string)
-	namespace, _, err := client.Namespaces().Read(name, qOpts)
-	if err != nil {
-		return fmt.Errorf("Failed to read namespace %q: %s", name, err)
-	}
-
-	if namespace == nil {
-		return fmt.Errorf("Namespace %q not found", name)
-	}
-
 	policy := d.Get("policy").(string)
+
+	namespace, err := findNamespace(client, qOpts, name)
+	if err != nil {
+		return err
+	}
+
 	for _, p := range namespace.ACLs.PolicyDefaults {
 		if p.Name == policy {
 			return fmt.Errorf("Policy %q already attached to the namespace", policy)
@@ -59,7 +56,7 @@ func resourceConsulNamespacePolicyAttachmentCreate(d *schema.ResourceData, meta 
 
 	_, _, err = client.Namespaces().Update(namespace, wOpts)
 	if err != nil {
-		return fmt.Errorf("Failed to update namespace %q to attach policy %q", name, policy)
+		return fmt.Errorf("Failed to update namespace %q to attach policy %q: %s", name, policy, err)
 	}
 
 	d.SetId(fmt.Sprintf("%s:%s", name, policy))
@@ -76,6 +73,9 @@ func resourceConsulNamespacePolicyAttachmentRead(d *schema.ResourceData, meta in
 	}
 
 	namespace, _, err := client.Namespaces().Read(name, qOpts)
+	if err != nil {
+		return fmt.Errorf("Failed to read namespace %q: %s", name, err)
+	}
 	if namespace == nil {
 		d.SetId("")
 		return nil
@@ -111,12 +111,9 @@ func resourceConsulNamespacePolicyAttachmentDelete(d *schema.ResourceData, meta 
 		return err
 	}
 
-	namespace, _, err := client.Namespaces().Read(name, qOpts)
+	namespace, err := findNamespace(client, qOpts, name)
 	if err != nil {
-		return fmt.Errorf("Failed to get namespace %q: %s", name, err)
-	}
-	if namespace == nil {
-		return fmt.Errorf("Namespace %q not found", name)
+		return err
 	}
 
 	for i, p := range namespace.ACLs.PolicyDefaults {
