@@ -34,7 +34,7 @@ jobs:
       run: make test
     - name: Run tfproviderlint
       run: docker run -v $PWD:/src docker.mirror.hashicorp.services/bflad/tfproviderlint -S006 -S022 -S023 ./...
-    - name: Run test (1)
+    - name: Run OSS acceptance tests
       run: |
         docker run --rm \
              -d \
@@ -44,7 +44,7 @@ jobs:
              docker.mirror.hashicorp.services/consul:latest consul agent -dev -config-file consul_test.hcl -client=0.0.0.0
         make testacc TESTARGS="-count=1"
         docker stop consul-test
-    - name: Run test (2)
+    - name: Run enterprise acceptance tests
       run: |  
         docker run --rm \
              -d \
@@ -54,7 +54,7 @@ jobs:
              docker.mirror.hashicorp.services/hashicorp/consul-enterprise:latest consul agent -dev -config-file consul_test.hcl -client=0.0.0.0
         make testacc TESTARGS="-count=1"
         docker stop consul-test
-    - name: Run test (3)
+    - name: Run OSS dc tests
       run: |
         docker run --rm \
              -d \
@@ -62,8 +62,6 @@ jobs:
              -v $PWD/consul_test_dc2.hcl:/consul_test_dc2.hcl:ro \
              --net host \
              docker.mirror.hashicorp.services/consul:latest consul agent -dev -config-file consul_test_dc2.hcl
-    - name: Run test (4)
-      run: |
         docker run --rm \
              -d \
              --name consul-test \
@@ -72,7 +70,7 @@ jobs:
              docker.mirror.hashicorp.services/consul:latest consul agent -dev -config-file consul_test.hcl
         TEST_REMOTE_DATACENTER=1 make testacc TESTARGS="-count=1"
         docker stop consul-test consul-test-dc2
-    - name: Run test (5)
+    - name: Run enterprise dc tests
       run: | 
         docker run --rm \
              -d \
@@ -80,7 +78,6 @@ jobs:
              -v $PWD/consul_test_dc2.hcl:/consul_test_dc2.hcl:ro \
              --net host \
              docker.mirror.hashicorp.services/hashicorp/consul-enterprise:latest consul agent -dev -config-file consul_test_dc2.hcl
-    - name: Run test (6)
       run: |
         docker run --rm \
              -d \
