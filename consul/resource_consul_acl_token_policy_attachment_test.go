@@ -15,7 +15,7 @@ func testAccCheckConsulACLTokenPolicyAttachmentDestroy(s *terraform.State) error
 		if rs.Type != "consul_acl_token_policy_attachment" {
 			continue
 		}
-		tokenID, policyName, err := parseTwoPartID(rs.Primary.ID, "policy")
+		tokenID, policyName, err := parseTwoPartID(rs.Primary.ID, "token", "policy")
 		if err != nil {
 			return fmt.Errorf("Invalid ACL token policy attachment id '%q'", rs.Primary.ID)
 		}

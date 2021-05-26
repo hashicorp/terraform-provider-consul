@@ -78,7 +78,7 @@ func resourceConsulACLTokenRoleAttachmentRead(d *schema.ResourceData, meta inter
 	id := d.Id()
 	log.Printf("[DEBUG] Reading ACL token role attachment '%q'", id)
 
-	tokenID, roleName, err := parseTwoPartID(id, "role")
+	tokenID, roleName, err := parseTwoPartID(id, "token", "role")
 	if err != nil {
 		return fmt.Errorf("Invalid ACL token role attachment id '%q'", id)
 	}
@@ -124,7 +124,7 @@ func resourceConsulACLTokenRoleAttachmentDelete(d *schema.ResourceData, meta int
 	id := d.Id()
 	log.Printf("[DEBUG] Reading ACL token role attachment '%q'", id)
 
-	tokenID, roleName, err := parseTwoPartID(id, "role")
+	tokenID, roleName, err := parseTwoPartID(id, "token", "role")
 	if err != nil {
 		return fmt.Errorf("Invalid ACL token role attachment id '%q'", id)
 	}
