@@ -82,7 +82,10 @@ func TestAccDataConsulServices_datacenter(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDataConsulCatalogServicesDatacenter,
-				Check:  testAccCheckDataSourceValue("data.consul_services.read", "services.%", "2"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDataSourceValue("data.consul_services.read", "services.%", "2"),
+					testAccCheckDataSourceValue("data.consul_services.read", "tags.tag0", "test"),
+				),
 			},
 		},
 	})
@@ -140,6 +143,7 @@ resource "consul_service" "test" {
 	name       = "test"
 	node       = consul_node.test.name
 	port       = 80
+	tags       = ["tag0"]
 }
 
 data "consul_services" "read" {

@@ -41,6 +41,13 @@ func dataSourceConsulServices() *schema.Resource {
 					Type: schema.TypeString,
 				},
 			},
+			"tags": {
+				Computed: true,
+				Type:     schema.TypeMap,
+				Elem: &schema.Schema{
+					Type: schema.TypeString,
+				},
+			},
 		},
 	}
 }
@@ -56,7 +63,7 @@ func dataSourceConsulServicesRead(d *schema.ResourceData, meta interface{}) erro
 		return err
 	}
 
-	catalogServices := make(map[string]interface{}, len(services))
+	catalogServices := make(map[string]string, len(services))
 	for name, tags := range services {
 		tagList := make([]string, 0, len(tags))
 		tagList = append(tagList, tags...)
@@ -64,7 +71,22 @@ func dataSourceConsulServicesRead(d *schema.ResourceData, meta interface{}) erro
 		catalogServices[name] = strings.Join(tagList, " ")
 	}
 
-	serviceNames := make([]interface{}, 0, len(services))
+	catalogTags := make(map[string]string)
+	for serviceName, tags := range catalogServices {
+		for _, tag := range strings.Fields(tags) {
+			if services, ok := catalogTags[tag]; ok {
+				if !strings.Contains(services, serviceName) {
+					updatedServices := append(strings.Fields(services), serviceName)
+					sort.Strings(updatedServices)
+					catalogTags[tag] = strings.Join(updatedServices, " ")
+				}
+			} else {
+				catalogTags[tag] = serviceName
+			}
+		}
+	}
+
+	serviceNames := make([]string, 0, len(services))
 	for k := range catalogServices {
 		serviceNames = append(serviceNames, k)
 	}
@@ -75,6 +97,10 @@ func dataSourceConsulServicesRead(d *schema.ResourceData, meta interface{}) erro
 	d.Set("datacenter", qOpts.Datacenter)
 	if err := d.Set("services", catalogServices); err != nil {
 		return errwrap.Wrapf("Unable to store services: {{err}}", err)
+	}
+
+	if err := d.Set("tags", catalogTags); err != nil {
+		return errwrap.Wrapf("Unable to store tags: {{err}}", err)
 	}
 
 	if err := d.Set("names", serviceNames); err != nil {
