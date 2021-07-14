@@ -21,8 +21,8 @@ func TestAccConsulConfigEntry_basic(t *testing.T) {
 
 	// Expected values for Consul Community Edition
 	extraConf := ""
-	configJSONServiceDefaults := "{\"Expose\":{},\"MeshGateway\":{},\"Protocol\":\"https\"}"
-	configJSONProxyDefaults := "{\"Config\":{\"foo\":\"bar\"},\"Expose\":{},\"MeshGateway\":{}}"
+	configJSONServiceDefaults := "{\"Expose\":{},\"MeshGateway\":{},\"Protocol\":\"https\",\"TransparentProxy\":{}}"
+	configJSONProxyDefaults := "{\"Config\":{\"foo\":\"bar\"},\"Expose\":{},\"MeshGateway\":{},\"TransparentProxy\":{}}"
 	configJSONServiceRouter := "{\"Routes\":[{\"Destination\":{\"Namespace\":\"default\",\"Service\":\"admin\"},\"Match\":{\"HTTP\":{\"PathPrefix\":\"/admin\"}}}]}"
 	configJSONServiceSplitter := "{\"Splits\":[{\"ServiceSubset\":\"v1\",\"Weight\":90},{\"ServiceSubset\":\"v2\",\"Weight\":10}]}"
 	configJSONServiceResolver := "{\"DefaultSubset\":\"v1\",\"Subsets\":{\"v1\":{\"Filter\":\"Service.Meta.version == v1\"},\"v2\":{\"Filter\":\"Service.Meta.version == v2\"}}}"
@@ -217,8 +217,9 @@ resource "consul_config_entry" "foo" {
 	kind = "service-defaults"
 
 	config_json = jsonencode({
-		MeshGateway = {}
-		Protocol    = "https"
+		MeshGateway      = {}
+		Protocol         = "https"
+		TransparentProxy = {}
 		%s
 	})
 }
@@ -232,7 +233,9 @@ resource "consul_config_entry" "foo" {
 	kind = "service-defaults"
 
 	config_json = jsonencode({
-		Protocol    = "https"
+		Expose           = {}
+		Protocol         = "https"
+		TransparentProxy = {}
 		%s
 	})
 }
@@ -261,6 +264,8 @@ resource "consul_config_entry" "foo" {
 		Config = {
 			foo = "bar"
 		}
+		MeshGateway      = {}
+		TransparentProxy = {}
 		%s
 	})
 }
@@ -274,7 +279,10 @@ resource "consul_config_entry" "web" {
 	kind = "service-defaults"
 
 	config_json = jsonencode({
-		Protocol = "http"
+		Expose           = {}
+		MeshGateway      = {}
+		TransparentProxy = {}
+		Protocol         = "http"
 		%s
 	})
 }
@@ -284,7 +292,10 @@ resource "consul_config_entry" "admin_service_defaults" {
 	kind = "service-defaults"
 
 	config_json = jsonencode({
-		Protocol = "http"
+		Expose           = {}
+		MeshGateway      = {}
+		TransparentProxy = {}
+		Protocol         = "http"
 		%s
 	})
 }
@@ -323,7 +334,10 @@ resource "consul_config_entry" "web" {
 
 	config_json = jsonencode({
 		%s
-		Protocol = "http"
+		Protocol         = "http"
+		Expose           = {}
+		MeshGateway      = {}
+		TransparentProxy = {}
 	})
 }
 
@@ -375,7 +389,10 @@ resource "consul_config_entry" "web" {
 
 	config_json = jsonencode({
 		%s
-		Protocol = "http"
+		Protocol         = "http"
+		Expose           = {}
+		MeshGateway      = {}
+		TransparentProxy = {}
 	})
 }
 
@@ -489,7 +506,10 @@ resource "consul_config_entry" "sd" {
 	kind = "service-defaults"
 
 	config_json = jsonencode({
-		Protocol = "http"
+		Protocol         = "http"
+		Expose           = {}
+		MeshGateway      = {}
+		TransparentProxy = {}
 	})
 }
 
@@ -547,7 +567,10 @@ resource "consul_config_entry" "sd" {
 	kind = "service-defaults"
 
 	config_json = jsonencode({
-		Protocol = "http"
+		Protocol         = "http"
+		Expose           = {}
+		MeshGateway      = {}
+		TransparentProxy = {}
 	})
 }
 
@@ -600,7 +623,10 @@ resource "consul_config_entry" "sd" {
 	kind = "service-defaults"
 
 	config_json = jsonencode({
-		Protocol = "grpc"
+		Protocol         = "grpc"
+		Expose           = {}
+		MeshGateway      = {}
+		TransparentProxy = {}
 	})
 }
 
@@ -658,7 +684,10 @@ resource "consul_config_entry" "sd" {
 
 	config_json = jsonencode({
 		%s
-		Protocol = "grpc"
+		Protocol         = "grpc"
+		Expose           = {}
+		MeshGateway      = {}
+		TransparentProxy = {}
 	})
 }
 
