@@ -6,6 +6,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 	"golang.org/x/mod/semver"
@@ -187,6 +188,28 @@ func TestResourceProvider_ConfigureTLSInsecureHttpsMismatch(t *testing.T) {
 // 	}
 // }
 
+func TestAccTokenReadProviderConfigureWithHeaders(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		Providers: testAccProviders,
+		PreCheck:  func() { testAccPreCheck(t) },
+		Steps: []resource.TestStep{
+			{
+				Config: testHeaderConfig,
+			},
+		},
+	})
+
+	rootProvider := Provider().(*schema.Provider)
+
+	rootProviderResource := &schema.Resource{
+		Schema: rootProvider.Schema,
+	}
+	rootProviderData := rootProviderResource.TestResourceData()
+	if _, err := providerConfigure(rootProviderData); err != nil {
+		t.Fatal(err)
+	}
+}
+
 func testAccPreCheck(t *testing.T) {
 	if os.Getenv("CONSUL_HTTP_ADDR") != "" {
 		return
@@ -242,5 +265,18 @@ func skipTestForVersionsAfter(t *testing.T, version string) {
 	if semver.Compare(version, v) >= 0 {
 		t.Skipf("Test skipped because Consul version %q is greater or equal to %q", v, version)
 	}
-
 }
+
+// lintignore: AT004
+var testHeaderConfig = `
+provider "consul" {
+	header {
+		name  = "auth"
+		value = "123"
+	}
+}
+
+data "consul_key_prefix" "read" {
+	path_prefix = "foo/"
+}
+`

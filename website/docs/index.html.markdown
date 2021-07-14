@@ -64,6 +64,13 @@ The following arguments are supported:
 * `key_pem`- (Optional) PEM-encoded private key, required if `cert_file` or `cert_pem` is specified.
 * `ca_path` - (Optional) A path to a directory of PEM-encoded certificate authority files to use to check the authenticity of client and server connections. Can also be specified with the `CONSUL_CAPATH` environment variable.
 * `insecure_https`- (Optional) Boolean value to disable SSL certificate verification; setting this value to true is not recommended for production use. Only use this with scheme set to "https".
+* `header` - (Optional) A configuration block, described below, that provides additional headers to be sent along with all requests to the Consul server. This block can be specified multiple times.
+
+The `header` configuration block accepts the following arguments:
+
+ * `name` - (Required) The name of the header.
+
+ * `value` - (Required) The value of the header.
 
 ## Environment Variables
 
