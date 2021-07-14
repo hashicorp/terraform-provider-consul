@@ -10,7 +10,10 @@ import (
 
 func TestAccConsulLicense_FailOnCommunityEdition(t *testing.T) {
 	resource.Test(t, resource.TestCase{
-		PreCheck:  func() { skipTestOnConsulEnterpriseEdition(t) },
+		PreCheck: func() {
+			skipTestOnConsulEnterpriseEdition(t)
+			skipTestForVersionsAfter(t, "1.10")
+		},
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
 			{
