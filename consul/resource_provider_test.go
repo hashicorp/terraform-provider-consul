@@ -8,6 +8,7 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"golang.org/x/mod/semver"
 )
 
 var testAccProviders map[string]terraform.ResourceProvider
@@ -227,4 +228,19 @@ func skipTestOnConsulEnterpriseEdition(t *testing.T) {
 	if !serverIsConsulCommunityEdition(t) {
 		t.Skip("Test skipped on Consul Enterprise Edition. Use a Consul Community server to run this test.")
 	}
+}
+
+func skipTestForVersionsAfter(t *testing.T, version string) {
+	testAccPreCheck(t)
+
+	client := getTestClient(testAccProvider.Meta())
+	self, err := client.Agent().Self()
+	if err != nil {
+		t.Fatalf("failed to get agent information: %v", err)
+	}
+	v := self["Config"]["Version"].(string)
+	if semver.Compare(version, v) >= 0 {
+		t.Skipf("Test skipped because Consul version %q is greater or equal to %q", v, version)
+	}
+
 }
