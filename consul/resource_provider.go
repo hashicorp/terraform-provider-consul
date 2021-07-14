@@ -111,11 +111,11 @@ func Provider() terraform.ResourceProvider {
 				Optional: true,
 			},
 
-			"headers": {
+			"header": {
 				Type:        schema.TypeList,
 				Optional:    true,
 				Sensitive:   true,
-				Description: "The headers to send with each Consul request.",
+				Description: "Additional headers to send with each Consul request.",
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"name": {
@@ -200,7 +200,7 @@ func providerConfigure(d *schema.ResourceData) (interface{}, error) {
 	config.client = client
 
 	// Set headers if provided
-	headers := d.Get("headers").([]interface{})
+	headers := d.Get("header").([]interface{})
 	parsedHeaders := client.Headers().Clone()
 
 	if parsedHeaders == nil {
@@ -209,9 +209,7 @@ func providerConfigure(d *schema.ResourceData) (interface{}, error) {
 
 	for _, h := range headers {
 		header := h.(map[string]interface{})
-		if name, ok := header["name"]; ok {
-			parsedHeaders.Add(name.(string), header["value"].(string))
-		}
+		parsedHeaders.Add(header["name"].(string), header["value"].(string))
 	}
 	client.SetHeaders(parsedHeaders)
 	return config, nil
