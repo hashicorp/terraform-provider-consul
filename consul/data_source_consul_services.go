@@ -63,7 +63,7 @@ func dataSourceConsulServicesRead(d *schema.ResourceData, meta interface{}) erro
 		return err
 	}
 
-	catalogServices := make(map[string]string, len(services))
+	catalogServices := make(map[string]interface{}, len(services))
 	for name, tags := range services {
 		tagList := make([]string, 0, len(tags))
 		tagList = append(tagList, tags...)
@@ -71,22 +71,7 @@ func dataSourceConsulServicesRead(d *schema.ResourceData, meta interface{}) erro
 		catalogServices[name] = strings.Join(tagList, " ")
 	}
 
-	catalogTags := make(map[string]string)
-	for serviceName, tags := range catalogServices {
-		for _, tag := range strings.Fields(tags) {
-			if services, ok := catalogTags[tag]; ok {
-				if !strings.Contains(services, serviceName) {
-					updatedServices := append(strings.Fields(services), serviceName)
-					sort.Strings(updatedServices)
-					catalogTags[tag] = strings.Join(updatedServices, " ")
-				}
-			} else {
-				catalogTags[tag] = serviceName
-			}
-		}
-	}
-
-	serviceNames := make([]string, 0, len(services))
+	serviceNames := make([]interface{}, 0, len(services))
 	for k := range catalogServices {
 		serviceNames = append(serviceNames, k)
 	}
@@ -99,7 +84,25 @@ func dataSourceConsulServicesRead(d *schema.ResourceData, meta interface{}) erro
 		return errwrap.Wrapf("Unable to store services: {{err}}", err)
 	}
 
-	if err := d.Set("tags", catalogTags); err != nil {
+	catalogTags := map[string]map[string]struct{}{}
+	for serviceName, tags := range services {
+		for _, tag := range tags {
+			if _, found := catalogTags[tag]; !found {
+				catalogTags[tag] = map[string]struct{}{}
+			}
+			catalogTags[tag][serviceName] = struct{}{}
+		}
+	}
+	ct := map[string]string{}
+	for tag, services := range catalogTags {
+		serviceList := []string{}
+		for s := range services {
+			serviceList = append(serviceList, s)
+		}
+		sort.Strings(serviceList)
+		ct[tag] = strings.Join(serviceList, " ")
+	}
+	if err := d.Set("tags", ct); err != nil {
 		return errwrap.Wrapf("Unable to store tags: {{err}}", err)
 	}
 
