@@ -1,3 +1,21 @@
+## 2.13.0
+
+NEW FEATURES:
+
+* The `consul_namespace_policy_attachment` and the `consul_namespace_role_attachment` can now be used to attach a default policy or role to an already existing Consul namespace ([#247](https://github.com/hashicorp/terraform-provider-consul/issues/247) and [#267](https://github.com/hashicorp/terraform-provider-consul/issues/267)).
+* Additional headers can be set to be sent with each requests to the Consul server using the `header` block in the provider configuration ([#245](https://github.com/hashicorp/terraform-provider-consul/issues/245)).
+
+IMPROVEMENTS:
+
+* The `consul_namespace` resource can now be imported ([#247](https://github.com/hashicorp/terraform-provider-consul/issues/247) and [#263](https://github.com/hashicorp/terraform-provider-consul/issues/263)).
+* The `tags` attribute in the `consul_services` datasource that was previously documented but missing is now present ([#274](https://github.com/hashicorp/terraform-provider-consul/issues/274)).
+
+BUG FIXES:
+
+* The `consul_service` now properly detect drift in the health-check configuration ([#237](https://github.com/hashicorp/terraform-provider-consul/issues/237) and [#262](https://github.com/hashicorp/terraform-provider-consul/issues/262)).
+* Detecting incorrect configuration in `consul_acl_auth_method` is now deferred until read to unsure the configuration has been interpolated ([#260](https://github.com/hashicorp/terraform-provider-consul/issues/260) and [#261](https://github.com/hashicorp/terraform-provider-consul/issues/261)).
+
+
 ## 2.12.0 (May 12, 2021)
 
 NEW FEATURES:
