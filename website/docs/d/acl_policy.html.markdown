@@ -3,7 +3,7 @@ layout: "consul"
 page_title: "Consul: consul_acl_policy"
 sidebar_current: "docs-consul-data-source-acl-policy"
 description: |-
-  Provides information about a Consul ACL Poliy.
+  Provides information about a Consul ACL Policy.
 ---
 
 # consul_acl_policy

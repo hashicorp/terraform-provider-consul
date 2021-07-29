@@ -53,9 +53,9 @@ The `query_options` block supports the following:
 
 * `token` - (Optional) Specify the Consul ACL token to use when performing the
   request.  This defaults to the same API token configured by the `consul`
-  provider but may be overriden if necessary.
+  provider but may be overridden if necessary.
 
-* `wait_index` - (Optional) Index number used to enable blocking quereis.
+* `wait_index` - (Optional) Index number used to enable blocking queries.
 
 * `wait_time` - (Optional) Max time the client should wait for a blocking query
   to return.

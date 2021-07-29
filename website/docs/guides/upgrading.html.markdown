@@ -47,12 +47,12 @@ resource "consul_config_entry" "database" {
 
 ### Changes to consul_service
 
-The `external` attribute introduced in 2.3.0 has been deprecated and does not
-update the associated Consul Node meta information anymore. The same functionality
-can be done by setting the meta attribute on the `consul_node` resource:
+The `external` attribute introduced in 2.3.0 has been deprecated and no longer
+updates the associated Consul Node meta information. The same functionality
+can be achieved by setting the meta attribute on the `consul_node` resource:
 
 ``` terraform
-# This was working in 2.3.0
+# (Deprecated) External service configuration in 2.3.0
 resource "consul_node" "compute" {
   name    = "compute-example"
   address = "www.hashicorptest.com"
@@ -66,7 +66,7 @@ resource "consul_service" "example1" {
   external = true
 }
 
-# This is working in 2.4.0
+# Updated configuration as of 2.4.0
 resource "consul_node" "compute" {
   name    = "compute-example"
   address = "www.hashicorptest.com"
