@@ -72,6 +72,9 @@ func TestAccConsulACLAuthMethod_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("consul_acl_auth_method.test", "config_json", "{\"BoundIssuer\":\"corp-issuer\",\"ClaimMappings\":{\"http://example.com/first_name\":\"first_name\",\"http://example.com/last_name\":\"last_name\"},\"JWTValidationPubKeys\":[\"-----BEGIN PUBLIC KEY-----\\nMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAryQICCl6NZ5gDKrnSztO\\n3Hy8PEUcuyvg/ikC+VcIo2SFFSf18a3IMYldIugqqqZCs4/4uVW3sbdLs/6PfgdX\\n7O9D22ZiFWHPYA2k2N744MNiCD1UE+tJyllUhSblK48bn+v1oZHCM0nYQ2NqUkvS\\nj+hwUU3RiWl7x3D2s9wSdNt7XUtW05a/FXehsPSiJfKvHJJnGOX0BgTvkLnkAOTd\\nOrUZ/wK69Dzu4IvrN4vs9Nes8vbwPa/ddZEzGR0cQMt0JBkhk9kU/qwqUseP1QRJ\\n5I1jR4g8aYPL/ke9K35PxZWuDp3U0UPAZ3PjFAh+5T+fc7gzCs9dPzSHloruU+gl\\nFQIDAQAB\\n-----END PUBLIC KEY-----\"],\"ListClaimMappings\":{\"http://example.com/groups\":\"groups\"}}"),
 				),
 			},
+			{
+				Config: testResourceACLAuthMethod_interpolation,
+			},
 		},
 	})
 }
@@ -330,3 +333,37 @@ resource "consul_acl_auth_method" "test" {
 		ServiceAccountJWT = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c"
 	}
 }`
+
+const testResourceACLAuthMethod_interpolation = `
+resource "consul_keys" "test" {
+  datacenter = "dc1"
+
+  key {
+		path   = "test/service_account"
+		value  = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c"
+		delete = true
+	}
+}
+
+data "consul_keys" "test" {
+  datacenter = consul_keys.test.datacenter
+
+  key {
+		name = "service_account"
+		path = "test/service_account"
+	}
+}
+
+resource "consul_acl_auth_method" "auth_method" {
+	name = "test"
+	type = "kubernetes"
+
+	config_json = jsonencode({
+	    Host = "host"
+	    CACert = <<-EOF
+` + testCert + `
+		EOF
+	    ServiceAccountJWT = data.consul_keys.test.var.service_account
+	})
+  }
+`
