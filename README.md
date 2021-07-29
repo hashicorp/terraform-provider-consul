@@ -1,7 +1,7 @@
 Terraform Provider
 ==================
 
-- Website: https://www.terraform.io
+- Website: <https://www.terraform.io>
 - [![Gitter chat](https://badges.gitter.im/hashicorp-terraform/Lobby.png)](https://gitter.im/hashicorp-terraform/Lobby)
 - Mailing list: [Google Groups](http://groups.google.com/group/terraform-tool)
 
@@ -15,8 +15,8 @@ This provider plugin is maintained by the Consul team at [HashiCorp](https://www
 Requirements
 ------------
 
--	[Terraform](https://www.terraform.io/downloads.html) >= 0.13.x
--	[Go](https://golang.org/doc/install) >= 1.15
+- [Terraform](https://www.terraform.io/downloads.html) >= 0.13.x
+- [Go](https://golang.org/doc/install) >= 1.15
 
 Building The Provider
 ---------------------
@@ -24,8 +24,9 @@ Building The Provider
 1. Clone the repository
 1. Enter the repository directory
 1. Build the provider using the Go `install` command:
+
 ```sh
-$ go install
+go install
 ```
 
 Developing the Provider
@@ -38,7 +39,7 @@ To compile the provider, run `go install`. This will build the provider and put 
 In order to test the provider, you can simply run `make test`.
 
 ```sh
-$ make test
+make test
 ```
 
 In order to run the full suite of Acceptance tests, run `make testacc`.
@@ -77,28 +78,28 @@ If you have [Docker](https://docs.docker.com/install/) installed, you can
 run Consul with the following command:
 
 ```sh
-$ make test-serv
+make test-serv
 ```
 
 By default, this will use the latest version of Consul based on the latest
 image in the Docker repository. You can specify a version with the following:
 
 ```sh
-$ CONSUL_VERSION=1.0.1 make test-serv
+CONSUL_VERSION=1.0.1 make test-serv
 ```
 
 This command will run attached and will stop Consul when
-interrupted. Images will be cached locally by Docker so it is quicky to
+interrupted. Images will be cached locally by Docker so it is quickly to
 restart the server as necessary. This will expose Consul on the default
-adddress.
+address.
 
 Nightly acceptance tests are run against the `latest` tag of the Consul
 Docker image. To run the acceptance tests against a development
-version of Consul, you can [compile it](https://github.com/hashicorp/consul#developing-consul)
+version of Consul, you can [compile it](https://github.com/hashicorp/consul/blob/main/.github/CONTRIBUTING.md#building-consul)
 locally and then run it in development mode:
 
-```
-$ consul agent -dev
+```shell
+consul agent -dev
 ```
 
 It is also possible to run additional tests to test the provider with multiple
