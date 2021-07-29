@@ -13,6 +13,9 @@ func resourceConsulNamespace() *schema.Resource {
 		Read:   resourceConsulNamespaceRead,
 		Update: resourceConsulNamespaceUpdate,
 		Delete: resourceConsulNamespaceDelete,
+		Importer: &schema.ResourceImporter{
+			State: schema.ImportStatePassthrough,
+		},
 
 		Schema: map[string]*schema.Schema{
 			"name": {
@@ -71,6 +74,9 @@ func resourceConsulNamespaceRead(d *schema.ResourceData, meta interface{}) error
 		return fmt.Errorf("failed to read namespace '%s': %v", name, err)
 	}
 
+	if err = d.Set("name", namespace.Name); err != nil {
+		return fmt.Errorf("failed to set 'name': %v", err)
+	}
 	if err = d.Set("description", namespace.Description); err != nil {
 		return fmt.Errorf("failed to set 'description': %v", err)
 	}

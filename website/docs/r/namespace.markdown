@@ -50,3 +50,12 @@ The following attributes are exported:
 * `role_defaults` - The list of default roles that will be applied
   to all tokens created in this namespace.
 * `meta` - Arbitrary KV metadata associated with the namespace.
+
+## Import
+
+`consul_namespace` can be imported. This is useful to manage attributes of the
+default namespace that is created automatically:
+
+```
+$ terraform import consul_namespace.default default
+```
