@@ -31,7 +31,7 @@ resource "consul_acl_token" "test" {
 }
 ```
 
-### Set explictly the `accessor_id`
+### Explicitly set the `accessor_id`
 
 ```hcl
 resource "random_uuid" "test" { }

@@ -15,7 +15,7 @@ with a [local agent](https://www.consul.io/docs/agent/basics.html).
 
 -> **NOTE:** If a Consul agent is running on the node where this service is
 registered, it is not recommended to use this resource as the service will be
-removed during the next [anti-entropy synchronisation](https://www.consul.io/docs/architecture/anti-entropy).
+removed during the next [anti-entropy synchronization](https://www.consul.io/docs/architecture/anti-entropy).
 
 ## Example Usage
 
@@ -94,7 +94,7 @@ of the `name` attribute.
 * `port` - (Optional, int) The port of the service.
 
 * `checks` - (Optional, list of checks) Health-checks to register to monitor the
-  service. The list of attributes for each health-check is detailled below.
+  service. The list of attributes for each health-check is detailed below.
 
 * `tags` - (Optional, set of strings) A list of values that are opaque to Consul,
   but can be used to distinguish between services or nodes.

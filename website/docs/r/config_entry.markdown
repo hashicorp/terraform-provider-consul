@@ -217,7 +217,7 @@ The following arguments are supported:
 
 * `kind` - (Required) The kind of configuration entry to register.
 
-* `name` - (Required) The name of the configuration entry being registred.
+* `name` - (Required) The name of the configuration entry being registered.
 
 * `namespace` - (Optional, Enterprise Only) The namespace to create the config entry within.
 
