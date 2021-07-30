@@ -63,7 +63,7 @@ The following arguments are supported:
 * `config` - (Optional) The raw configuration for this ACL auth method. This
   attribute is deprecated and will be removed in a future version. `config_json`
   should be used instead.
-* `namespace` - (Optional, Enterprise Only) The namespace to create the policy within.
+* `namespace` - (Optional, Enterprise Only) The namespace in which to create the auth method.
 * `namespace_rule` - (Optional, Enterprise Only) A set of rules that control
   which namespace tokens created via this auth method will be created within.
 
@@ -92,6 +92,6 @@ The following attributes are exported:
   deprecated and will be removed in a future version. If the configuration is
   too complex to be represented as a map of strings it will be blank.
   `config_json` should be used instead.
-* `namespace` - (Enterprise Only) The namespace to create the policy within.
+* `namespace` - (Enterprise Only) The namespace in which to create the auth method.
 * `namespace_rule` - (Enterprise Only) A set of rules that control which
   namespace tokens created via this auth method will be created within.
