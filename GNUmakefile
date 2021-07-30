@@ -1,6 +1,5 @@
 TEST?=$$(go list ./... |grep -v 'vendor')
 GOFMT_FILES?=$$(find . -name '*.go' |grep -v vendor)
-WEBSITE_REPO=github.com/hashicorp/terraform-website
 PKG_NAME=consul
 CONSUL_VERSION ?= "latest"
 CONSUL_IMAGE ?= "docker.mirror.hashicorp.services/consul:$(CONSUL_VERSION)"
@@ -51,12 +50,5 @@ test-serv: fmtcheck
 		-v $(PWD)/consul_test.hcl:/consul/config/consul_test.hcl:ro \
 		$(CONSUL_IMAGE)
 
-website:
-ifeq (,$(wildcard $(GOPATH)/src/$(WEBSITE_REPO)))
-	echo "$(WEBSITE_REPO) not found in your GOPATH (necessary for layouts and assets), get-ting..."
-	git clone https://$(WEBSITE_REPO) $(GOPATH)/src/$(WEBSITE_REPO)
-endif
-	@$(MAKE) -C $(GOPATH)/src/$(WEBSITE_REPO) website-provider PROVIDER_PATH=$(shell pwd) PROVIDER_NAME=$(PKG_NAME)
-
-.PHONY: build test testacc vet fmt fmtcheck errcheck test-compile test-serv website
+.PHONY: build test testacc vet fmt fmtcheck errcheck test-compile test-serv
 
