@@ -111,3 +111,15 @@ $ export CONSUL_HTTP_ADDR=localhost:8500
 $ export CONSUL_HTTP_TOKEN=master-token
 $ TEST_REMOTE_DATACENTER=1 make testacc
 ```
+
+Documentation
+-----------------------
+
+Full, comprehensive documentation is available on the Terraform Registry:
+
+<https://registry.terraform.io/providers/hashicorp/consul/latest/docs>
+
+If you wish to contribute to the documentation, the source can be found in this
+repository under website/docs/. To preview documentation changes prior to
+submitting a pull request, please use the Terraform Registry's
+[doc preview](https://registry.terraform.io/tools/doc-preview) tool.
