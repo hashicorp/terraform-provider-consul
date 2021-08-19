@@ -1,4 +1,4 @@
-## 2.13.0 (Unreleased)
+## 2.13.0 (August 19, 2021)
 
 NEW FEATURES:
 
