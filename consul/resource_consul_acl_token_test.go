@@ -32,22 +32,35 @@ func TestAccConsulACLToken_basic(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testResourceACLTokenConfigBasic,
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttrSet("consul_acl_token.test", "accessor_id"),
 					resource.TestCheckResourceAttr("consul_acl_token.test", "description", "test"),
-					resource.TestCheckResourceAttr("consul_acl_token.test", "roles.#", "0"),
-					resource.TestCheckResourceAttr("consul_acl_token.test", "policies.#", "1"),
+					resource.TestCheckResourceAttr("consul_acl_token.test", "expiration_time", ""),
+					resource.TestCheckResourceAttrSet("consul_acl_token.test", "id"),
+					resource.TestCheckResourceAttrSet("consul_acl_token.test", "local"),
+					resource.TestCheckResourceAttr("consul_acl_token.test", "node_identities.#", "0"),
+					resource.TestCheckResourceAttrSet("consul_acl_token.test", "policies.#"),
 					resource.TestCheckResourceAttr("consul_acl_token.test", "policies.1785148924", "test"),
-					resource.TestCheckResourceAttr("consul_acl_token.test", "local", "true"),
+					resource.TestCheckResourceAttr("consul_acl_token.test", "service_identities.#", "0"),
 				),
 			},
 			{
 				Config: testResourceACLTokenConfigUpdate,
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttrSet("consul_acl_token.test", "accessor_id"),
 					resource.TestCheckResourceAttr("consul_acl_token.test", "description", "test"),
-					resource.TestCheckResourceAttr("consul_acl_token.test", "roles.#", "0"),
+					resource.TestCheckResourceAttr("consul_acl_token.test", "expiration_time", ""),
+					resource.TestCheckResourceAttrSet("consul_acl_token.test", "id"),
+					resource.TestCheckResourceAttr("consul_acl_token.test", "local", "false"),
+					resource.TestCheckResourceAttr("consul_acl_token.test", "node_identities.#", "1"),
+					resource.TestCheckResourceAttr("consul_acl_token.test", "node_identities.0.datacenter", "bar"),
+					resource.TestCheckResourceAttr("consul_acl_token.test", "node_identities.0.node_name", "foo"),
 					resource.TestCheckResourceAttr("consul_acl_token.test", "policies.#", "1"),
 					resource.TestCheckResourceAttr("consul_acl_token.test", "policies.111830242", "test2"),
-					resource.TestCheckResourceAttr("consul_acl_token.test", "local", "false"),
+					resource.TestCheckResourceAttr("consul_acl_token.test", "service_identities.#", "1"),
+					resource.TestCheckResourceAttr("consul_acl_token.test", "service_identities.0.datacenters.#", "1"),
+					resource.TestCheckResourceAttr("consul_acl_token.test", "service_identities.0.datacenters.0", "world"),
+					resource.TestCheckResourceAttr("consul_acl_token.test", "service_identities.0.service_name", "hello"),
 				),
 			},
 			{
@@ -55,10 +68,17 @@ func TestAccConsulACLToken_basic(t *testing.T) {
 			},
 			{
 				Config: testResourceACLTokenConfigRole,
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttrSet("consul_acl_token.test", "accessor_id"),
 					resource.TestCheckResourceAttr("consul_acl_token.test", "description", "test"),
+					resource.TestCheckResourceAttr("consul_acl_token.test", "expiration_time", ""),
+					resource.TestCheckResourceAttrSet("consul_acl_token.test", "id"),
+					resource.TestCheckResourceAttr("consul_acl_token.test", "local", "false"),
+					resource.TestCheckResourceAttr("consul_acl_token.test", "node_identities.#", "0"),
+					resource.TestCheckResourceAttr("consul_acl_token.test", "policies.#", "0"),
 					resource.TestCheckResourceAttr("consul_acl_token.test", "roles.#", "1"),
 					resource.TestCheckResourceAttr("consul_acl_token.test", "roles.1785148924", "test"),
+					resource.TestCheckResourceAttr("consul_acl_token.test", "service_identities.#", "0"),
 				),
 			},
 		},
@@ -151,6 +171,16 @@ resource "consul_acl_policy" "test2" {
 resource "consul_acl_token" "test" {
 	description = "test"
 	policies = ["${consul_acl_policy.test2.name}"]
+
+	service_identities {
+		service_name = "hello"
+		datacenters = ["world"]
+	}
+
+	node_identities {
+		node_name = "foo"
+		datacenter = "bar"
+	}
 }`
 
 const testResourceACLTokenConfigRole = `
