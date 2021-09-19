@@ -18,15 +18,19 @@ func TestAccDataACLRole_basic(t *testing.T) {
 			},
 			{
 				Config: testAccDataSourceACLRoleConfigBasic,
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDataSourceValue("data.consul_acl_role.test", "name", "foo"),
-					testAccCheckDataSourceValue("data.consul_acl_role.test", "description", "bar"),
-					testAccCheckDataSourceValue("data.consul_acl_role.test", "policies.#", "1"),
-					testAccCheckDataSourceValue("data.consul_acl_role.test", "policies.0.id", "<any>"),
-					testAccCheckDataSourceValue("data.consul_acl_role.test", "policies.0.name", "test"),
-					testAccCheckDataSourceValue("data.consul_acl_role.test", "service_identities.#", "1"),
-					testAccCheckDataSourceValue("data.consul_acl_role.test", "service_identities.0.service_name", "foo"),
-					testAccCheckDataSourceValue("data.consul_acl_role.test", "service_identities.0.datacenters.#", "0"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr("data.consul_acl_role.test", "description", "bar"),
+					resource.TestCheckResourceAttrSet("data.consul_acl_role.test", "id"),
+					resource.TestCheckResourceAttr("data.consul_acl_role.test", "name", "foo"),
+					resource.TestCheckResourceAttr("data.consul_acl_role.test", "node_identities.#", "1"),
+					resource.TestCheckResourceAttr("data.consul_acl_role.test", "node_identities.0.datacenter", "world"),
+					resource.TestCheckResourceAttr("data.consul_acl_role.test", "node_identities.0.node_name", "hello"),
+					resource.TestCheckResourceAttr("data.consul_acl_role.test", "policies.#", "1"),
+					resource.TestCheckResourceAttrSet("data.consul_acl_role.test", "policies.0.id"),
+					resource.TestCheckResourceAttr("data.consul_acl_role.test", "policies.0.name", "test"),
+					resource.TestCheckResourceAttr("data.consul_acl_role.test", "service_identities.#", "1"),
+					resource.TestCheckResourceAttr("data.consul_acl_role.test", "service_identities.0.datacenters.#", "0"),
+					resource.TestCheckResourceAttr("data.consul_acl_role.test", "service_identities.0.service_name", "foo"),
 				),
 			},
 		},
@@ -81,6 +85,11 @@ resource "consul_acl_role" "test" {
 
 	service_identities {
 		service_name = "foo"
+	}
+
+	node_identities {
+		node_name = "hello"
+		datacenter = "world"
 	}
 }
 

@@ -16,16 +16,19 @@ func dataSourceConsulACLRole() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-
-			// Out parameters
-			"description": {
+			"namespace": {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
 
+			// Out parameters
+			"description": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"policies": {
 				Type:     schema.TypeList,
-				Optional: true,
+				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"name": {
@@ -39,10 +42,9 @@ func dataSourceConsulACLRole() *schema.Resource {
 					},
 				},
 			},
-
 			"service_identities": {
 				Type:     schema.TypeList,
-				Optional: true,
+				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"service_name": {
@@ -58,10 +60,21 @@ func dataSourceConsulACLRole() *schema.Resource {
 					},
 				},
 			},
-
-			"namespace": {
-				Type:     schema.TypeString,
-				Optional: true,
+			"node_identities": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"node_name": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"datacenter": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+					},
+				},
 			},
 		},
 	}
@@ -79,20 +92,12 @@ func datasourceConsulACLRoleRead(d *schema.ResourceData, meta interface{}) error
 		return fmt.Errorf("Could not find role '%s'", name)
 	}
 
-	d.SetId(role.ID)
-	if err = d.Set("description", role.Description); err != nil {
-		return fmt.Errorf("Failed to set 'description': %v", err)
-	}
-
 	policies := make([]map[string]interface{}, len(role.Policies))
 	for i, p := range role.Policies {
 		policies[i] = map[string]interface{}{
 			"name": p.Name,
 			"id":   p.ID,
 		}
-	}
-	if err = d.Set("policies", policies); err != nil {
-		return fmt.Errorf("Failed to set 'policies': %v", err)
 	}
 
 	identities := make([]map[string]interface{}, len(role.ServiceIdentities))
@@ -102,9 +107,22 @@ func datasourceConsulACLRoleRead(d *schema.ResourceData, meta interface{}) error
 			"datacenters":  si.Datacenters,
 		}
 	}
-	if err = d.Set("service_identities", identities); err != nil {
-		return fmt.Errorf("Failed to set 'service_identities': %v", err)
+
+	nodeIdentities := make([]interface{}, len(role.NodeIdentities))
+	for i, ni := range role.NodeIdentities {
+		nodeIdentities[i] = map[string]interface{}{
+			"node_name":  ni.NodeName,
+			"datacenter": ni.Datacenter,
+		}
 	}
 
-	return nil
+	d.SetId(role.ID)
+
+	sw := newStateWriter(d)
+	sw.set("description", role.Description)
+	sw.set("policies", policies)
+	sw.set("service_identities", identities)
+	sw.set("node_identities", nodeIdentities)
+
+	return sw.error()
 }

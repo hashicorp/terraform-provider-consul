@@ -41,14 +41,19 @@ The following arguments are supported:
 * `name` - (Required) The name of the ACL role.
 * `description` - (Optional) A free form human readable description of the role.
 * `policies` - (Optional) The list of policies that should be applied to the role.
-* `service_identities` - (Optional) The list of service identities that should
-be applied to the role.
+* `service_identities` - (Optional) The list of service identities that should be applied to the role.
+* `node_identities` - (Optional) The list of node identities that should be applied to the role.
 * `namespace` - (Optional, Enterprise Only) The namespace to create the role within.
 
-The `service_identities` supports:
+The `service_identities` block supports:
 
 * `service_name` - (Required) The name of the service.
 * `datacenters` - (Optional) The datacenters the effective policy is valid within.
+
+The `node_identities` block supports:
+
+* `node_name` - (Required) The name of the node.
+* `datacenter` - (Required) The datacenter of the node.
 
 ## Attributes Reference
 
@@ -58,8 +63,9 @@ The following attributes are exported:
 * `name` - The name of the ACL role.
 * `description` - A free form human readable description of the role.
 * `policies` - The list of policies that should be applied to the role.
-* `service_identities` - The list of service identities that should
-be applied to the role.
+* `service_identities` - The list of service identities that should be applied to the role.
+* `node_identities` - The list of node identities that should be applied to the role.
+* `namespace` - The namespace to create the role within.
 
 
 ## Import

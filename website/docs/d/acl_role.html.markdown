@@ -35,8 +35,9 @@ The following arguments are supported:
 
 The following attributes are exported:
 
+* `name` - The name of the ACL Role.
+* `namespace` - The namespace to lookup the role.
 * `description` - The description of the ACL Role.
-* `policies` - The list of policies associated with the ACL Role. Each entry has
-  an `id` and a `name` attribute.
-* `service_identities` - The list of service identities associated with the ACL
-  Role. Each entry has a `service_name` attribute and a list of `datacenters`.
+* `policies` - The list of policies associated with the ACL Role. Each entry has an `id` and a `name` attribute.
+* `service_identities` - The list of service identities associated with the ACL Role. Each entry has a `service_name` attribute and a list of `datacenters`.
+* `node_identities` - The list of node identities associated with the ACL Role. Each entry has a `node_name` and a `datacenter` attributes.

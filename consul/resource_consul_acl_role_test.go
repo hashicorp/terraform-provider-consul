@@ -18,58 +18,39 @@ func TestAccConsulACLRole_basic(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testResourceACLRoleConfigBasic,
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("consul_acl_role.test", "name", "foo"),
+				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr("consul_acl_role.test", "description", "bar"),
+					resource.TestCheckResourceAttrSet("consul_acl_role.test", "id"),
+					resource.TestCheckResourceAttr("consul_acl_role.test", "name", "foo"),
+					resource.TestCheckResourceAttr("consul_acl_role.test", "namespace", ""),
+					resource.TestCheckResourceAttr("consul_acl_role.test", "node_identities.#", "0"),
 					resource.TestCheckResourceAttr("consul_acl_role.test", "policies.#", "1"),
 					resource.TestCheckResourceAttr("consul_acl_role.test", "service_identities.#", "1"),
+					resource.TestCheckResourceAttr("consul_acl_role.test", "service_identities.3690720679.datacenters.#", "0"),
+					resource.TestCheckResourceAttr("consul_acl_role.test", "service_identities.3690720679.service_name", "foo"),
 				),
 			},
 			{
 				Config: testResourceACLRoleConfigUpdate,
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("consul_acl_role.test", "name", "baz"),
+				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr("consul_acl_role.test", "description", ""),
+					resource.TestCheckResourceAttrSet("consul_acl_role.test", "id"),
+					resource.TestCheckResourceAttr("consul_acl_role.test", "name", "baz"),
+					resource.TestCheckResourceAttr("consul_acl_role.test", "namespace", ""),
+					resource.TestCheckResourceAttr("consul_acl_role.test", "node_identities.#", "1"),
+					resource.TestCheckResourceAttr("consul_acl_role.test", "node_identities.0.datacenter", "world"),
+					resource.TestCheckResourceAttr("consul_acl_role.test", "node_identities.0.node_name", "hello"),
 					resource.TestCheckResourceAttr("consul_acl_role.test", "policies.#", "0"),
 					resource.TestCheckResourceAttr("consul_acl_role.test", "service_identities.#", "1"),
+					resource.TestCheckResourceAttr("consul_acl_role.test", "service_identities.2708159462.datacenters.#", "0"),
+					resource.TestCheckResourceAttr("consul_acl_role.test", "service_identities.2708159462.service_name", "bar"),
 				),
 			},
-		},
-	})
-}
-
-func TestAccConsulACLRole_import(t *testing.T) {
-	checkFn := func(s []*terraform.InstanceState) error {
-		if len(s) != 1 {
-			return fmt.Errorf("bad state: %s", s)
-		}
-		v, ok := s[0].Attributes["name"]
-		if !ok || v != "foo" {
-			return fmt.Errorf("bad name: %s", s)
-		}
-		v, ok = s[0].Attributes["description"]
-		if !ok || v != "bar" {
-			return fmt.Errorf("bad description: %s", s)
-		}
-		v, ok = s[0].Attributes["policies.#"]
-		if !ok || v != "1" {
-			return fmt.Errorf("bad policies: %s", s)
-		}
-
-		return nil
-	}
-
-	resource.Test(t, resource.TestCase{
-		Providers: testAccProviders,
-		PreCheck:  func() { testAccPreCheck(t) },
-		Steps: []resource.TestStep{
 			{
-				Config: testResourceACLRoleConfigBasic,
-			},
-			{
-				ResourceName:     "consul_acl_role.test",
-				ImportState:      true,
-				ImportStateCheck: checkFn,
+				Config:            testResourceACLRoleConfigUpdate,
+				ResourceName:      "consul_acl_role.test",
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -142,6 +123,11 @@ resource "consul_acl_role" "test" {
 
 	service_identities {
 		service_name = "bar"
+	}
+
+	node_identities {
+		node_name = "hello"
+		datacenter = "world"
 	}
 }`
 
