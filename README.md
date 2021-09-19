@@ -12,6 +12,20 @@ Maintainers
 
 This provider plugin is maintained by the Consul team at [HashiCorp](https://www.hashicorp.com/).
 
+Compatibility
+-------------
+
+The Consul Terraform provider uses features of the latest version of Consul and
+some resources may not be supported by older versions of Consul.
+
+The known compatibility between this provider and Consul is:
+
+| Terraform provider version | Consul version |
+| -------------------------- | -------------- |
+| 2.14.0                     | >= 1.10.0      |
+| 2.13.0                     | >= 1.10.0      |
+
+
 Requirements
 ------------
 
@@ -22,8 +36,8 @@ Building The Provider
 ---------------------
 
 1. Clone the repository
-1. Enter the repository directory
-1. Build the provider using the Go `install` command:
+2. Enter the repository directory
+3. Build the provider using the Go `install` command:
 
 ```sh
 go install
