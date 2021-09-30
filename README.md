@@ -15,8 +15,8 @@ This provider plugin is maintained by the Consul team at [HashiCorp](https://www
 Compatibility
 -------------
 
-The Consul Terraform provider uses features of the latest version of Consul and
-some resources may not be supported by older versions of Consul.
+The Consul Terraform provider uses features of the latest version of Consul.
+Some resources may not be supported by older versions of Consul.
 
 The known compatibility between this provider and Consul is:
 
