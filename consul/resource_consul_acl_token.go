@@ -4,9 +4,11 @@ import (
 	"fmt"
 	"log"
 	"strings"
+	"time"
 
 	consulapi "github.com/hashicorp/consul/api"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
 )
 
 func resourceConsulACLToken() *schema.Resource {
@@ -48,14 +50,60 @@ func resourceConsulACLToken() *schema.Resource {
 				},
 				Description: "List of roles",
 			},
+			"service_identities": {
+				Type:        schema.TypeList,
+				Optional:    true,
+				Description: "The list of service identities that should be applied to the token.",
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"service_name": {
+							Type:        schema.TypeString,
+							Required:    true,
+							Description: "The name of the service.",
+						},
+						"datacenters": {
+							Type:        schema.TypeList,
+							Optional:    true,
+							Description: "Specifies the datacenters the effective policy is valid within.",
+							Elem: &schema.Schema{
+								Type: schema.TypeString,
+							},
+						},
+					},
+				},
+			},
+			"node_identities": {
+				Type:        schema.TypeList,
+				Optional:    true,
+				Description: "The list of node identities that should be applied to the token.",
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"node_name": {
+							Type:        schema.TypeString,
+							Required:    true,
+							Description: "The name of the node.",
+						},
+						"datacenter": {
+							Type:        schema.TypeString,
+							Required:    true,
+							Description: "Specifies the node's datacenter.",
+						},
+					},
+				},
+			},
 			"local": {
 				Type:        schema.TypeBool,
 				ForceNew:    true,
 				Optional:    true,
-				Default:     false,
 				Description: "Flag to set the token local to the current datacenter.",
 			},
-
+			"expiration_time": {
+				Type:         schema.TypeString,
+				ForceNew:     true,
+				Optional:     true,
+				ValidateFunc: validation.ValidateRFC3339TimeString,
+				Description:  "If set this represents the point after which a token should be considered revoked and is eligible for destruction.",
+			},
 			"namespace": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -102,12 +150,9 @@ func resourceConsulACLTokenRead(d *schema.ResourceData, meta interface{}) error 
 
 	log.Printf("[DEBUG] Read ACL token %q", id)
 
-	if err = d.Set("accessor_id", aclToken.AccessorID); err != nil {
-		return fmt.Errorf("Error while setting 'accessor_id': %s", err)
-	}
-
-	if err = d.Set("description", aclToken.Description); err != nil {
-		return fmt.Errorf("Error while setting 'description': %s", err)
+	roles := make([]string, 0, len(aclToken.Roles))
+	for _, roleLink := range aclToken.Roles {
+		roles = append(roles, roleLink.Name)
 	}
 
 	policies := make([]string, 0, len(aclToken.Policies))
@@ -115,24 +160,37 @@ func resourceConsulACLTokenRead(d *schema.ResourceData, meta interface{}) error 
 		policies = append(policies, policyLink.Name)
 	}
 
-	if err = d.Set("policies", policies); err != nil {
-		return fmt.Errorf("Error while setting 'policies': %s", err)
+	var expirationTime string
+	if aclToken.ExpirationTime != nil {
+		expirationTime = aclToken.ExpirationTime.Format(time.RFC3339)
 	}
 
-	roles := make([]string, 0, len(aclToken.Roles))
-	for _, roleLink := range aclToken.Roles {
-		roles = append(roles, roleLink.Name)
+	serviceIdentities := make([]interface{}, len(aclToken.ServiceIdentities))
+	for i, si := range aclToken.ServiceIdentities {
+		serviceIdentities[i] = map[string]interface{}{
+			"service_name": si.ServiceName,
+			"datacenters":  si.Datacenters,
+		}
+	}
+	nodeIdentities := make([]interface{}, len(aclToken.NodeIdentities))
+	for i, ni := range aclToken.NodeIdentities {
+		nodeIdentities[i] = map[string]interface{}{
+			"node_name":  ni.NodeName,
+			"datacenter": ni.Datacenter,
+		}
 	}
 
-	if err = d.Set("roles", roles); err != nil {
-		return fmt.Errorf("Error while setting 'roles': %s", err)
-	}
+	sw := newStateWriter(d)
+	sw.set("accessor_id", aclToken.AccessorID)
+	sw.set("description", aclToken.Description)
+	sw.set("policies", policies)
+	sw.set("roles", roles)
+	sw.set("service_identities", serviceIdentities)
+	sw.set("node_identities", nodeIdentities)
+	sw.set("local", aclToken.Local)
+	sw.set("expiration_time", expirationTime)
 
-	if err = d.Set("local", aclToken.Local); err != nil {
-		return fmt.Errorf("Error while setting 'local': %s", err)
-	}
-
-	return nil
+	return sw.error()
 }
 
 func resourceConsulACLTokenUpdate(d *schema.ResourceData, meta interface{}) error {
@@ -192,6 +250,41 @@ func getToken(d *schema.ResourceData) *consulapi.ACLToken {
 		})
 	}
 	aclToken.Roles = roleLinks
+
+	serviceIdentities := []*consulapi.ACLServiceIdentity{}
+	for _, si := range d.Get("service_identities").([]interface{}) {
+		s := si.(map[string]interface{})
+
+		datacenters := []string{}
+		for _, d := range s["datacenters"].([]interface{}) {
+			datacenters = append(datacenters, d.(string))
+		}
+
+		serviceIdentities = append(serviceIdentities, &consulapi.ACLServiceIdentity{
+			ServiceName: s["service_name"].(string),
+			Datacenters: datacenters,
+		})
+	}
+	aclToken.ServiceIdentities = serviceIdentities
+
+	nodeIdentities := []*consulapi.ACLNodeIdentity{}
+	for _, ni := range d.Get("node_identities").([]interface{}) {
+		n := ni.(map[string]interface{})
+
+		nodeIdentities = append(nodeIdentities, &consulapi.ACLNodeIdentity{
+			NodeName:   n["node_name"].(string),
+			Datacenter: n["datacenter"].(string),
+		})
+	}
+	aclToken.NodeIdentities = nodeIdentities
+
+	expirationTime := d.Get("expiration_time").(string)
+	if expirationTime != "" {
+		// the string has already been validated so there is no need to check
+		// the error here
+		t, _ := time.Parse(time.RFC3339, expirationTime)
+		aclToken.ExpirationTime = &t
+	}
 
 	return aclToken
 }

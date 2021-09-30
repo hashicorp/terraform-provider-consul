@@ -13,12 +13,23 @@ func TestAccDataACLToken_basic(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDataACLTokenConfig,
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDataSourceValue("data.consul_acl_token.read", "description", "test"),
-					testAccCheckDataSourceValue("data.consul_acl_token.read", "policies.#", "1"),
-					testAccCheckDataSourceValue("data.consul_acl_token.read", "policies.0.name", "test"),
-					testAccCheckDataSourceValue("data.consul_acl_token.read", "policies.0.id", "<any>"),
-					testAccCheckDataSourceValue("data.consul_acl_token.read", "local", "true"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttrSet("data.consul_acl_token.read", "accessor_id"),
+					resource.TestCheckResourceAttr("data.consul_acl_token.read", "description", "test"),
+					resource.TestCheckResourceAttr("data.consul_acl_token.read", "expiration_time", ""),
+					resource.TestCheckResourceAttrSet("data.consul_acl_token.read", "id"),
+					resource.TestCheckResourceAttr("data.consul_acl_token.read", "local", "false"),
+					resource.TestCheckResourceAttr("data.consul_acl_token.read", "node_identities.#", "1"),
+					resource.TestCheckResourceAttr("data.consul_acl_token.read", "node_identities.0.datacenter", "bar"),
+					resource.TestCheckResourceAttr("data.consul_acl_token.read", "node_identities.0.node_name", "foo"),
+					resource.TestCheckResourceAttr("data.consul_acl_token.read", "policies.#", "1"),
+					resource.TestCheckResourceAttrSet("data.consul_acl_token.read", "policies.0.id"),
+					resource.TestCheckResourceAttr("data.consul_acl_token.read", "policies.0.name", "test"),
+					resource.TestCheckResourceAttr("data.consul_acl_token.read", "roles.#", "0"),
+					resource.TestCheckResourceAttr("data.consul_acl_token.read", "service_identities.#", "1"),
+					resource.TestCheckResourceAttr("data.consul_acl_token.read", "service_identities.0.datacenters.#", "1"),
+					resource.TestCheckResourceAttr("data.consul_acl_token.read", "service_identities.0.datacenters.0", "world"),
+					resource.TestCheckResourceAttr("data.consul_acl_token.read", "service_identities.0.service_name", "hello"),
 				),
 			},
 		},
@@ -60,7 +71,17 @@ resource "consul_acl_policy" "test" {
 resource "consul_acl_token" "test" {
 	description = "test"
 	policies = ["${consul_acl_policy.test.name}"]
-	local = true
+	local = false
+
+	service_identities {
+		service_name = "hello"
+		datacenters = ["world"]
+	}
+
+	node_identities {
+		node_name = "foo"
+		datacenter = "bar"
+	}
 }
 
 data "consul_acl_token" "read" {

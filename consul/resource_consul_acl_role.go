@@ -23,13 +23,11 @@ func resourceConsulACLRole() *schema.Resource {
 				Required:    true,
 				Description: "The name of the ACL role.",
 			},
-
 			"description": {
 				Type:        schema.TypeString,
 				Optional:    true,
 				Description: "A free form human readable description of the role.",
 			},
-
 			"policies": {
 				Type:     schema.TypeSet,
 				Optional: true,
@@ -38,7 +36,6 @@ func resourceConsulACLRole() *schema.Resource {
 				},
 				Description: "The list of policies that should be applied to the role.",
 			},
-
 			"service_identities": {
 				Type:     schema.TypeSet,
 				Optional: true,
@@ -60,7 +57,25 @@ func resourceConsulACLRole() *schema.Resource {
 				},
 				Description: "The list of service identities that should be applied to the role.",
 			},
-
+			"node_identities": {
+				Type:        schema.TypeList,
+				Optional:    true,
+				Description: "The list of node identities that should be applied to the role.",
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"node_name": {
+							Type:        schema.TypeString,
+							Required:    true,
+							Description: "The name of the node.",
+						},
+						"datacenter": {
+							Type:        schema.TypeString,
+							Required:    true,
+							Description: "Specifies the node's datacenter.",
+						},
+					},
+				},
+			},
 			"namespace": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -98,27 +113,9 @@ func resourceConsulACLRoleRead(d *schema.ResourceData, meta interface{}) error {
 		return nil
 	}
 
-	if err = d.Set("name", role.Name); err != nil {
-		return fmt.Errorf("Failed to set 'name': %s", err)
-	}
-
-	if err = d.Set("description", role.Description); err != nil {
-		return fmt.Errorf("Failed to set 'description': %s", err)
-	}
-	// Consul Enterprise will change "" to "default" but Community Edition only
-	// understands the first one.
-	if d.Get("namespace").(string) != "" || role.Namespace != "default" {
-		if err = d.Set("namespace", role.Namespace); err != nil {
-			return fmt.Errorf("failed to set 'namespace': %v", err)
-		}
-	}
-
 	policies := make([]string, len(role.Policies))
 	for i, policy := range role.Policies {
 		policies[i] = policy.ID
-	}
-	if err = d.Set("policies", policies); err != nil {
-		return fmt.Errorf("Failed to set 'policies': %s", err)
 	}
 
 	serviceIdentities := make([]map[string]interface{}, len(role.ServiceIdentities))
@@ -128,11 +125,32 @@ func resourceConsulACLRoleRead(d *schema.ResourceData, meta interface{}) error {
 			"datacenters":  serviceIdentity.Datacenters,
 		}
 	}
-	if err = d.Set("service_identities", serviceIdentities); err != nil {
-		return fmt.Errorf("Failed to set 'service_identities': %s", err)
+
+	nodeIdentities := make([]interface{}, len(role.NodeIdentities))
+	for i, ni := range role.NodeIdentities {
+		nodeIdentities[i] = map[string]interface{}{
+			"node_name":  ni.NodeName,
+			"datacenter": ni.Datacenter,
+		}
 	}
 
-	return nil
+	sw := newStateWriter(d)
+
+	// Consul Enterprise will change "" to "default" but Community Edition only
+	// understands the first one.
+	if d.Get("namespace").(string) != "" || role.Namespace != "default" {
+		if err = d.Set("namespace", role.Namespace); err != nil {
+			return fmt.Errorf("failed to set 'namespace': %v", err)
+		}
+	}
+
+	sw.set("name", role.Name)
+	sw.set("description", role.Description)
+	sw.set("policies", policies)
+	sw.set("service_identities", serviceIdentities)
+	sw.set("node_identities", nodeIdentities)
+
+	return sw.error()
 }
 
 func resourceConsulACLRoleUpdate(d *schema.ResourceData, meta interface{}) error {
@@ -179,7 +197,6 @@ func getRole(d *schema.ResourceData, meta interface{}) *consulapi.ACLRole {
 	}
 	role.Policies = policies
 
-	serviceIdentities := make([]*consulapi.ACLServiceIdentity, 0)
 	for _, raw := range d.Get("service_identities").(*schema.Set).List() {
 		s := raw.(map[string]interface{})
 
@@ -188,12 +205,19 @@ func getRole(d *schema.ResourceData, meta interface{}) *consulapi.ACLRole {
 			datacenters[i] = d.(string)
 		}
 
-		serviceIdentities = append(serviceIdentities, &consulapi.ACLServiceIdentity{
+		role.ServiceIdentities = append(role.ServiceIdentities, &consulapi.ACLServiceIdentity{
 			ServiceName: s["service_name"].(string),
 			Datacenters: datacenters,
 		})
 	}
-	role.ServiceIdentities = serviceIdentities
+
+	for _, ni := range d.Get("node_identities").([]interface{}) {
+		n := ni.(map[string]interface{})
+		role.NodeIdentities = append(role.NodeIdentities, &consulapi.ACLNodeIdentity{
+			NodeName:   n["node_name"].(string),
+			Datacenter: n["datacenter"].(string),
+		})
+	}
 
 	return role
 }

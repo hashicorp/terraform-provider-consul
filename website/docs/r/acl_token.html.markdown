@@ -53,8 +53,21 @@ The following arguments are supported:
 * `description` - (Optional) The description of the token.
 * `policies` - (Optional) The list of policies attached to the token.
 * `roles` - (Optional) The list of roles attached to the token.
+* `service_identities` - (Optional) The list of service identities that should be applied to the token.
+* `node_identities` - (Optional) The list of node identities that should be applied to the token.
 * `local` - (Optional) The flag to set the token local to the current datacenter.
+* `expiration_time` - (Optional) If set this represents the point after which a token should be considered revoked and is eligible for destruction.
 * `namespace` - (Optional, Enterprise Only) The namespace to create the token within.
+
+The `service_identities` block supports the following arguments:
+
+* `service_name` - (Required) The name of the service.
+* `datacenters` - (Required) The list of datacenters the policy is valid within.
+
+The `node_identities` block supports the following arguments:
+
+* `node_name` - (Optional) The name of the node.
+* `datacenter` - (Optional) The datacenter of the node.
 
 ## Attributes Reference
 
@@ -65,7 +78,11 @@ The following attributes are exported:
 * `description` - The description of the token.
 * `policies` - The list of policies attached to the token.
 * `roles` - The list of roles attached to the token.
+* `service_identities` - The list of service identities that should be applied to the token.
+* `node_identities` - The list of node identities that should be applied to the token.
 * `local` - The flag to set the token local to the current datacenter.
+* `expiration_time` - If set this represents the point after which a token should be considered revoked and is eligible for destruction.
+* `namespace` - The namespace to create the token within.
 
 
 ## Import
