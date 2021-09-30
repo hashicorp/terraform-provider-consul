@@ -1,3 +1,12 @@
+## 2.14.0 (Unreleased)
+
+IMPROVEMENTS:
+
+* The `consul_acl_role` resource now has a `node_identities` argument ([#284](https://github.com/hashicorp/terraform-provider-consul/issues/284) and [#287](https://github.com/hashicorp/terraform-provider-consul/issues/287)).
+* The `consul_acl_role` datasource now has a `node_identities` attribute ([#284](https://github.com/hashicorp/terraform-provider-consul/issues/284) and [#287](https://github.com/hashicorp/terraform-provider-consul/issues/287)).
+* The `consul_acl_token` resource now supports `service_identities`, `node_identities`, and `expiration_time` arguments ([#284](https://github.com/hashicorp/terraform-provider-consul/issues/284) and [#287](https://github.com/hashicorp/terraform-provider-consul/issues/287)).
+* The `consul_acl_token` datasource now supports `roles`, `service_identities`, `node_identities`, and `expiration_time` attributes ([#284](https://github.com/hashicorp/terraform-provider-consul/issues/284) and [#287](https://github.com/hashicorp/terraform-provider-consul/issues/287)).
+
 ## 2.13.0 (August 19, 2021)
 
 NEW FEATURES:
