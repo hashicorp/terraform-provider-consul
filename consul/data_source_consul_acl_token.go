@@ -25,11 +25,11 @@ func dataSourceConsulACLToken() *schema.Resource {
 			// Out parameters
 			"description": {
 				Type:     schema.TypeString,
-				Optional: true,
+				Required: true,
 			},
 			"policies": {
 				Type:     schema.TypeList,
-				Optional: true,
+				Required: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"name": {
