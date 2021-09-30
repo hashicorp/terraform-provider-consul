@@ -13,9 +13,8 @@ resource can be used to provide cluster-wide defaults for various aspects of
 Consul.
 
 ~> **NOTE:** Because the schema in a `consul_config_entry` resource can very
-widely between the various configuration entry kinds it is necessary to define
-explicitely every attributes or Terraform will always report a diff on the
-resource.
+widely between the various configuration entry kinds, it is necessary to explicitly
+define every attribute to avoid Terraform reporting a diff on the resource.
 
 ## Example Usage
 
