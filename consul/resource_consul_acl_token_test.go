@@ -40,7 +40,6 @@ func TestAccConsulACLToken_basic(t *testing.T) {
 					resource.TestCheckResourceAttrSet("consul_acl_token.test", "local"),
 					resource.TestCheckResourceAttr("consul_acl_token.test", "node_identities.#", "0"),
 					resource.TestCheckResourceAttrSet("consul_acl_token.test", "policies.#"),
-					resource.TestCheckResourceAttr("consul_acl_token.test", "policies.1785148924", "test"),
 					resource.TestCheckResourceAttr("consul_acl_token.test", "service_identities.#", "0"),
 				),
 			},
@@ -149,14 +148,14 @@ func TestAccConsulACLToken_namespaceEE(t *testing.T) {
 
 const testResourceACLTokenConfigBasic = `
 resource "consul_acl_policy" "test" {
-	name = "test"
+	name = "test-token-basic"
 	rules = "node \"\" { policy = \"read\" }"
 	datacenters = [ "dc1" ]
 }
 
 resource "consul_acl_token" "test" {
 	description = "test"
-	policies = ["${consul_acl_policy.test.name}"]
+	policies = [consul_acl_policy.test.name]
 	local = true
 }`
 
@@ -185,7 +184,7 @@ resource "consul_acl_token" "test" {
 
 const testResourceACLTokenConfigRole = `
 resource "consul_acl_role" "test" {
-    name = "test"
+    name      = "test"
 }
 
 resource "consul_acl_token" "test" {

@@ -12,12 +12,12 @@ func TestAccConsulNamespacePolicyAttachment(t *testing.T) {
 	testPolicy := func(name string) func(*terraform.State) error {
 		return func(s *terraform.State) error {
 			client := getTestClient(testAccProvider.Meta())
-			namespace, _, err := client.Namespaces().Read("testAttachment", nil)
+			namespace, _, err := client.Namespaces().Read("testattachment", nil)
 			if err != nil {
-				return fmt.Errorf("failed to read namespace testAttachment: %s", err)
+				return fmt.Errorf("failed to read namespace testattachment: %s", err)
 			}
 			if namespace == nil {
-				return fmt.Errorf("namespace testAttachment not found")
+				return fmt.Errorf("namespace testattachment not found")
 			}
 			if len(namespace.ACLs.PolicyDefaults) != 1 {
 				return fmt.Errorf("wrong number of policies: %d", len(namespace.ACLs.PolicyDefaults))
@@ -36,7 +36,7 @@ func TestAccConsulNamespacePolicyAttachment(t *testing.T) {
 			{
 				Config: testResourceNamespacePolicyConfig,
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("consul_namespace_policy_attachment.test", "namespace", "testAttachment"),
+					resource.TestCheckResourceAttr("consul_namespace_policy_attachment.test", "namespace", "testattachment"),
 					resource.TestCheckResourceAttr("consul_namespace_policy_attachment.test", "policy", "policy"),
 					testPolicy("policy"),
 				),
@@ -44,7 +44,7 @@ func TestAccConsulNamespacePolicyAttachment(t *testing.T) {
 			{
 				Config: testResourceNamespacePolicyConfigUpdate,
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("consul_namespace_policy_attachment.test", "namespace", "testAttachment"),
+					resource.TestCheckResourceAttr("consul_namespace_policy_attachment.test", "namespace", "testattachment"),
 					resource.TestCheckResourceAttr("consul_namespace_policy_attachment.test", "policy", "policy2"),
 					testPolicy("policy2"),
 				),
@@ -63,7 +63,7 @@ func TestAccConsulNamespacePolicyAttachment(t *testing.T) {
 
 const testResourceNamespacePolicyConfig = `
 resource "consul_namespace" "test" {
-	name = "testAttachment"
+	name = "testattachment"
 
 	lifecycle {
 		ignore_changes = [policy_defaults]
@@ -87,7 +87,7 @@ resource "consul_namespace_policy_attachment" "test" {
 
 const testResourceNamespacePolicyConfigUpdate = `
 resource "consul_namespace" "test" {
-	name = "testAttachment"
+	name = "testattachment"
 
 	lifecycle {
 		ignore_changes = [policy_defaults]

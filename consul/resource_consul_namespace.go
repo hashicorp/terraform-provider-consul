@@ -44,6 +44,12 @@ func resourceConsulNamespace() *schema.Resource {
 					Type: schema.TypeString,
 				},
 			},
+			"partition": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				ForceNew:    true,
+				Description: "The partition the namespace is associated with.",
+			},
 		},
 	}
 }
@@ -74,30 +80,25 @@ func resourceConsulNamespaceRead(d *schema.ResourceData, meta interface{}) error
 		return fmt.Errorf("failed to read namespace '%s': %v", name, err)
 	}
 
-	if err = d.Set("name", namespace.Name); err != nil {
-		return fmt.Errorf("failed to set 'name': %v", err)
-	}
-	if err = d.Set("description", namespace.Description); err != nil {
-		return fmt.Errorf("failed to set 'description': %v", err)
-	}
-	if err = d.Set("meta", namespace.Meta); err != nil {
-		return fmt.Errorf("failed to set 'meta': %v", err)
-	}
+	sw := newStateWriter(d)
+	sw.set("name", namespace.Name)
+	sw.set("description", namespace.Description)
+	sw.set("meta", namespace.Meta)
+
 	roleDefaults := make([]interface{}, 0)
 	for _, r := range namespace.ACLs.RoleDefaults {
 		roleDefaults = append(roleDefaults, r.Name)
 	}
-	if err = d.Set("role_defaults", roleDefaults); err != nil {
-		return fmt.Errorf("failed to set 'role_defaults': %v", err)
-	}
+	sw.set("role_defaults", roleDefaults)
+
 	policyDefaults := make([]interface{}, 0)
 	for _, p := range namespace.ACLs.PolicyDefaults {
 		policyDefaults = append(policyDefaults, p.Name)
 	}
-	if err = d.Set("policy_defaults", policyDefaults); err != nil {
-		return fmt.Errorf("failed to set 'policy_defaults': %v", err)
-	}
-	return nil
+	sw.set("policy_defaults", policyDefaults)
+	sw.set("partition", namespace.Partition)
+
+	return sw.error()
 }
 
 func resourceConsulNamespaceUpdate(d *schema.ResourceData, meta interface{}) error {

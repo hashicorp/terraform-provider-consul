@@ -87,7 +87,7 @@ func resourceConsulIntentionCreate(d *schema.ResourceData, meta interface{}) err
 
 	id, _, err := connect.IntentionCreate(intention, wOpts)
 	if err != nil {
-		return fmt.Errorf("Failed to create intention (dc: '%s'): %v", wOpts.Datacenter, err)
+		return fmt.Errorf("failed to create intention (dc: '%s'): %v", wOpts.Datacenter, err)
 	}
 
 	d.SetId(id)
@@ -106,7 +106,7 @@ func resourceConsulIntentionUpdate(d *schema.ResourceData, meta interface{}) err
 	intention.ID = d.Id()
 
 	if _, err := connect.IntentionUpdate(intention, wOpts); err != nil {
-		return fmt.Errorf("Failed to update intention (dc: '%s'): %v", wOpts.Datacenter, err)
+		return fmt.Errorf("failed to update intention (dc: '%s'): %v", wOpts.Datacenter, err)
 	}
 
 	return resourceConsulIntentionRead(d, meta)
@@ -120,7 +120,7 @@ func resourceConsulIntentionRead(d *schema.ResourceData, meta interface{}) error
 
 	intention, _, err := connect.IntentionGet(id, qOpts)
 	if err != nil {
-		return fmt.Errorf("Failed to retrieve intention (dc: '%s'): %v", qOpts.Datacenter, err)
+		return fmt.Errorf("failed to retrieve intention (dc: '%s'): %v", qOpts.Datacenter, err)
 	}
 
 	if intention == nil {
@@ -128,32 +128,18 @@ func resourceConsulIntentionRead(d *schema.ResourceData, meta interface{}) error
 		return nil
 	}
 
-	if err = d.Set("datacenter", qOpts.Datacenter); err != nil {
-		return fmt.Errorf("failed to set 'datacenter': %v", err)
-	}
-	if err = d.Set("source_name", intention.SourceName); err != nil {
-		return fmt.Errorf("failed to set 'source_name': %v", err)
-	}
-	if err = d.Set("source_namespace", intention.SourceNS); err != nil {
-		return fmt.Errorf("failed to set 'source_namespace': %v", err)
-	}
-	if err = d.Set("destination_name", intention.DestinationName); err != nil {
-		return fmt.Errorf("failed to set 'destination_name': %v", err)
-	}
-	if err = d.Set("destination_namespace", intention.DestinationNS); err != nil {
-		return fmt.Errorf("failed to set 'destination_namespace': %v", err)
-	}
-	if err = d.Set("description", intention.Description); err != nil {
-		return fmt.Errorf("failed to set 'description': %v", err)
-	}
-	if err = d.Set("action", string(intention.Action)); err != nil {
-		return fmt.Errorf("failed to set 'action': %v", err)
-	}
-	if err = d.Set("meta", intention.Meta); err != nil {
-		return fmt.Errorf("failed to set 'meta': %v", err)
-	}
+	sw := newStateWriter(d)
 
-	return nil
+	sw.set("datacenter", qOpts.Datacenter)
+	sw.set("source_name", intention.SourceName)
+	sw.set("source_namespace", intention.SourceNS)
+	sw.set("destination_name", intention.DestinationName)
+	sw.set("destination_namespace", intention.DestinationNS)
+	sw.set("description", intention.Description)
+	sw.set("action", string(intention.Action))
+	sw.set("meta", intention.Meta)
+
+	return sw.error()
 }
 
 func resourceConsulIntentionDelete(d *schema.ResourceData, meta interface{}) error {
@@ -162,7 +148,7 @@ func resourceConsulIntentionDelete(d *schema.ResourceData, meta interface{}) err
 	id := d.Id()
 
 	if _, err := connect.IntentionDelete(id, wOpts); err != nil {
-		return fmt.Errorf("Failed to delete intention with id '%s' in %s: %v",
+		return fmt.Errorf("failed to delete intention with id '%s' in %s: %v",
 			id, wOpts.Datacenter, err)
 	}
 
@@ -185,7 +171,7 @@ func getIntention(d *schema.ResourceData) (*consulapi.Intention, error) {
 	} else if action == "deny" {
 		intentionAction = consulapi.IntentionActionDeny
 	} else {
-		return nil, fmt.Errorf("Failed to create intention, action must match '%v' or '%v'", consulapi.IntentionActionAllow, consulapi.IntentionActionDeny)
+		return nil, fmt.Errorf("failed to create intention, action must match '%v' or '%v'", consulapi.IntentionActionAllow, consulapi.IntentionActionDeny)
 	}
 
 	intention := &consulapi.Intention{

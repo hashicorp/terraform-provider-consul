@@ -53,7 +53,7 @@ func TestAccConsulNetworkArea_CommunityEdition(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccConsulNetworkAreaBasic,
-				ExpectError: regexp.MustCompile("Failed to create network area: Unexpected response code: 404"),
+				ExpectError: regexp.MustCompile("failed to create network area: Unexpected response code: 404"),
 			},
 		},
 	})

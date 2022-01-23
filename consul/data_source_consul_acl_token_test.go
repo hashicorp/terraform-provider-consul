@@ -24,7 +24,7 @@ func TestAccDataACLToken_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("data.consul_acl_token.read", "node_identities.0.node_name", "foo"),
 					resource.TestCheckResourceAttr("data.consul_acl_token.read", "policies.#", "1"),
 					resource.TestCheckResourceAttrSet("data.consul_acl_token.read", "policies.0.id"),
-					resource.TestCheckResourceAttr("data.consul_acl_token.read", "policies.0.name", "test"),
+					resource.TestCheckResourceAttr("data.consul_acl_token.read", "policies.0.name", "test-token"),
 					resource.TestCheckResourceAttr("data.consul_acl_token.read", "roles.#", "0"),
 					resource.TestCheckResourceAttr("data.consul_acl_token.read", "service_identities.#", "1"),
 					resource.TestCheckResourceAttr("data.consul_acl_token.read", "service_identities.0.datacenters.#", "1"),
@@ -63,7 +63,7 @@ func TestAccDataACLToken_namespaceEE(t *testing.T) {
 
 const testAccDataACLTokenConfig = `
 resource "consul_acl_policy" "test" {
-	name = "test"
+	name = "test-token"
 	rules = "node \"\" { policy = \"read\" }"
 	datacenters = [ "dc1" ]
 }
@@ -102,7 +102,7 @@ resource "consul_namespace" "test" {
 }
 
 resource "consul_acl_policy" "test" {
-  name        = "test"
+  name        = "test-token"
   rules       = "node \"\" { policy = \"read\" }"
   datacenters = [ "dc1" ]
   namespace   = consul_namespace.test.name

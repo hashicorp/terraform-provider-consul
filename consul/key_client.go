@@ -33,7 +33,7 @@ func (c *keyClient) Get(path string) (string, int, error) {
 	)
 	pair, _, err := c.client.Get(path, c.qOpts)
 	if err != nil {
-		return "", 0, fmt.Errorf("Failed to read Consul key '%s': %s", path, err)
+		return "", 0, fmt.Errorf("failed to read Consul key '%s': %s", path, err)
 	}
 	value := ""
 	if pair != nil {
@@ -54,7 +54,7 @@ func (c *keyClient) GetUnderPrefix(pathPrefix string) (consulapi.KVPairs, error)
 	pairs, _, err := c.client.List(pathPrefix, c.qOpts)
 	if err != nil {
 		return nil, fmt.Errorf(
-			"Failed to list Consul keys under prefix '%s': %s", pathPrefix, err,
+			"failed to list Consul keys under prefix '%s': %s", pathPrefix, err,
 		)
 	}
 	return pairs, nil
@@ -67,7 +67,7 @@ func (c *keyClient) Put(path, value string, flags int) error {
 	)
 	pair := consulapi.KVPair{Key: path, Value: []byte(value), Flags: uint64(flags)}
 	if _, err := c.client.Put(&pair, c.wOpts); err != nil {
-		return fmt.Errorf("Failed to write Consul key '%s': %s", path, err)
+		return fmt.Errorf("failed to write Consul key '%s': %s", path, err)
 	}
 	return nil
 }
@@ -78,7 +78,7 @@ func (c *keyClient) Delete(path string) error {
 		path, c.wOpts.Datacenter,
 	)
 	if _, err := c.client.Delete(path, c.wOpts); err != nil {
-		return fmt.Errorf("Failed to delete Consul key '%s': %s", path, err)
+		return fmt.Errorf("failed to delete Consul key '%s': %s", path, err)
 	}
 	return nil
 }
@@ -89,7 +89,7 @@ func (c *keyClient) DeleteUnderPrefix(pathPrefix string) error {
 		pathPrefix, c.wOpts.Datacenter,
 	)
 	if _, err := c.client.DeleteTree(pathPrefix, c.wOpts); err != nil {
-		return fmt.Errorf("Failed to delete Consul keys under '%s': %s", pathPrefix, err)
+		return fmt.Errorf("failed to delete Consul keys under '%s': %s", pathPrefix, err)
 	}
 	return nil
 }

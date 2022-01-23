@@ -237,7 +237,7 @@ func TestAccConsulService_nodeDoesNotExist(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccConsulServiceConfigNoNode,
-				ExpectError: regexp.MustCompile(`Node does not exist: '*'`),
+				ExpectError: regexp.MustCompile(`node does not exist: '*'`),
 			},
 		},
 	})
@@ -747,7 +747,7 @@ resource "consul_service" "test" {
 
 const testAccConsulServiceNamespaceEE = `
 resource "consul_namespace" "test" {
-  name = "test-service"
+  name      = "test-service"
 }
 
 resource "consul_node" "test" {

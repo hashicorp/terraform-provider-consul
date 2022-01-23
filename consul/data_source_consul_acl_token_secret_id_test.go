@@ -65,7 +65,7 @@ func TestAccDataACLTokenSecretID_PGP(t *testing.T) {
 			{
 				Config: testAccDataACLTokenSecretIDPGPConfig,
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("data.consul_acl_token_secret_id.read", "pgp_key", "keybase:terraformacctest"),
+					resource.TestCheckResourceAttr("data.consul_acl_token_secret_id.read", "pgp_key", "keybase:remilapeyre"),
 					resource.TestCheckResourceAttr("data.consul_acl_token_secret_id.read", "secret_id", ""),
 				),
 			},
@@ -91,14 +91,14 @@ func testAccCheckTokenExistsAndValidUUID(n string, attr string) resource.TestChe
 
 const testAccDataACLTokenSecretIDConfig = `
 resource "consul_acl_policy" "test" {
-	name = "test"
+	name = "test-data-token-secret"
 	rules = "node \"\" { policy = \"read\" }"
 	datacenters = [ "dc1" ]
 }
 
 resource "consul_acl_token" "test" {
 	description = "test"
-	policies = ["${consul_acl_policy.test.name}"]
+	policies = [consul_acl_policy.test.name]
 	local = true
 }
 
@@ -122,7 +122,7 @@ resource "consul_acl_token" "test" {
 
 data "consul_acl_token_secret_id" "read" {
 	accessor_id = "${consul_acl_token.test.id}"
-	pgp_key     = "keybase:terraformacctest"
+	pgp_key     = "keybase:remilapeyre"
 }
 `
 
@@ -139,7 +139,7 @@ resource "consul_namespace" "test" {
 }
 
 resource "consul_acl_policy" "test" {
-  name        = "test"
+  name        = "test-data-token-secret"
   rules       = "node \"\" { policy = \"read\" }"
   datacenters = [ "dc1" ]
   namespace   = consul_namespace.test.name

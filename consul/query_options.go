@@ -24,6 +24,10 @@ func schemaQueryOpts() *schema.Schema {
 					Optional: true,
 					Type:     schema.TypeString,
 				},
+				"partition": {
+					Optional: true,
+					Type:     schema.TypeString,
+				},
 				"near": {
 					Optional: true,
 					Type:     schema.TypeString,
@@ -79,6 +83,12 @@ func getQueryOpts(queryOpts *consulapi.QueryOptions, d *schema.ResourceData, met
 			if v, ok := queryOptions["datacenter"]; ok {
 				if v.(string) != "" {
 					queryOpts.Datacenter = v.(string)
+				}
+			}
+
+			if v, ok := queryOptions["partition"]; ok {
+				if v.(string) != "" {
+					queryOpts.Partition = v.(string)
 				}
 			}
 

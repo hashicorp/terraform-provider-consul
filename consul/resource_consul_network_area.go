@@ -69,7 +69,7 @@ func resourceConsulNetworkAreaCreate(d *schema.ResourceData, meta interface{}) e
 
 	id, _, err := operator.AreaCreate(area, wOpts)
 	if err != nil {
-		return fmt.Errorf("Failed to create network area: %v", err)
+		return fmt.Errorf("failed to create network area: %v", err)
 	}
 
 	d.SetId(id)
@@ -84,7 +84,7 @@ func resourceConsulNetworkAreaRead(d *schema.ResourceData, meta interface{}) err
 
 	area, _, err := operator.AreaGet(id, qOpts)
 	if err != nil {
-		return fmt.Errorf("Failed to get %s area: %v", id, err)
+		return fmt.Errorf("failed to get %s area: %v", id, err)
 	}
 
 	if len(area) == 0 {
@@ -93,24 +93,19 @@ func resourceConsulNetworkAreaRead(d *schema.ResourceData, meta interface{}) err
 	}
 
 	if len(area) != 1 {
-		return fmt.Errorf("There should be only one area")
+		return fmt.Errorf("there should be only one area")
 	}
 
 	peerDatacenter := area[0].PeerDatacenter
 	retryJoin := area[0].RetryJoin
 	useTLS := area[0].UseTLS
 
-	if err = d.Set("peer_datacenter", peerDatacenter); err != nil {
-		return fmt.Errorf("Failed to set 'peer_datacenter': %v", err)
-	}
-	if err = d.Set("retry_join", retryJoin); err != nil {
-		return fmt.Errorf("Failed to set 'retry_join': %v", err)
-	}
-	if err = d.Set("use_tls", useTLS); err != nil {
-		return fmt.Errorf("Failed to set 'use_tls': %v", err)
-	}
+	sw := newStateWriter(d)
+	sw.set("peer_datacenter", peerDatacenter)
+	sw.set("retry_join", retryJoin)
+	sw.set("use_tls", useTLS)
 
-	return nil
+	return sw.error()
 }
 
 func resourceConsulNetworkAreaUpdate(d *schema.ResourceData, meta interface{}) error {
@@ -139,11 +134,11 @@ func resourceConsulNetworkAreaUpdate(d *schema.ResourceData, meta interface{}) e
 
 	_id, _, err := operator.AreaUpdate(id, area, wOpts)
 	if err != nil {
-		return fmt.Errorf("Failed to update '%s' network area: %v", id, err)
+		return fmt.Errorf("failed to update '%s' network area: %v", id, err)
 	}
 
 	if id != _id {
-		return fmt.Errorf("This should not happen")
+		return fmt.Errorf("this should not happen")
 	}
 
 	d.SetId(id)
@@ -158,7 +153,7 @@ func resourceConsulNetworkAreaDelete(d *schema.ResourceData, meta interface{}) e
 
 	_, err := operator.AreaDelete(id, wOpts)
 	if err != nil {
-		return fmt.Errorf("Failed to delete '%s' network area: %v", err, id)
+		return fmt.Errorf("failed to delete '%s' network area: %v", err, id)
 	}
 
 	d.SetId("")

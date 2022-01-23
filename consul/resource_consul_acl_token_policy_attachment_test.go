@@ -77,7 +77,7 @@ func TestAccConsulACLTokenPolicyAttachment_basic(t *testing.T) {
 				Config: testResourceACLTokenPolicyAttachmentConfigBasic,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTokenPolicyID,
-					resource.TestCheckResourceAttr("consul_acl_token_policy_attachment.test", "policy", "test"),
+					resource.TestCheckResourceAttr("consul_acl_token_policy_attachment.test", "policy", "test-attachment"),
 				),
 			},
 			{
@@ -99,12 +99,12 @@ func TestAccConsulACLTokenPolicyAttachment_import(t *testing.T) {
 		if len(s) != 1 {
 			return fmt.Errorf("bad state: %s", s)
 		}
-		v, ok := s[0].Attributes["token_id"]
+		_, ok := s[0].Attributes["token_id"]
 		if !ok {
 			return fmt.Errorf("bad token_id: %s", s)
 		}
-		v, ok = s[0].Attributes["policy"]
-		if !ok || v != "test" {
+		v, ok := s[0].Attributes["policy"]
+		if !ok || v != "test-attachment" {
 			return fmt.Errorf("bad policy: %s", s)
 		}
 
@@ -129,7 +129,7 @@ func TestAccConsulACLTokenPolicyAttachment_import(t *testing.T) {
 
 const testResourceACLTokenPolicyAttachmentConfigBasic = `
 resource "consul_acl_policy" "test" {
-	name = "test"
+	name = "test-attachment"
 	rules = "node \"\" { policy = \"read\" }"
 	datacenters = [ "dc1" ]
 }

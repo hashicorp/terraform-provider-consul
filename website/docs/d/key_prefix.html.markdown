@@ -72,7 +72,9 @@ The following arguments are supported:
 * `subkey` - (Optional) Specifies a subkey in Consul to be read. Supported
   values documented below. Multiple blocks supported.
 
-* `namespace` - (Optional, Enterprise Only) The namespace to create the keys within.
+* `namespace` - (Optional, Enterprise Only) The namespace to lookup the keys within.
+
+* `partition` - (Optional, Enterprise Only) The namespace to lookup the keys within.
 
 The `subkey` block supports the following:
 

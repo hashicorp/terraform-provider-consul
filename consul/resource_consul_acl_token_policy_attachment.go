@@ -2,7 +2,6 @@ package consul
 
 import (
 	"fmt"
-	"log"
 	"strings"
 
 	consulapi "github.com/hashicorp/consul/api"
@@ -38,19 +37,17 @@ func resourceConsulACLTokenPolicyAttachment() *schema.Resource {
 func resourceConsulACLTokenPolicyAttachmentCreate(d *schema.ResourceData, meta interface{}) error {
 	client, qOpts, wOpts := getClient(d, meta)
 
-	log.Printf("[DEBUG] Creating ACL token policy attachment")
-
 	tokenID := d.Get("token_id").(string)
 
 	aclToken, _, err := client.ACL().TokenRead(tokenID, qOpts)
 	if err != nil {
-		return fmt.Errorf("Token '%s' not found", tokenID)
+		return fmt.Errorf("token '%s' not found", tokenID)
 	}
 
 	newPolicyName := d.Get("policy").(string)
 	for _, iPolicy := range aclToken.Policies {
 		if iPolicy.Name == newPolicyName {
-			return fmt.Errorf("Policy '%s' already attached to token", newPolicyName)
+			return fmt.Errorf("policy '%s' already attached to token", newPolicyName)
 		}
 	}
 
@@ -60,12 +57,10 @@ func resourceConsulACLTokenPolicyAttachmentCreate(d *schema.ResourceData, meta i
 
 	_, _, err = client.ACL().TokenUpdate(aclToken, wOpts)
 	if err != nil {
-		return fmt.Errorf("Error updating ACL token '%q' to set new policy attachment: '%s'", tokenID, err)
+		return fmt.Errorf("error updating ACL token '%q' to set new policy attachment: '%s'", tokenID, err)
 	}
 
 	id := fmt.Sprintf("%s:%s", tokenID, newPolicyName)
-
-	log.Printf("[DEBUG] Created ACL token policy attachment '%q'", id)
 
 	d.SetId(id)
 
@@ -76,24 +71,20 @@ func resourceConsulACLTokenPolicyAttachmentRead(d *schema.ResourceData, meta int
 	client, qOpts, _ := getClient(d, meta)
 
 	id := d.Id()
-	log.Printf("[DEBUG] Reading ACL token policy attachment '%q'", id)
 
 	tokenID, policyName, err := parseTwoPartID(id, "token", "policy")
 	if err != nil {
-		return fmt.Errorf("Invalid ACL token policy attachment id '%q'", id)
+		return fmt.Errorf("invalid ACL token policy attachment id '%q'", id)
 	}
 
 	aclToken, _, err := client.ACL().TokenRead(tokenID, qOpts)
 	if err != nil {
 		if strings.Contains(err.Error(), "ACL not found") {
-			log.Printf("[WARN] ACL token not found, removing from state")
 			d.SetId("")
 			return nil
 		}
-		return fmt.Errorf("Failed to read token '%s': %v", id, err)
+		return fmt.Errorf("failed to read token '%s': %v", id, err)
 	}
-
-	log.Printf("[DEBUG] Read ACL token %q", tokenID)
 
 	policyFound := false
 	for _, iPolicy := range aclToken.Policies {
@@ -103,16 +94,15 @@ func resourceConsulACLTokenPolicyAttachmentRead(d *schema.ResourceData, meta int
 		}
 	}
 	if !policyFound {
-		log.Printf("[WARN] ACL policy not found in token, removing from state")
 		d.SetId("")
 		return nil
 	}
 
 	if err = d.Set("token_id", tokenID); err != nil {
-		return fmt.Errorf("Error while setting 'token_id': %s", err)
+		return fmt.Errorf("error while setting 'token_id': %s", err)
 	}
 	if err = d.Set("policy", policyName); err != nil {
-		return fmt.Errorf("Error while setting 'policyName': %s", err)
+		return fmt.Errorf("error while setting 'policyName': %s", err)
 	}
 
 	return nil
@@ -122,16 +112,15 @@ func resourceConsulACLTokenPolicyAttachmentDelete(d *schema.ResourceData, meta i
 	client, qOpts, wOpts := getClient(d, meta)
 
 	id := d.Id()
-	log.Printf("[DEBUG] Reading ACL token policy attachment '%q'", id)
 
 	tokenID, policyName, err := parseTwoPartID(id, "token", "policy")
 	if err != nil {
-		return fmt.Errorf("Invalid ACL token policy attachment id '%q'", id)
+		return fmt.Errorf("invalid ACL token policy attachment id '%q'", id)
 	}
 
 	aclToken, _, err := client.ACL().TokenRead(tokenID, qOpts)
 	if err != nil {
-		return fmt.Errorf("Token '%s' not found", tokenID)
+		return fmt.Errorf("token '%s' not found", tokenID)
 	}
 
 	for i, iPolicy := range aclToken.Policies {
@@ -143,9 +132,8 @@ func resourceConsulACLTokenPolicyAttachmentDelete(d *schema.ResourceData, meta i
 
 	_, _, err = client.ACL().TokenUpdate(aclToken, wOpts)
 	if err != nil {
-		return fmt.Errorf("Error updating ACL token '%q' to set new policy attachment: '%s'", tokenID, err)
+		return fmt.Errorf("error updating ACL token '%q' to set new policy attachment: '%s'", tokenID, err)
 	}
-	log.Printf("[DEBUG] Deleted ACL token attachment policy %q", id)
 
 	return nil
 }
@@ -154,7 +142,7 @@ func resourceConsulACLTokenPolicyAttachmentDelete(d *schema.ResourceData, meta i
 func parseTwoPartID(id, resource, name string) (string, string, error) {
 	parts := strings.SplitN(id, ":", 2)
 	if len(parts) != 2 {
-		return "", "", fmt.Errorf("Unexpected ID format (%q). Expected %s_id:%s_name", id, resource, name)
+		return "", "", fmt.Errorf("unexpected ID format (%q). Expected %s_id:%s_name", id, resource, name)
 	}
 
 	return parts[0], parts[1], nil

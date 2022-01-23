@@ -7,7 +7,6 @@ import (
 	"time"
 
 	consulapi "github.com/hashicorp/consul/api"
-	"github.com/hashicorp/errwrap"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/hashcode"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 )
@@ -34,7 +33,7 @@ const (
 	consulSourceValue = "terraform"
 )
 
-var NoServiceRegistered error = errors.New("No service was found in consul catalog")
+var ErrNoServiceRegistered error = errors.New("no service was found in consul catalog")
 
 func resourceConsulService() *schema.Resource {
 	return &schema.Resource{
@@ -207,6 +206,13 @@ func resourceConsulService() *schema.Resource {
 				ForceNew: true,
 			},
 
+			"partition": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				ForceNew:    true,
+				Description: "The partition the service is associated with.",
+			},
+
 			"enable_tag_override": {
 				Type:     schema.TypeBool,
 				Optional: true,
@@ -228,14 +234,14 @@ func resourceConsulServiceCreate(d *schema.ResourceData, meta interface{}) error
 	}
 
 	if _, err := catalog.Register(registration, wOpts); err != nil {
-		return fmt.Errorf("Failed to register service (dc: '%s'): %v", wOpts.Datacenter, err)
+		return fmt.Errorf("failed to register service (dc: '%s'): %v", wOpts.Datacenter, err)
 	}
 
 	// Retrieve the service again to get the canonical service ID. We can't
 	// get this back from the register call or through
 	service, err := retrieveService(client, name, ident, node, qOpts)
 	if err != nil {
-		return fmt.Errorf("Failed to retrieve service '%s' after registration. This may mean that the service should be manually deregistered. %v", ident, err)
+		return fmt.Errorf("failed to retrieve service '%s' after registration. This may mean that the service should be manually deregistered. %v", ident, err)
 	}
 
 	d.SetId(service.ServiceID)
@@ -253,7 +259,7 @@ func resourceConsulServiceUpdate(d *schema.ResourceData, meta interface{}) error
 	}
 
 	if _, err := catalog.Register(registration, wOpts); err != nil {
-		return fmt.Errorf("Failed to update service (dc: '%s'): %v", wOpts.Datacenter, err)
+		return fmt.Errorf("failed to update service (dc: '%s'): %v", wOpts.Datacenter, err)
 	}
 
 	return resourceConsulServiceRead(d, meta)
@@ -268,43 +274,26 @@ func resourceConsulServiceRead(d *schema.ResourceData, meta interface{}) error {
 
 	service, err := retrieveService(client, name, id, node, qOpts)
 	if err != nil {
-		if err == NoServiceRegistered {
+		if err == ErrNoServiceRegistered {
 			d.SetId("")
 			return nil
 		}
 		return err
 	}
 
-	if err = d.Set("address", service.ServiceAddress); err != nil {
-		return fmt.Errorf("Failed to store 'address': %s", err)
-	}
-	if err = d.Set("service_id", service.ServiceID); err != nil {
-		return fmt.Errorf("Failed to store 'service_id': %s", err)
-	}
-	if err = d.Set("datacenter", service.Datacenter); err != nil {
-		return fmt.Errorf("Failed to store 'datacenter': %s", err)
-	}
-	if err = d.Set("name", service.ServiceName); err != nil {
-		return fmt.Errorf("Failed to store 'name': %s", err)
-	}
-	if err = d.Set("port", service.ServicePort); err != nil {
-		return fmt.Errorf("Failed to store 'port': %s", err)
-	}
-	tags := make([]string, 0, len(service.ServiceTags))
-	for _, tag := range service.ServiceTags {
-		tags = append(tags, tag)
-	}
-	if err = d.Set("tags", tags); err != nil {
-		return fmt.Errorf("Failed to store 'tags': %s", err)
-	}
-	if err = d.Set("node", service.Node); err != nil {
-		return fmt.Errorf("Failed to store 'node': %s", err)
-	}
+	sw := newStateWriter(d)
+
+	sw.set("address", service.ServiceAddress)
+	sw.set("service_id", service.ServiceID)
+	sw.set("datacenter", service.Datacenter)
+	sw.set("name", service.ServiceName)
+	sw.set("port", service.ServicePort)
+	sw.set("tags", service.ServiceTags)
+	sw.set("node", service.Node)
+
 	serviceMeta := service.ServiceMeta
 	delete(serviceMeta, consulSourceKey)
-	if err = d.Set("meta", serviceMeta); err != nil {
-		return fmt.Errorf("Failed to store 'meta': %s", err)
-	}
+	sw.set("meta", serviceMeta)
 
 	checks := make([]map[string]interface{}, 0)
 	for _, check := range service.Checks {
@@ -343,15 +332,12 @@ func resourceConsulServiceRead(d *schema.ResourceData, meta interface{}) error {
 
 		checks = append(checks, m)
 	}
-	if err := d.Set("check", checks); err != nil {
-		return errwrap.Wrapf("Unable to store checks: {{err}}", err)
-	}
+	sw.set("check", checks)
+	sw.set("enable_tag_override", service.ServiceEnableTagOverride)
+	sw.set("namespace", service.Namespace)
+	sw.set("partition", service.Partition)
 
-	if err = d.Set("enable_tag_override", service.ServiceEnableTagOverride); err != nil {
-		return fmt.Errorf("Failed to set 'enable_tag_override': %v", err)
-	}
-
-	return nil
+	return sw.error()
 }
 
 func resourceConsulServiceDelete(d *schema.ResourceData, meta interface{}) error {
@@ -373,7 +359,7 @@ func resourceConsulServiceDelete(d *schema.ResourceData, meta interface{}) error
 	}
 
 	if _, err := catalog.Deregister(&deregistration, wOpts); err != nil {
-		return fmt.Errorf("Failed to deregister Consul service with id '%s' in %s: %v",
+		return fmt.Errorf("failed to deregister Consul service with id '%s' in %s: %v",
 			id, wOpts.Datacenter, err)
 	}
 
@@ -394,7 +380,7 @@ func retrieveService(client *consulapi.Client, name, ident, node string, qOpts *
 			// Fetch health-checks for this service
 			healthChecks, _, err := client.Health().Checks(name, qOpts)
 			if err != nil {
-				return nil, fmt.Errorf("Failed to fetch health-checks: %v", err)
+				return nil, fmt.Errorf("failed to fetch health-checks: %v", err)
 			}
 			// Filter the checks that correspond to this specific service instance
 			s.Checks = make([]*consulapi.HealthCheck, 0)
@@ -408,18 +394,17 @@ func retrieveService(client *consulapi.Client, name, ident, node string, qOpts *
 	}
 
 	// No matching service has been found
-	return nil, NoServiceRegistered
+	return nil, ErrNoServiceRegistered
 }
 
 func parseChecks(node string, serviceID string, d *schema.ResourceData) ([]*consulapi.HealthCheck, error) {
 	// Get health checks definition
 	checks := d.Get("check").(*schema.Set).List()
-	s := []*consulapi.HealthCheck{}
-	s = make([]*consulapi.HealthCheck, len(checks))
+	s := make([]*consulapi.HealthCheck, len(checks))
 	for i, raw := range checks {
 		check, ok := raw.(map[string]interface{})
 		if !ok {
-			return nil, fmt.Errorf("Failed to unroll: %#v", raw)
+			return nil, fmt.Errorf("failed to unroll: %#v", raw)
 		}
 		headers, err := parseHeaders(check)
 		if err != nil {
@@ -427,17 +412,17 @@ func parseChecks(node string, serviceID string, d *schema.ResourceData) ([]*cons
 		}
 		interval, err := time.ParseDuration(check["interval"].(string))
 		if err != nil {
-			return nil, fmt.Errorf("Failed to parse interval: %#v", interval)
+			return nil, fmt.Errorf("failed to parse interval: %#v", interval)
 		}
 		timeout, err := time.ParseDuration(check["timeout"].(string))
 		if err != nil {
-			return nil, fmt.Errorf("Failed to parse timeout: %#v", timeout)
+			return nil, fmt.Errorf("failed to parse timeout: %#v", timeout)
 		}
 
 		tcp := check["tcp"].(string)
 		http := check["http"].(string)
 		if tcp != "" && http != "" {
-			return nil, fmt.Errorf("You cannot set both tcp and http in the same check")
+			return nil, fmt.Errorf("you cannot set both tcp and http in the same check")
 		}
 		var tlsSkipVerify bool
 		if check["tls_skip_verify"] != nil {
@@ -465,7 +450,7 @@ func parseChecks(node string, serviceID string, d *schema.ResourceData) ([]*cons
 		if deregisterCriticalServiceAfter != "" {
 			deregisterCriticalServiceAfter, err := time.ParseDuration(deregisterCriticalServiceAfter)
 			if err != nil {
-				return nil, fmt.Errorf("Failed to parse deregister_critical_service_after: %#v", deregisterCriticalServiceAfter)
+				return nil, fmt.Errorf("failed to parse deregister_critical_service_after: %#v", deregisterCriticalServiceAfter)
 			}
 			healthCheck.DeregisterCriticalServiceAfter = *consulapi.NewReadableDuration(deregisterCriticalServiceAfter)
 		}
@@ -485,7 +470,7 @@ func parseChecks(node string, serviceID string, d *schema.ResourceData) ([]*cons
 }
 
 func parseHeaders(check map[string]interface{}) (map[string][]string, error) {
-	headers := make(map[string][]string, 0)
+	headers := make(map[string][]string)
 	header := check["header"].(*schema.Set).List()
 	for _, h := range header {
 		name := h.(map[string]interface{})["name"].(string)
@@ -512,10 +497,10 @@ func getCatalogRegistration(d *schema.ResourceData, meta interface{}) (*consulap
 	// managed by the consul_node resource (or datasource)
 	nodeCheck, _, err := client.Catalog().Node(node, qOpts)
 	if err != nil {
-		return nil, "", fmt.Errorf("Cannot retrieve node '%s': %v", node, err)
+		return nil, "", fmt.Errorf("cannot retrieve node '%s': %v", node, err)
 	}
 	if nodeCheck == nil {
-		return nil, "", fmt.Errorf("Node does not exist: '%s'", node)
+		return nil, "", fmt.Errorf("node does not exist: '%s'", node)
 	}
 
 	registration := &consulapi.CatalogRegistration{
@@ -559,7 +544,7 @@ func getCatalogRegistration(d *schema.ResourceData, meta interface{}) (*consulap
 
 	checks, err := parseChecks(node, ident, d)
 	if err != nil {
-		return nil, "", fmt.Errorf("Failed to fetch health-checks: %v", err)
+		return nil, "", fmt.Errorf("failed to fetch health-checks: %v", err)
 	}
 	registration.Checks = checks
 

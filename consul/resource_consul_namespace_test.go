@@ -7,7 +7,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 )
 
-var namespaceEnterpriseFeature = regexp.MustCompile("(?i)Namespaces .* Consul Enterprise feature")
+var namespaceEnterpriseFeature = regexp.MustCompile("(?i)Consul Enterprise feature")
 
 func TestAccConsulNamespace_FailOnCommunityEdition(t *testing.T) {
 	resource.Test(t, resource.TestCase{
@@ -71,7 +71,7 @@ resource "consul_namespace" "test" {
 
 const testAccConsulNamespace_Update = `
 resource "consul_acl_role" "test" {
-  name = "foo"
+  name      = "foo"
 }
 
 resource "consul_acl_policy" "test" {

@@ -18,23 +18,29 @@ func dataSourceConsulACLPolicy() *schema.Resource {
 				Required: true,
 			},
 
-			// Out parameters
-			"description": {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			"rules": {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			"datacenters": {
-				Type:     schema.TypeList,
-				Optional: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
 			"namespace": {
 				Type:     schema.TypeString,
 				Optional: true,
+			},
+
+			"partition": {
+				Type:     schema.TypeString,
+				Optional: true,
+			},
+
+			// Out parameters
+			"description": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"rules": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"datacenters": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
 		},
 	}
@@ -47,7 +53,7 @@ func dataSourceConsulACLPolicyRead(d *schema.ResourceData, meta interface{}) err
 	var policyEntry *consulapi.ACLPolicyListEntry
 	policyEntries, _, err := client.ACL().PolicyList(qOpts)
 	if err != nil {
-		return fmt.Errorf("Could not list policies: %v", err)
+		return fmt.Errorf("could not list policies: %v", err)
 	}
 	for _, pe := range policyEntries {
 		if pe.Name == name {
@@ -56,24 +62,20 @@ func dataSourceConsulACLPolicyRead(d *schema.ResourceData, meta interface{}) err
 		}
 	}
 	if policyEntry == nil {
-		return fmt.Errorf("Could not find policy '%s'", name)
+		return fmt.Errorf("could not find policy '%s'", name)
 	}
 
 	policy, _, err := client.ACL().PolicyRead(policyEntry.ID, qOpts)
 	if err != nil {
-		return fmt.Errorf("Could not read policy '%s': %v", name, err)
+		return fmt.Errorf("could not read policy '%s': %v", name, err)
 	}
 
 	d.SetId(policy.ID)
-	if err = d.Set("description", policy.Description); err != nil {
-		return fmt.Errorf("Could not set 'description': %v", err)
-	}
-	if err = d.Set("rules", policy.Rules); err != nil {
-		return fmt.Errorf("Could not set 'rules': %v", err)
-	}
-	if err = d.Set("datacenters", policy.Datacenters); err != nil {
-		return fmt.Errorf("Could not set 'datacenters': %v", err)
-	}
 
-	return nil
+	sw := newStateWriter(d)
+	sw.set("description", policy.Description)
+	sw.set("rules", policy.Rules)
+	sw.set("datacenters", policy.Datacenters)
+
+	return sw.error()
 }

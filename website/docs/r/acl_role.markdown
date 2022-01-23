@@ -44,6 +44,7 @@ The following arguments are supported:
 * `service_identities` - (Optional) The list of service identities that should be applied to the role.
 * `node_identities` - (Optional) The list of node identities that should be applied to the role.
 * `namespace` - (Optional, Enterprise Only) The namespace to create the role within.
+* `partition` - (Optional, Enterprise Only) The partition the ACL role is associated with.
 
 The `service_identities` block supports:
 

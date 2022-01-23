@@ -60,7 +60,7 @@ func resourceConsulConfigEntryUpdate(d *schema.ResourceData, meta interface{}) e
 	}
 
 	if _, _, err := configEntries.Set(configEntry, wOpts); err != nil {
-		return fmt.Errorf("Failed to set '%s' config entry: %v", name, err)
+		return fmt.Errorf("failed to set '%s' config entry: %v", name, err)
 	}
 	_, _, err = configEntries.Get(configEntry.GetKind(), configEntry.GetName(), qOpts)
 	if err != nil {
@@ -90,16 +90,16 @@ func resourceConsulConfigEntryRead(d *schema.ResourceData, meta interface{}) err
 			d.SetId("")
 			return nil
 		}
-		return fmt.Errorf("Failed to fetch '%s' config entry: %#v", configName, err)
+		return fmt.Errorf("failed to fetch '%s' config entry: %#v", configName, err)
 	}
 
 	_, _, configJSON, err := parseConfigEntry(configEntry)
 	if err != nil {
-		return fmt.Errorf("Failed to parse ConfigEntry: %v", err)
+		return fmt.Errorf("failed to parse ConfigEntry: %v", err)
 	}
 
 	if err = d.Set("config_json", string(configJSON)); err != nil {
-		return fmt.Errorf("Failed to set 'config_json': %v", err)
+		return fmt.Errorf("failed to set 'config_json': %v", err)
 	}
 
 	return nil
@@ -112,7 +112,7 @@ func resourceConsulConfigEntryDelete(d *schema.ResourceData, meta interface{}) e
 	configName := d.Get("name").(string)
 
 	if _, err := configEntries.Delete(configKind, configName, wOpts); err != nil {
-		return fmt.Errorf("Failed to delete '%s' config entry: %#v", configName, err)
+		return fmt.Errorf("failed to delete '%s' config entry: %#v", configName, err)
 	}
 	d.SetId("")
 	return nil
@@ -121,7 +121,7 @@ func resourceConsulConfigEntryDelete(d *schema.ResourceData, meta interface{}) e
 func makeConfigEntry(kind, name, config, namespace string) (consulapi.ConfigEntry, error) {
 	var configMap map[string]interface{}
 	if err := json.Unmarshal([]byte(config), &configMap); err != nil {
-		return nil, fmt.Errorf("Failed to unmarshal configMap: %v", err)
+		return nil, fmt.Errorf("failed to unmarshal configMap: %v", err)
 	}
 
 	configMap["kind"] = kind
@@ -130,7 +130,7 @@ func makeConfigEntry(kind, name, config, namespace string) (consulapi.ConfigEntr
 
 	configEntry, err := decodeConfigEntry(configMap)
 	if err != nil {
-		return nil, fmt.Errorf("Failed to decode config entry: %v", err)
+		return nil, fmt.Errorf("failed to decode config entry: %v", err)
 	}
 
 	return configEntry, nil
@@ -139,13 +139,13 @@ func makeConfigEntry(kind, name, config, namespace string) (consulapi.ConfigEntr
 func configEntryToMap(configEntry consulapi.ConfigEntry) (map[string]interface{}, error) {
 	marshalled, err := json.Marshal(configEntry)
 	if err != nil {
-		return nil, fmt.Errorf("Failed to marshal %v: %v", configEntry, err)
+		return nil, fmt.Errorf("failed to marshal %v: %v", configEntry, err)
 	}
 
 	var configMap map[string]interface{}
 	if err = json.Unmarshal(marshalled, &configMap); err != nil {
 		// This should never happen
-		return nil, fmt.Errorf("Failed to unmarshal %v: %v", marshalled, err)
+		return nil, fmt.Errorf("failed to unmarshal %v: %v", marshalled, err)
 	}
 
 	// Remove the fields unrelated to the configEntry
@@ -166,12 +166,12 @@ func parseConfigEntry(configEntry consulapi.ConfigEntry) (string, string, string
 
 	configMap, err := configEntryToMap(configEntry)
 	if err != nil {
-		return "", "", "", fmt.Errorf("Failed to convert config entry to map")
+		return "", "", "", fmt.Errorf("failed to convert config entry to map")
 	}
 
 	configJSON, err := json.Marshal(configMap)
 	if err != nil {
-		return "", "", "", fmt.Errorf("Failed to marshal %v: %v", configMap, err)
+		return "", "", "", fmt.Errorf("failed to marshal %v: %v", configMap, err)
 	}
 
 	return kind, name, string(configJSON), nil
@@ -203,7 +203,7 @@ func decodeConfigEntry(raw map[string]interface{}) (consulapi.ConfigEntry, error
 		kindVal, ok = raw["kind"]
 	}
 	if !ok {
-		return nil, fmt.Errorf("Payload does not contain a kind/Kind key at the top level")
+		return nil, fmt.Errorf("payload does not contain a kind/Kind key at the top level")
 	}
 
 	if kindStr, ok := kindVal.(string); ok {
@@ -213,7 +213,7 @@ func decodeConfigEntry(raw map[string]interface{}) (consulapi.ConfigEntry, error
 		}
 		entry = newEntry
 	} else {
-		return nil, fmt.Errorf("Kind value in payload is not a string")
+		return nil, fmt.Errorf("kind value in payload is not a string")
 	}
 
 	decodeConf := &mapstructure.DecoderConfig{

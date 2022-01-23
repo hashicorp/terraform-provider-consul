@@ -14,7 +14,7 @@ func TestAccDataACLAuthMethod_basic(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccDataSourceACLAuthMethodConfigNotFound,
-				ExpectError: regexp.MustCompile("Could not find auth-method 'not-found'"),
+				ExpectError: regexp.MustCompile("could not find auth-method 'not-found'"),
 			},
 			{
 				Config: testAccDataSourceACLAuthMethodConfigBasic,

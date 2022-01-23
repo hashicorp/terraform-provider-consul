@@ -58,6 +58,7 @@ The following arguments are supported:
 * `local` - (Optional) The flag to set the token local to the current datacenter.
 * `expiration_time` - (Optional) If set this represents the point after which a token should be considered revoked and is eligible for destruction.
 * `namespace` - (Optional, Enterprise Only) The namespace to create the token within.
+* `partition` - (Optional, Enterprise Only) The partition the ACL token is associated with.
 
 The `service_identities` block supports the following arguments:
 

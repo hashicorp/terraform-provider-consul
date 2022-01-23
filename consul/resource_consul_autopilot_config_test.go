@@ -47,7 +47,7 @@ func TestAccConsulAutopilotConfig_basic(t *testing.T) {
 }
 
 func TestAccConsulAutopilotConfig_parseduration(t *testing.T) {
-	errorRegexp := regexp.MustCompile("Could not parse 'last_contact_threshold': time: invalid duration")
+	errorRegexp := regexp.MustCompile("could not parse 'last_contact_threshold': time: invalid duration")
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
 		Providers: testAccProviders,

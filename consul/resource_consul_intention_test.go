@@ -193,16 +193,3 @@ resource "consul_intention" "example" {
 	action = "allow"
 }
 `
-
-const testAccConsulIntentionDc = `
-resource "consul_intention" "example" {
-	datacenter       = "ny3"
-	source_name      = "api"
-	destination_name = "db"
-	action           = "allow"
-
-	meta = {
-		is_tf_acc_test = "yes"
-	}
-}
-`

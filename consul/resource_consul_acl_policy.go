@@ -47,6 +47,13 @@ func resourceConsulACLPolicy() *schema.Resource {
 				Optional: true,
 				ForceNew: true,
 			},
+
+			"partition": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				ForceNew:    true,
+				Description: "The partition the ACL policy is associated with.",
+			},
 		},
 	}
 }
@@ -88,40 +95,25 @@ func resourceConsulACLPolicyRead(d *schema.ResourceData, meta interface{}) error
 	client, qOpts, _ := getClient(d, meta)
 
 	id := d.Id()
-	log.Printf("[DEBUG] Reading ACL policy %q", id)
 
 	aclPolicy, _, err := client.ACL().PolicyRead(id, qOpts)
 	if err != nil {
 		if strings.Contains(err.Error(), "ACL not found") {
-			log.Printf("[INFO] ACL policy not found, removing from state")
 			d.SetId("")
 			return nil
 		}
-		return fmt.Errorf("Failed to read policy '%s': %v", id, err)
+		return fmt.Errorf("failed to read policy '%s': %v", id, err)
 	}
 
-	log.Printf("[DEBUG] Read ACL policy %q", id)
+	sw := newStateWriter(d)
+	sw.set("name", aclPolicy.Name)
+	sw.set("description", aclPolicy.Description)
+	sw.set("rules", aclPolicy.Rules)
+	sw.set("datacenters", aclPolicy.Datacenters)
+	sw.set("namespace", aclPolicy.Namespace)
+	sw.set("partition", aclPolicy.Partition)
 
-	if err = d.Set("name", aclPolicy.Name); err != nil {
-		return fmt.Errorf("Error while setting 'name': %s", err)
-	}
-	if err = d.Set("description", aclPolicy.Description); err != nil {
-		return fmt.Errorf("Error while setting 'description': %s", err)
-	}
-	if err = d.Set("rules", aclPolicy.Rules); err != nil {
-		return fmt.Errorf("Error while setting 'rules': %s", err)
-	}
-
-	datacenters := make([]string, 0, len(aclPolicy.Datacenters))
-	for _, datacenter := range aclPolicy.Datacenters {
-		datacenters = append(datacenters, datacenter)
-	}
-
-	if err = d.Set("datacenters", datacenters); err != nil {
-		return fmt.Errorf("Error while setting 'datacenters': %s", err)
-	}
-
-	return nil
+	return sw.error()
 }
 
 func resourceConsulACLPolicyUpdate(d *schema.ResourceData, meta interface{}) error {

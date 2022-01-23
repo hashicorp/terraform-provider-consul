@@ -46,7 +46,7 @@ func resourceConsulNamespaceRoleAttachmentCreate(d *schema.ResourceData, meta in
 
 	for _, r := range namespace.ACLs.RoleDefaults {
 		if r.Name == role {
-			return fmt.Errorf("Role %q already attached to the namespace", role)
+			return fmt.Errorf("role %q already attached to the namespace", role)
 		}
 	}
 
@@ -56,7 +56,7 @@ func resourceConsulNamespaceRoleAttachmentCreate(d *schema.ResourceData, meta in
 
 	_, _, err = client.Namespaces().Update(namespace, wOpts)
 	if err != nil {
-		return fmt.Errorf("Failed to update namespace %q to attach role %q: %s", name, role, err)
+		return fmt.Errorf("failed to update namespace %q to attach role %q: %s", name, role, err)
 	}
 
 	d.SetId(fmt.Sprintf("%s:%s", name, role))
@@ -74,7 +74,7 @@ func resourceConsulNamespaceRoleAttachmentRead(d *schema.ResourceData, meta inte
 
 	namespace, _, err := client.Namespaces().Read(name, qOpts)
 	if err != nil {
-		return fmt.Errorf("Failed to read namespace %q: %s", name, err)
+		return fmt.Errorf("failed to read namespace %q: %s", name, err)
 	}
 	if namespace == nil {
 		d.SetId("")
@@ -95,10 +95,10 @@ func resourceConsulNamespaceRoleAttachmentRead(d *schema.ResourceData, meta inte
 	}
 
 	if err = d.Set("namespace", name); err != nil {
-		return fmt.Errorf("Failed to set 'namespace': %s", err)
+		return fmt.Errorf("failed to set 'namespace': %s", err)
 	}
 	if err = d.Set("role", role); err != nil {
-		return fmt.Errorf("Failed to set 'role': %s", err)
+		return fmt.Errorf("failed to set 'role': %s", err)
 	}
 
 	return nil
@@ -128,7 +128,7 @@ func resourceConsulNamespaceRoleAttachmentDelete(d *schema.ResourceData, meta in
 
 	_, _, err = client.Namespaces().Update(namespace, wOpts)
 	if err != nil {
-		return fmt.Errorf("Failed to remove role %q from namespace %q", role, name)
+		return fmt.Errorf("failed to remove role %q from namespace %q", role, name)
 	}
 
 	return nil
@@ -137,11 +137,11 @@ func resourceConsulNamespaceRoleAttachmentDelete(d *schema.ResourceData, meta in
 func findNamespace(client *consulapi.Client, qOpts *consulapi.QueryOptions, name string) (*consulapi.Namespace, error) {
 	namespace, _, err := client.Namespaces().Read(name, qOpts)
 	if err != nil {
-		return nil, fmt.Errorf("Failed to read namespace %q: %s", name, err)
+		return nil, fmt.Errorf("failed to read namespace %q: %s", name, err)
 	}
 
 	if namespace == nil {
-		return nil, fmt.Errorf("Namespace %q not found", name)
+		return nil, fmt.Errorf("namespace %q not found", name)
 	}
 
 	return namespace, nil

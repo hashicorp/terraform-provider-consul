@@ -49,6 +49,8 @@ The following arguments are supported:
 
 * `namespace` - (Optional, Enterprise Only) The namespace to lookup the keys.
 
+* `partition` - (Optional, Enterprise Only) The partition to lookup the keys.
+
 The `key` block supports the following:
 
 * `name` - (Required) This is the name of the key. This value of the

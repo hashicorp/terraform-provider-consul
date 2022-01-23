@@ -20,7 +20,7 @@ func TestAccConsulACLAuthMethod_basic(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config:      testResourceACLAuthMethodConfigBasic_NoConfig,
-				ExpectError: regexp.MustCompile("One of 'config' or 'config_json' must be set"),
+				ExpectError: regexp.MustCompile("one of 'config' or 'config_json' must be set"),
 			},
 			{
 				Config: testResourceACLAuthMethodConfigBasic,

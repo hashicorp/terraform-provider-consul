@@ -30,6 +30,7 @@ The following arguments are supported:
 
 * `name` - (Required) The name of the ACL Role.
 * `namespace` - (Optional, Enterprise Only) The namespace to lookup the role.
+* `partition` - (Optional, Enterprise Only) The partition to lookup the role.
 
 ## Attributes Reference
 

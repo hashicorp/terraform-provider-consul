@@ -34,6 +34,7 @@ The following arguments are supported:
 * `rules` - (Required) The rules of the policy.
 * `datacenters` - (Optional) The datacenters of the policy.
 * `namespace` - (Optional, Enterprise Only) The namespace to create the policy within.
+* `partition` - (Optional, Enterprise Only) The partition the ACL policy is associated with.
 
 ## Attributes Reference
 

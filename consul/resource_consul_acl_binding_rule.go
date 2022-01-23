@@ -51,6 +51,13 @@ func resourceConsulACLBindingRule() *schema.Resource {
 				Optional: true,
 				ForceNew: true,
 			},
+
+			"partition": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				ForceNew:    true,
+				Description: "The partition the ACL binding rule is associated with.",
+			},
 		},
 	}
 }
@@ -63,7 +70,7 @@ func resourceConsulACLBindingRuleCreate(d *schema.ResourceData, meta interface{}
 
 	rule, _, err := ACL.BindingRuleCreate(rule, wOpts)
 	if err != nil {
-		return fmt.Errorf("Failed to create binding rule: %v", err)
+		return fmt.Errorf("failed to create binding rule: %v", err)
 	}
 
 	d.SetId(rule.ID)
@@ -77,30 +84,22 @@ func resourceConsulACLBindingRuleRead(d *schema.ResourceData, meta interface{}) 
 
 	rule, _, err := ACL.BindingRuleRead(d.Id(), qOpts)
 	if err != nil {
-		return fmt.Errorf("Failed to read binding rule '%s': %v", d.Id(), err)
+		return fmt.Errorf("failed to read binding rule '%s': %v", d.Id(), err)
 	}
 	if rule == nil {
 		d.SetId("")
 		return nil
 	}
 
-	if err = d.Set("description", rule.Description); err != nil {
-		return fmt.Errorf("Failed to set 'description': %v", err)
-	}
+	sw := newStateWriter(d)
+	sw.set("description", rule.Description)
+	sw.set("selector", rule.Selector)
+	sw.set("bind_type", rule.BindType)
+	sw.set("bind_name", rule.BindName)
+	sw.set("namespace", rule.Namespace)
+	sw.set("partition", rule.Partition)
 
-	if err = d.Set("selector", rule.Selector); err != nil {
-		return fmt.Errorf("Failed to set 'selector': %v", err)
-	}
-
-	if err = d.Set("bind_type", rule.BindType); err != nil {
-		return fmt.Errorf("Failed to set 'bind_type': %v", err)
-	}
-
-	if err = d.Set("bind_name", rule.BindName); err != nil {
-		return fmt.Errorf("Failed to set 'bind_name': %v", err)
-	}
-
-	return nil
+	return sw.error()
 }
 
 func resourceConsulACLBindingRuleUpdate(d *schema.ResourceData, meta interface{}) error {
@@ -109,9 +108,9 @@ func resourceConsulACLBindingRuleUpdate(d *schema.ResourceData, meta interface{}
 
 	rule := getBindingRule(d, meta)
 
-	rule, _, err := ACL.BindingRuleUpdate(rule, wOpts)
+	_, _, err := ACL.BindingRuleUpdate(rule, wOpts)
 	if err != nil {
-		return fmt.Errorf("Failed to update binding rule '%s': %v", d.Id(), err)
+		return fmt.Errorf("failed to update binding rule '%s': %v", d.Id(), err)
 	}
 
 	return resourceConsulACLBindingRuleRead(d, meta)
@@ -122,7 +121,7 @@ func resourceConsulACLBindingRuleDelete(d *schema.ResourceData, meta interface{}
 	ACL := client.ACL()
 
 	if _, err := ACL.BindingRuleDelete(d.Id(), wOpts); err != nil {
-		return fmt.Errorf("Failed to delete binding rule '%s': %v", d.Id(), err)
+		return fmt.Errorf("failed to delete binding rule '%s': %v", d.Id(), err)
 	}
 
 	d.SetId("")

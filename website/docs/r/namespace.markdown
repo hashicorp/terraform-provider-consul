@@ -31,12 +31,10 @@ The following arguments are supported:
 
 * `name` - (Required) The namespace name.
 * `description` - (Optional) Free form namespace description.
-* `policy_defaults` - (Optional) The list of default policies that should be
-  applied to all tokens created in this namespace.
-* `role_defaults` - (Optional) The list of default roles that should be applied
-  to all tokens created in this namespace.
-* `meta` - (Optional) Specifies arbitrary KV metadata to associate with the
-  namespace.
+* `policy_defaults` - (Optional) The list of default policies that should be applied to all tokens created in this namespace.
+* `role_defaults` - (Optional) The list of default roles that should be applied to all tokens created in this namespace.
+* `meta` - (Optional) Specifies arbitrary KV metadata to associate with the namespace.
+* `partition` - (Optional, Enterprise Only) The partition to create the namespace within.
 
 ## Attributes Reference
 

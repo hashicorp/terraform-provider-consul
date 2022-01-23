@@ -95,6 +95,12 @@ func resourceConsulKeys() *schema.Resource {
 				Optional: true,
 				ForceNew: true,
 			},
+
+			"partition": {
+				Type:     schema.TypeString,
+				Optional: true,
+				ForceNew: true,
+			},
 		},
 	}
 }
@@ -267,14 +273,14 @@ func resourceConsulKeysDelete(d *schema.ResourceData, meta interface{}) error {
 func parseKey(raw interface{}) (string, string, map[string]interface{}, error) {
 	sub, ok := raw.(map[string]interface{})
 	if !ok {
-		return "", "", nil, fmt.Errorf("Failed to unroll: %#v", raw)
+		return "", "", nil, fmt.Errorf("failed to unroll: %#v", raw)
 	}
 
 	key := sub["name"].(string)
 
 	path, ok := sub["path"].(string)
 	if !ok {
-		return "", "", nil, fmt.Errorf("Failed to get path for key '%s'", key)
+		return "", "", nil, fmt.Errorf("failed to get path for key '%s'", key)
 	}
 	return key, path, sub, nil
 }

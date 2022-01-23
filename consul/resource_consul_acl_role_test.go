@@ -99,7 +99,7 @@ func testRoleDestroy(s *terraform.State) error {
 
 const testResourceACLRoleConfigBasic = `
 resource "consul_acl_policy" "test-read" {
-	name        = "test"
+	name        = "test-role"
 	rules       = "node \"\" { policy = \"read\" }"
 	datacenters = [ "dc1" ]
 }
@@ -119,7 +119,7 @@ resource "consul_acl_role" "test" {
 
 const testResourceACLRoleConfigUpdate = `
 resource "consul_acl_role" "test" {
-	name = "baz"
+	name      = "baz"
 
 	service_identities {
 		service_name = "bar"

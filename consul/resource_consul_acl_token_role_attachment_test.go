@@ -154,7 +154,7 @@ resource "consul_acl_token_role_attachment" "test" {
 const testResourceACLTokenRoleAttachmentConfigUpdate = `
 // Using another resource to force the update of consul_acl_token
 resource "consul_acl_role" "test2" {
-	name = "test2"
+	name      = "test2"
 
 	service_identities {
         service_name = "bar"

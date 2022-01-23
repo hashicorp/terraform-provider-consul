@@ -63,7 +63,7 @@ func TestAccConsulNamespaceRoleAttachment(t *testing.T) {
 
 const testResourceNamespaceRoleConfig = `
 resource "consul_namespace" "test" {
-	name = "testroleattachment"
+	name      = "testroleattachment"
 
 	lifecycle {
 		ignore_changes = [role_defaults]
@@ -71,7 +71,7 @@ resource "consul_namespace" "test" {
 }
 
 resource "consul_acl_role" "test" {
-	name = "role"
+	name      = "role"
 
 	service_identities {
         service_name = "foo"
@@ -94,7 +94,7 @@ resource "consul_namespace" "test" {
 }
 
 resource "consul_acl_role" "test2" {
-	name = "role2"
+	name      = "role2"
 
 	service_identities {
         service_name = "foo"

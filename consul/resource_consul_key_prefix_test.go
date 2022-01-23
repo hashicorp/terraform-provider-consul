@@ -84,10 +84,11 @@ func TestAccCheckConsulKeyPrefix_Import(t *testing.T) {
 				Config: testAccConsulKeyPrefixConfig_Import,
 			},
 			{
-				Config:            testAccConsulKeyPrefixConfig_Import,
-				ResourceName:      "consul_key_prefix.app",
-				ImportState:       true,
-				ImportStateVerify: true,
+				Config:                  testAccConsulKeyPrefixConfig_Import,
+				ResourceName:            "consul_key_prefix.app",
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"namespace", "partition"},
 			},
 		},
 	})
@@ -178,20 +179,6 @@ func TestAccConsulKeyPrefix_datacenter(t *testing.T) {
 			},
 		},
 	})
-}
-
-func testAccCheckConsulKeyPrefixDestroy(s *terraform.State) error {
-	client := getTestClient(testAccProvider.Meta())
-	kv := client.KV()
-	opts := &consulapi.QueryOptions{Datacenter: "dc1"}
-	pair, _, err := kv.Get("test/set", opts)
-	if err != nil {
-		return err
-	}
-	if pair != nil {
-		return fmt.Errorf("Key still exists: %#v", pair)
-	}
-	return nil
 }
 
 func testAccCheckConsulKeyPrefixKeyAbsent(name string) resource.TestCheckFunc {

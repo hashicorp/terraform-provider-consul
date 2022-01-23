@@ -64,6 +64,7 @@ The following arguments are supported:
   attribute is deprecated and will be removed in a future version. `config_json`
   should be used instead.
 * `namespace` - (Optional, Enterprise Only) The namespace in which to create the auth method.
+* `partition` - (Optional, Enterprise Only) The partition the ACL auth method is associated with.
 * `namespace_rule` - (Optional, Enterprise Only) A set of rules that control
   which namespace tokens created via this auth method will be created within.
 

@@ -1,6 +1,7 @@
 package consul
 
 import (
+	"encoding/json"
 	"fmt"
 	"log"
 	"net/http"
@@ -167,6 +168,7 @@ func Provider() terraform.ResourceProvider {
 			"consul_acl_token":                   resourceConsulACLToken(),
 			"consul_acl_token_policy_attachment": resourceConsulACLTokenPolicyAttachment(),
 			"consul_acl_token_role_attachment":   resourceConsulACLTokenRoleAttachment(),
+			"consul_admin_partition":             resourceConsulAdminPartition(),
 			"consul_agent_service":               resourceConsulAgentService(),
 			"consul_catalog_entry":               resourceConsulCatalogEntry(),
 			"consul_certificate_authority":       resourceConsulCertificateAuthority(),
@@ -220,7 +222,7 @@ func providerConfigure(d *schema.ResourceData) (interface{}, error) {
 
 func getClient(d *schema.ResourceData, meta interface{}) (*consulapi.Client, *consulapi.QueryOptions, *consulapi.WriteOptions) {
 	client := getTestClient(meta)
-	var dc, token, namespace string
+	var dc, token, namespace, partition string
 	if v, ok := d.GetOk("datacenter"); ok {
 		dc = v.(string)
 	}
@@ -229,6 +231,9 @@ func getClient(d *schema.ResourceData, meta interface{}) (*consulapi.Client, *co
 	}
 	if v, ok := d.GetOk("token"); ok {
 		token = v.(string)
+	}
+	if v, ok := d.GetOk("partition"); ok {
+		partition = v.(string)
 	}
 
 	if dc == "" {
@@ -245,11 +250,13 @@ func getClient(d *schema.ResourceData, meta interface{}) (*consulapi.Client, *co
 	qOpts := &consulapi.QueryOptions{
 		Datacenter: dc,
 		Namespace:  namespace,
+		Partition:  partition,
 		Token:      token,
 	}
 	wOpts := &consulapi.WriteOptions{
 		Datacenter: dc,
 		Namespace:  namespace,
+		Partition:  partition,
 		Token:      token,
 	}
 	return client, qOpts, wOpts
@@ -271,6 +278,14 @@ func newStateWriter(d *schema.ResourceData) *stateWriter {
 }
 
 func (sw *stateWriter) set(key string, value interface{}) {
+	if key == "namespace" || key == "partition" {
+		// Consul Enterprise will change "" to "default" but Community Edition only
+		// understands the first one.
+		if sw.d.Get(key).(string) == "" && value.(string) == "default" {
+			value = ""
+		}
+	}
+
 	err := sw.d.Set(key, value)
 	if err != nil {
 		sw.errors = append(
@@ -280,10 +295,23 @@ func (sw *stateWriter) set(key string, value interface{}) {
 	}
 }
 
+func (sw *stateWriter) setJson(key string, value interface{}) {
+	marshaled, err := json.Marshal(value)
+	if err != nil {
+		sw.errors = append(
+			sw.errors,
+			fmt.Sprintf("failed to marshal '%s': %v", key, err),
+		)
+		return
+	}
+
+	sw.set(key, string(marshaled))
+}
+
 func (sw *stateWriter) error() error {
 	if sw.errors == nil {
 		return nil
 	}
 	errors := strings.Join(sw.errors, "\n")
-	return fmt.Errorf("Failed to write the state:\n%s", errors)
+	return fmt.Errorf("failed to write the state:\n%s", errors)
 }
