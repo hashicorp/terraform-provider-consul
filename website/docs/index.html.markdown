@@ -48,6 +48,19 @@ resource "aws_instance" "app" {
 }
 ```
 
+## Compatibility
+
+The Consul Terraform provider uses features of the latest version of Consul.
+Some resources may not be supported by older versions of Consul.
+
+The known compatibility between this provider and Consul is:
+
+| Terraform provider version | Consul version |
+| -------------------------- | -------------- |
+| 2.15.0                     | >= 1.11.0      |
+| 2.14.0                     | >= 1.10.0      |
+| 2.13.0                     | >= 1.10.0      |
+
 ## Argument Reference
 
 The following arguments are supported:

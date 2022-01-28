@@ -1,3 +1,20 @@
+## 2.15.0 (Unreleased)
+
+CHANGES:
+
+* The `consul_license` resource is now deprecated and will be removed in a future version of the provider ([#292](https://github.com/hashicorp/terraform-provider-consul/issues/292)).
+
+NEW FEATURES:
+
+* The `consul_admin_partition` resource can now be used to manage Consul Admin Partitions ([#292](https://github.com/hashicorp/terraform-provider-consul/issues/292)).
+* The `consul_datacenters` datasource can now be used to get the list of known datacenters ([#290](https://github.com/hashicorp/terraform-provider-consul/issues/290) and [#293](https://github.com/hashicorp/terraform-provider-consul/issues/293)).
+
+IMPROVEMENTS:
+
+* The `consul_acl_auth_method`, `consul_acl_binding_rule`, `consul_acl_policy`, `consul_acl_role`, `consul_acl_token`, `consul_key_prefix`, `consul_keys`, `consul_namespace` and `consul_node` can now manage resources in Admin Partitions ([#292](https://github.com/hashicorp/terraform-provider-consul/issues/292)).
+
+* The `consul_acl_auth_method`, `consul_acl_policy`, `consul_acl_role`, `consul_acl_token`, `consul_key_prefix` and `consul_keys` datasources can now look for a resource in a specific Admin Partition ([#292](https://github.com/hashicorp/terraform-provider-consul/issues/292)).
+
 ## 2.14.0 (October 01, 2021)
 
 IMPROVEMENTS:
