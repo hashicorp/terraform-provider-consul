@@ -150,6 +150,7 @@ func Provider() terraform.ResourceProvider {
 			"consul_acl_token_secret_id":  dataSourceConsulACLTokenSecretID(),
 			"consul_network_segments":     dataSourceConsulNetworkSegments(),
 			"consul_network_area_members": dataSourceConsulNetworkAreaMembers(),
+			"consul_datacenters":          dataSourceConsulDatacenters(),
 
 			// Aliases to limit the impact of rename of catalog
 			// datasources
