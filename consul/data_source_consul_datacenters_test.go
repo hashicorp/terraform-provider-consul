@@ -14,6 +14,7 @@ func TestAccDataConsulDatacenters_basic(t *testing.T) {
 			{
 				Config: testAccDataConsulDatacentersConfig,
 				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDataSourceValue("data.consul_datacenters.read", "datacenters.#", "1"),
 					testAccCheckDataSourceValue("data.consul_datacenters.read", "datacenters.0", "dc1"),
 				),
 			},

@@ -1,7 +1,6 @@
 package consul
 
 import (
-	"github.com/hashicorp/errwrap"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 )
 
@@ -9,7 +8,6 @@ func dataSourceConsulDatacenters() *schema.Resource {
 	return &schema.Resource{
 		Read: dataSourceConsulDatacentersRead,
 		Schema: map[string]*schema.Schema{
-
 			// Out parameters
 			"datacenters": {
 				Computed: true,
@@ -29,9 +27,8 @@ func dataSourceConsulDatacentersRead(d *schema.ResourceData, meta interface{}) e
 	}
 
 	d.SetId("-")
-	if err := d.Set("datacenters", datacenters); err != nil {
-		return errwrap.Wrapf("Unable to list datacenters: {{err}}", err)
-	}
+	sw := newStateWriter(d)
+	sw.set("datacenters", datacenters)
 
-	return nil
+	return sw.error()
 }
