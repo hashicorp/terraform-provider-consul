@@ -56,7 +56,7 @@ The following arguments are supported:
 * `scheme` - (Optional) The URL scheme of the agent to use ("http" or "https"). Defaults to "http".
 * `http_auth` - (Optional) HTTP Basic Authentication credentials to be used when communicating with Consul, in the format of either `user` or `user:pass`. This may also be specified using the `CONSUL_HTTP_AUTH` environment variable.
 * `datacenter` - (Optional) The datacenter to use. Defaults to that of the agent.
-* `token` - (Optional) The ACL token to use by default when making requests to the agent. Can also be specified with `CONSUL_HTTP_TOKEN` or `CONSUL_TOKEN` as an environment variable.
+* `token` - (Optional) The ACL token to use by default when making requests to the agent. Can also be specified with `CONSUL_HTTP_TOKEN` as an environment variable.
 * `ca_file` - (Optional) A path to a PEM-encoded certificate authority used to verify the remote agent's certificate.
 * `ca_pem` - (Optional) PEM-encoded certificate authority used to verify the remote agent's certificate.
 * `cert_file` - (Optional) A path to a PEM-encoded certificate provided to the remote agent; requires use of `key_file` or `key_pem`.
