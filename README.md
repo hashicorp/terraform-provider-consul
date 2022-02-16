@@ -3,9 +3,9 @@
   <span>Consul Terraform Provider</span>
 </h1>
 
+[![Discuss](https://img.shields.io/badge/discuss-consul--api--gateway-dc477d?logo=consul)](https://discuss.hashicorp.com/c/consul) [![Gitter chat](https://badges.gitter.im/hashicorp-consul/Lobby.png)](https://gitter.im/hashicorp-consul/Lobby)
+
 - Website: [https://www.consul.io/](https://www.consul.io/docs/intro)
-- [![Gitter chat](https://badges.gitter.im/hashicorp-consul/Lobby.png)](https://gitter.im/hashicorp-consul/Lobby)
-- Mailing list: [HashiCorp Discuss](https://discuss.hashicorp.com/c/consul/29)
 
 Maintainers
 -----------
