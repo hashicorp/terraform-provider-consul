@@ -1,11 +1,13 @@
-Terraform Provider
-==================
+<h1>
+  <img src="./assets/logo.svg" align="left" height="46px" alt="Consul logo"/>
+  <span>Consul Terraform Provider</span>
+</h1>
 
-- Website: <https://www.terraform.io>
-- [![Gitter chat](https://badges.gitter.im/hashicorp-terraform/Lobby.png)](https://gitter.im/hashicorp-terraform/Lobby)
-- Mailing list: [Google Groups](http://groups.google.com/group/terraform-tool)
+[![Discuss](https://img.shields.io/badge/discuss-consul?logo=consul)](https://discuss.hashicorp.com/c/consul) [![Gitter chat](https://badges.gitter.im/hashicorp-consul/Lobby.png)](https://gitter.im/hashicorp-consul/Lobby)
 
-<img src="https://cdn.rawgit.com/hashicorp/terraform-website/master/content/source/assets/images/logo-hashicorp.svg" width="600px">
+- [Terraforrm Website](https://www.terraform.io/)
+- [Consul Docs](https://www.consul.io/docs/intro)
+- [Consul Terraform Provider Docs](https://www.terraform.io/docs/providers/consul/)
 
 Maintainers
 -----------
