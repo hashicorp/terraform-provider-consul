@@ -3,13 +3,11 @@ package consul
 import (
 	"fmt"
 	"log"
-	"net/http"
 	"strings"
 
 	consulapi "github.com/hashicorp/consul/api"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/terraform"
-	"github.com/mitchellh/mapstructure"
 )
 
 // Provider returns a terraform.ResourceProvider.
@@ -190,31 +188,16 @@ func Provider() terraform.ResourceProvider {
 }
 
 func providerConfigure(d *schema.ResourceData) (interface{}, error) {
-	var config *Config
-	configRaw := d.Get("").(map[string]interface{})
-	if err := mapstructure.Decode(configRaw, &config); err != nil {
-		return nil, err
+	config := &Config{
+		resourceData: d,
 	}
+
 	log.Printf("[INFO] Initializing Consul client")
-	client, err := config.Client()
+	_, err := config.ClientFromResourceData()
 	if err != nil {
 		return nil, err
 	}
-	config.client = client
 
-	// Set headers if provided
-	headers := d.Get("header").([]interface{})
-	parsedHeaders := client.Headers().Clone()
-
-	if parsedHeaders == nil {
-		parsedHeaders = make(http.Header)
-	}
-
-	for _, h := range headers {
-		header := h.(map[string]interface{})
-		parsedHeaders.Add(header["name"].(string), header["value"].(string))
-	}
-	client.SetHeaders(parsedHeaders)
 	return config, nil
 }
 
@@ -258,7 +241,23 @@ func getClient(d *schema.ResourceData, meta interface{}) (*consulapi.Client, *co
 // during the tests we only have access to the definition of the provider, not
 // the ResourceData
 func getTestClient(meta interface{}) *consulapi.Client {
-	return meta.(*Config).client
+	config := meta.(*Config)
+
+	if config.client != nil {
+		return config.client
+	}
+
+	log.Printf("[INFO] Initializing Consul client")
+	client, err := config.ClientFromResourceData()
+	if err != nil {
+		log.Printf("[ERROR] Initialization of the Consul client failure: %s", err)
+		return nil
+	}
+
+	config.client = client
+	config.resourceData = nil
+
+	return config.client
 }
 
 type stateWriter struct {

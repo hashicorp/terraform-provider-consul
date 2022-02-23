@@ -7,6 +7,8 @@ import (
 	"strings"
 
 	consulapi "github.com/hashicorp/consul/api"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/mitchellh/mapstructure"
 )
 
 // Config is configuration defined in the provider block
@@ -26,6 +28,40 @@ type Config struct {
 	InsecureHttps bool   `mapstructure:"insecure_https"`
 	Namespace     string `mapstructure:"namespace"`
 	client        *consulapi.Client
+	resourceData  *schema.ResourceData
+}
+
+// ClientFromResourceData loads the config from the provider block and create a Consul client.
+func (c *Config) ClientFromResourceData() (*consulapi.Client, error) {
+	d := c.resourceData
+	if d == nil {
+		return nil, fmt.Errorf("Consul client cannot be lazy initialized.")
+	}
+
+	configRaw := d.Get("").(map[string]interface{})
+	if err := mapstructure.Decode(configRaw, c); err != nil {
+		return nil, err
+	}
+	client, err := c.Client()
+	if err != nil {
+		return nil, err
+	}
+
+	// Set headers if provided
+	headers := d.Get("header").([]interface{})
+	parsedHeaders := client.Headers().Clone()
+
+	if parsedHeaders == nil {
+		parsedHeaders = make(http.Header)
+	}
+
+	for _, h := range headers {
+		header := h.(map[string]interface{})
+		parsedHeaders.Add(header["name"].(string), header["value"].(string))
+	}
+	client.SetHeaders(parsedHeaders)
+
+	return client, nil
 }
 
 // Client returns a new client for accessing consul.
@@ -77,7 +113,6 @@ func (c *Config) Client() (*consulapi.Client, error) {
 
 	if config.Transport.TLSClientConfig == nil {
 		tlsClientConfig, err := consulapi.SetupTLSConfig(&config.TLSConfig)
-
 		if err != nil {
 			return nil, fmt.Errorf("failed to create http client: %s", err)
 		}
