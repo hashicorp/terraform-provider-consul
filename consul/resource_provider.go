@@ -190,32 +190,16 @@ func Provider() terraform.ResourceProvider {
 }
 
 func providerConfigure(d *schema.ResourceData) (interface{}, error) {
-	var config *Config
+	// Try decoding the config as we cannot return property in getTestClient
+	var smokeConfig *Config
 	configRaw := d.Get("").(map[string]interface{})
-	if err := mapstructure.Decode(configRaw, &config); err != nil {
+	if err := mapstructure.Decode(configRaw, &smokeConfig); err != nil {
 		return nil, err
 	}
-	log.Printf("[INFO] Initializing Consul client")
-	client, err := config.Client()
-	if err != nil {
-		return nil, err
-	}
-	config.client = client
 
-	// Set headers if provided
-	headers := d.Get("header").([]interface{})
-	parsedHeaders := client.Headers().Clone()
-
-	if parsedHeaders == nil {
-		parsedHeaders = make(http.Header)
-	}
-
-	for _, h := range headers {
-		header := h.(map[string]interface{})
-		parsedHeaders.Add(header["name"].(string), header["value"].(string))
-	}
-	client.SetHeaders(parsedHeaders)
-	return config, nil
+	return &Config{
+		resourceData: d,
+	}, nil
 }
 
 func getClient(d *schema.ResourceData, meta interface{}) (*consulapi.Client, *consulapi.QueryOptions, *consulapi.WriteOptions) {
@@ -258,7 +242,46 @@ func getClient(d *schema.ResourceData, meta interface{}) (*consulapi.Client, *co
 // during the tests we only have access to the definition of the provider, not
 // the ResourceData
 func getTestClient(meta interface{}) *consulapi.Client {
-	return meta.(*Config).client
+	config := meta.(*Config)
+
+	client := config.client
+	if client != nil {
+		log.Printf("[DEBUG] Consul client already initialized")
+		return client
+	}
+
+	configRaw := config.resourceData.Get("").(map[string]interface{})
+	if err := mapstructure.Decode(configRaw, &config); err != nil {
+		log.Printf("[ERROR] Configuration decoding error: %s", err)
+		return nil
+	}
+
+	log.Printf("[INFO] Initializing Consul client")
+	client, err := config.Client()
+	if err != nil {
+		log.Printf("[ERROR] Consul client creation error: %s", err)
+		return nil
+	}
+	config.client = client
+
+	// Set headers if provided
+	headers := config.resourceData.Get("header").([]interface{})
+	parsedHeaders := client.Headers().Clone()
+
+	if parsedHeaders == nil {
+		parsedHeaders = make(http.Header)
+	}
+
+	for _, h := range headers {
+		header := h.(map[string]interface{})
+		parsedHeaders.Add(header["name"].(string), header["value"].(string))
+	}
+	client.SetHeaders(parsedHeaders)
+
+	// free the linked resourceData as it's not required.
+	config.resourceData = nil
+
+	return client
 }
 
 type stateWriter struct {

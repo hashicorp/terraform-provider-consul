@@ -7,6 +7,7 @@ import (
 	"strings"
 
 	consulapi "github.com/hashicorp/consul/api"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 )
 
 // Config is configuration defined in the provider block
@@ -26,6 +27,7 @@ type Config struct {
 	InsecureHttps bool   `mapstructure:"insecure_https"`
 	Namespace     string `mapstructure:"namespace"`
 	client        *consulapi.Client
+	resourceData  *schema.ResourceData
 }
 
 // Client returns a new client for accessing consul.
@@ -77,7 +79,6 @@ func (c *Config) Client() (*consulapi.Client, error) {
 
 	if config.Transport.TLSClientConfig == nil {
 		tlsClientConfig, err := consulapi.SetupTLSConfig(&config.TLSConfig)
-
 		if err != nil {
 			return nil, fmt.Errorf("failed to create http client: %s", err)
 		}
