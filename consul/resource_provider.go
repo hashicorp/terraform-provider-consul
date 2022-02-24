@@ -213,9 +213,6 @@ func getClient(d *schema.ResourceData, meta interface{}) (*consulapi.Client, *co
 
 		// Keep it for latest use.
 		config.client = client
-
-		// The provider config is not needed anymore
-		config.resourceData = nil
 	}
 
 	var dc, token, namespace string
