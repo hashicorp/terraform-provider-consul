@@ -210,6 +210,12 @@ func getClient(d *schema.ResourceData, meta interface{}) (*consulapi.Client, *co
 	client := config.client
 	if client == nil {
 		client = getTestClient(meta)
+
+		// Keep it for latest use.
+		config.client = client
+
+		// The provider config is not needed anymore
+		config.resourceData = nil
 	}
 
 	var dc, token, namespace string
@@ -259,10 +265,7 @@ func getTestClient(meta interface{}) *consulapi.Client {
 		return nil
 	}
 
-	config.client = client
-	config.resourceData = nil
-
-	return config.client
+	return client
 }
 
 type stateWriter struct {
