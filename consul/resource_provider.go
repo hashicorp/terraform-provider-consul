@@ -188,21 +188,30 @@ func Provider() terraform.ResourceProvider {
 }
 
 func providerConfigure(d *schema.ResourceData) (interface{}, error) {
-	config := &Config{
+	// A smoke test configuration that is thrown away.
+	smokeConfig := &Config{
 		resourceData: d,
 	}
 
-	log.Printf("[INFO] Initializing Consul client")
-	_, err := config.ClientFromResourceData()
+	log.Printf("[INFO] Smoke testing a Consul client")
+	_, err := smokeConfig.ClientFromResourceData()
 	if err != nil {
 		return nil, err
 	}
 
-	return config, nil
+	return &Config{
+		resourceData: d,
+	}, nil
 }
 
 func getClient(d *schema.ResourceData, meta interface{}) (*consulapi.Client, *consulapi.QueryOptions, *consulapi.WriteOptions) {
-	client := getTestClient(meta)
+	config := meta.(*Config)
+
+	client := config.client
+	if client == nil {
+		client = getTestClient(meta)
+	}
+
 	var dc, token, namespace string
 	if v, ok := d.GetOk("datacenter"); ok {
 		dc = v.(string)
@@ -242,10 +251,6 @@ func getClient(d *schema.ResourceData, meta interface{}) (*consulapi.Client, *co
 // the ResourceData
 func getTestClient(meta interface{}) *consulapi.Client {
 	config := meta.(*Config)
-
-	if config.client != nil {
-		return config.client
-	}
 
 	log.Printf("[INFO] Initializing Consul client")
 	client, err := config.ClientFromResourceData()
