@@ -11,10 +11,10 @@ import (
 )
 
 func TestAccConsulACLBindingRule_basic(t *testing.T) {
-	resource.Test(t, resource.TestCase{
-		Providers: testAccProviders,
+	startTestServer(t)
 
-		PreCheck:     func() { testAccPreCheck(t) },
+	resource.Test(t, resource.TestCase{
+		Providers:    testAccProviders,
 		CheckDestroy: testBindingRuleDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -56,6 +56,8 @@ func TestAccConsulACLBindingRule_basic(t *testing.T) {
 }
 
 func TestAccConsulACLBindingRule_namespaceCE(t *testing.T) {
+	startTestServer(t)
+
 	resource.Test(t, resource.TestCase{
 		Providers: testAccProviders,
 		PreCheck:  func() { skipTestOnConsulEnterpriseEdition(t) },
@@ -69,6 +71,8 @@ func TestAccConsulACLBindingRule_namespaceCE(t *testing.T) {
 }
 
 func TestAccConsulACLBindingRule_namespaceEE(t *testing.T) {
+	startTestServer(t)
+
 	resource.Test(t, resource.TestCase{
 		Providers: testAccProviders,
 		PreCheck:  func() { skipTestOnConsulCommunityEdition(t) },

@@ -9,6 +9,8 @@ import (
 )
 
 func TestAccConsulNamespacePolicyAttachment(t *testing.T) {
+	startTestServer(t)
+
 	testPolicy := func(name string) func(*terraform.State) error {
 		return func(s *terraform.State) error {
 			client := getTestClient(testAccProvider.Meta())

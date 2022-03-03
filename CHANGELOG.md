@@ -8,6 +8,7 @@ NEW FEATURES:
 
 * The `consul_admin_partition` resource can now be used to manage Consul Admin Partitions ([#292](https://github.com/hashicorp/terraform-provider-consul/issues/292)).
 * The `consul_datacenters` datasource can now be used to get the list of known datacenters ([#290](https://github.com/hashicorp/terraform-provider-consul/issues/290) and [#293](https://github.com/hashicorp/terraform-provider-consul/issues/293)).
+* The `consul_config_entry` now supports the `mesh` and `exported-services` kinds ([#292](https://github.com/hashicorp/terraform-provider-consul/issues/292)).
 
 IMPROVEMENTS:
 

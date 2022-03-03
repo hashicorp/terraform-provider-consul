@@ -8,10 +8,11 @@ import (
 )
 
 func TestAccConsulAdminParition_CEBasic(t *testing.T) {
+	startTestServer(t)
+
 	resource.Test(t, resource.TestCase{
 		Providers: testAccProviders,
 		PreCheck: func() {
-			testAccPreCheck(t)
 			skipTestOnConsulEnterpriseEdition(t)
 		},
 		CheckDestroy: testAccCheckConsulACLTokenDestroy,

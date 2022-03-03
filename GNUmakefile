@@ -43,11 +43,5 @@ test-compile:
 	fi
 	go test -c $(TEST) $(TESTARGS)
 
-test-serv: fmtcheck
-	@docker pull $(CONSUL_IMAGE)
-	docker run --rm -p 127.0.0.1:8500:8500 \
-		-v $(PWD)/consul_test.hcl:/consul/config/consul_test.hcl:ro \
-		$(CONSUL_IMAGE)
-
 .PHONY: build test testacc vet fmt fmtcheck errcheck test-compile test-serv
 

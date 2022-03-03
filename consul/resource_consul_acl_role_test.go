@@ -10,10 +10,10 @@ import (
 )
 
 func TestAccConsulACLRole_basic(t *testing.T) {
-	resource.Test(t, resource.TestCase{
-		Providers: testAccProviders,
+	startTestServer(t)
 
-		PreCheck:     func() { testAccPreCheck(t) },
+	resource.Test(t, resource.TestCase{
+		Providers:    testAccProviders,
 		CheckDestroy: testRoleDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -57,6 +57,8 @@ func TestAccConsulACLRole_basic(t *testing.T) {
 }
 
 func TestAccConsulACLRole_NamespaceCE(t *testing.T) {
+	startTestServer(t)
+
 	resource.Test(t, resource.TestCase{
 		Providers: testAccProviders,
 		PreCheck:  func() { skipTestOnConsulEnterpriseEdition(t) },
@@ -70,6 +72,8 @@ func TestAccConsulACLRole_NamespaceCE(t *testing.T) {
 }
 
 func TestAccConsulACLRole_NamespaceEE(t *testing.T) {
+	startTestServer(t)
+
 	resource.Test(t, resource.TestCase{
 		Providers: testAccProviders,
 		PreCheck:  func() { skipTestOnConsulCommunityEdition(t) },

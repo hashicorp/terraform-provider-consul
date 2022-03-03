@@ -27,9 +27,10 @@ func testAccCheckConsulACLPolicyDestroy(s *terraform.State) error {
 }
 
 func TestAccConsulACLPolicy_basic(t *testing.T) {
+	startTestServer(t)
+
 	resource.Test(t, resource.TestCase{
 		Providers:    testAccProviders,
-		PreCheck:     func() { testAccPreCheck(t) },
 		CheckDestroy: testAccCheckConsulACLPolicyDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -57,6 +58,8 @@ func TestAccConsulACLPolicy_basic(t *testing.T) {
 }
 
 func TestAccConsulACLPolicy_import(t *testing.T) {
+	startTestServer(t)
+
 	checkFn := func(s []*terraform.InstanceState) error {
 		if len(s) != 1 {
 			return fmt.Errorf("bad state: %s", s)
@@ -79,7 +82,6 @@ func TestAccConsulACLPolicy_import(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		Providers: testAccProviders,
-		PreCheck:  func() { testAccPreCheck(t) },
 		Steps: []resource.TestStep{
 			{
 				Config: testResourceACLPolicyConfigBasic,
@@ -94,6 +96,8 @@ func TestAccConsulACLPolicy_import(t *testing.T) {
 }
 
 func TestAccConsulACLPolicy_NamespaceCE(t *testing.T) {
+	startTestServer(t)
+
 	resource.Test(t, resource.TestCase{
 		Providers: testAccProviders,
 		PreCheck:  func() { skipTestOnConsulEnterpriseEdition(t) },
@@ -107,6 +111,8 @@ func TestAccConsulACLPolicy_NamespaceCE(t *testing.T) {
 }
 
 func TestAccConsulACLPolicy_NamespaceEE(t *testing.T) {
+	startTestServer(t)
+
 	resource.Test(t, resource.TestCase{
 		Providers: testAccProviders,
 		PreCheck:  func() { skipTestOnConsulCommunityEdition(t) },

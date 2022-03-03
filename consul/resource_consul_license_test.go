@@ -8,6 +8,8 @@ import (
 )
 
 func TestAccConsulLicense_CommunityEdition(t *testing.T) {
+	startTestServer(t)
+
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			skipTestOnConsulEnterpriseEdition(t)
@@ -23,6 +25,8 @@ func TestAccConsulLicense_CommunityEdition(t *testing.T) {
 }
 
 func TestAccConsulLicense_EnterpriseEdition(t *testing.T) {
+	startTestServer(t)
+
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			skipTestOnConsulCommunityEdition(t)

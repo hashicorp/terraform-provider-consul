@@ -9,6 +9,8 @@ import (
 )
 
 func TestAccConsulAgentService_basic(t *testing.T) {
+	startTestServer(t)
+
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() {},
 		Providers:    testAccProviders,

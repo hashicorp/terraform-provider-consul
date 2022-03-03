@@ -7,8 +7,9 @@ import (
 )
 
 func TestAccDataACLToken_basic(t *testing.T) {
+	startTestServer(t)
+
 	resource.Test(t, resource.TestCase{
-		PreCheck:  func() { testAccPreCheck(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
 			{
@@ -37,6 +38,8 @@ func TestAccDataACLToken_basic(t *testing.T) {
 }
 
 func TestAccDataACLToken_namespaceCE(t *testing.T) {
+	startTestServer(t)
+
 	resource.Test(t, resource.TestCase{
 		Providers: testAccProviders,
 		PreCheck:  func() { skipTestOnConsulEnterpriseEdition(t) },
@@ -50,6 +53,8 @@ func TestAccDataACLToken_namespaceCE(t *testing.T) {
 }
 
 func TestAccDataACLToken_namespaceEE(t *testing.T) {
+	startTestServer(t)
+
 	resource.Test(t, resource.TestCase{
 		Providers: testAccProviders,
 		PreCheck:  func() { skipTestOnConsulCommunityEdition(t) },

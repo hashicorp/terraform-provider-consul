@@ -9,6 +9,8 @@ import (
 )
 
 func TestAccConsulNamespaceRoleAttachment(t *testing.T) {
+	startTestServer(t)
+
 	testRole := func(name string) func(*terraform.State) error {
 		return func(s *terraform.State) error {
 			client := getTestClient(testAccProvider.Meta())

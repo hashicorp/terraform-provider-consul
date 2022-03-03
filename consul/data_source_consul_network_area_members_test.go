@@ -8,6 +8,8 @@ import (
 )
 
 func TestAccConsulNetworkAreaMembers_basic(t *testing.T) {
+	startTestServer(t)
+
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { skipTestOnConsulCommunityEdition(t) },
 		Providers: testAccProviders,
@@ -30,6 +32,8 @@ func TestAccConsulNetworkAreaMembers_basic(t *testing.T) {
 }
 
 func TestAccConsulNetworkAreaMembers_CommunityEdition(t *testing.T) {
+	startTestServer(t)
+
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { skipTestOnConsulEnterpriseEdition(t) },
 		Providers: testAccProviders,
@@ -43,9 +47,10 @@ func TestAccConsulNetworkAreaMembers_CommunityEdition(t *testing.T) {
 }
 
 func TestAccConsulNetworkAreaMembers_datacenter(t *testing.T) {
+	startRemoteDatacenterTestServer(t)
+
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
-			testAccRemoteDatacenterPreCheck(t)
 			skipTestOnConsulCommunityEdition(t)
 		},
 		Providers: testAccProviders,

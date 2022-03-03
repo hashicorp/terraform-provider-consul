@@ -24,10 +24,10 @@ func testAccCheckConsulACLTokenDestroy(s *terraform.State) error {
 }
 
 func TestAccConsulACLToken_basic(t *testing.T) {
-	resource.Test(t, resource.TestCase{
-		Providers: testAccProviders,
+	startTestServer(t)
 
-		PreCheck:     func() { testAccPreCheck(t) },
+	resource.Test(t, resource.TestCase{
+		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckConsulACLTokenDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -85,6 +85,8 @@ func TestAccConsulACLToken_basic(t *testing.T) {
 }
 
 func TestAccConsulACLToken_import(t *testing.T) {
+	startTestServer(t)
+
 	checkFn := func(s []*terraform.InstanceState) error {
 		if len(s) != 1 {
 			return fmt.Errorf("bad state: %s", s)
@@ -107,7 +109,6 @@ func TestAccConsulACLToken_import(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		Providers: testAccProviders,
-		PreCheck:  func() { testAccPreCheck(t) },
 		Steps: []resource.TestStep{
 			{
 				Config: testResourceACLTokenConfigBasic,
@@ -122,6 +123,8 @@ func TestAccConsulACLToken_import(t *testing.T) {
 }
 
 func TestAccConsulACLToken_namespaceCE(t *testing.T) {
+	startTestServer(t)
+
 	resource.Test(t, resource.TestCase{
 		Providers: testAccProviders,
 		PreCheck:  func() { skipTestOnConsulEnterpriseEdition(t) },
@@ -135,6 +138,8 @@ func TestAccConsulACLToken_namespaceCE(t *testing.T) {
 }
 
 func TestAccConsulACLToken_namespaceEE(t *testing.T) {
+	startTestServer(t)
+
 	resource.Test(t, resource.TestCase{
 		Providers: testAccProviders,
 		PreCheck:  func() { skipTestOnConsulCommunityEdition(t) },

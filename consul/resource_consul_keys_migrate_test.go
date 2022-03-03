@@ -7,6 +7,8 @@ import (
 )
 
 func TestConsulKeysMigrateState(t *testing.T) {
+	startTestServer(t)
+
 	cases := map[string]struct {
 		StateVersion int
 		Attributes   map[string]string

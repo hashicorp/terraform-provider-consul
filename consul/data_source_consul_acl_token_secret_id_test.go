@@ -10,8 +10,9 @@ import (
 )
 
 func TestAccDataACLTokenSecretID_basic(t *testing.T) {
+	startTestServer(t)
+
 	resource.Test(t, resource.TestCase{
-		PreCheck:  func() { testAccPreCheck(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
 			{
@@ -27,6 +28,8 @@ func TestAccDataACLTokenSecretID_basic(t *testing.T) {
 }
 
 func TestAccDataACLTokenSecretID_namespaceCE(t *testing.T) {
+	startTestServer(t)
+
 	resource.Test(t, resource.TestCase{
 		Providers: testAccProviders,
 		PreCheck:  func() { skipTestOnConsulEnterpriseEdition(t) },
@@ -40,6 +43,8 @@ func TestAccDataACLTokenSecretID_namespaceCE(t *testing.T) {
 }
 
 func TestAccDataACLTokenSecretID_namespaceEE(t *testing.T) {
+	startTestServer(t)
+
 	resource.Test(t, resource.TestCase{
 		Providers: testAccProviders,
 		PreCheck:  func() { skipTestOnConsulCommunityEdition(t) },
@@ -58,8 +63,9 @@ func TestAccDataACLTokenSecretID_namespaceEE(t *testing.T) {
 }
 
 func TestAccDataACLTokenSecretID_PGP(t *testing.T) {
+	startTestServer(t)
+
 	resource.Test(t, resource.TestCase{
-		PreCheck:  func() { testAccPreCheck(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
 			{

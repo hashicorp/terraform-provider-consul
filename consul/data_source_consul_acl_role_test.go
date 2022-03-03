@@ -8,8 +8,9 @@ import (
 )
 
 func TestAccDataACLRole_basic(t *testing.T) {
+	startTestServer(t)
+
 	resource.Test(t, resource.TestCase{
-		PreCheck:  func() { testAccPreCheck(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
 			{
@@ -38,6 +39,8 @@ func TestAccDataACLRole_basic(t *testing.T) {
 }
 
 func TestAccDataACLRole_namespaceCE(t *testing.T) {
+	startTestServer(t)
+
 	resource.Test(t, resource.TestCase{
 		Providers: testAccProviders,
 		PreCheck:  func() { skipTestOnConsulEnterpriseEdition(t) },
@@ -51,6 +54,8 @@ func TestAccDataACLRole_namespaceCE(t *testing.T) {
 }
 
 func TestAccDataACLRole_namespaceEE(t *testing.T) {
+	startTestServer(t)
+
 	resource.Test(t, resource.TestCase{
 		Providers: testAccProviders,
 		PreCheck:  func() { skipTestOnConsulCommunityEdition(t) },

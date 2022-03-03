@@ -7,8 +7,9 @@ import (
 )
 
 func TestAccDataConsulNodes_basic(t *testing.T) {
+	startTestServer(t)
+
 	resource.Test(t, resource.TestCase{
-		PreCheck:  func() { testAccPreCheck(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
 			{
@@ -25,8 +26,9 @@ func TestAccDataConsulNodes_basic(t *testing.T) {
 }
 
 func TestAccDataConsulNodes_alias(t *testing.T) {
+	startTestServer(t)
+
 	resource.Test(t, resource.TestCase{
-		PreCheck:  func() { testAccPreCheck(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
 			{
@@ -40,8 +42,9 @@ func TestAccDataConsulNodes_alias(t *testing.T) {
 }
 
 func TestAccDataConsulNodes_datacenter(t *testing.T) {
+	startRemoteDatacenterTestServer(t)
+
 	resource.Test(t, resource.TestCase{
-		PreCheck:  func() { testAccRemoteDatacenterPreCheck(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
 			{

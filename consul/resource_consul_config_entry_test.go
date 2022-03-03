@@ -2,7 +2,6 @@ package consul
 
 import (
 	"fmt"
-	"os"
 	"regexp"
 	"testing"
 
@@ -10,14 +9,7 @@ import (
 )
 
 func TestAccConsulConfigEntry_basic(t *testing.T) {
-	// This needs to be called before serverIsConsulCommunityEdition() as the
-	// test provider won't be initialized for unit tests.
-	if os.Getenv(resource.TestEnvVar) == "" {
-		t.Skip(fmt.Sprintf(
-			"Acceptance tests skipped unless env '%s' set",
-			resource.TestEnvVar))
-		return
-	}
+	startTestServer(t)
 
 	// Expected values for Consul Community Edition
 	extraConf := ""
@@ -41,7 +33,6 @@ func TestAccConsulConfigEntry_basic(t *testing.T) {
 	}
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:  func() { testAccPreCheck(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
 			{
@@ -54,17 +45,6 @@ func TestAccConsulConfigEntry_basic(t *testing.T) {
 			},
 			{
 				Config: testAccConsulConfigEntry_ServiceDefaultsOptionalField(extraConf),
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("consul_config_entry.foo", "name", "foo"),
-					resource.TestCheckResourceAttr("consul_config_entry.foo", "kind", "service-defaults"),
-					resource.TestCheckResourceAttr("consul_config_entry.foo", "config_json", configJSONServiceDefaults),
-				),
-			},
-			{
-				Config: testAccConsulConfigEntry_ServiceDefaultsExtraField,
-				ExpectError: regexp.MustCompile(`errors during apply: failed to decode config entry: 1 error\(s\) decoding:
-
-\* '' has invalid keys: ThisFieldDoesNotExists`),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("consul_config_entry.foo", "name", "foo"),
 					resource.TestCheckResourceAttr("consul_config_entry.foo", "kind", "service-defaults"),
@@ -159,6 +139,8 @@ func TestAccConsulConfigEntry_basic(t *testing.T) {
 }
 
 func TestAccConsulConfigEntry_Errors(t *testing.T) {
+	startTestServer(t)
+
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() {},
 		Providers: testAccProviders,
@@ -172,6 +154,8 @@ func TestAccConsulConfigEntry_Errors(t *testing.T) {
 }
 
 func TestAccConsulConfigEntry_NamespaceEE(t *testing.T) {
+	startTestServer(t)
+
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { skipTestOnConsulCommunityEdition(t) },
 		Providers: testAccProviders,
@@ -191,6 +175,75 @@ func TestAccConsulConfigEntry_NamespaceEE(t *testing.T) {
 					resource.TestCheckResourceAttr("consul_config_entry.test_intentions", "namespace", "example"),
 					resource.TestCheckResourceAttr("consul_config_entry.test_intentions", "kind", "service-intentions"),
 					resource.TestCheckResourceAttr("consul_config_entry.test_intentions", "config_json", "{\"Meta\":{\"foo\":\"bar\"},\"Partition\":\"default\",\"Sources\":[{\"Action\":\"allow\",\"Name\":\"source-service\",\"Namespace\":\"example\",\"Partition\":\"default\",\"Precedence\":9,\"Type\":\"consul\"}]}"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccConsulConfigEntry_ServicesExportedCE(t *testing.T) {
+	startTestServer(t)
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:  func() { skipTestOnConsulEnterpriseEdition(t) },
+		Providers: testAccProviders,
+		Steps: []resource.TestStep{
+			{
+				Config:      TestAccConsulConfigEntry_exportedServicesCE,
+				ExpectError: regexp.MustCompile(`Config entry kind "exported-services" requires Consul Enterprise`),
+			},
+		},
+	})
+}
+
+func TestAccConsulConfigEntry_ServicesExportedEE(t *testing.T) {
+	startTestServer(t)
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:  func() { skipTestOnConsulCommunityEdition(t) },
+		Providers: testAccProviders,
+		Steps: []resource.TestStep{
+			{
+				Config: TestAccConsulConfigEntry_exportedServicesEE,
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr("consul_config_entry.exported_services", "name", "test"),
+					resource.TestCheckResourceAttr("consul_config_entry.exported_services", "kind", "exported-services"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccConsulConfigEntry_MeshCE(t *testing.T) {
+	startTestServer(t)
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:  func() { skipTestOnConsulEnterpriseEdition(t) },
+		Providers: testAccProviders,
+		Steps: []resource.TestStep{
+			{
+				Config: TestAccConsulConfigEntry_meshCE,
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr("consul_config_entry.mesh", "name", "mesh"),
+					resource.TestCheckResourceAttr("consul_config_entry.mesh", "kind", "mesh"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccConsulConfigEntry_MeshEE(t *testing.T) {
+	startTestServer(t)
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:  func() { skipTestOnConsulCommunityEdition(t) },
+		Providers: testAccProviders,
+		Steps: []resource.TestStep{
+			{
+				Config: TestAccConsulConfigEntry_meshEE,
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr("consul_config_entry.mesh", "name", "mesh"),
+					resource.TestCheckResourceAttr("consul_config_entry.mesh", "kind", "mesh"),
 				),
 			},
 		},
@@ -228,18 +281,6 @@ resource "consul_config_entry" "foo" {
 }
 `, extraConf)
 }
-
-const testAccConsulConfigEntry_ServiceDefaultsExtraField = `
-resource "consul_config_entry" "foo" {
-	name = "foo"
-	kind = "service-defaults"
-
-	config_json = jsonencode({
-		ThisFieldDoesNotExists = true
-		Protocol               = "https"
-	})
-}
-`
 
 func testAccConsulConfigEntry_ProxyDefaults(extraConf string) string {
 	return fmt.Sprintf(`
@@ -810,5 +851,75 @@ resource "consul_config_entry" "test_intentions" {
 		}
 		Partition = "default"
 	  })
+}
+`
+
+const TestAccConsulConfigEntry_mesh = `
+`
+
+const TestAccConsulConfigEntry_exportedServicesCE = `
+resource "consul_config_entry" "exported_services" {
+	name = "test"
+	kind = "exported-services"
+
+	config_json = jsonencode({
+		Services = [{
+			Name = "test"
+			Namespace = "default"
+			Consumers = [{
+				Partition = "default"
+			}]
+		}]
+	})
+}
+`
+
+const TestAccConsulConfigEntry_exportedServicesEE = `
+resource "consul_admin_partition" "test" {
+	name = "test"
+}
+
+resource "consul_config_entry" "exported_services" {
+	name = "test"
+	kind = "exported-services"
+
+	config_json = jsonencode({
+		Partition = consul_admin_partition.test.name
+		Services = [{
+			Name = "test"
+			Namespace = "default"
+			Consumers = [{
+				Partition = "default"
+			}]
+		}]
+	})
+}
+`
+
+const TestAccConsulConfigEntry_meshCE = `
+resource "consul_config_entry" "mesh" {
+	name = "mesh"
+	kind = "mesh"
+
+	config_json = jsonencode({
+		TransparentProxy = {
+			MeshDestinationsOnly = true
+		}
+	})
+}
+`
+
+const TestAccConsulConfigEntry_meshEE = `
+resource "consul_config_entry" "mesh" {
+	name = "mesh"
+	kind = "mesh"
+
+	config_json = jsonencode({
+		Partition = "default"
+
+		TransparentProxy = {
+			MeshDestinationsOnly = true
+		}
+	})
 }
 `

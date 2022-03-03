@@ -8,8 +8,9 @@ import (
 )
 
 func TestAccDataConsulAutopilotHealth_basic(t *testing.T) {
+	startTestServer(t)
+
 	resource.Test(t, resource.TestCase{
-		PreCheck:  func() { testAccPreCheck(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
 			resource.TestStep{
@@ -37,8 +38,9 @@ func TestAccDataConsulAutopilotHealth_basic(t *testing.T) {
 }
 
 func TestAccDataConsulAutopilotHealth_config(t *testing.T) {
+	startTestServer(t)
+
 	resource.Test(t, resource.TestCase{
-		PreCheck:  func() { testAccPreCheck(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
 			resource.TestStep{
@@ -52,13 +54,14 @@ func TestAccDataConsulAutopilotHealth_config(t *testing.T) {
 }
 
 func TestAccDataConsulAutopilotHealth_wrongDatacenter(t *testing.T) {
+	startTestServer(t)
+
 	re, err := regexp.Compile("No path to datacenter")
 	if err != nil {
 		t.Fatalf("err: %#v", err)
 	}
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:  func() { testAccPreCheck(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
 			resource.TestStep{

@@ -10,6 +10,8 @@ import (
 var namespaceEnterpriseFeature = regexp.MustCompile("(?i)Consul Enterprise feature")
 
 func TestAccConsulNamespace_FailOnCommunityEdition(t *testing.T) {
+	startTestServer(t)
+
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { skipTestOnConsulEnterpriseEdition(t) },
 		Providers: testAccProviders,
@@ -23,6 +25,8 @@ func TestAccConsulNamespace_FailOnCommunityEdition(t *testing.T) {
 }
 
 func TestAccConsulNamespace(t *testing.T) {
+	startTestServer(t)
+
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { skipTestOnConsulCommunityEdition(t) },
 		Providers: testAccProviders,

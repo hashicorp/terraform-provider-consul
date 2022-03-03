@@ -11,8 +11,9 @@ import (
 )
 
 func TestAccConsulAutopilotConfig_basic(t *testing.T) {
+	startTestServer(t)
+
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testFinalConfiguration,
 		Steps: []resource.TestStep{
@@ -47,9 +48,10 @@ func TestAccConsulAutopilotConfig_basic(t *testing.T) {
 }
 
 func TestAccConsulAutopilotConfig_parseduration(t *testing.T) {
+	startTestServer(t)
+
 	errorRegexp := regexp.MustCompile("could not parse 'last_contact_threshold': time: invalid duration")
 	resource.Test(t, resource.TestCase{
-		PreCheck:  func() { testAccPreCheck(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
 			{
@@ -61,8 +63,9 @@ func TestAccConsulAutopilotConfig_parseduration(t *testing.T) {
 }
 
 func TestAccConsulAutopilogConfig_datacenter(t *testing.T) {
+	startRemoteDatacenterTestServer(t)
+
 	resource.Test(t, resource.TestCase{
-		PreCheck:  func() { testAccRemoteDatacenterPreCheck(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
 			{
@@ -84,7 +87,7 @@ func TestAccConsulAutopilogConfig_datacenter(t *testing.T) {
 						return nil
 					}
 
-					if err := test("dc1", 100); err != nil {
+					if err := test("dc1", 250); err != nil {
 						return err
 					}
 					return test("dc2", 10)

@@ -7,8 +7,9 @@ import (
 )
 
 func TestAccDataConsulServiceHealth(t *testing.T) {
+	startTestServer(t)
+
 	resource.Test(t, resource.TestCase{
-		PreCheck:  func() { testAccPreCheck(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
 			{
@@ -64,8 +65,9 @@ func TestAccDataConsulServiceHealth(t *testing.T) {
 }
 
 func TestAccDataConsulServiceHealthPassing(t *testing.T) {
+	startTestServer(t)
+
 	resource.Test(t, resource.TestCase{
-		PreCheck:  func() { testAccPreCheck(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
 			{
@@ -93,8 +95,9 @@ func TestAccDataConsulServiceHealthPassing(t *testing.T) {
 }
 
 func TestAccDataConsulServiceHealthDatacenter(t *testing.T) {
+	startRemoteDatacenterTestServer(t)
+
 	resource.Test(t, resource.TestCase{
-		PreCheck:  func() { testAccRemoteDatacenterPreCheck(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
 			{

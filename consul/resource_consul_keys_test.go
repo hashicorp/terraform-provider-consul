@@ -10,8 +10,9 @@ import (
 )
 
 func TestAccConsulKeys_basic(t *testing.T) {
+	startTestServer(t)
+
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckConsulKeysDestroy,
 		Steps: []resource.TestStep{
@@ -39,8 +40,9 @@ func TestAccConsulKeys_basic(t *testing.T) {
 }
 
 func TestAccConsulKeys_EmptyValue(t *testing.T) {
+	startTestServer(t)
+
 	resource.Test(t, resource.TestCase{
-		PreCheck:  func() { testAccPreCheck(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
 			{
@@ -52,6 +54,8 @@ func TestAccConsulKeys_EmptyValue(t *testing.T) {
 }
 
 func TestAccConsulKeys_NamespaceCE(t *testing.T) {
+	startTestServer(t)
+
 	resource.Test(t, resource.TestCase{
 		Providers: testAccProviders,
 		PreCheck:  func() { skipTestOnConsulEnterpriseEdition(t) },
@@ -65,6 +69,8 @@ func TestAccConsulKeys_NamespaceCE(t *testing.T) {
 }
 
 func TestAccConsulKeys_NamespaceEE(t *testing.T) {
+	startTestServer(t)
+
 	resource.Test(t, resource.TestCase{
 		Providers: testAccProviders,
 		PreCheck:  func() { skipTestOnConsulCommunityEdition(t) },
@@ -77,9 +83,10 @@ func TestAccConsulKeys_NamespaceEE(t *testing.T) {
 }
 
 func TestAccConsulKeys_Datacenter(t *testing.T) {
+	startRemoteDatacenterTestServer(t)
+
 	resource.Test(t, resource.TestCase{
 		Providers: testAccProviders,
-		PreCheck:  func() { testAccRemoteDatacenterPreCheck(t) },
 		Steps: []resource.TestStep{
 			{
 				Config: testAccConsulKeysDatacenter,

@@ -67,10 +67,10 @@ func testAccCheckTokenPolicyID(s *terraform.State) error {
 }
 
 func TestAccConsulACLTokenPolicyAttachment_basic(t *testing.T) {
-	resource.Test(t, resource.TestCase{
-		Providers: testAccProviders,
+	startTestServer(t)
 
-		PreCheck:     func() { testAccPreCheck(t) },
+	resource.Test(t, resource.TestCase{
+		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckConsulACLTokenPolicyAttachmentDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -95,6 +95,8 @@ func TestAccConsulACLTokenPolicyAttachment_basic(t *testing.T) {
 }
 
 func TestAccConsulACLTokenPolicyAttachment_import(t *testing.T) {
+	startTestServer(t)
+
 	checkFn := func(s []*terraform.InstanceState) error {
 		if len(s) != 1 {
 			return fmt.Errorf("bad state: %s", s)
@@ -113,7 +115,6 @@ func TestAccConsulACLTokenPolicyAttachment_import(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		Providers: testAccProviders,
-		PreCheck:  func() { testAccPreCheck(t) },
 		Steps: []resource.TestStep{
 			{
 				Config: testResourceACLTokenPolicyAttachmentConfigBasic,

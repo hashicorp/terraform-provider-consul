@@ -11,8 +11,9 @@ import (
 )
 
 func TestAccConsulPreparedQuery_basic(t *testing.T) {
+	startTestServer(t)
+
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckConsulPreparedQueryDestroy,
 		Steps: []resource.TestStep{
@@ -83,6 +84,8 @@ func TestAccConsulPreparedQuery_basic(t *testing.T) {
 }
 
 func TestAccConsulPreparedQuery_import(t *testing.T) {
+	startTestServer(t)
+
 	checkFn := func(s []*terraform.InstanceState) error {
 		// Expect, 1 resource in state, and route count to be 1
 		if len(s) != 1 {
@@ -101,7 +104,6 @@ func TestAccConsulPreparedQuery_import(t *testing.T) {
 	}
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckConsulPreparedQueryDestroy,
 		Steps: []resource.TestStep{
@@ -118,8 +120,9 @@ func TestAccConsulPreparedQuery_import(t *testing.T) {
 }
 
 func TestAccConsulPreparedQuery_blocks(t *testing.T) {
+	startTestServer(t)
+
 	resource.Test(t, resource.TestCase{
-		PreCheck:  func() { testAccPreCheck(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
 			{
@@ -139,8 +142,9 @@ func TestAccConsulPreparedQuery_blocks(t *testing.T) {
 }
 
 func TestAccConsulPreparedQuery_datacenter(t *testing.T) {
+	startRemoteDatacenterTestServer(t)
+
 	resource.Test(t, resource.TestCase{
-		PreCheck:  func() { testAccRemoteDatacenterPreCheck(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
 			{

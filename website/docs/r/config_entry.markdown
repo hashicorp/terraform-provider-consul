@@ -215,6 +215,43 @@ resource "consul_config_entry" "service_intentions" {
 }
 ```
 
+### `exported-services` config entry
+
+```hcl
+resource "consul_config_entry" "exported_services" {
+	name = "test"
+	kind = "exported-services"
+
+	config_json = jsonencode({
+		Services = [{
+			Name = "test"
+			Namespace = "default"
+			Consumers = [{
+				Partition = "default"
+			}]
+		}]
+	})
+}
+```
+
+### `mesh` config entry
+
+```hcl
+resource "consul_config_entry" "mesh" {
+	name = "mesh"
+	kind = "mesh"
+
+	config_json = jsonencode({
+		Partition = "default"
+
+		TransparentProxy = {
+			MeshDestinationsOnly = true
+		}
+	})
+}
+```
+
+
 ## Argument Reference
 
 The following arguments are supported:
