@@ -67,17 +67,17 @@ func testAccCheckTokenPolicyID(s *terraform.State) error {
 }
 
 func TestAccConsulACLTokenPolicyAttachment_basic(t *testing.T) {
-	resource.Test(t, resource.TestCase{
-		Providers: testAccProviders,
+	startTestServer(t)
 
-		PreCheck:     func() { testAccPreCheck(t) },
+	resource.Test(t, resource.TestCase{
+		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckConsulACLTokenPolicyAttachmentDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testResourceACLTokenPolicyAttachmentConfigBasic,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTokenPolicyID,
-					resource.TestCheckResourceAttr("consul_acl_token_policy_attachment.test", "policy", "test"),
+					resource.TestCheckResourceAttr("consul_acl_token_policy_attachment.test", "policy", "test-attachment"),
 				),
 			},
 			{
@@ -95,16 +95,18 @@ func TestAccConsulACLTokenPolicyAttachment_basic(t *testing.T) {
 }
 
 func TestAccConsulACLTokenPolicyAttachment_import(t *testing.T) {
+	startTestServer(t)
+
 	checkFn := func(s []*terraform.InstanceState) error {
 		if len(s) != 1 {
 			return fmt.Errorf("bad state: %s", s)
 		}
-		v, ok := s[0].Attributes["token_id"]
+		_, ok := s[0].Attributes["token_id"]
 		if !ok {
 			return fmt.Errorf("bad token_id: %s", s)
 		}
-		v, ok = s[0].Attributes["policy"]
-		if !ok || v != "test" {
+		v, ok := s[0].Attributes["policy"]
+		if !ok || v != "test-attachment" {
 			return fmt.Errorf("bad policy: %s", s)
 		}
 
@@ -113,7 +115,6 @@ func TestAccConsulACLTokenPolicyAttachment_import(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		Providers: testAccProviders,
-		PreCheck:  func() { testAccPreCheck(t) },
 		Steps: []resource.TestStep{
 			{
 				Config: testResourceACLTokenPolicyAttachmentConfigBasic,
@@ -129,7 +130,7 @@ func TestAccConsulACLTokenPolicyAttachment_import(t *testing.T) {
 
 const testResourceACLTokenPolicyAttachmentConfigBasic = `
 resource "consul_acl_policy" "test" {
-	name = "test"
+	name = "test-attachment"
 	rules = "node \"\" { policy = \"read\" }"
 	datacenters = [ "dc1" ]
 }

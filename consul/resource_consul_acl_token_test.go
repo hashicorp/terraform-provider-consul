@@ -24,10 +24,10 @@ func testAccCheckConsulACLTokenDestroy(s *terraform.State) error {
 }
 
 func TestAccConsulACLToken_basic(t *testing.T) {
-	resource.Test(t, resource.TestCase{
-		Providers: testAccProviders,
+	startTestServer(t)
 
-		PreCheck:     func() { testAccPreCheck(t) },
+	resource.Test(t, resource.TestCase{
+		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckConsulACLTokenDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -40,7 +40,6 @@ func TestAccConsulACLToken_basic(t *testing.T) {
 					resource.TestCheckResourceAttrSet("consul_acl_token.test", "local"),
 					resource.TestCheckResourceAttr("consul_acl_token.test", "node_identities.#", "0"),
 					resource.TestCheckResourceAttrSet("consul_acl_token.test", "policies.#"),
-					resource.TestCheckResourceAttr("consul_acl_token.test", "policies.1785148924", "test"),
 					resource.TestCheckResourceAttr("consul_acl_token.test", "service_identities.#", "0"),
 				),
 			},
@@ -86,6 +85,8 @@ func TestAccConsulACLToken_basic(t *testing.T) {
 }
 
 func TestAccConsulACLToken_import(t *testing.T) {
+	startTestServer(t)
+
 	checkFn := func(s []*terraform.InstanceState) error {
 		if len(s) != 1 {
 			return fmt.Errorf("bad state: %s", s)
@@ -108,7 +109,6 @@ func TestAccConsulACLToken_import(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		Providers: testAccProviders,
-		PreCheck:  func() { testAccPreCheck(t) },
 		Steps: []resource.TestStep{
 			{
 				Config: testResourceACLTokenConfigBasic,
@@ -123,6 +123,8 @@ func TestAccConsulACLToken_import(t *testing.T) {
 }
 
 func TestAccConsulACLToken_namespaceCE(t *testing.T) {
+	startTestServer(t)
+
 	resource.Test(t, resource.TestCase{
 		Providers: testAccProviders,
 		PreCheck:  func() { skipTestOnConsulEnterpriseEdition(t) },
@@ -136,6 +138,8 @@ func TestAccConsulACLToken_namespaceCE(t *testing.T) {
 }
 
 func TestAccConsulACLToken_namespaceEE(t *testing.T) {
+	startTestServer(t)
+
 	resource.Test(t, resource.TestCase{
 		Providers: testAccProviders,
 		PreCheck:  func() { skipTestOnConsulCommunityEdition(t) },
@@ -149,14 +153,14 @@ func TestAccConsulACLToken_namespaceEE(t *testing.T) {
 
 const testResourceACLTokenConfigBasic = `
 resource "consul_acl_policy" "test" {
-	name = "test"
+	name = "test-token-basic"
 	rules = "node \"\" { policy = \"read\" }"
 	datacenters = [ "dc1" ]
 }
 
 resource "consul_acl_token" "test" {
 	description = "test"
-	policies = ["${consul_acl_policy.test.name}"]
+	policies = [consul_acl_policy.test.name]
 	local = true
 }`
 
@@ -185,7 +189,7 @@ resource "consul_acl_token" "test" {
 
 const testResourceACLTokenConfigRole = `
 resource "consul_acl_role" "test" {
-    name = "test"
+    name      = "test"
 }
 
 resource "consul_acl_token" "test" {

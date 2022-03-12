@@ -41,15 +41,12 @@ resource "consul_acl_binding_rule" "test" {
 The following arguments are supported:
 
 * `auth_method` - (Required) The name of the ACL auth method this rule apply.
-* `description` - (Optional) A free form human readable description of the
-binding rule.
-* `selector` - (Optional) The expression used to math this rule against valid
-identities returned from an auth method validation.
-* `bind_type` - (Required) Specifies the way the binding rule affects a token
-created at login.
+* `description` - (Optional) A free form human readable description of the binding rule.
+* `selector` - (Optional) The expression used to math this rule against valid identities returned from an auth method validation.
+* `bind_type` - (Required) Specifies the way the binding rule affects a token created at login.
 * `bind_name` - (Required) The name to bind to a token at login-time.
-* `namespace` - (Optional, Enterprise Only) The namespace to create the binding
-rule within.
+* `namespace` - (Optional, Enterprise Only) The namespace to create the binding rule within.
+* `partition` - (Optional, Enterprise Only) The partition the ACL binding rule is associated with.
 
 
 ## Attributes Reference

@@ -6,14 +6,14 @@ import (
 	"testing"
 
 	"github.com/hashicorp/consul/api"
-	consulapi "github.com/hashicorp/consul/api"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 )
 
 func TestAccConsulPreparedQuery_basic(t *testing.T) {
+	startTestServer(t)
+
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckConsulPreparedQueryDestroy,
 		Steps: []resource.TestStep{
@@ -84,6 +84,8 @@ func TestAccConsulPreparedQuery_basic(t *testing.T) {
 }
 
 func TestAccConsulPreparedQuery_import(t *testing.T) {
+	startTestServer(t)
+
 	checkFn := func(s []*terraform.InstanceState) error {
 		// Expect, 1 resource in state, and route count to be 1
 		if len(s) != 1 {
@@ -102,7 +104,6 @@ func TestAccConsulPreparedQuery_import(t *testing.T) {
 	}
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckConsulPreparedQueryDestroy,
 		Steps: []resource.TestStep{
@@ -119,8 +120,9 @@ func TestAccConsulPreparedQuery_import(t *testing.T) {
 }
 
 func TestAccConsulPreparedQuery_blocks(t *testing.T) {
+	startTestServer(t)
+
 	resource.Test(t, resource.TestCase{
-		PreCheck:  func() { testAccPreCheck(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
 			{
@@ -140,8 +142,9 @@ func TestAccConsulPreparedQuery_blocks(t *testing.T) {
 }
 
 func TestAccConsulPreparedQuery_datacenter(t *testing.T) {
+	startRemoteDatacenterTestServer(t)
+
 	resource.Test(t, resource.TestCase{
-		PreCheck:  func() { testAccRemoteDatacenterPreCheck(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
 			{
@@ -149,7 +152,7 @@ func TestAccConsulPreparedQuery_datacenter(t *testing.T) {
 				Check: func(s *terraform.State) error {
 					test := func(dc string) error {
 						c := getTestClient(testAccProvider.Meta()).PreparedQuery()
-						opts := &consulapi.QueryOptions{
+						opts := &api.QueryOptions{
 							Datacenter: dc,
 						}
 						pq, _, err := c.List(opts)
@@ -184,7 +187,7 @@ func getPreparedQuery(s *terraform.State) (*api.PreparedQueryDefinition, error) 
 
 	c := getTestClient(testAccProvider.Meta())
 	client := c.PreparedQuery()
-	opts := &consulapi.QueryOptions{Datacenter: "dc1"}
+	opts := &api.QueryOptions{Datacenter: "dc1"}
 	pq, _, err := client.Get(id, opts)
 	if len(pq) != 1 {
 		return nil, fmt.Errorf("Wrong number of prepared queries")
@@ -244,8 +247,8 @@ func testAccCheckConsulPreparedQueryExists() resource.TestCheckFunc {
 func testAccConsulPreparedQueryNearestN(t *testing.T) func() {
 	return func() {
 		client := getTestClient(testAccProvider.Meta())
-		wOpts := &consulapi.WriteOptions{}
-		qOpts := &consulapi.QueryOptions{}
+		wOpts := &api.WriteOptions{}
+		qOpts := &api.QueryOptions{}
 
 		queries, _, err := client.PreparedQuery().List(qOpts)
 		if err != nil {

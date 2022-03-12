@@ -7,8 +7,9 @@ import (
 )
 
 func TestAccDataConsulAgentConfig_basic(t *testing.T) {
+	startTestServer(t)
+
 	resource.Test(t, resource.TestCase{
-		PreCheck:  func() { testAccPreCheck(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
 			{
@@ -18,7 +19,6 @@ func TestAccDataConsulAgentConfig_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("data.consul_agent_config.example", "server", "true"),
 					resource.TestCheckResourceAttrSet("data.consul_agent_config.example", "node_name"),
 					resource.TestCheckResourceAttrSet("data.consul_agent_config.example", "node_id"),
-					resource.TestCheckResourceAttrSet("data.consul_agent_config.example", "revision"),
 					resource.TestCheckResourceAttrSet("data.consul_agent_config.example", "version"),
 				),
 			},

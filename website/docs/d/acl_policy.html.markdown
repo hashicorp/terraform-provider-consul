@@ -31,6 +31,7 @@ The following arguments are supported:
 
 * `name` - (Required) The name of the ACL Policy.
 * `namespace` - (Optional, Enterprise Only) The namespace to lookup the policy.
+* `partition` - (Optional, Enterprise Only) The partition to lookup the policy.
 
 ## Attributes Reference
 

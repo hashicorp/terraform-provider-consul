@@ -11,8 +11,9 @@ import (
 )
 
 func TestAccConsulKeyPrefix_basic(t *testing.T) {
+	startTestServer(t)
+
 	resource.Test(t, resource.TestCase{
-		PreCheck:  func() { testAccPreCheck(t) },
 		Providers: testAccProviders,
 		CheckDestroy: resource.ComposeTestCheckFunc(
 			testAccCheckConsulKeyPrefixKeyAbsent("species"),
@@ -76,24 +77,28 @@ func TestAccConsulKeyPrefix_basic(t *testing.T) {
 }
 
 func TestAccCheckConsulKeyPrefix_Import(t *testing.T) {
+	startTestServer(t)
+
 	resource.Test(t, resource.TestCase{
-		PreCheck:  func() { testAccPreCheck(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccConsulKeyPrefixConfig_Import,
 			},
 			{
-				Config:            testAccConsulKeyPrefixConfig_Import,
-				ResourceName:      "consul_key_prefix.app",
-				ImportState:       true,
-				ImportStateVerify: true,
+				Config:                  testAccConsulKeyPrefixConfig_Import,
+				ResourceName:            "consul_key_prefix.app",
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"namespace", "partition"},
 			},
 		},
 	})
 }
 
 func TestAccConsulKeyPrefix_namespaceCE(t *testing.T) {
+	startTestServer(t)
+
 	resource.Test(t, resource.TestCase{
 		Providers: testAccProviders,
 		PreCheck:  func() { skipTestOnConsulEnterpriseEdition(t) },
@@ -107,6 +112,8 @@ func TestAccConsulKeyPrefix_namespaceCE(t *testing.T) {
 }
 
 func TestAccConsulKeyPrefix_namespaceEE(t *testing.T) {
+	startTestServer(t)
+
 	resource.Test(t, resource.TestCase{
 		Providers: testAccProviders,
 		PreCheck:  func() { skipTestOnConsulCommunityEdition(t) },
@@ -121,8 +128,9 @@ func TestAccConsulKeyPrefix_namespaceEE(t *testing.T) {
 // TestAccConsulKeyPrefix_deleted checks that resource will recreate keys
 // the consul_key_prefix resource if all the keys has been deleted on Consul
 func TestAccConsulKeyPrefix_deleted(t *testing.T) {
+	startTestServer(t)
+
 	resource.Test(t, resource.TestCase{
-		PreCheck:  func() { testAccPreCheck(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
 			{
@@ -168,9 +176,10 @@ func TestAccConsulKeyPrefix_deleted(t *testing.T) {
 }
 
 func TestAccConsulKeyPrefix_datacenter(t *testing.T) {
+	startRemoteDatacenterTestServer(t)
+
 	resource.Test(t, resource.TestCase{
 		Providers: testAccProviders,
-		PreCheck:  func() { testAccRemoteDatacenterPreCheck(t) },
 		Steps: []resource.TestStep{
 			{
 				Config: testAccConsulKeyPrefixConfig_datacenter,
@@ -178,20 +187,6 @@ func TestAccConsulKeyPrefix_datacenter(t *testing.T) {
 			},
 		},
 	})
-}
-
-func testAccCheckConsulKeyPrefixDestroy(s *terraform.State) error {
-	client := getTestClient(testAccProvider.Meta())
-	kv := client.KV()
-	opts := &consulapi.QueryOptions{Datacenter: "dc1"}
-	pair, _, err := kv.Get("test/set", opts)
-	if err != nil {
-		return err
-	}
-	if pair != nil {
-		return fmt.Errorf("Key still exists: %#v", pair)
-	}
-	return nil
 }
 
 func testAccCheckConsulKeyPrefixKeyAbsent(name string) resource.TestCheckFunc {

@@ -67,12 +67,14 @@ func dataSourceConsulAgentConfigRead(d *schema.ResourceData, meta interface{}) e
 	// is the best we can do to get a consistent identifier
 	d.SetId(fmt.Sprintf("agent-%s", config["NodeId"]))
 
-	d.Set("datacenter", config["Datacenter"])
-	d.Set("node_id", config["NodeID"])
-	d.Set("node_name", config["NodeName"])
-	d.Set("server", config["Server"])
-	d.Set("revision", config["Revision"])
-	d.Set("version", config["Version"])
+	sw := newStateWriter(d)
 
-	return nil
+	sw.set("datacenter", config["Datacenter"])
+	sw.set("node_id", config["NodeID"])
+	sw.set("node_name", config["NodeName"])
+	sw.set("server", config["Server"])
+	sw.set("revision", config["Revision"])
+	sw.set("version", config["Version"])
+
+	return sw.error()
 }

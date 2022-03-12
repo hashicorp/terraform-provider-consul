@@ -11,6 +11,8 @@ import (
 )
 
 func TestAccConsulNetworkArea_basic(t *testing.T) {
+	startTestServer(t)
+
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { skipTestOnConsulCommunityEdition(t) },
 		Providers:    testAccProviders,
@@ -47,22 +49,25 @@ func TestAccConsulNetworkArea_basic(t *testing.T) {
 }
 
 func TestAccConsulNetworkArea_CommunityEdition(t *testing.T) {
+	startTestServer(t)
+
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { skipTestOnConsulEnterpriseEdition(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccConsulNetworkAreaBasic,
-				ExpectError: regexp.MustCompile("Failed to create network area: Unexpected response code: 404"),
+				ExpectError: regexp.MustCompile("failed to create network area: Unexpected response code: 404"),
 			},
 		},
 	})
 }
 
 func TestAccConsulNetworkArea_datacenter(t *testing.T) {
+	startRemoteDatacenterTestServer(t)
+
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
-			testAccRemoteDatacenterPreCheck(t)
 			skipTestOnConsulCommunityEdition(t)
 		},
 		Providers:    testAccProviders,

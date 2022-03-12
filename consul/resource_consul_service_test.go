@@ -12,8 +12,9 @@ import (
 )
 
 func TestAccConsulService_basic(t *testing.T) {
+	startTestServer(t)
+
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckConsulServiceDestroy,
 		Steps: []resource.TestStep{
@@ -66,8 +67,9 @@ func TestAccConsulService_basic(t *testing.T) {
 }
 
 func TestAccConsulService_basicModify(t *testing.T) {
+	startTestServer(t)
+
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckConsulServiceDestroy,
 		Steps: []resource.TestStep{
@@ -102,8 +104,9 @@ func TestAccConsulService_basicModify(t *testing.T) {
 }
 
 func TestAccConsulService_serviceID(t *testing.T) {
+	startTestServer(t)
+
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckConsulServiceDestroy,
 		Steps: []resource.TestStep{
@@ -121,8 +124,9 @@ func TestAccConsulService_serviceID(t *testing.T) {
 }
 
 func TestAccConsulServiceCheck(t *testing.T) {
+	startTestServer(t)
+
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckConsulServiceDestroy,
 		Steps: []resource.TestStep{
@@ -204,8 +208,9 @@ func TestAccConsulServiceCheck(t *testing.T) {
 }
 
 func TestAccConsulServiceCheckOrder(t *testing.T) {
+	startTestServer(t)
+
 	resource.Test(t, resource.TestCase{
-		PreCheck:  func() { testAccPreCheck(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
 			{
@@ -218,8 +223,9 @@ func TestAccConsulServiceCheckOrder(t *testing.T) {
 // When the same service is defined on multiple nodes, the health-checks must
 // be associated to the correct instance.
 func TestAccDataConsulServiceSameServiceMultipleNodes(t *testing.T) {
+	startTestServer(t)
+
 	resource.Test(t, resource.TestCase{
-		PreCheck:  func() { testAccPreCheck(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
 			{
@@ -230,24 +236,26 @@ func TestAccDataConsulServiceSameServiceMultipleNodes(t *testing.T) {
 }
 
 func TestAccConsulService_nodeDoesNotExist(t *testing.T) {
+	startTestServer(t)
+
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckConsulServiceDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccConsulServiceConfigNoNode,
-				ExpectError: regexp.MustCompile(`Node does not exist: '*'`),
+				ExpectError: regexp.MustCompile(`node does not exist: '*'`),
 			},
 		},
 	})
 }
 
 func TestAccConsulService_dontOverrideNodeMeta(t *testing.T) {
+	startTestServer(t)
+
 	// This would raise an error if consul_service changed attributes of consul_node
 	// since the next plan would not be empty
 	resource.Test(t, resource.TestCase{
-		PreCheck:  func() { testAccPreCheck(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
 			{
@@ -258,8 +266,9 @@ func TestAccConsulService_dontOverrideNodeMeta(t *testing.T) {
 }
 
 func TestAccConsulService_multipleInstances(t *testing.T) {
+	startTestServer(t)
+
 	resource.Test(t, resource.TestCase{
-		PreCheck:  func() { testAccPreCheck(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
 			{
@@ -274,6 +283,8 @@ func TestAccConsulService_multipleInstances(t *testing.T) {
 }
 
 func TestAccConsulService_NamespaceCE(t *testing.T) {
+	startTestServer(t)
+
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { skipTestOnConsulEnterpriseEdition(t) },
 		Providers: testAccProviders,
@@ -287,6 +298,8 @@ func TestAccConsulService_NamespaceCE(t *testing.T) {
 }
 
 func TestAccConsulService_NamespaceEE(t *testing.T) {
+	startTestServer(t)
+
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { skipTestOnConsulCommunityEdition(t) },
 		Providers: testAccProviders,
@@ -299,8 +312,9 @@ func TestAccConsulService_NamespaceEE(t *testing.T) {
 }
 
 func TestAccConsulService_datacenter(t *testing.T) {
+	startRemoteDatacenterTestServer(t)
+
 	resource.Test(t, resource.TestCase{
-		PreCheck:  func() { testAccRemoteDatacenterPreCheck(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
 			{
@@ -747,7 +761,7 @@ resource "consul_service" "test" {
 
 const testAccConsulServiceNamespaceEE = `
 resource "consul_namespace" "test" {
-  name = "test-service"
+  name      = "test-service"
 }
 
 resource "consul_node" "test" {

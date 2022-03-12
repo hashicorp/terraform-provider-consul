@@ -84,6 +84,8 @@ The following arguments are supported:
 
 * `namespace` - (Optional, Enterprise Only) The namespace to create the keys within.
 
+* `partition` - (Optional, Enterprise Only) The admin partition to create the keys within.
+
 The `subkey` block supports the following:
 
 * `path` - (Required) This is the path (which will be appended to the given

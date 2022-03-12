@@ -24,16 +24,11 @@ resource "consul_node" "foobar" {
 
 The following arguments are supported:
 
-* `address` - (Required) The address of the node being added to,
-  or referenced in the catalog.
-
-* `name` - (Required) The name of the node being added to, or
-  referenced in the catalog.
-
-* `datacenter` - (Optional) The datacenter to use. This overrides the agent's
-  default datacenter and the datacenter in the provider setup.
-
+* `address` - (Required) The address of the node being added to, or referenced in the catalog.
+* `name` - (Required) The name of the node being added to, or referenced in the catalog.
+* `datacenter` - (Optional) The datacenter to use. This overrides the agent's default datacenter and the datacenter in the provider setup.
 * `meta` - (Optional, map) Key/value pairs that are associated with the node.
+* `partition` - (Optional, Enterprise Only) The partition the node is associated with.
 
 ## Attributes Reference
 

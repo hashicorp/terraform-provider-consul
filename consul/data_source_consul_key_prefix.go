@@ -69,6 +69,11 @@ func dataSourceConsulKeyPrefix() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
+
+			"partition": {
+				Type:     schema.TypeString,
+				Optional: true,
+			},
 		},
 	}
 }

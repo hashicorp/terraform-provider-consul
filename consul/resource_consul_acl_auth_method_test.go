@@ -12,15 +12,16 @@ import (
 )
 
 func TestAccConsulACLAuthMethod_basic(t *testing.T) {
+	startTestServer(t)
+
 	resource.Test(t, resource.TestCase{
 		Providers: testAccProviders,
 
-		PreCheck:     func() { testAccPreCheck(t) },
 		CheckDestroy: testAuthMethodDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config:      testResourceACLAuthMethodConfigBasic_NoConfig,
-				ExpectError: regexp.MustCompile("One of 'config' or 'config_json' must be set"),
+				ExpectError: regexp.MustCompile("one of 'config' or 'config_json' must be set"),
 			},
 			{
 				Config: testResourceACLAuthMethodConfigBasic,
@@ -80,6 +81,8 @@ func TestAccConsulACLAuthMethod_basic(t *testing.T) {
 }
 
 func TestAccConsulACLAuthMethod_namespaceCE(t *testing.T) {
+	startTestServer(t)
+
 	resource.Test(t, resource.TestCase{
 		Providers: testAccProviders,
 		PreCheck:  func() { skipTestOnConsulEnterpriseEdition(t) },
@@ -93,6 +96,8 @@ func TestAccConsulACLAuthMethod_namespaceCE(t *testing.T) {
 }
 
 func TestAccConsulACLAuthMethod_namespaceEE(t *testing.T) {
+	startTestServer(t)
+
 	resource.Test(t, resource.TestCase{
 		Providers: testAccProviders,
 		PreCheck:  func() { skipTestOnConsulCommunityEdition(t) },

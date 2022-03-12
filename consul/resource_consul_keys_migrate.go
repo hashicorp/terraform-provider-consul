@@ -16,7 +16,7 @@ func resourceConsulKeysMigrateState(
 		log.Println("[INFO] Found consul_keys State v0; migrating to v1")
 		return resourceConsulKeysMigrateStateV0toV1(is)
 	default:
-		return is, fmt.Errorf("Unexpected schema version: %d", v)
+		return is, fmt.Errorf("unexpected schema version: %d", v)
 	}
 }
 
@@ -59,7 +59,7 @@ func readV0Keys(
 
 	oldKeys, ok := result.Value.(*schema.Set)
 	if !ok {
-		return nil, fmt.Errorf("Got unexpected value from state: %#v", result.Value)
+		return nil, fmt.Errorf("got unexpected value from state: %#v", result.Value)
 	}
 	return oldKeys, nil
 }

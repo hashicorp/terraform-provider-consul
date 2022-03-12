@@ -20,6 +20,10 @@ func dataSourceConsulACLRole() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
+			"partition": {
+				Type:     schema.TypeString,
+				Optional: true,
+			},
 
 			// Out parameters
 			"description": {
@@ -86,10 +90,10 @@ func datasourceConsulACLRoleRead(d *schema.ResourceData, meta interface{}) error
 
 	role, _, err := client.ACL().RoleReadByName(name, qOpts)
 	if err != nil {
-		return fmt.Errorf("Failed to get role: %v", err)
+		return fmt.Errorf("failed to get role: %v", err)
 	}
 	if role == nil {
-		return fmt.Errorf("Could not find role '%s'", name)
+		return fmt.Errorf("could not find role '%s'", name)
 	}
 
 	policies := make([]map[string]interface{}, len(role.Policies))

@@ -10,6 +10,8 @@ import (
 )
 
 func TestAccConsulCatalogEntry_basic(t *testing.T) {
+	startTestServer(t)
+
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() {},
 		Providers:    testAccProviders,
@@ -36,6 +38,8 @@ func TestAccConsulCatalogEntry_basic(t *testing.T) {
 }
 
 func TestAccConsulCatalogEntry_extremove(t *testing.T) {
+	startTestServer(t)
+
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() {},
 		Providers:    testAccProviders,

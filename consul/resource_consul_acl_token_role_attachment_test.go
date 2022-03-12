@@ -67,10 +67,10 @@ func testAccCheckTokenRoleName(s *terraform.State) error {
 }
 
 func TestAccConsulACLTokenRoleAttachment_basic(t *testing.T) {
-	resource.Test(t, resource.TestCase{
-		Providers: testAccProviders,
+	startTestServer(t)
 
-		PreCheck:     func() { testAccPreCheck(t) },
+	resource.Test(t, resource.TestCase{
+		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckConsulACLTokenRoleAttachmentDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -95,6 +95,8 @@ func TestAccConsulACLTokenRoleAttachment_basic(t *testing.T) {
 }
 
 func TestAccConsulACLTokenRoleAttachment_import(t *testing.T) {
+	startTestServer(t)
+
 	checkFn := func(s []*terraform.InstanceState) error {
 		if len(s) != 1 {
 			return fmt.Errorf("bad state: %s", s)
@@ -113,7 +115,6 @@ func TestAccConsulACLTokenRoleAttachment_import(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		Providers: testAccProviders,
-		PreCheck:  func() { testAccPreCheck(t) },
 		Steps: []resource.TestStep{
 			{
 				Config: testResourceACLTokenRoleAttachmentConfigBasic,
@@ -154,7 +155,7 @@ resource "consul_acl_token_role_attachment" "test" {
 const testResourceACLTokenRoleAttachmentConfigUpdate = `
 // Using another resource to force the update of consul_acl_token
 resource "consul_acl_role" "test2" {
-	name = "test2"
+	name      = "test2"
 
 	service_identities {
         service_name = "bar"

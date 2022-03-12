@@ -11,6 +11,8 @@ import (
 )
 
 func TestAccConsulIntention_basic(t *testing.T) {
+	startTestServer(t)
+
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() {},
 		Providers:    testAccProviders,
@@ -52,6 +54,8 @@ func TestAccConsulIntention_basic(t *testing.T) {
 }
 
 func TestAccConsulIntention_badAction(t *testing.T) {
+	startTestServer(t)
+
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() {},
 		Providers:    testAccProviders,
@@ -66,6 +70,8 @@ func TestAccConsulIntention_badAction(t *testing.T) {
 }
 
 func TestAccConsulIntention_namespaceCE(t *testing.T) {
+	startTestServer(t)
+
 	resource.Test(t, resource.TestCase{
 		Providers: testAccProviders,
 		PreCheck:  func() { skipTestOnConsulEnterpriseEdition(t) },
@@ -79,6 +85,8 @@ func TestAccConsulIntention_namespaceCE(t *testing.T) {
 }
 
 func TestAccConsulIntention_namespaceEE(t *testing.T) {
+	startTestServer(t)
+
 	resource.Test(t, resource.TestCase{
 		Providers: testAccProviders,
 		PreCheck:  func() { skipTestOnConsulCommunityEdition(t) },
@@ -191,18 +199,5 @@ resource "consul_intention" "example" {
 	destination_namespace = consul_namespace.ns.name
 
 	action = "allow"
-}
-`
-
-const testAccConsulIntentionDc = `
-resource "consul_intention" "example" {
-	datacenter       = "ny3"
-	source_name      = "api"
-	destination_name = "db"
-	action           = "allow"
-
-	meta = {
-		is_tf_acc_test = "yes"
-	}
 }
 `

@@ -46,7 +46,7 @@ func resourceConsulNamespacePolicyAttachmentCreate(d *schema.ResourceData, meta 
 
 	for _, p := range namespace.ACLs.PolicyDefaults {
 		if p.Name == policy {
-			return fmt.Errorf("Policy %q already attached to the namespace", policy)
+			return fmt.Errorf("policy %q already attached to the namespace", policy)
 		}
 	}
 
@@ -56,7 +56,7 @@ func resourceConsulNamespacePolicyAttachmentCreate(d *schema.ResourceData, meta 
 
 	_, _, err = client.Namespaces().Update(namespace, wOpts)
 	if err != nil {
-		return fmt.Errorf("Failed to update namespace %q to attach policy %q: %s", name, policy, err)
+		return fmt.Errorf("failed to update namespace %q to attach policy %q: %s", name, policy, err)
 	}
 
 	d.SetId(fmt.Sprintf("%s:%s", name, policy))
@@ -74,7 +74,7 @@ func resourceConsulNamespacePolicyAttachmentRead(d *schema.ResourceData, meta in
 
 	namespace, _, err := client.Namespaces().Read(name, qOpts)
 	if err != nil {
-		return fmt.Errorf("Failed to read namespace %q: %s", name, err)
+		return fmt.Errorf("failed to read namespace %q: %s", name, err)
 	}
 	if namespace == nil {
 		d.SetId("")
@@ -95,10 +95,10 @@ func resourceConsulNamespacePolicyAttachmentRead(d *schema.ResourceData, meta in
 	}
 
 	if err = d.Set("namespace", name); err != nil {
-		return fmt.Errorf("Failed to set 'namespace': %s", err)
+		return fmt.Errorf("failed to set 'namespace': %s", err)
 	}
 	if err = d.Set("policy", policy); err != nil {
-		return fmt.Errorf("Failed to set 'policy': %s", err)
+		return fmt.Errorf("failed to set 'policy': %s", err)
 	}
 
 	return nil
@@ -128,7 +128,7 @@ func resourceConsulNamespacePolicyAttachmentDelete(d *schema.ResourceData, meta 
 
 	_, _, err = client.Namespaces().Update(namespace, wOpts)
 	if err != nil {
-		return fmt.Errorf("Failed to remove policy %q from namespace %q", policy, name)
+		return fmt.Errorf("failed to remove policy %q from namespace %q", policy, name)
 	}
 
 	return nil

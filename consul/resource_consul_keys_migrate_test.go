@@ -7,6 +7,8 @@ import (
 )
 
 func TestConsulKeysMigrateState(t *testing.T) {
+	startTestServer(t)
+
 	cases := map[string]struct {
 		StateVersion int
 		Attributes   map[string]string
@@ -83,9 +85,8 @@ func TestConsulKeysMigrateState_empty(t *testing.T) {
 
 	// should handle non-nil but empty
 	is = &terraform.InstanceState{}
-	is, err = resourceConsulKeys().MigrateState(0, is, meta)
 
-	if err != nil {
+	if _, err = resourceConsulKeys().MigrateState(0, is, meta); err != nil {
 		t.Fatalf("err: %#v", err)
 	}
 }

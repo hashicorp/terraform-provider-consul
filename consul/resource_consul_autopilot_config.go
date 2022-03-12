@@ -4,8 +4,6 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/hashicorp/errwrap"
-
 	consulapi "github.com/hashicorp/consul/api"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 )
@@ -71,11 +69,11 @@ func resourceConsulAutopilotConfigUpdate(d *schema.ResourceData, meta interface{
 
 	lastContactThreshold, err := time.ParseDuration(d.Get("last_contact_threshold").(string))
 	if err != nil {
-		return fmt.Errorf("Could not parse '%v': %v", "last_contact_threshold", err)
+		return fmt.Errorf("could not parse '%v': %v", "last_contact_threshold", err)
 	}
 	serverStabilizationTime, err := time.ParseDuration(d.Get("server_stabilization_time").(string))
 	if err != nil {
-		return fmt.Errorf("Could not parse '%v': %v", "server_stabilization_time", err)
+		return fmt.Errorf("could not parse '%v': %v", "server_stabilization_time", err)
 	}
 
 	config := &consulapi.AutopilotConfiguration{
@@ -89,7 +87,7 @@ func resourceConsulAutopilotConfigUpdate(d *schema.ResourceData, meta interface{
 	}
 	err = operator.AutopilotSetConfiguration(config, wOpts)
 	if err != nil {
-		return fmt.Errorf("Failed to update autopilot configuration: %v", err)
+		return fmt.Errorf("failed to update autopilot configuration: %v", err)
 	}
 
 	return resourceConsulAutopilotConfigRead(d, meta)
@@ -101,34 +99,21 @@ func resourceConsulAutopilotConfigRead(d *schema.ResourceData, meta interface{})
 
 	config, err := operator.AutopilotGetConfiguration(qOpts)
 	if err != nil {
-		return fmt.Errorf("Failed to fetch autopilot configuration: %v", err)
+		return fmt.Errorf("failed to fetch autopilot configuration: %v", err)
 	}
 
 	d.SetId(fmt.Sprintf("consul-autopilot-%s", qOpts.Datacenter))
 
-	if err = d.Set("cleanup_dead_servers", config.CleanupDeadServers); err != nil {
-		return errwrap.Wrapf("Unable to store cleanup_dead_servers: {{err}}", err)
-	}
-	if err = d.Set("last_contact_threshold", config.LastContactThreshold.String()); err != nil {
-		return errwrap.Wrapf("Unable to store last_contact_threshold: {{err}}", err)
-	}
-	if err = d.Set("max_trailing_logs", config.MaxTrailingLogs); err != nil {
-		return errwrap.Wrapf("Unable to store max_trailing_logs: {{err}}", err)
-	}
-	if err = d.Set("server_stabilization_time", config.ServerStabilizationTime.String()); err != nil {
-		return errwrap.Wrapf("Unable to store server_stabilization_time: {{err}}", err)
-	}
-	if err = d.Set("redundancy_zone_tag", config.RedundancyZoneTag); err != nil {
-		return errwrap.Wrapf("Unable to store redundancy_zone_tag: {{err}}", err)
-	}
-	if err = d.Set("disable_upgrade_migration", config.DisableUpgradeMigration); err != nil {
-		return errwrap.Wrapf("Unable to store disable_upgrade_migration: {{err}}", err)
-	}
-	if err = d.Set("upgrade_version_tag", config.UpgradeVersionTag); err != nil {
-		return errwrap.Wrapf("Unable to store upgrade_version_tag: {{err}}", err)
-	}
+	sw := newStateWriter(d)
+	sw.set("cleanup_dead_servers", config.CleanupDeadServers)
+	sw.set("last_contact_threshold", config.LastContactThreshold.String())
+	sw.set("max_trailing_logs", config.MaxTrailingLogs)
+	sw.set("server_stabilization_time", config.ServerStabilizationTime.String())
+	sw.set("redundancy_zone_tag", config.RedundancyZoneTag)
+	sw.set("disable_upgrade_migration", config.DisableUpgradeMigration)
+	sw.set("upgrade_version_tag", config.UpgradeVersionTag)
 
-	return nil
+	return sw.error()
 }
 
 func resourceConsulAutopilotConfigDelete(d *schema.ResourceData, meta interface{}) error {

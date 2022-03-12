@@ -21,6 +21,10 @@ func dataSourceConsulACLToken() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
+			"partition": {
+				Type:     schema.TypeString,
+				Optional: true,
+			},
 
 			// Out parameters
 			"description": {

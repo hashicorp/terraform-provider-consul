@@ -10,10 +10,10 @@ import (
 )
 
 func TestAccConsulACLRole_basic(t *testing.T) {
-	resource.Test(t, resource.TestCase{
-		Providers: testAccProviders,
+	startTestServer(t)
 
-		PreCheck:     func() { testAccPreCheck(t) },
+	resource.Test(t, resource.TestCase{
+		Providers:    testAccProviders,
 		CheckDestroy: testRoleDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -57,6 +57,8 @@ func TestAccConsulACLRole_basic(t *testing.T) {
 }
 
 func TestAccConsulACLRole_NamespaceCE(t *testing.T) {
+	startTestServer(t)
+
 	resource.Test(t, resource.TestCase{
 		Providers: testAccProviders,
 		PreCheck:  func() { skipTestOnConsulEnterpriseEdition(t) },
@@ -70,6 +72,8 @@ func TestAccConsulACLRole_NamespaceCE(t *testing.T) {
 }
 
 func TestAccConsulACLRole_NamespaceEE(t *testing.T) {
+	startTestServer(t)
+
 	resource.Test(t, resource.TestCase{
 		Providers: testAccProviders,
 		PreCheck:  func() { skipTestOnConsulCommunityEdition(t) },
@@ -99,7 +103,7 @@ func testRoleDestroy(s *terraform.State) error {
 
 const testResourceACLRoleConfigBasic = `
 resource "consul_acl_policy" "test-read" {
-	name        = "test"
+	name        = "test-role"
 	rules       = "node \"\" { policy = \"read\" }"
 	datacenters = [ "dc1" ]
 }
@@ -119,7 +123,7 @@ resource "consul_acl_role" "test" {
 
 const testResourceACLRoleConfigUpdate = `
 resource "consul_acl_role" "test" {
-	name = "baz"
+	name      = "baz"
 
 	service_identities {
 		service_name = "bar"

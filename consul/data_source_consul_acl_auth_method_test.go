@@ -8,13 +8,14 @@ import (
 )
 
 func TestAccDataACLAuthMethod_basic(t *testing.T) {
+	startTestServer(t)
+
 	resource.Test(t, resource.TestCase{
-		PreCheck:  func() { testAccPreCheck(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccDataSourceACLAuthMethodConfigNotFound,
-				ExpectError: regexp.MustCompile("Could not find auth-method 'not-found'"),
+				ExpectError: regexp.MustCompile("could not find auth-method 'not-found'"),
 			},
 			{
 				Config: testAccDataSourceACLAuthMethodConfigBasic,
@@ -44,6 +45,8 @@ func TestAccDataACLAuthMethod_basic(t *testing.T) {
 }
 
 func TestAccDataACLAuthMethod_namespaceCE(t *testing.T) {
+	startTestServer(t)
+
 	resource.Test(t, resource.TestCase{
 		Providers: testAccProviders,
 		PreCheck:  func() { skipTestOnConsulEnterpriseEdition(t) },
@@ -57,6 +60,8 @@ func TestAccDataACLAuthMethod_namespaceCE(t *testing.T) {
 }
 
 func TestAccDataACLAuthMethod_namespaceEE(t *testing.T) {
+	startTestServer(t)
+
 	resource.Test(t, resource.TestCase{
 		Providers: testAccProviders,
 		PreCheck:  func() { skipTestOnConsulCommunityEdition(t) },

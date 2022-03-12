@@ -1,7 +1,6 @@
 package consul
 
 import (
-	"fmt"
 	"strings"
 
 	consulapi "github.com/hashicorp/consul/api"
@@ -188,39 +187,18 @@ func resourceConsulPreparedQueryRead(d *schema.ResourceData, meta interface{}) e
 	}
 	pq := queries[0]
 
-	if err = d.Set("name", pq.Name); err != nil {
-		return fmt.Errorf("Failed to set 'name': %v", err)
-	}
-	if err = d.Set("session", pq.Session); err != nil {
-		return fmt.Errorf("Failed to set 'session': %v", err)
-	}
-	if err = d.Set("stored_token", pq.Token); err != nil {
-		return fmt.Errorf("Failed to set 'stored_token': %v", err)
-	}
-	if err = d.Set("service", pq.Service.Service); err != nil {
-		return fmt.Errorf("Failed to set 'service': %v", err)
-	}
-	if err = d.Set("near", pq.Service.Near); err != nil {
-		return fmt.Errorf("Failed to set 'near': %v", err)
-	}
-	if err = d.Set("only_passing", pq.Service.OnlyPassing); err != nil {
-		return fmt.Errorf("Failed to set 'only_passing': %v", err)
-	}
-	if err = d.Set("connect", pq.Service.Connect); err != nil {
-		return fmt.Errorf("Failed to set 'connect': %v", err)
-	}
-	if err = d.Set("tags", pq.Service.Tags); err != nil {
-		return fmt.Errorf("Failed to set 'tags': %v", err)
-	}
-	if err = d.Set("ignore_check_ids", pq.Service.IgnoreCheckIDs); err != nil {
-		return fmt.Errorf("Failed to set 'ignore_check_ids': %v", err)
-	}
-	if err = d.Set("node_meta", pq.Service.NodeMeta); err != nil {
-		return fmt.Errorf("Failed to set 'node_meta': %v", err)
-	}
-	if err = d.Set("service_meta", pq.Service.ServiceMeta); err != nil {
-		return fmt.Errorf("Failed to set 'service_meta': %v", err)
-	}
+	sw := newStateWriter(d)
+	sw.set("name", pq.Name)
+	sw.set("session", pq.Session)
+	sw.set("stored_token", pq.Token)
+	sw.set("service", pq.Service.Service)
+	sw.set("near", pq.Service.Near)
+	sw.set("only_passing", pq.Service.OnlyPassing)
+	sw.set("connect", pq.Service.Connect)
+	sw.set("tags", pq.Service.Tags)
+	sw.set("ignore_check_ids", pq.Service.IgnoreCheckIDs)
+	sw.set("node_meta", pq.Service.NodeMeta)
+	sw.set("service_meta", pq.Service.ServiceMeta)
 
 	// Since failover and dns are implemented with an optionnal list instead of a
 	// sub-resource, writing those attributes to the state is more involved that
@@ -241,9 +219,7 @@ func resourceConsulPreparedQueryRead(d *schema.ResourceData, meta interface{}) e
 	}
 
 	// We can finally set the failover attribute
-	if err = d.Set("failover", failover); err != nil {
-		return fmt.Errorf("Failed to set 'failover': %v", err)
-	}
+	sw.set("failover", failover)
 
 	dns := make([]map[string]interface{}, 0)
 
@@ -254,9 +230,7 @@ func resourceConsulPreparedQueryRead(d *schema.ResourceData, meta interface{}) e
 			"ttl": pq.DNS.TTL,
 		})
 	}
-	if err = d.Set("dns", dns); err != nil {
-		return fmt.Errorf("Failed to set 'dns': %v", err)
-	}
+	sw.set("dns", dns)
 
 	template := make([]map[string]interface{}, 0)
 
@@ -268,11 +242,9 @@ func resourceConsulPreparedQueryRead(d *schema.ResourceData, meta interface{}) e
 			"regexp": pq.Template.Regexp,
 		})
 	}
-	if err = d.Set("template", template); err != nil {
-		return fmt.Errorf("Failed to set 'template': %v", err)
-	}
+	sw.set("template", template)
 
-	return nil
+	return sw.error()
 }
 
 func resourceConsulPreparedQueryDelete(d *schema.ResourceData, meta interface{}) error {

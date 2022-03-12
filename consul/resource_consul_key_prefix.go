@@ -15,7 +15,7 @@ func resourceConsulKeyPrefix() *schema.Resource {
 		Importer: &schema.ResourceImporter{
 			State: func(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
 				if err := d.Set("path_prefix", d.Id()); err != nil {
-					return nil, fmt.Errorf("failed to set 'path_prefix': %#v", err)
+					return nil, fmt.Errorf("failed to set 'path_prefix': %v", err)
 				}
 				return []*schema.ResourceData{d}, nil
 			},
@@ -49,22 +49,22 @@ func resourceConsulKeyPrefix() *schema.Resource {
 				},
 			},
 
-			"subkey": &schema.Schema{
+			"subkey": {
 				Type:     schema.TypeSet,
 				Optional: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"path": &schema.Schema{
+						"path": {
 							Type:     schema.TypeString,
 							Required: true,
 						},
 
-						"value": &schema.Schema{
+						"value": {
 							Type:     schema.TypeString,
 							Required: true,
 						},
 
-						"flags": &schema.Schema{
+						"flags": {
 							Type:     schema.TypeInt,
 							Optional: true,
 							Default:  0,
@@ -74,6 +74,11 @@ func resourceConsulKeyPrefix() *schema.Resource {
 			},
 
 			"namespace": {
+				Type:     schema.TypeString,
+				Optional: true,
+				ForceNew: true,
+			},
+			"partition": {
 				Type:     schema.TypeString,
 				Optional: true,
 				ForceNew: true,
@@ -303,21 +308,16 @@ func resourceConsulKeyPrefixRead(d *schema.ResourceData, meta interface{}) error
 		}
 	}
 
-	if err := d.Set("subkey", subKeySet); err != nil {
-		return fmt.Errorf("failed to set 'subkey': %v", err)
-	}
+	sw := newStateWriter(d)
 
-	if err := d.Set("subkeys", subKeys); err != nil {
-		return fmt.Errorf("failed to set 'subkeys': %v", err)
-	}
+	sw.set("subkey", subKeySet)
+	sw.set("subkeys", subKeys)
 
 	// Store the datacenter on this resource, which can be helpful for reference
 	// in case it was read from the provider
-	if err := d.Set("datacenter", keyClient.qOpts.Datacenter); err != nil {
-		return fmt.Errorf("failed to set 'datacenter': %v", err)
-	}
+	sw.set("datacenter", keyClient.qOpts.Datacenter)
 
-	return nil
+	return sw.error()
 }
 
 func resourceConsulKeyPrefixDelete(d *schema.ResourceData, meta interface{}) error {

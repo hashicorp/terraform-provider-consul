@@ -8,8 +8,9 @@ import (
 )
 
 func TestAccDataConsulServices_basic(t *testing.T) {
+	startTestServer(t)
+
 	resource.Test(t, resource.TestCase{
-		PreCheck:  func() { testAccPreCheck(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
 			{
@@ -25,8 +26,9 @@ func TestAccDataConsulServices_basic(t *testing.T) {
 }
 
 func TestAccDataConsulCatalogServices_alias(t *testing.T) {
+	startTestServer(t)
+
 	resource.Test(t, resource.TestCase{
-		PreCheck:  func() { testAccPreCheck(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
 			{
@@ -38,8 +40,9 @@ func TestAccDataConsulCatalogServices_alias(t *testing.T) {
 }
 
 func TestAccDataConsulCatalogServices_badToken(t *testing.T) {
+	startTestServer(t)
+
 	resource.Test(t, resource.TestCase{
-		PreCheck:  func() { testAccPreCheck(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
 			{
@@ -51,6 +54,8 @@ func TestAccDataConsulCatalogServices_badToken(t *testing.T) {
 }
 
 func TestAccDataConsulServices_namespaceCE(t *testing.T) {
+	startTestServer(t)
+
 	resource.Test(t, resource.TestCase{
 		Providers: testAccProviders,
 		PreCheck:  func() { skipTestOnConsulEnterpriseEdition(t) },
@@ -64,6 +69,8 @@ func TestAccDataConsulServices_namespaceCE(t *testing.T) {
 }
 
 func TestAccDataConsulServices_namespaceEE(t *testing.T) {
+	startTestServer(t)
+
 	resource.Test(t, resource.TestCase{
 		Providers: testAccProviders,
 		PreCheck:  func() { skipTestOnConsulCommunityEdition(t) },
@@ -76,9 +83,10 @@ func TestAccDataConsulServices_namespaceEE(t *testing.T) {
 }
 
 func TestAccDataConsulServices_datacenter(t *testing.T) {
+	startRemoteDatacenterTestServer(t)
+
 	resource.Test(t, resource.TestCase{
 		Providers: testAccProviders,
-		PreCheck:  func() { testAccRemoteDatacenterPreCheck(t) },
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDataConsulCatalogServicesDatacenter,

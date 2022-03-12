@@ -81,6 +81,12 @@ func resourceConsulACLRole() *schema.Resource {
 				Optional: true,
 				ForceNew: true,
 			},
+			"partition": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				ForceNew:    true,
+				Description: "The partition the ACL role is associated with.",
+			},
 		},
 	}
 }
@@ -93,7 +99,7 @@ func resourceConsulACLRoleCreate(d *schema.ResourceData, meta interface{}) error
 	name := role.Name
 	role, _, err := ACL.RoleCreate(role, wOpts)
 	if err != nil {
-		return fmt.Errorf("Failed to create role '%s': %s", name, err)
+		return fmt.Errorf("failed to create role '%s': %s", name, err)
 	}
 
 	d.SetId(role.ID)
@@ -106,7 +112,7 @@ func resourceConsulACLRoleRead(d *schema.ResourceData, meta interface{}) error {
 
 	role, _, err := ACL.RoleRead(d.Id(), qOpts)
 	if err != nil {
-		return fmt.Errorf("Failed to read role '%s': %s", d.Id(), err)
+		return fmt.Errorf("failed to read role '%s': %s", d.Id(), err)
 	}
 	if role == nil {
 		d.SetId("")
@@ -136,19 +142,13 @@ func resourceConsulACLRoleRead(d *schema.ResourceData, meta interface{}) error {
 
 	sw := newStateWriter(d)
 
-	// Consul Enterprise will change "" to "default" but Community Edition only
-	// understands the first one.
-	if d.Get("namespace").(string) != "" || role.Namespace != "default" {
-		if err = d.Set("namespace", role.Namespace); err != nil {
-			return fmt.Errorf("failed to set 'namespace': %v", err)
-		}
-	}
-
 	sw.set("name", role.Name)
 	sw.set("description", role.Description)
 	sw.set("policies", policies)
 	sw.set("service_identities", serviceIdentities)
 	sw.set("node_identities", nodeIdentities)
+	sw.set("namespace", role.Namespace)
+	sw.set("partition", role.Partition)
 
 	return sw.error()
 }
@@ -162,7 +162,7 @@ func resourceConsulACLRoleUpdate(d *schema.ResourceData, meta interface{}) error
 
 	role, _, err := ACL.RoleUpdate(role, wOpts)
 	if err != nil {
-		return fmt.Errorf("Failed to update role '%s': %s", d.Id(), err)
+		return fmt.Errorf("failed to update role '%s': %s", d.Id(), err)
 	}
 
 	d.SetId(role.ID)
@@ -174,7 +174,7 @@ func resourceConsulACLRoleDelete(d *schema.ResourceData, meta interface{}) error
 	ACL := client.ACL()
 
 	if _, err := ACL.RoleDelete(d.Id(), wOpts); err != nil {
-		return fmt.Errorf("Failed to delete role '%s': %s", d.Id(), err)
+		return fmt.Errorf("failed to delete role '%s': %s", d.Id(), err)
 	}
 
 	d.SetId("")

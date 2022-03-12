@@ -109,6 +109,12 @@ func resourceConsulACLToken() *schema.Resource {
 				Optional: true,
 				ForceNew: true,
 			},
+			"partition": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				ForceNew:    true,
+				Description: "The partition the ACL token is associated with.",
+			},
 		},
 	}
 }
@@ -145,7 +151,7 @@ func resourceConsulACLTokenRead(d *schema.ResourceData, meta interface{}) error 
 			d.SetId("")
 			return nil
 		}
-		return fmt.Errorf("Failed to read token '%s': %v", id, err)
+		return fmt.Errorf("failed to read token '%s': %v", id, err)
 	}
 
 	log.Printf("[DEBUG] Read ACL token %q", id)
@@ -189,6 +195,8 @@ func resourceConsulACLTokenRead(d *schema.ResourceData, meta interface{}) error 
 	sw.set("node_identities", nodeIdentities)
 	sw.set("local", aclToken.Local)
 	sw.set("expiration_time", expirationTime)
+	sw.set("namespace", aclToken.Namespace)
+	sw.set("partition", aclToken.Partition)
 
 	return sw.error()
 }

@@ -9,10 +9,6 @@ import (
 	"github.com/hashicorp/errwrap"
 )
 
-// An array of inputs used as typed arguments and converted from their type into
-// function objects that are dynamically constructed and executed.
-type validatorInputs []interface{}
-
 // validateDurationMin is the minimum duration to accept as input
 type validateDurationMin string
 
@@ -76,7 +72,7 @@ func validateDurationMinFactory(name, minDuration string) func(v interface{}, ke
 		}
 
 		if d < dMin {
-			errors = append(errors, fmt.Errorf("Invalid %s specified: duration %q less than the required minimum %s", name, v.(string), dMin))
+			errors = append(errors, fmt.Errorf("invalid %s specified: duration %q less than the required minimum %s", name, v.(string), dMin))
 		}
 
 		return warnings, errors
@@ -94,14 +90,14 @@ func validateIntMaxFactory(name string, max int) func(v interface{}, key string)
 			}
 
 			if i > int64(max) {
-				errors = append(errors, fmt.Errorf("Invalid %s specified: %d more than the required maximum %d", name, v.(int), max))
+				errors = append(errors, fmt.Errorf("invalid %s specified: %d more than the required maximum %d", name, v.(int), max))
 			}
 		case int:
 			if u > max {
-				errors = append(errors, fmt.Errorf("Invalid %s specified: %d more than the required maximum %d", name, v.(int), max))
+				errors = append(errors, fmt.Errorf("invalid %s specified: %d more than the required maximum %d", name, v.(int), max))
 			}
 		default:
-			errors = append(errors, fmt.Errorf("Unsupported type in int max validation: %T", v))
+			errors = append(errors, fmt.Errorf("unsupported type in int max validation: %T", v))
 		}
 
 		return warnings, errors
@@ -119,14 +115,14 @@ func validateIntMinFactory(name string, min int) func(v interface{}, key string)
 			}
 
 			if i < int64(min) {
-				errors = append(errors, fmt.Errorf("Invalid %s specified: %d less than the required minimum %d", name, v.(int), min))
+				errors = append(errors, fmt.Errorf("invalid %s specified: %d less than the required minimum %d", name, v.(int), min))
 			}
 		case int:
 			if u < min {
-				errors = append(errors, fmt.Errorf("Invalid %s specified: %d less than the required minimum %d", name, v.(int), min))
+				errors = append(errors, fmt.Errorf("invalid %s specified: %d less than the required minimum %d", name, v.(int), min))
 			}
 		default:
-			errors = append(errors, fmt.Errorf("Unsupported type in int min validation: %T", v))
+			errors = append(errors, fmt.Errorf("unsupported type in int min validation: %T", v))
 		}
 
 		return warnings, errors
@@ -138,7 +134,7 @@ func validateRegexpFactory(name string, reString string) func(v interface{}, key
 
 	return func(v interface{}, key string) (warnings []string, errors []error) {
 		if !re.MatchString(v.(string)) {
-			errors = append(errors, fmt.Errorf("Invalid %s specified (%q): regexp failed to match string", name, v.(string)))
+			errors = append(errors, fmt.Errorf("invalid %s specified (%q): regexp failed to match string", name, v.(string)))
 		}
 
 		return warnings, errors

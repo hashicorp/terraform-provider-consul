@@ -10,6 +10,8 @@ import (
 )
 
 func TestAccConsulNode_basic(t *testing.T) {
+	startTestServer(t)
+
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() {},
 		Providers:    testAccProviders,
@@ -49,6 +51,8 @@ func TestAccConsulNode_basic(t *testing.T) {
 }
 
 func TestAccConsulNode_nodeMeta(t *testing.T) {
+	startTestServer(t)
+
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() {},
 		Providers:    testAccProviders,
@@ -83,8 +87,9 @@ func TestAccConsulNode_nodeMeta(t *testing.T) {
 }
 
 func TestAccConsulNode_datacenter(t *testing.T) {
+	startRemoteDatacenterTestServer(t)
+
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccRemoteDatacenterPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckConsulNodeDestroy,
 		Steps: []resource.TestStep{

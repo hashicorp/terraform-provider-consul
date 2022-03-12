@@ -33,6 +33,7 @@ The following arguments are supported:
 
 * `accessor_id` - (Required) The accessor ID of the ACL token.
 * `namespace` - (Optional, Enterprise Only) The namespace to lookup the ACL token.
+* `partition` - (Optional, Enterprise Only) The partition to lookup the ACL token.
 
 ## Attributes Reference
 
