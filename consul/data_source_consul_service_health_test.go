@@ -7,9 +7,10 @@ import (
 )
 
 func TestAccDataConsulServiceHealth(t *testing.T) {
+	providers, _ := startTestServer(t)
+
 	resource.Test(t, resource.TestCase{
-		PreCheck:  func() { testAccPreCheck(t) },
-		Providers: testAccProviders,
+		Providers: providers,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDataConsulServiceHealth,
@@ -64,9 +65,10 @@ func TestAccDataConsulServiceHealth(t *testing.T) {
 }
 
 func TestAccDataConsulServiceHealthPassing(t *testing.T) {
+	providers, _ := startTestServer(t)
+
 	resource.Test(t, resource.TestCase{
-		PreCheck:  func() { testAccPreCheck(t) },
-		Providers: testAccProviders,
+		Providers: providers,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDataConsulServiceHealthPassingSetup,
@@ -93,9 +95,10 @@ func TestAccDataConsulServiceHealthPassing(t *testing.T) {
 }
 
 func TestAccDataConsulServiceHealthDatacenter(t *testing.T) {
+	providers, _ := startRemoteDatacenterTestServer(t)
+
 	resource.Test(t, resource.TestCase{
-		PreCheck:  func() { testAccRemoteDatacenterPreCheck(t) },
-		Providers: testAccProviders,
+		Providers: providers,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDataConsulServiceHealthDatacenter,

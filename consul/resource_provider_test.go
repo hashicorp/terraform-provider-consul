@@ -1,26 +1,19 @@
 package consul
 
 import (
+	"encoding/json"
 	"io/ioutil"
 	"os"
+	"os/exec"
 	"strings"
 	"testing"
+	"time"
 
+	consulapi "github.com/hashicorp/consul/api"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/terraform"
-	"golang.org/x/mod/semver"
 )
-
-var testAccProviders map[string]terraform.ResourceProvider
-var testAccProvider *schema.Provider
-
-func init() {
-	testAccProvider = Provider().(*schema.Provider)
-	testAccProviders = map[string]terraform.ResourceProvider{
-		"consul": testAccProvider,
-	}
-}
 
 func TestResourceProvider(t *testing.T) {
 	if err := Provider().(*schema.Provider).InternalValidate(); err != nil {
@@ -189,9 +182,10 @@ func TestResourceProvider_ConfigureTLSInsecureHttpsMismatch(t *testing.T) {
 // }
 
 func TestAccTokenReadProviderConfigureWithHeaders(t *testing.T) {
+	providers, _ := startTestServer(t)
+
 	resource.Test(t, resource.TestCase{
-		Providers: testAccProviders,
-		PreCheck:  func() { testAccPreCheck(t) },
+		Providers: providers,
 		Steps: []resource.TestStep{
 			{
 				Config: testHeaderConfig,
@@ -210,60 +204,193 @@ func TestAccTokenReadProviderConfigureWithHeaders(t *testing.T) {
 	}
 }
 
-func testAccPreCheck(t *testing.T) {
-	if os.Getenv("CONSUL_HTTP_ADDR") != "" {
-		return
+func startServerWithConfig(t *testing.T, config string) {
+	if os.Getenv("TF_ACC") == "" {
+		t.Skip("Acceptance tests skipped unless env 'TF_ACC' set")
 	}
-	if os.Getenv("CONSUL_ADDRESS") != "" {
-		return
+
+	f, err := os.CreateTemp("", "consul_*.hcl")
+	if err != nil {
+		t.Fatalf("fail to create Consul config file: %s", err)
 	}
-	t.Fatal("Either CONSUL_ADDRESS or CONSUL_HTTP_ADDR must be set for acceptance tests")
+	if _, err := f.WriteString(config); err != nil {
+		t.Fatalf("fail to write Consul config: %s", err)
+	}
+	if err := f.Close(); err != nil {
+		t.Fatalf("fail to close Consul config file: %s", err)
+	}
+
+	path := os.Getenv("CONSUL_TEST_BINARY")
+	if path == "" {
+		path = "consul"
+	}
+	cmd := exec.Command(path, "agent", "-dev", "-config-file", f.Name())
+
+	if err := cmd.Start(); err != nil {
+		t.Fatalf("failed to start Consul: %s", err)
+	}
+	t.Cleanup(func() {
+		cmd.Process.Kill()
+		cmd.Process.Wait()
+	})
 }
 
-func testAccRemoteDatacenterPreCheck(t *testing.T) {
-	testAccPreCheck(t)
+func waitForService(t *testing.T) (map[string]terraform.ResourceProvider, *consulapi.Client) {
+	config := consulapi.DefaultConfig()
+	config.Address = "http://localhost:8500"
+	config.Token = "master-token"
 
-	if os.Getenv("TEST_REMOTE_DATACENTER") == "" {
-		t.Skip("Test skipped. Set TEST_REMOTE_DATACENTER to run this test.")
+	client, err := consulapi.NewClient(config)
+	if err != nil {
+		t.Fatalf("failed to instantiate client: %v", err)
 	}
+
+	var services []*consulapi.ServiceEntry
+	for i := 0; i < 10; i++ {
+		services, _, err = client.Health().Service("consul", "", true, nil)
+		if err == nil && len(services) == 1 {
+			// Once the service is up we have to wait for the info to be synced
+			time.Sleep(200 * time.Millisecond)
+
+			return map[string]terraform.ResourceProvider{
+				"consul": Provider().(*schema.Provider),
+			}, client
+		}
+
+		time.Sleep(200 * time.Millisecond)
+	}
+
+	t.Fatalf("timeout while waiting for Consul to start, last error: %v, %d services", err, len(services))
+	return nil, nil
+}
+
+func startTestServer(t *testing.T) (map[string]terraform.ResourceProvider, *consulapi.Client) {
+	startServerWithConfig(
+		t,
+		`
+			ui = true
+
+			limits = {
+				http_max_conns_per_client = -1
+			}
+
+			acl = {
+				enabled = true
+				default_policy = "allow"
+				down_policy = "extend-cache"
+
+				tokens = {
+					master = "master-token"
+				}
+			}
+		`,
+	)
+
+	return waitForService(t)
+}
+
+func startRemoteDatacenterTestServer(t *testing.T) (map[string]terraform.ResourceProvider, *consulapi.Client) {
+	startServerWithConfig(
+		t,
+		`
+			ui = true
+			datacenter = "dc2"
+			primary_datacenter = "dc1"
+
+			limits = {
+				http_max_conns_per_client = -1
+			}
+
+			acl = {
+				enabled = true
+				default_policy = "allow"
+				down_policy = "extend-cache"
+
+				tokens = {
+					replication = "master-token"
+				}
+			}
+
+			ports = {
+				dns = -1
+				grpc = -1
+				http = 8501
+				server = 8305
+				serf_lan = 8306
+				serf_wan = 8307
+			}
+		`,
+	)
+	startServerWithConfig(
+		t,
+		`
+			ui = true
+			primary_datacenter = "dc1"
+
+			limits = {
+				http_max_conns_per_client = -1
+			}
+
+			acl = {
+				enabled = true
+				default_policy = "allow"
+				down_policy = "extend-cache"
+
+				tokens = {
+					master = "master-token"
+				}
+			}
+
+			retry_join_wan = ["127.0.0.1:8307"]
+		`,
+	)
+
+	providers, client := waitForService(t)
+	for i := 0; i < 10; i++ {
+		datacenters, err := client.Catalog().Datacenters()
+		if err == nil && len(datacenters) == 2 {
+			return providers, client
+		}
+
+		time.Sleep(200 * time.Millisecond)
+	}
+
+	t.Fatal("wait for the two datacenters to get synced")
+	return nil, nil
 }
 
 func serverIsConsulCommunityEdition(t *testing.T) bool {
-	client := getTestClient(testAccProvider.Meta())
-	self, err := client.Agent().Self()
-	if err != nil {
-		t.Fatalf("failed to get agent information: %v", err)
+	path := os.Getenv("CONSUL_TEST_BINARY")
+	if path == "" {
+		path = "consul"
 	}
-	return !strings.HasSuffix(self["Config"]["Version"].(string), "+ent")
+	cmd := exec.Command(path, "version", "-format=json")
+
+	data, err := cmd.Output()
+	if err != nil {
+		t.Fatalf("failed to get `consul version` output: %v", err)
+	}
+
+	type Output struct {
+		Version string
+	}
+	var output Output
+	if err := json.Unmarshal(data, &output); err != nil {
+		t.Fatalf("failed to unmarshal Consul version: %v", err)
+	}
+
+	return !strings.HasSuffix(output.Version, "+ent")
 }
 
 func skipTestOnConsulCommunityEdition(t *testing.T) {
-	testAccPreCheck(t)
-
 	if serverIsConsulCommunityEdition(t) {
 		t.Skip("Test skipped on Consul Community Edition. Use a Consul Enterprise server to run this test.")
 	}
 }
 
 func skipTestOnConsulEnterpriseEdition(t *testing.T) {
-	testAccPreCheck(t)
-
 	if !serverIsConsulCommunityEdition(t) {
 		t.Skip("Test skipped on Consul Enterprise Edition. Use a Consul Community server to run this test.")
-	}
-}
-
-func skipTestForVersionsAfter(t *testing.T, version string) {
-	testAccPreCheck(t)
-
-	client := getTestClient(testAccProvider.Meta())
-	self, err := client.Agent().Self()
-	if err != nil {
-		t.Fatalf("failed to get agent information: %v", err)
-	}
-	v := self["Config"]["Version"].(string)
-	if semver.Compare(version, v) >= 0 {
-		t.Skipf("Test skipped because Consul version %q is greater or equal to %q", v, version)
 	}
 }
 

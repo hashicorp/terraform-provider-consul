@@ -16,6 +16,8 @@ func resourceConsulLicense() *schema.Resource {
 			State: schema.ImportStatePassthrough,
 		},
 
+		DeprecationMessage: `The /operator/license has been removed in Consul v1.10.0 and this resource will be removed in a future version of the Terraform provider.`,
+
 		Schema: map[string]*schema.Schema{
 			// Input
 			"datacenter": {

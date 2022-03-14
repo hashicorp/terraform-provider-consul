@@ -2,7 +2,6 @@ package consul
 
 import (
 	"fmt"
-	"log"
 	"strings"
 
 	consulapi "github.com/hashicorp/consul/api"
@@ -38,19 +37,17 @@ func resourceConsulACLTokenRoleAttachment() *schema.Resource {
 func resourceConsulACLTokenRoleAttachmentCreate(d *schema.ResourceData, meta interface{}) error {
 	client, qOpts, wOpts := getClient(d, meta)
 
-	log.Printf("[DEBUG] Creating ACL token role attachment")
-
 	tokenID := d.Get("token_id").(string)
 
 	aclToken, _, err := client.ACL().TokenRead(tokenID, qOpts)
 	if err != nil {
-		return fmt.Errorf("Token '%s' not found", tokenID)
+		return fmt.Errorf("token '%s' not found", tokenID)
 	}
 
 	roleName := d.Get("role").(string)
 	for _, role := range aclToken.Roles {
 		if role.Name == roleName {
-			return fmt.Errorf("Role '%s' already attached to token", roleName)
+			return fmt.Errorf("role '%s' already attached to token", roleName)
 		}
 	}
 
@@ -60,12 +57,10 @@ func resourceConsulACLTokenRoleAttachmentCreate(d *schema.ResourceData, meta int
 
 	_, _, err = client.ACL().TokenUpdate(aclToken, wOpts)
 	if err != nil {
-		return fmt.Errorf("Error updating ACL token '%q' to set new role attachment: '%s'", tokenID, err)
+		return fmt.Errorf("error updating ACL token '%q' to set new role attachment: '%s'", tokenID, err)
 	}
 
 	id := fmt.Sprintf("%s:%s", tokenID, roleName)
-
-	log.Printf("[DEBUG] Created ACL token role attachment '%q'", id)
 
 	d.SetId(id)
 
@@ -76,24 +71,20 @@ func resourceConsulACLTokenRoleAttachmentRead(d *schema.ResourceData, meta inter
 	client, qOpts, _ := getClient(d, meta)
 
 	id := d.Id()
-	log.Printf("[DEBUG] Reading ACL token role attachment '%q'", id)
 
 	tokenID, roleName, err := parseTwoPartID(id, "token", "role")
 	if err != nil {
-		return fmt.Errorf("Invalid ACL token role attachment id '%q'", id)
+		return fmt.Errorf("invalid ACL token role attachment id '%q'", id)
 	}
 
 	aclToken, _, err := client.ACL().TokenRead(tokenID, qOpts)
 	if err != nil {
 		if strings.Contains(err.Error(), "ACL not found") {
-			log.Printf("[WARN] ACL token not found, removing from state")
 			d.SetId("")
 			return nil
 		}
-		return fmt.Errorf("Failed to read token '%s': %v", id, err)
+		return fmt.Errorf("failed to read token '%s': %v", id, err)
 	}
-
-	log.Printf("[DEBUG] Read ACL token %q", tokenID)
 
 	roleFound := false
 	for _, role := range aclToken.Roles {
@@ -103,16 +94,15 @@ func resourceConsulACLTokenRoleAttachmentRead(d *schema.ResourceData, meta inter
 		}
 	}
 	if !roleFound {
-		log.Printf("[WARN] ACL role not found in token, removing from state")
 		d.SetId("")
 		return nil
 	}
 
 	if err = d.Set("token_id", tokenID); err != nil {
-		return fmt.Errorf("Error while setting 'token_id': %s", err)
+		return fmt.Errorf("error while setting 'token_id': %s", err)
 	}
 	if err = d.Set("role", roleName); err != nil {
-		return fmt.Errorf("Error while setting 'role': %s", err)
+		return fmt.Errorf("error while setting 'role': %s", err)
 	}
 
 	return nil
@@ -122,16 +112,15 @@ func resourceConsulACLTokenRoleAttachmentDelete(d *schema.ResourceData, meta int
 	client, qOpts, wOpts := getClient(d, meta)
 
 	id := d.Id()
-	log.Printf("[DEBUG] Reading ACL token role attachment '%q'", id)
 
 	tokenID, roleName, err := parseTwoPartID(id, "token", "role")
 	if err != nil {
-		return fmt.Errorf("Invalid ACL token role attachment id '%q'", id)
+		return fmt.Errorf("invalid ACL token role attachment id '%q'", id)
 	}
 
 	aclToken, _, err := client.ACL().TokenRead(tokenID, qOpts)
 	if err != nil {
-		return fmt.Errorf("Token '%s' not found", tokenID)
+		return fmt.Errorf("token '%s' not found", tokenID)
 	}
 
 	for i, role := range aclToken.Roles {
@@ -143,9 +132,8 @@ func resourceConsulACLTokenRoleAttachmentDelete(d *schema.ResourceData, meta int
 
 	_, _, err = client.ACL().TokenUpdate(aclToken, wOpts)
 	if err != nil {
-		return fmt.Errorf("Error updating ACL token '%q' to set new role attachment: '%s'", tokenID, err)
+		return fmt.Errorf("error updating ACL token '%q' to set new role attachment: '%s'", tokenID, err)
 	}
-	log.Printf("[DEBUG] Deleted ACL token attachment role %q", id)
 
 	return nil
 }

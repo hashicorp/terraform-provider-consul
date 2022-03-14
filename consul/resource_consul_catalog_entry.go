@@ -159,7 +159,7 @@ func resourceConsulCatalogEntryCreate(d *schema.ResourceData, meta interface{}) 
 			}
 
 			if _, err := catalog.Register(registration, wOpts); err != nil {
-				return fmt.Errorf("Failed to register Consul catalog entry with node '%s' at address '%s' in %s: %v",
+				return fmt.Errorf("failed to register Consul catalog entry with node '%s' at address '%s' in %s: %v",
 					node, address, wOpts.Datacenter, err)
 			}
 		}
@@ -171,14 +171,14 @@ func resourceConsulCatalogEntryCreate(d *schema.ResourceData, meta interface{}) 
 		}
 
 		if _, err := catalog.Register(registration, wOpts); err != nil {
-			return fmt.Errorf("Failed to register Consul catalog entry with node '%s' at address '%s' in %s: %v",
+			return fmt.Errorf("failed to register Consul catalog entry with node '%s' at address '%s' in %s: %v",
 				node, address, wOpts.Datacenter, err)
 		}
 	}
 
 	// Update the resource
 	if _, _, err := catalog.Node(node, qOpts); err != nil {
-		return fmt.Errorf("Failed to read Consul catalog entry for node '%s' at address '%s' in %s: %v",
+		return fmt.Errorf("failed to read Consul catalog entry for node '%s' at address '%s' in %s: %v",
 			node, address, qOpts.Datacenter, err)
 	} else {
 		d.Set("datacenter", qOpts.Datacenter)
@@ -200,7 +200,7 @@ func resourceConsulCatalogEntryRead(d *schema.ResourceData, meta interface{}) er
 
 	cNode, _, err := catalog.Node(node, qOpts)
 	if err != nil {
-		return fmt.Errorf("Failed to get node '%s' from Consul catalog: %v", node, err)
+		return fmt.Errorf("failed to get node '%s' from Consul catalog: %v", node, err)
 	}
 	if cNode == nil || cNode.Node == nil {
 		d.SetId("")
@@ -223,7 +223,7 @@ func resourceConsulCatalogEntryDelete(d *schema.ResourceData, meta interface{}) 
 	}
 
 	if _, err := catalog.Deregister(&deregistration, wOpts); err != nil {
-		return fmt.Errorf("Failed to deregister Consul catalog entry with node '%s' at address '%s' in %s: %v",
+		return fmt.Errorf("failed to deregister Consul catalog entry with node '%s' at address '%s' in %s: %v",
 			node, address, wOpts.Datacenter, err)
 	}
 

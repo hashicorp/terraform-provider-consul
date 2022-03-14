@@ -11,11 +11,11 @@ import (
 )
 
 func TestAccConsulACLBindingRule_basic(t *testing.T) {
-	resource.Test(t, resource.TestCase{
-		Providers: testAccProviders,
+	providers, client := startTestServer(t)
 
-		PreCheck:     func() { testAccPreCheck(t) },
-		CheckDestroy: testBindingRuleDestroy,
+	resource.Test(t, resource.TestCase{
+		Providers:    providers,
+		CheckDestroy: testBindingRuleDestroy(client),
 		Steps: []resource.TestStep{
 			{
 				Config: testResourceACLBindingRuleConfigBasic,
@@ -56,8 +56,10 @@ func TestAccConsulACLBindingRule_basic(t *testing.T) {
 }
 
 func TestAccConsulACLBindingRule_namespaceCE(t *testing.T) {
+	providers, _ := startTestServer(t)
+
 	resource.Test(t, resource.TestCase{
-		Providers: testAccProviders,
+		Providers: providers,
 		PreCheck:  func() { skipTestOnConsulEnterpriseEdition(t) },
 		Steps: []resource.TestStep{
 			{
@@ -69,8 +71,10 @@ func TestAccConsulACLBindingRule_namespaceCE(t *testing.T) {
 }
 
 func TestAccConsulACLBindingRule_namespaceEE(t *testing.T) {
+	providers, _ := startTestServer(t)
+
 	resource.Test(t, resource.TestCase{
-		Providers: testAccProviders,
+		Providers: providers,
 		PreCheck:  func() { skipTestOnConsulCommunityEdition(t) },
 		Steps: []resource.TestStep{
 			{
@@ -80,20 +84,22 @@ func TestAccConsulACLBindingRule_namespaceEE(t *testing.T) {
 	})
 }
 
-func testBindingRuleDestroy(s *terraform.State) error {
-	ACL := getTestClient(testAccProvider.Meta()).ACL()
-	qOpts := &consulapi.QueryOptions{}
+func testBindingRuleDestroy(client *consulapi.Client) func(s *terraform.State) error {
+	return func(s *terraform.State) error {
+		ACL := client.ACL()
+		qOpts := &consulapi.QueryOptions{}
 
-	rules, _, err := ACL.BindingRuleList("minikube2", qOpts)
-	if err != nil {
-		return err
+		rules, _, err := ACL.BindingRuleList("minikube2", qOpts)
+		if err != nil {
+			return err
+		}
+
+		if len(rules) != 0 {
+			return fmt.Errorf("Binding rule of 'minikube2' still exists")
+		}
+
+		return nil
 	}
-
-	if len(rules) != 0 {
-		return fmt.Errorf("Binding rule of 'minikube2' still exists")
-	}
-
-	return nil
 }
 
 const testResourceACLBindingRuleConfigBasic = `

@@ -11,10 +11,12 @@ import (
 )
 
 func TestAccConsulIntention_basic(t *testing.T) {
+	providers, client := startTestServer(t)
+
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() {},
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckConsulIntentionDestroy,
+		Providers:    providers,
+		CheckDestroy: testAccCheckConsulIntentionDestroy(client),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccConsulIntentionConfigBasic,
@@ -29,7 +31,7 @@ func TestAccConsulIntention_basic(t *testing.T) {
 				),
 			},
 			{
-				PreConfig: testAccRemoveConsulIntention(t),
+				PreConfig: testAccRemoveConsulIntention(t, client),
 				Config:    testAccConsulIntentionConfigBasic,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("consul_intention.example", "source_name", "api"),
@@ -52,10 +54,12 @@ func TestAccConsulIntention_basic(t *testing.T) {
 }
 
 func TestAccConsulIntention_badAction(t *testing.T) {
+	providers, client := startTestServer(t)
+
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() {},
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckConsulIntentionDestroy,
+		Providers:    providers,
+		CheckDestroy: testAccCheckConsulIntentionDestroy(client),
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccConsulIntentionConfigBadAction,
@@ -66,8 +70,10 @@ func TestAccConsulIntention_badAction(t *testing.T) {
 }
 
 func TestAccConsulIntention_namespaceCE(t *testing.T) {
+	providers, _ := startTestServer(t)
+
 	resource.Test(t, resource.TestCase{
-		Providers: testAccProviders,
+		Providers: providers,
 		PreCheck:  func() { skipTestOnConsulEnterpriseEdition(t) },
 		Steps: []resource.TestStep{
 			{
@@ -79,8 +85,10 @@ func TestAccConsulIntention_namespaceCE(t *testing.T) {
 }
 
 func TestAccConsulIntention_namespaceEE(t *testing.T) {
+	providers, _ := startTestServer(t)
+
 	resource.Test(t, resource.TestCase{
-		Providers: testAccProviders,
+		Providers: providers,
 		PreCheck:  func() { skipTestOnConsulCommunityEdition(t) },
 		Steps: []resource.TestStep{
 			{
@@ -90,25 +98,24 @@ func TestAccConsulIntention_namespaceEE(t *testing.T) {
 	})
 }
 
-func testAccCheckConsulIntentionDestroy(s *terraform.State) error {
-	client := getTestClient(testAccProvider.Meta())
+func testAccCheckConsulIntentionDestroy(client *consulapi.Client) func(s *terraform.State) error {
+	return func(s *terraform.State) error {
+		qOpts := consulapi.QueryOptions{}
+		intentions, _, err := client.Connect().Intentions(&qOpts)
+		if err != nil {
+			return fmt.Errorf("Failed to retrieve intentions: %v", err)
+		}
 
-	qOpts := consulapi.QueryOptions{}
-	intentions, _, err := client.Connect().Intentions(&qOpts)
-	if err != nil {
-		return fmt.Errorf("Failed to retrieve intentions: %v", err)
+		if len(intentions) > 0 {
+			return fmt.Errorf("Intentions still exist: %v", intentions)
+		}
+
+		return nil
 	}
-
-	if len(intentions) > 0 {
-		return fmt.Errorf("Intentions still exist: %v", intentions)
-	}
-
-	return nil
 }
 
-func testAccRemoveConsulIntention(t *testing.T) func() {
+func testAccRemoveConsulIntention(t *testing.T, client *consulapi.Client) func() {
 	return func() {
-		client := getTestClient(testAccProvider.Meta())
 		connect := client.Connect()
 		qOpts := &consulapi.QueryOptions{}
 		iM := &consulapi.IntentionMatch{
@@ -191,18 +198,5 @@ resource "consul_intention" "example" {
 	destination_namespace = consul_namespace.ns.name
 
 	action = "allow"
-}
-`
-
-const testAccConsulIntentionDc = `
-resource "consul_intention" "example" {
-	datacenter       = "ny3"
-	source_name      = "api"
-	destination_name = "db"
-	action           = "allow"
-
-	meta = {
-		is_tf_acc_test = "yes"
-	}
 }
 `

@@ -10,11 +10,11 @@ import (
 )
 
 func TestAccConsulACLRole_basic(t *testing.T) {
-	resource.Test(t, resource.TestCase{
-		Providers: testAccProviders,
+	providers, client := startTestServer(t)
 
-		PreCheck:     func() { testAccPreCheck(t) },
-		CheckDestroy: testRoleDestroy,
+	resource.Test(t, resource.TestCase{
+		Providers:    providers,
+		CheckDestroy: testRoleDestroy(client),
 		Steps: []resource.TestStep{
 			{
 				Config: testResourceACLRoleConfigBasic,
@@ -57,8 +57,10 @@ func TestAccConsulACLRole_basic(t *testing.T) {
 }
 
 func TestAccConsulACLRole_NamespaceCE(t *testing.T) {
+	providers, _ := startTestServer(t)
+
 	resource.Test(t, resource.TestCase{
-		Providers: testAccProviders,
+		Providers: providers,
 		PreCheck:  func() { skipTestOnConsulEnterpriseEdition(t) },
 		Steps: []resource.TestStep{
 			{
@@ -70,8 +72,10 @@ func TestAccConsulACLRole_NamespaceCE(t *testing.T) {
 }
 
 func TestAccConsulACLRole_NamespaceEE(t *testing.T) {
+	providers, _ := startTestServer(t)
+
 	resource.Test(t, resource.TestCase{
-		Providers: testAccProviders,
+		Providers: providers,
 		PreCheck:  func() { skipTestOnConsulCommunityEdition(t) },
 		Steps: []resource.TestStep{
 			{
@@ -81,25 +85,27 @@ func TestAccConsulACLRole_NamespaceEE(t *testing.T) {
 	})
 }
 
-func testRoleDestroy(s *terraform.State) error {
-	ACL := getTestClient(testAccProvider.Meta()).ACL()
-	qOpts := &consulapi.QueryOptions{}
+func testRoleDestroy(client *consulapi.Client) func(s *terraform.State) error {
+	return func(s *terraform.State) error {
+		ACL := client.ACL()
+		qOpts := &consulapi.QueryOptions{}
 
-	role, _, err := ACL.RoleReadByName("baz", qOpts)
-	if err != nil {
-		return err
+		role, _, err := ACL.RoleReadByName("baz", qOpts)
+		if err != nil {
+			return err
+		}
+
+		if role != nil {
+			return fmt.Errorf("Role 'baz' still exists")
+		}
+
+		return nil
 	}
-
-	if role != nil {
-		return fmt.Errorf("Role 'baz' still exists")
-	}
-
-	return nil
 }
 
 const testResourceACLRoleConfigBasic = `
 resource "consul_acl_policy" "test-read" {
-	name        = "test"
+	name        = "test-role"
 	rules       = "node \"\" { policy = \"read\" }"
 	datacenters = [ "dc1" ]
 }
@@ -119,7 +125,7 @@ resource "consul_acl_role" "test" {
 
 const testResourceACLRoleConfigUpdate = `
 resource "consul_acl_role" "test" {
-	name = "baz"
+	name      = "baz"
 
 	service_identities {
 		service_name = "bar"

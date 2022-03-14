@@ -8,13 +8,14 @@ import (
 )
 
 func TestAccDataACLPolicy_basic(t *testing.T) {
+	providers, _ := startTestServer(t)
+
 	resource.Test(t, resource.TestCase{
-		PreCheck:  func() { testAccPreCheck(t) },
-		Providers: testAccProviders,
+		Providers: providers,
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccDataSourceACLPolicyConfigNotFound,
-				ExpectError: regexp.MustCompile("Could not find policy 'not-found'"),
+				ExpectError: regexp.MustCompile("could not find policy 'not-found'"),
 			},
 			{
 				Config: testAccDataSourceACLPolicyConfigBasic,
@@ -31,8 +32,10 @@ func TestAccDataACLPolicy_basic(t *testing.T) {
 }
 
 func TestAccDataACLPolicy_namespaceCE(t *testing.T) {
+	providers, _ := startTestServer(t)
+
 	resource.Test(t, resource.TestCase{
-		Providers: testAccProviders,
+		Providers: providers,
 		PreCheck:  func() { skipTestOnConsulEnterpriseEdition(t) },
 		Steps: []resource.TestStep{
 			{
@@ -44,8 +47,10 @@ func TestAccDataACLPolicy_namespaceCE(t *testing.T) {
 }
 
 func TestAccDataACLPolicy_namespaceEE(t *testing.T) {
+	providers, _ := startTestServer(t)
+
 	resource.Test(t, resource.TestCase{
-		Providers: testAccProviders,
+		Providers: providers,
 		PreCheck:  func() { skipTestOnConsulCommunityEdition(t) },
 		Steps: []resource.TestStep{
 			{

@@ -48,6 +48,8 @@ The following arguments are supported:
 
 * `namespace` - (Optional, Enterprise Only) The namespace to create the keys within.
 
+* `partition` - (Optional, Enterprise Only) The partition to create the keys within.
+
 The `key` block supports the following:
 
 * `path` - (Required) This is the path in Consul that should be written to.

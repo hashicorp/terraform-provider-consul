@@ -10,54 +10,58 @@ import (
 )
 
 func TestAccConsulNode_basic(t *testing.T) {
+	providers, client := startTestServer(t)
+
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() {},
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckConsulNodeDestroy,
+		Providers:    providers,
+		CheckDestroy: testAccCheckConsulNodeDestroy(client),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccConsulNodeConfigBasic,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckConsulNodeExists(),
+					testAccCheckConsulNodeExists(client),
 					testAccCheckConsulNodeValue("consul_node.foo", "address", "127.0.0.1"),
 					testAccCheckConsulNodeValue("consul_node.foo", "name", "foo"),
 				),
 			},
 			{
-				PreConfig: testAccRemoveConsulNode(t),
+				PreConfig: testAccRemoveConsulNode(t, client),
 				Config:    testAccConsulNodeConfigBasic,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckConsulNodeExists(),
+					testAccCheckConsulNodeExists(client),
 					testAccCheckConsulNodeValue("consul_node.foo", "address", "127.0.0.1"),
 					testAccCheckConsulNodeValue("consul_node.foo", "name", "foo"),
 				),
 			},
 			{
 				// consul_node must detect changes made to its address...
-				PreConfig: testAccChangeConsulNodeAddress(t),
+				PreConfig: testAccChangeConsulNodeAddress(t, client),
 				Config:    testAccConsulNodeConfigBasic,
-				Check:     testAccConsulNodeDetectAttributeChanges,
+				Check:     testAccConsulNodeDetectAttributeChanges(client),
 			},
 			{
 				// ... and to its meta information
-				PreConfig: testAccChangeConsulNodeAddressMeta(t),
+				PreConfig: testAccChangeConsulNodeAddressMeta(t, client),
 				Config:    testAccConsulNodeConfigBasic,
-				Check:     testAccConsulNodeDetectAttributeChanges,
+				Check:     testAccConsulNodeDetectAttributeChanges(client),
 			},
 		},
 	})
 }
 
 func TestAccConsulNode_nodeMeta(t *testing.T) {
+	providers, client := startTestServer(t)
+
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() {},
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckConsulNodeDestroy,
+		Providers:    providers,
+		CheckDestroy: testAccCheckConsulNodeDestroy(client),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccConsulNodeConfigNodeMeta,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckConsulNodeExists(),
+					testAccCheckConsulNodeExists(client),
 					testAccCheckConsulNodeValue("consul_node.foo", "address", "127.0.0.1"),
 					testAccCheckConsulNodeValue("consul_node.foo", "name", "foo"),
 					testAccCheckConsulNodeValue("consul_node.foo", "meta.%", "3"),
@@ -69,7 +73,7 @@ func TestAccConsulNode_nodeMeta(t *testing.T) {
 			{
 				Config: testAccConsulNodeConfigNodeMeta_Update,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckConsulNodeExists(),
+					testAccCheckConsulNodeExists(client),
 					testAccCheckConsulNodeValue("consul_node.foo", "address", "127.0.0.1"),
 					testAccCheckConsulNodeValue("consul_node.foo", "name", "foo"),
 					testAccCheckConsulNodeValue("consul_node.foo", "meta.%", "2"),
@@ -83,16 +87,17 @@ func TestAccConsulNode_nodeMeta(t *testing.T) {
 }
 
 func TestAccConsulNode_datacenter(t *testing.T) {
+	providers, client := startRemoteDatacenterTestServer(t)
+
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccRemoteDatacenterPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckConsulNodeDestroy,
+		Providers:    providers,
+		CheckDestroy: testAccCheckConsulNodeDestroy(client),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccConsulNodeConfigDatacenter,
 				Check: func(s *terraform.State) error {
 					test := func(dc string) error {
-						c := getTestClient(testAccProvider.Meta()).Catalog()
+						c := client.Catalog()
 						opts := &consulapi.QueryOptions{
 							Datacenter: dc,
 						}
@@ -118,25 +123,25 @@ func TestAccConsulNode_datacenter(t *testing.T) {
 	})
 }
 
-func testAccCheckConsulNodeDestroy(s *terraform.State) error {
-	client := getTestClient(testAccProvider.Meta())
-	catalog := client.Catalog()
-	qOpts := consulapi.QueryOptions{}
-	nodes, _, err := catalog.Nodes(&qOpts)
-	if err != nil {
-		return fmt.Errorf("Could not retrieve services: %#v", err)
-	}
-	for i := range nodes {
-		if nodes[i].Node == "foo" {
-			return fmt.Errorf("Node still exists: %#v", "foo")
+func testAccCheckConsulNodeDestroy(client *consulapi.Client) func(s *terraform.State) error {
+	return func(s *terraform.State) error {
+		catalog := client.Catalog()
+		qOpts := consulapi.QueryOptions{}
+		nodes, _, err := catalog.Nodes(&qOpts)
+		if err != nil {
+			return fmt.Errorf("Could not retrieve services: %#v", err)
 		}
+		for i := range nodes {
+			if nodes[i].Node == "foo" {
+				return fmt.Errorf("Node still exists: %#v", "foo")
+			}
+		}
+		return nil
 	}
-	return nil
 }
 
-func testAccCheckConsulNodeExists() resource.TestCheckFunc {
+func testAccCheckConsulNodeExists(client *consulapi.Client) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		client := getTestClient(testAccProvider.Meta())
 		catalog := client.Catalog()
 		qOpts := consulapi.QueryOptions{}
 		nodes, _, err := catalog.Nodes(&qOpts)
@@ -186,9 +191,8 @@ func testAccCheckConsulNodeValueRemoved(n, attr string) resource.TestCheckFunc {
 	}
 }
 
-func testAccRemoveConsulNode(t *testing.T) func() {
+func testAccRemoveConsulNode(t *testing.T, client *consulapi.Client) func() {
 	return func() {
-		client := getTestClient(testAccProvider.Meta())
 		catalog := client.Catalog()
 		wOpts := &consulapi.WriteOptions{}
 		dereg := &consulapi.CatalogDeregistration{
@@ -201,9 +205,9 @@ func testAccRemoveConsulNode(t *testing.T) func() {
 	}
 }
 
-func testAccChangeConsulNodeAddress(t *testing.T) func() {
+func testAccChangeConsulNodeAddress(t *testing.T, client *consulapi.Client) func() {
 	return func() {
-		catalog := getTestClient(testAccProvider.Meta()).Catalog()
+		catalog := client.Catalog()
 		wOpts := &consulapi.WriteOptions{}
 
 		registration := &consulapi.CatalogRegistration{
@@ -220,9 +224,9 @@ func testAccChangeConsulNodeAddress(t *testing.T) func() {
 		}
 	}
 }
-func testAccChangeConsulNodeAddressMeta(t *testing.T) func() {
+func testAccChangeConsulNodeAddressMeta(t *testing.T, client *consulapi.Client) func() {
 	return func() {
-		catalog := getTestClient(testAccProvider.Meta()).Catalog()
+		catalog := client.Catalog()
 		wOpts := &consulapi.WriteOptions{}
 
 		registration := &consulapi.CatalogRegistration{
@@ -237,22 +241,24 @@ func testAccChangeConsulNodeAddressMeta(t *testing.T) func() {
 	}
 }
 
-func testAccConsulNodeDetectAttributeChanges(*terraform.State) error {
-	catalog := getTestClient(testAccProvider.Meta()).Catalog()
-	n, _, err := catalog.Node("foo", &consulapi.QueryOptions{})
-	if err != nil {
-		return fmt.Errorf("Failed to read 'foo': %v", err)
+func testAccConsulNodeDetectAttributeChanges(client *consulapi.Client) func(*terraform.State) error {
+	return func(s *terraform.State) error {
+		catalog := client.Catalog()
+		n, _, err := catalog.Node("foo", &consulapi.QueryOptions{})
+		if err != nil {
+			return fmt.Errorf("Failed to read 'foo': %v", err)
+		}
+		if n == nil {
+			return fmt.Errorf("No 'foo' node found")
+		}
+		if n.Node.Address != "127.0.0.1" {
+			return fmt.Errorf("Wrong address: %s", n.Node.Address)
+		}
+		if len(n.Node.Meta) != 1 || n.Node.Meta["foo"] != "bar" {
+			return fmt.Errorf("Wrong node meta: %v", n.Node.Meta)
+		}
+		return nil
 	}
-	if n == nil {
-		return fmt.Errorf("No 'foo' node found")
-	}
-	if n.Node.Address != "127.0.0.1" {
-		return fmt.Errorf("Wrong address: %s", n.Node.Address)
-	}
-	if len(n.Node.Meta) != 1 || n.Node.Meta["foo"] != "bar" {
-		return fmt.Errorf("Wrong node meta: %v", n.Node.Meta)
-	}
-	return nil
 }
 
 const testAccConsulNodeConfigBasic = `

@@ -42,7 +42,7 @@ func resourceConsulCertificateAuthorityCreate(d *schema.ResourceData, meta inter
 	}
 
 	if _, err := client.Connect().CASetConfig(caConfig, wOpts); err != nil {
-		return fmt.Errorf("Failed to set CA configuration: %v", err)
+		return fmt.Errorf("failed to set CA configuration: %v", err)
 	}
 
 	d.SetId("consul-ca")
@@ -55,16 +55,13 @@ func resourceConsulCertificateAuthorityRead(d *schema.ResourceData, meta interfa
 
 	conf, _, err := client.Connect().CAGetConfig(qOpts)
 	if err != nil {
-		return fmt.Errorf("Failed to get CA configuration: %v", err)
+		return fmt.Errorf("failed to get CA configuration: %v", err)
 	}
 
-	if err = d.Set("connect_provider", conf.Provider); err != nil {
-		return fmt.Errorf("Failed to set 'connect_provider': %v", err)
-	}
+	sw := newStateWriter(d)
 
-	if err = d.Set("config", conf.Config); err != nil {
-		return fmt.Errorf("Failed to set 'config': %v", err)
-	}
+	sw.set("connect_provider", conf.Provider)
+	sw.set("config", conf.Config)
 
-	return nil
+	return sw.error()
 }

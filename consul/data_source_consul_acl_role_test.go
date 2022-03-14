@@ -8,13 +8,14 @@ import (
 )
 
 func TestAccDataACLRole_basic(t *testing.T) {
+	providers, _ := startTestServer(t)
+
 	resource.Test(t, resource.TestCase{
-		PreCheck:  func() { testAccPreCheck(t) },
-		Providers: testAccProviders,
+		Providers: providers,
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccDataSourceACLRoleConfigNotFound,
-				ExpectError: regexp.MustCompile("Could not find role 'not-found'"),
+				ExpectError: regexp.MustCompile("could not find role 'not-found'"),
 			},
 			{
 				Config: testAccDataSourceACLRoleConfigBasic,
@@ -27,7 +28,7 @@ func TestAccDataACLRole_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("data.consul_acl_role.test", "node_identities.0.node_name", "hello"),
 					resource.TestCheckResourceAttr("data.consul_acl_role.test", "policies.#", "1"),
 					resource.TestCheckResourceAttrSet("data.consul_acl_role.test", "policies.0.id"),
-					resource.TestCheckResourceAttr("data.consul_acl_role.test", "policies.0.name", "test"),
+					resource.TestCheckResourceAttr("data.consul_acl_role.test", "policies.0.name", "test-role"),
 					resource.TestCheckResourceAttr("data.consul_acl_role.test", "service_identities.#", "1"),
 					resource.TestCheckResourceAttr("data.consul_acl_role.test", "service_identities.0.datacenters.#", "0"),
 					resource.TestCheckResourceAttr("data.consul_acl_role.test", "service_identities.0.service_name", "foo"),
@@ -38,8 +39,10 @@ func TestAccDataACLRole_basic(t *testing.T) {
 }
 
 func TestAccDataACLRole_namespaceCE(t *testing.T) {
+	providers, _ := startTestServer(t)
+
 	resource.Test(t, resource.TestCase{
-		Providers: testAccProviders,
+		Providers: providers,
 		PreCheck:  func() { skipTestOnConsulEnterpriseEdition(t) },
 		Steps: []resource.TestStep{
 			{
@@ -51,8 +54,10 @@ func TestAccDataACLRole_namespaceCE(t *testing.T) {
 }
 
 func TestAccDataACLRole_namespaceEE(t *testing.T) {
+	providers, _ := startTestServer(t)
+
 	resource.Test(t, resource.TestCase{
-		Providers: testAccProviders,
+		Providers: providers,
 		PreCheck:  func() { skipTestOnConsulCommunityEdition(t) },
 		Steps: []resource.TestStep{
 			{
@@ -70,13 +75,13 @@ data "consul_acl_role" "test" {
 
 const testAccDataSourceACLRoleConfigBasic = `
 resource "consul_acl_policy" "test-read" {
-	name = "test"
+	name = "test-role"
 	rules = "node \"\" { policy = \"read\" }"
 	datacenters = [ "dc1" ]
 }
 
 resource "consul_acl_role" "test" {
-	name = "foo"
+	name      = "foo"
 	description = "bar"
 
 	policies = [

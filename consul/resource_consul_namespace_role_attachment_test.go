@@ -9,9 +9,10 @@ import (
 )
 
 func TestAccConsulNamespaceRoleAttachment(t *testing.T) {
+	providers, client := startTestServer(t)
+
 	testRole := func(name string) func(*terraform.State) error {
 		return func(s *terraform.State) error {
-			client := getTestClient(testAccProvider.Meta())
 			namespace, _, err := client.Namespaces().Read("testroleattachment", nil)
 			if err != nil {
 				return fmt.Errorf("failed to read namespace testroleattachment: %s", err)
@@ -30,7 +31,7 @@ func TestAccConsulNamespaceRoleAttachment(t *testing.T) {
 	}
 
 	resource.Test(t, resource.TestCase{
-		Providers: testAccProviders,
+		Providers: providers,
 		PreCheck:  func() { skipTestOnConsulCommunityEdition(t) },
 		Steps: []resource.TestStep{
 			{
@@ -63,7 +64,7 @@ func TestAccConsulNamespaceRoleAttachment(t *testing.T) {
 
 const testResourceNamespaceRoleConfig = `
 resource "consul_namespace" "test" {
-	name = "testroleattachment"
+	name      = "testroleattachment"
 
 	lifecycle {
 		ignore_changes = [role_defaults]
@@ -71,7 +72,7 @@ resource "consul_namespace" "test" {
 }
 
 resource "consul_acl_role" "test" {
-	name = "role"
+	name      = "role"
 
 	service_identities {
         service_name = "foo"
@@ -94,7 +95,7 @@ resource "consul_namespace" "test" {
 }
 
 resource "consul_acl_role" "test2" {
-	name = "role2"
+	name      = "role2"
 
 	service_identities {
         service_name = "foo"

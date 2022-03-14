@@ -48,6 +48,13 @@ func resourceConsulNode() *schema.Resource {
 				Optional:  true,
 				Sensitive: true,
 			},
+
+			"partition": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				ForceNew:    true,
+				Description: "The partition the node is associated with.",
+			},
 		},
 	}
 }
@@ -74,13 +81,13 @@ func resourceConsulNodeCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if _, err := catalog.Register(registration, wOpts); err != nil {
-		return fmt.Errorf("Failed to register Consul catalog node with name '%s' at address '%s' in %s: %v",
+		return fmt.Errorf("failed to register Consul catalog node with name '%s' at address '%s' in %s: %v",
 			name, address, wOpts.Datacenter, err)
 	}
 
 	// Update the resource
 	if _, _, err := catalog.Node(name, qOpts); err != nil {
-		return fmt.Errorf("Failed to read Consul catalog node with name '%s' at address '%s' in %s: %v",
+		return fmt.Errorf("failed to read Consul catalog node with name '%s' at address '%s' in %s: %v",
 			name, address, qOpts.Datacenter, err)
 	} else {
 		d.Set("datacenter", qOpts.Datacenter)
@@ -99,7 +106,7 @@ func resourceConsulNodeRead(d *schema.ResourceData, meta interface{}) error {
 
 	n, _, err := catalog.Node(name, qOpts)
 	if err != nil {
-		return fmt.Errorf("Failed to get name '%s' from Consul catalog: %v", name, err)
+		return fmt.Errorf("failed to get name '%s' from Consul catalog: %v", name, err)
 	}
 
 	if n == nil {
@@ -107,13 +114,13 @@ func resourceConsulNodeRead(d *schema.ResourceData, meta interface{}) error {
 		return nil
 	}
 
-	if err = d.Set("address", n.Node.Address); err != nil {
-		return fmt.Errorf("Failed to set 'address': %v", err)
-	}
-	if err = d.Set("meta", n.Node.Meta); err != nil {
-		return fmt.Errorf("Failed to set 'meta': %v", err)
-	}
-	return nil
+	sw := newStateWriter(d)
+
+	sw.set("address", n.Node.Address)
+	sw.set("meta", n.Node.Meta)
+	sw.set("partition", n.Node.Partition)
+
+	return sw.error()
 }
 
 func resourceConsulNodeDelete(d *schema.ResourceData, meta interface{}) error {
@@ -130,7 +137,7 @@ func resourceConsulNodeDelete(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if _, err := catalog.Deregister(&deregistration, wOpts); err != nil {
-		return fmt.Errorf("Failed to deregister Consul catalog node with name '%s' at address '%s' in %s: %v",
+		return fmt.Errorf("failed to deregister Consul catalog node with name '%s' at address '%s' in %s: %v",
 			name, address, wOpts.Datacenter, err)
 	}
 

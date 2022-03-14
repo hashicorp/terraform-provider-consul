@@ -1,7 +1,6 @@
 package consul
 
 import (
-	"encoding/json"
 	"fmt"
 
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
@@ -19,6 +18,11 @@ func dataSourceConsulACLAuthMethod() *schema.Resource {
 			},
 
 			"namespace": {
+				Type:     schema.TypeString,
+				Optional: true,
+			},
+
+			"partition": {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
@@ -90,27 +94,18 @@ func dataSourceConsulACLAuthMethodRead(d *schema.ResourceData, meta interface{})
 
 	authMethod, _, err := client.ACL().AuthMethodRead(name, qOpts)
 	if err != nil {
-		return fmt.Errorf("Failed to get auth-method: %v", err)
+		return fmt.Errorf("failed to get auth-method: %v", err)
 	}
 	if authMethod == nil {
-		return fmt.Errorf("Could not find auth-method '%s'", name)
+		return fmt.Errorf("could not find auth-method '%s'", name)
 	}
 
 	d.SetId(authMethod.Name)
-	if err = d.Set("type", authMethod.Type); err != nil {
-		return fmt.Errorf("Failed to set 'type': %v", err)
-	}
-	if err = d.Set("description", authMethod.Description); err != nil {
-		return fmt.Errorf("Failed to set 'description': %v", err)
-	}
 
-	configJson, err := json.Marshal(authMethod.Config)
-	if err != nil {
-		return fmt.Errorf("Failed to marshal 'config_json': %v", err)
-	}
-	if err = d.Set("config_json", string(configJson)); err != nil {
-		return fmt.Errorf("Failed to set 'config_json': %v", err)
-	}
+	sw := newStateWriter(d)
+	sw.set("type", authMethod.Type)
+	sw.set("description", authMethod.Description)
+	sw.setJson("config_json", authMethod.Config)
 
 	if err = d.Set("config", authMethod.Config); err != nil {
 		// When a complex configuration is used we can fail to set config as it
@@ -119,22 +114,14 @@ func dataSourceConsulACLAuthMethodRead(d *schema.ResourceData, meta interface{})
 		// succeeded to set that and 'config' is deprecated, we can just use
 		// an empty placeholder value and ignore the error.
 		if c := d.Get("config_json").(string); c != "" {
-			if err = d.Set("config", map[string]interface{}{}); err != nil {
-				return fmt.Errorf("Failed to set 'config': %v", err)
-			}
+			sw.set("config", map[string]interface{}{})
 		} else {
-			return fmt.Errorf("Failed to set 'config': %v", err)
+			return fmt.Errorf("failed to set 'config': %v", err)
 		}
 	}
-	if err = d.Set("display_name", authMethod.DisplayName); err != nil {
-		return fmt.Errorf("Failed to set 'display_name': %v", err)
-	}
-	if err = d.Set("max_token_ttl", authMethod.MaxTokenTTL.String()); err != nil {
-		return fmt.Errorf("Failed to set 'max_token_ttl': %v", err)
-	}
-	if err = d.Set("token_locality", authMethod.TokenLocality); err != nil {
-		return fmt.Errorf("Failed to set 'token_locality': %v", err)
-	}
+	sw.set("display_name", authMethod.DisplayName)
+	sw.set("max_token_ttl", authMethod.MaxTokenTTL.String())
+	sw.set("token_locality", authMethod.TokenLocality)
 
 	rules := make([]interface{}, 0)
 	for _, rule := range authMethod.NamespaceRules {
@@ -143,9 +130,7 @@ func dataSourceConsulACLAuthMethodRead(d *schema.ResourceData, meta interface{})
 			"bind_namespace": rule.BindNamespace,
 		})
 	}
-	if err = d.Set("namespace_rule", rules); err != nil {
-		return fmt.Errorf("Failed to set 'namespace_rule': %v", err)
-	}
+	sw.set("namespace_rule", rules)
 
-	return nil
+	return sw.error()
 }

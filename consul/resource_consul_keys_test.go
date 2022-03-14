@@ -10,15 +10,16 @@ import (
 )
 
 func TestAccConsulKeys_basic(t *testing.T) {
+	providers, client := startTestServer(t)
+
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckConsulKeysDestroy,
+		Providers:    providers,
+		CheckDestroy: testAccCheckConsulKeysDestroy(client),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccConsulKeysConfig,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckConsulKeysExists(),
+					testAccCheckConsulKeysExists(client),
 					testAccCheckConsulKeysValue("consul_keys.app", "enabled", "true"),
 					testAccCheckConsulKeysValue("consul_keys.app", "set", "acceptance"),
 					testAccCheckConsulKeysValue("consul_keys.app", "remove_one", "hello"),
@@ -28,7 +29,7 @@ func TestAccConsulKeys_basic(t *testing.T) {
 			{
 				Config: testAccConsulKeysConfig_Update,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckConsulKeysExists(),
+					testAccCheckConsulKeysExists(client),
 					testAccCheckConsulKeysValue("consul_keys.app", "enabled", "true"),
 					testAccCheckConsulKeysValue("consul_keys.app", "set", "acceptanceUpdated"),
 					testAccCheckConsulKeysRemoved("consul_keys.app", "remove_one"),
@@ -39,21 +40,24 @@ func TestAccConsulKeys_basic(t *testing.T) {
 }
 
 func TestAccConsulKeys_EmptyValue(t *testing.T) {
+	providers, client := startTestServer(t)
+
 	resource.Test(t, resource.TestCase{
-		PreCheck:  func() { testAccPreCheck(t) },
-		Providers: testAccProviders,
+		Providers: providers,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccConsulKeysEmptyValue,
-				Check:  testAccCheckConsulKeysExists(),
+				Check:  testAccCheckConsulKeysExists(client),
 			},
 		},
 	})
 }
 
 func TestAccConsulKeys_NamespaceCE(t *testing.T) {
+	providers, _ := startTestServer(t)
+
 	resource.Test(t, resource.TestCase{
-		Providers: testAccProviders,
+		Providers: providers,
 		PreCheck:  func() { skipTestOnConsulEnterpriseEdition(t) },
 		Steps: []resource.TestStep{
 			{
@@ -65,8 +69,10 @@ func TestAccConsulKeys_NamespaceCE(t *testing.T) {
 }
 
 func TestAccConsulKeys_NamespaceEE(t *testing.T) {
+	providers, _ := startTestServer(t)
+
 	resource.Test(t, resource.TestCase{
-		Providers: testAccProviders,
+		Providers: providers,
 		PreCheck:  func() { skipTestOnConsulCommunityEdition(t) },
 		Steps: []resource.TestStep{
 			{
@@ -77,35 +83,36 @@ func TestAccConsulKeys_NamespaceEE(t *testing.T) {
 }
 
 func TestAccConsulKeys_Datacenter(t *testing.T) {
+	providers, client := startRemoteDatacenterTestServer(t)
+
 	resource.Test(t, resource.TestCase{
-		Providers: testAccProviders,
-		PreCheck:  func() { testAccRemoteDatacenterPreCheck(t) },
+		Providers: providers,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccConsulKeysDatacenter,
-				Check:  testAccCheckConsulKeysDatacenter,
+				Check:  testAccCheckConsulKeysDatacenter(client),
 			},
 		},
 	})
 }
 
-func testAccCheckConsulKeysDestroy(s *terraform.State) error {
-	client := getTestClient(testAccProvider.Meta())
-	kv := client.KV()
-	opts := &consulapi.QueryOptions{Datacenter: "dc1"}
-	pair, _, err := kv.Get("test/set", opts)
-	if err != nil {
-		return err
+func testAccCheckConsulKeysDestroy(client *consulapi.Client) func(s *terraform.State) error {
+	return func(s *terraform.State) error {
+		kv := client.KV()
+		opts := &consulapi.QueryOptions{Datacenter: "dc1"}
+		pair, _, err := kv.Get("test/set", opts)
+		if err != nil {
+			return err
+		}
+		if pair != nil {
+			return fmt.Errorf("Key still exists: %#v", pair)
+		}
+		return nil
 	}
-	if pair != nil {
-		return fmt.Errorf("Key still exists: %#v", pair)
-	}
-	return nil
 }
 
-func testAccCheckConsulKeysExists() resource.TestCheckFunc {
+func testAccCheckConsulKeysExists(client *consulapi.Client) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		client := getTestClient(testAccProvider.Meta())
 		kv := client.KV()
 		opts := &consulapi.QueryOptions{Datacenter: "dc1"}
 		pair, _, err := kv.Get("test/set", opts)
@@ -153,9 +160,9 @@ func testAccCheckConsulKeysRemoved(n, attr string) resource.TestCheckFunc {
 	}
 }
 
-func testAccCheckConsulKeysDatacenter(s *terraform.State) error {
+func testAccCheckConsulKeysDatacenter(client *consulapi.Client) func(s *terraform.State) error {
 	test := func(dc string) error {
-		kv := getTestClient(testAccProvider.Meta()).KV()
+		kv := client.KV()
 		opts := &consulapi.QueryOptions{
 			Datacenter: dc,
 		}
@@ -173,10 +180,12 @@ func testAccCheckConsulKeysDatacenter(s *terraform.State) error {
 		return nil
 	}
 
-	if err := test("dc1"); err != nil {
-		return err
+	return func(s *terraform.State) error {
+		if err := test("dc1"); err != nil {
+			return err
+		}
+		return test("dc2")
 	}
-	return test("dc2")
 }
 
 const testAccConsulKeysConfig = `

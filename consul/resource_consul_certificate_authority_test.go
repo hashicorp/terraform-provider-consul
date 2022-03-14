@@ -7,9 +7,10 @@ import (
 )
 
 func TestAccConsulCertificateAuthority(t *testing.T) {
+	providers, _ := startTestServer(t)
+
 	resource.Test(t, resource.TestCase{
-		PreCheck:  func() { testAccPreCheck(t) },
-		Providers: testAccProviders,
+		Providers: providers,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccConsulCertificateAuthorityConfig,

@@ -1,21 +1,16 @@
 package consul
 
 import (
-	"os"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 )
 
 func TestAccDataConsulDatacenters_basic(t *testing.T) {
+	providers, _ := startTestServer(t)
+
 	resource.Test(t, resource.TestCase{
-		PreCheck: func() {
-			testAccPreCheck(t)
-			if os.Getenv("TEST_REMOTE_DATACENTER") != "" {
-				t.Skip("Test skipped. Unset TEST_REMOTE_DATACENTER to run this test.")
-			}
-		},
-		Providers: testAccProviders,
+		Providers: providers,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDataConsulDatacentersConfig,
@@ -29,11 +24,10 @@ func TestAccDataConsulDatacenters_basic(t *testing.T) {
 }
 
 func TestAccDataConsulDatacenters_multipleDatacenters(t *testing.T) {
+	providers, _ := startRemoteDatacenterTestServer(t)
+
 	resource.Test(t, resource.TestCase{
-		PreCheck: func() {
-			testAccRemoteDatacenterPreCheck(t)
-		},
-		Providers: testAccProviders,
+		Providers: providers,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDataConsulDatacentersConfig,

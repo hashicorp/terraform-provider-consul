@@ -4,20 +4,23 @@ import (
 	"fmt"
 	"testing"
 
+	consulapi "github.com/hashicorp/consul/api"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 )
 
 func TestAccConsulAgentService_basic(t *testing.T) {
+	providers, client := startTestServer(t)
+
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() {},
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckConsulAgentServiceDestroy,
+		Providers:    providers,
+		CheckDestroy: testAccCheckConsulAgentServiceDestroy(client),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccConsulAgentServiceConfig,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckConsulAgentServiceExists(),
+					testAccCheckConsulAgentServiceExists(client),
 					testAccCheckConsulAgentServiceValue("consul_agent_service.app", "address", "www.google.com"),
 					testAccCheckConsulAgentServiceValue("consul_agent_service.app", "id", "google"),
 					testAccCheckConsulAgentServiceValue("consul_agent_service.app", "name", "google"),
@@ -31,23 +34,23 @@ func TestAccConsulAgentService_basic(t *testing.T) {
 	})
 }
 
-func testAccCheckConsulAgentServiceDestroy(s *terraform.State) error {
-	client := getTestClient(testAccProvider.Meta())
-	agent := client.Agent()
-	services, err := agent.Services()
-	if err != nil {
-		return fmt.Errorf("Could not retrieve services: %#v", err)
+func testAccCheckConsulAgentServiceDestroy(client *consulapi.Client) func(s *terraform.State) error {
+	return func(s *terraform.State) error {
+		agent := client.Agent()
+		services, err := agent.Services()
+		if err != nil {
+			return fmt.Errorf("Could not retrieve services: %#v", err)
+		}
+		_, ok := services["google"]
+		if ok {
+			return fmt.Errorf("Service still exists: %#v", "google")
+		}
+		return nil
 	}
-	_, ok := services["google"]
-	if ok {
-		return fmt.Errorf("Service still exists: %#v", "google")
-	}
-	return nil
 }
 
-func testAccCheckConsulAgentServiceExists() resource.TestCheckFunc {
+func testAccCheckConsulAgentServiceExists(client *consulapi.Client) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		client := getTestClient(testAccProvider.Meta())
 		agent := client.Agent()
 		services, err := agent.Services()
 		if err != nil {

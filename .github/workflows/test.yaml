@@ -10,12 +10,10 @@ jobs:
     env:
       GO111MODULE: on
       GOFLAGS: -mod=vendor
-      CONSUL_HTTP_TOKEN: master-token
-      CONSUL_HTTP_ADDR: http://localhost:8500
     strategy:
       fail-fast: false
       matrix:
-        go-version: [1.15.x, 1.16.x]
+        go-version: [1.16.x, 1.17.x]
         os: [ubuntu-latest]
     runs-on: ${{ matrix.os }}
     steps:
@@ -31,55 +29,8 @@ jobs:
       run: docker run -v $PWD:/src docker.mirror.hashicorp.services/bflad/tfproviderlint -S006 -S022 -S023 ./...
     - name: Run OSS acceptance tests
       run: |
-        docker run --rm \
-             -d \
-             --name consul-test \
-             -v $PWD/consul_test.hcl:/consul_test.hcl:ro \
-             -p 8500:8500 \
-             docker.mirror.hashicorp.services/consul:latest consul agent -dev -config-file consul_test.hcl -client=0.0.0.0
+        curl -LO https://releases.hashicorp.com/consul/1.11.4/consul_1.11.4_linux_amd64.zip
+        sudo unzip consul_1.11.4_linux_amd64.zip consul -d /usr/local/bin
         make testacc TESTARGS="-count=1"
-        docker stop consul-test
-    # - name: Run enterprise acceptance tests
-    #   run: |
-    #     docker run --rm \
-    #          -d \
-    #          --name consul-test \
-    #          -v $PWD/consul_test.hcl:/consul_test.hcl:ro \
-    #          -p 8500:8500 \
-    #          docker.mirror.hashicorp.services/hashicorp/consul-enterprise:latest consul agent -dev -config-file consul_test.hcl -client=0.0.0.0
-    #     make testacc TESTARGS="-count=1"
-    #     docker stop consul-test
-    - name: Run OSS dc tests
-      run: |
-        docker run --rm \
-             -d \
-             --name consul-test-dc2 \
-             -v $PWD/consul_test_dc2.hcl:/consul_test_dc2.hcl:ro \
-             --net host \
-             docker.mirror.hashicorp.services/consul:latest consul agent -dev -config-file consul_test_dc2.hcl
-        docker run --rm \
-             -d \
-             --name consul-test \
-             -v $PWD/consul_test.hcl:/consul_test.hcl:ro \
-             --net host \
-             docker.mirror.hashicorp.services/consul:latest consul agent -dev -config-file consul_test.hcl
-        TEST_REMOTE_DATACENTER=1 make testacc TESTARGS="-count=1"
-        docker stop consul-test consul-test-dc2
-    # - name: Run enterprise dc tests
-    #   run: |
-    #     docker run --rm \
-    #          -d \
-    #          --name consul-test-dc2 \
-    #          -v $PWD/consul_test_dc2.hcl:/consul_test_dc2.hcl:ro \
-    #          --net host \
-    #          docker.mirror.hashicorp.services/hashicorp/consul-enterprise:latest consul agent -dev -config-file consul_test_dc2.hcl
-    #     docker run --rm \
-    #          -d \
-    #          --name consul-test \
-    #          -v $PWD/consul_test.hcl:/consul_test.hcl:ro \
-    #          --net host \
-    #          docker.mirror.hashicorp.services/hashicorp/consul-enterprise:latest consul agent -dev -config-file consul_test.hcl
-    #     TEST_REMOTE_DATACENTER=1 make testacc TESTARGS="-count=1"
-    #     docker stop consul-test consul-test-dc2
     - name: Run go vet
       run: make vet

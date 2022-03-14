@@ -2,7 +2,6 @@ package consul
 
 import (
 	"fmt"
-	"os"
 	"regexp"
 	"testing"
 
@@ -10,39 +9,31 @@ import (
 )
 
 func TestAccConsulConfigEntry_basic(t *testing.T) {
-	// This needs to be called before serverIsConsulCommunityEdition() as the
-	// test provider won't be initialized for unit tests.
-	if os.Getenv(resource.TestEnvVar) == "" {
-		t.Skip(fmt.Sprintf(
-			"Acceptance tests skipped unless env '%s' set",
-			resource.TestEnvVar))
-		return
-	}
+	providers, _ := startTestServer(t)
 
 	// Expected values for Consul Community Edition
 	extraConf := ""
 	configJSONServiceDefaults := "{\"Expose\":{},\"MeshGateway\":{},\"Protocol\":\"https\",\"TransparentProxy\":{}}"
 	configJSONProxyDefaults := "{\"Config\":{\"foo\":\"bar\"},\"Expose\":{},\"MeshGateway\":{},\"TransparentProxy\":{}}"
-	configJSONServiceRouter := "{\"Routes\":[{\"Destination\":{\"Namespace\":\"default\",\"Service\":\"admin\"},\"Match\":{\"HTTP\":{\"PathPrefix\":\"/admin\"}}}]}"
+	configJSONServiceRouter := "{\"Routes\":[{\"Destination\":{\"Namespace\":\"default\",\"Partition\":\"default\",\"Service\":\"admin\"},\"Match\":{\"HTTP\":{\"PathPrefix\":\"/admin\"}}}]}"
 	configJSONServiceSplitter := "{\"Splits\":[{\"ServiceSubset\":\"v1\",\"Weight\":90},{\"ServiceSubset\":\"v2\",\"Weight\":10}]}"
 	configJSONServiceResolver := "{\"DefaultSubset\":\"v1\",\"Subsets\":{\"v1\":{\"Filter\":\"Service.Meta.version == v1\"},\"v2\":{\"Filter\":\"Service.Meta.version == v2\"}}}"
 	configJSONIngressGateway := "{\"Listeners\":[{\"Port\":8000,\"Protocol\":\"http\",\"Services\":[{\"Hosts\":null,\"Name\":\"*\"}]}],\"TLS\":{\"Enabled\":true}}"
 	configJSONTerminatingGateway := "{\"Services\":[{\"Name\":\"billing\"}]}"
 
 	if !serverIsConsulCommunityEdition(t) {
-		extraConf = `Namespace: "default"`
-		configJSONServiceDefaults = "{\"Expose\":{},\"MeshGateway\":{},\"Protocol\":\"https\"}"
-		configJSONProxyDefaults = "{\"Config\":{\"foo\":\"bar\"},\"Expose\":{},\"MeshGateway\":{}}"
-		configJSONServiceRouter = "{\"Routes\":[{\"Destination\":{\"Namespace\":\"default\",\"Service\":\"admin\"},\"Match\":{\"HTTP\":{\"PathPrefix\":\"/admin\"}}}]}"
-		configJSONServiceSplitter = "{\"Splits\":[{\"ServiceSubset\":\"v1\",\"Weight\":90},{\"ServiceSubset\":\"v2\",\"Weight\":10}]}"
-		configJSONServiceResolver = "{\"DefaultSubset\":\"v1\",\"Subsets\":{\"v1\":{\"Filter\":\"Service.Meta.version == v1\"},\"v2\":{\"Filter\":\"Service.Meta.version == v2\"}}}"
-		configJSONIngressGateway = "{\"Listeners\":[{\"Port\":8000,\"Protocol\":\"http\",\"Services\":[{\"Hosts\":null,\"Name\":\"*\",\"Namespace\":\"default\"}]}],\"TLS\":{\"Enabled\":true}}"
-		configJSONTerminatingGateway = "{\"Services\":[{\"Name\":\"billing\",\"Namespace\":\"default\"}]}"
+		extraConf = `Namespace: "default", Partition: "default"`
+		configJSONServiceDefaults = "{\"Expose\":{},\"MeshGateway\":{},\"Partition\":\"default\",\"Protocol\":\"https\",\"TransparentProxy\":{}}"
+		configJSONProxyDefaults = "{\"Config\":{\"foo\":\"bar\"},\"Expose\":{},\"MeshGateway\":{},\"Partition\":\"default\",\"TransparentProxy\":{}}"
+		configJSONServiceRouter = "{\"Partition\":\"default\",\"Routes\":[{\"Destination\":{\"Namespace\":\"default\",\"Partition\":\"default\",\"Service\":\"admin\"},\"Match\":{\"HTTP\":{\"PathPrefix\":\"/admin\"}}}]}"
+		configJSONServiceSplitter = "{\"Partition\":\"default\",\"Splits\":[{\"ServiceSubset\":\"v1\",\"Weight\":90},{\"ServiceSubset\":\"v2\",\"Weight\":10}]}"
+		configJSONServiceResolver = "{\"DefaultSubset\":\"v1\",\"Partition\":\"default\",\"Subsets\":{\"v1\":{\"Filter\":\"Service.Meta.version == v1\"},\"v2\":{\"Filter\":\"Service.Meta.version == v2\"}}}"
+		configJSONIngressGateway = "{\"Listeners\":[{\"Port\":8000,\"Protocol\":\"http\",\"Services\":[{\"Hosts\":null,\"Name\":\"*\",\"Namespace\":\"default\",\"Partition\":\"default\"}]}],\"Partition\":\"default\",\"TLS\":{\"Enabled\":true}}"
+		configJSONTerminatingGateway = "{\"Partition\":\"default\",\"Services\":[{\"Name\":\"billing\",\"Namespace\":\"default\"}]}"
 	}
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:  func() { testAccPreCheck(t) },
-		Providers: testAccProviders,
+		Providers: providers,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccConsulConfigEntry_ServiceDefaults(extraConf),
@@ -54,17 +45,6 @@ func TestAccConsulConfigEntry_basic(t *testing.T) {
 			},
 			{
 				Config: testAccConsulConfigEntry_ServiceDefaultsOptionalField(extraConf),
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("consul_config_entry.foo", "name", "foo"),
-					resource.TestCheckResourceAttr("consul_config_entry.foo", "kind", "service-defaults"),
-					resource.TestCheckResourceAttr("consul_config_entry.foo", "config_json", configJSONServiceDefaults),
-				),
-			},
-			{
-				Config: testAccConsulConfigEntry_ServiceDefaultsExtraField,
-				ExpectError: regexp.MustCompile(`errors during apply: Failed to decode config entry: 1 error\(s\) decoding:
-
-\* '' has invalid keys: ThisFieldDoesNotExists`),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("consul_config_entry.foo", "name", "foo"),
 					resource.TestCheckResourceAttr("consul_config_entry.foo", "kind", "service-defaults"),
@@ -159,9 +139,11 @@ func TestAccConsulConfigEntry_basic(t *testing.T) {
 }
 
 func TestAccConsulConfigEntry_Errors(t *testing.T) {
+	providers, _ := startTestServer(t)
+
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() {},
-		Providers: testAccProviders,
+		Providers: providers,
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccConsulConfigEntry_ProxyDefaultsWrongName,
@@ -171,23 +153,12 @@ func TestAccConsulConfigEntry_Errors(t *testing.T) {
 	})
 }
 
-func TestAccConsulConfigEntry_NamespaceCE(t *testing.T) {
-	resource.Test(t, resource.TestCase{
-		PreCheck:  func() { skipTestOnConsulEnterpriseEdition(t) },
-		Providers: testAccProviders,
-		Steps: []resource.TestStep{
-			{
-				Config:      testAccConsulConfigEntry_DefaultNamespace,
-				ExpectError: namespaceEnterpriseFeature,
-			},
-		},
-	})
-}
-
 func TestAccConsulConfigEntry_NamespaceEE(t *testing.T) {
+	providers, _ := startTestServer(t)
+
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { skipTestOnConsulCommunityEdition(t) },
-		Providers: testAccProviders,
+		Providers: providers,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccConsulConfigEntry_DefaultNamespace,
@@ -203,7 +174,76 @@ func TestAccConsulConfigEntry_NamespaceEE(t *testing.T) {
 					resource.TestCheckResourceAttr("consul_config_entry.test_intentions", "name", "destination-service"),
 					resource.TestCheckResourceAttr("consul_config_entry.test_intentions", "namespace", "example"),
 					resource.TestCheckResourceAttr("consul_config_entry.test_intentions", "kind", "service-intentions"),
-					resource.TestCheckResourceAttr("consul_config_entry.test_intentions", "config_json", "{\"Meta\":{\"foo\":\"bar\"},\"Sources\":[{\"Action\":\"allow\",\"Name\":\"source-service\",\"Namespace\":\"example\",\"Precedence\":9,\"Type\":\"consul\"}]}"),
+					resource.TestCheckResourceAttr("consul_config_entry.test_intentions", "config_json", "{\"Meta\":{\"foo\":\"bar\"},\"Partition\":\"default\",\"Sources\":[{\"Action\":\"allow\",\"Name\":\"source-service\",\"Namespace\":\"example\",\"Partition\":\"default\",\"Precedence\":9,\"Type\":\"consul\"}]}"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccConsulConfigEntry_ServicesExportedCE(t *testing.T) {
+	providers, _ := startTestServer(t)
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:  func() { skipTestOnConsulEnterpriseEdition(t) },
+		Providers: providers,
+		Steps: []resource.TestStep{
+			{
+				Config:      TestAccConsulConfigEntry_exportedServicesCE,
+				ExpectError: regexp.MustCompile(`Config entry kind "exported-services" requires Consul Enterprise`),
+			},
+		},
+	})
+}
+
+func TestAccConsulConfigEntry_ServicesExportedEE(t *testing.T) {
+	providers, _ := startTestServer(t)
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:  func() { skipTestOnConsulCommunityEdition(t) },
+		Providers: providers,
+		Steps: []resource.TestStep{
+			{
+				Config: TestAccConsulConfigEntry_exportedServicesEE,
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr("consul_config_entry.exported_services", "name", "test"),
+					resource.TestCheckResourceAttr("consul_config_entry.exported_services", "kind", "exported-services"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccConsulConfigEntry_MeshCE(t *testing.T) {
+	providers, _ := startTestServer(t)
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:  func() { skipTestOnConsulEnterpriseEdition(t) },
+		Providers: providers,
+		Steps: []resource.TestStep{
+			{
+				Config: TestAccConsulConfigEntry_meshCE,
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr("consul_config_entry.mesh", "name", "mesh"),
+					resource.TestCheckResourceAttr("consul_config_entry.mesh", "kind", "mesh"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccConsulConfigEntry_MeshEE(t *testing.T) {
+	providers, _ := startTestServer(t)
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:  func() { skipTestOnConsulCommunityEdition(t) },
+		Providers: providers,
+		Steps: []resource.TestStep{
+			{
+				Config: TestAccConsulConfigEntry_meshEE,
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr("consul_config_entry.mesh", "name", "mesh"),
+					resource.TestCheckResourceAttr("consul_config_entry.mesh", "kind", "mesh"),
 				),
 			},
 		},
@@ -241,18 +281,6 @@ resource "consul_config_entry" "foo" {
 }
 `, extraConf)
 }
-
-const testAccConsulConfigEntry_ServiceDefaultsExtraField = `
-resource "consul_config_entry" "foo" {
-	name = "foo"
-	kind = "service-defaults"
-
-	config_json = jsonencode({
-		ThisFieldDoesNotExists = true
-		Protocol               = "https"
-	})
-}
-`
 
 func testAccConsulConfigEntry_ProxyDefaults(extraConf string) string {
 	return fmt.Sprintf(`
@@ -316,6 +344,7 @@ resource "consul_config_entry" "service_router" {
 
 				Destination = {
 					Namespace = "default"
+					Partition = "default"
 					Service   = consul_config_entry.admin_service_defaults.name
 				}
 			}
@@ -432,6 +461,11 @@ resource "consul_config_entry" "foo" {
 `
 
 func testAccConsulConfigEntry_IngressGateway(extraConf string) string {
+	var partition string
+	if extraConf != "" {
+		partition = `Partition = "default"`
+	}
+
 	return fmt.Sprintf(`
 resource "consul_config_entry" "ingress_gateway" {
 	name = "foo"
@@ -442,20 +476,27 @@ resource "consul_config_entry" "ingress_gateway" {
 			Enabled = true
 		}
 		Listeners = [{
-			Port     = 8000
-			Protocol = "http"
+			Port      = 8000
+			Protocol  = "http"
 			Services = [{
-				Hosts     = null
-				Name      = "*"
+				Hosts = null
+				Name  = "*"
 				%s
 			}]
 		}]
+		%s
 	})
 }
-`, extraConf)
+`, extraConf, partition)
 }
 
 func testAccConsulConfigEntry_TerminatingGateway(extraConf string) string {
+	var partition string
+	if extraConf != "" {
+		extraConf = `Namespace: "default"`
+		partition = `Partition = "default"`
+	}
+
 	return fmt.Sprintf(`
 resource "consul_config_entry" "terminating_gateway" {
 	name = "foo-egress"
@@ -463,21 +504,28 @@ resource "consul_config_entry" "terminating_gateway" {
 
 	config_json = jsonencode({
 		Services = [{
-			Name      = "billing"
+			Name = "billing"
 			%s
 		}]
+		%s
 	})
 }
-`, extraConf)
+`, extraConf, partition)
 }
 
 func testAccConsulConfigEntry_ServiceConfigL4(extraConf string) string {
+	var partition string
+	if extraConf != "" {
+		partition = `Partition = "default"`
+	}
+
 	return fmt.Sprintf(`
 resource "consul_config_entry" "service_intentions" {
 	name = "api-service"
 	kind = "service-intentions"
 
 	config_json = jsonencode({
+		%s
 		Sources = [
 			{
 				%s
@@ -496,16 +544,22 @@ resource "consul_config_entry" "service_intentions" {
 		]
 	})
 }
-`, extraConf, extraConf)
+`, partition, extraConf, extraConf)
 }
 
 func testAccConsulConfigEntry_ServiceConfigL7(extraConf string) string {
+	var partition string
+	if extraConf != "" {
+		partition = `Partition = "default"`
+	}
+
 	return fmt.Sprintf(`
 resource "consul_config_entry" "sd" {
 	name = "fort-knox"
 	kind = "service-defaults"
 
 	config_json = jsonencode({
+		%s
 		Protocol         = "http"
 		Expose           = {}
 		MeshGateway      = {}
@@ -518,6 +572,7 @@ resource "consul_config_entry" "service_intentions" {
 	kind = "service-intentions"
 
 	config_json = jsonencode({
+		%s
 		Sources = [
 			{
 				%s
@@ -557,16 +612,22 @@ resource "consul_config_entry" "service_intentions" {
 		]
 	})
 }
-`, extraConf, extraConf)
+`, partition, partition, extraConf, extraConf)
 }
 
 func testAccConsulConfigEntry_ServiceConfigL7b(extraConf string) string {
+	var partition string
+	if extraConf != "" {
+		partition = `Partition = "default"`
+	}
+
 	return fmt.Sprintf(`
 resource "consul_config_entry" "sd" {
 	name = "api"
 	kind = "service-defaults"
 
 	config_json = jsonencode({
+		%s
 		Protocol         = "http"
 		Expose           = {}
 		MeshGateway      = {}
@@ -579,6 +640,7 @@ resource "consul_config_entry" "service_intentions" {
 	kind = "service-intentions"
 
 	config_json = jsonencode({
+		%s
 		Sources = [
 			{
 				%s
@@ -613,16 +675,22 @@ resource "consul_config_entry" "service_intentions" {
 		]
 	})
 }
-`, extraConf, extraConf)
+`, partition, partition, extraConf, extraConf)
 }
 
 func testAccConsulConfigEntry_ServiceConfigL7gRPC(extraConf string) string {
+	var partition string
+	if extraConf != "" {
+		partition = `Partition = "default"`
+	}
+
 	return fmt.Sprintf(`
 resource "consul_config_entry" "sd" {
 	name = "billing"
 	kind = "service-defaults"
 
 	config_json = jsonencode({
+		%s
 		Protocol         = "grpc"
 		Expose           = {}
 		MeshGateway      = {}
@@ -635,6 +703,7 @@ resource "consul_config_entry" "service_intentions" {
 	kind = "service-intentions"
 
 	config_json = jsonencode({
+		%s
 		Sources = [
 			{
 				%s
@@ -673,10 +742,15 @@ resource "consul_config_entry" "service_intentions" {
 		]
 	})
 }
-`, extraConf, extraConf)
+`, partition, partition, extraConf, extraConf)
 }
 
 func testAccConsulConfigEntry_ServiceConfigL7Mixed(extraConf string) string {
+	var partition string
+	if extraConf != "" {
+		partition = `Partition = "default"`
+	}
+
 	return fmt.Sprintf(`
 resource "consul_config_entry" "sd" {
 	name = "api"
@@ -696,6 +770,7 @@ resource "consul_config_entry" "service_intentions" {
 	kind = "service-intentions"
 
 	config_json = jsonencode({
+		%s
 		Sources = [
 			{
 				%s
@@ -729,7 +804,7 @@ resource "consul_config_entry" "service_intentions" {
 		]
 	})
 }
-`, extraConf, extraConf, extraConf, extraConf)
+`, extraConf, partition, extraConf, extraConf, extraConf)
 }
 
 const testAccConsulConfigEntry_DefaultNamespace = `
@@ -739,9 +814,12 @@ resource "consul_config_entry" "foo" {
 	namespace = "default"
 
 	config_json = jsonencode({
-		MeshGateway = {}
-		Protocol    = "https"
-		Namespace   = "default"
+		Expose           = {}
+		MeshGateway      = {}
+		TransparentProxy = {}
+		Protocol         = "https"
+		Namespace        = "default"
+		Partition        = "default"
 	})
 }
 `
@@ -763,6 +841,7 @@ resource "consul_config_entry" "test_intentions" {
 			Action     = "allow"
 			Name       = "source-service"
 			Namespace  = "example"
+			Partition  = "default"
 			Precedence = 9
 			Type       = "consul"
 		  }
@@ -770,6 +849,77 @@ resource "consul_config_entry" "test_intentions" {
 		Meta = {
 			foo = "bar"
 		}
+		Partition = "default"
 	  })
+}
+`
+
+const TestAccConsulConfigEntry_mesh = `
+`
+
+const TestAccConsulConfigEntry_exportedServicesCE = `
+resource "consul_config_entry" "exported_services" {
+	name = "test"
+	kind = "exported-services"
+
+	config_json = jsonencode({
+		Services = [{
+			Name = "test"
+			Namespace = "default"
+			Consumers = [{
+				Partition = "default"
+			}]
+		}]
+	})
+}
+`
+
+const TestAccConsulConfigEntry_exportedServicesEE = `
+resource "consul_admin_partition" "test" {
+	name = "test"
+}
+
+resource "consul_config_entry" "exported_services" {
+	name = "test"
+	kind = "exported-services"
+
+	config_json = jsonencode({
+		Partition = consul_admin_partition.test.name
+		Services = [{
+			Name = "test"
+			Namespace = "default"
+			Consumers = [{
+				Partition = "default"
+			}]
+		}]
+	})
+}
+`
+
+const TestAccConsulConfigEntry_meshCE = `
+resource "consul_config_entry" "mesh" {
+	name = "mesh"
+	kind = "mesh"
+
+	config_json = jsonencode({
+		TransparentProxy = {
+			MeshDestinationsOnly = true
+		}
+	})
+}
+`
+
+const TestAccConsulConfigEntry_meshEE = `
+resource "consul_config_entry" "mesh" {
+	name = "mesh"
+	kind = "mesh"
+
+	config_json = jsonencode({
+		Partition = "default"
+
+		TransparentProxy = {
+			MeshDestinationsOnly = true
+		}
+	})
 }
 `

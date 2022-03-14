@@ -9,11 +9,12 @@ import (
 )
 
 func TestAccDataConsulAgentSelf_basic(t *testing.T) {
+	providers, _ := startTestServer(t)
+
 	t.Skip("consul_agent_self is incompatible with Consul versions >= 1.0. It has been deprecated and will be removed in an upcoming version.")
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:  func() { testAccPreCheck(t) },
-		Providers: testAccProviders,
+		Providers: providers,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDataConsulAgentSelfConfig,
