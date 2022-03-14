@@ -7,10 +7,10 @@ import (
 )
 
 func TestAccDataConsulDatacenters_basic(t *testing.T) {
-	startTestServer(t)
+	providers, _ := startTestServer(t)
 
 	resource.Test(t, resource.TestCase{
-		Providers: testAccProviders,
+		Providers: providers,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDataConsulDatacentersConfig,
@@ -24,10 +24,10 @@ func TestAccDataConsulDatacenters_basic(t *testing.T) {
 }
 
 func TestAccDataConsulDatacenters_multipleDatacenters(t *testing.T) {
-	startRemoteDatacenterTestServer(t)
+	providers, _ := startRemoteDatacenterTestServer(t)
 
 	resource.Test(t, resource.TestCase{
-		Providers: testAccProviders,
+		Providers: providers,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDataConsulDatacentersConfig,

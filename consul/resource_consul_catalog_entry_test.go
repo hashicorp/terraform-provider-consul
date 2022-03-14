@@ -10,17 +10,17 @@ import (
 )
 
 func TestAccConsulCatalogEntry_basic(t *testing.T) {
-	startTestServer(t)
+	providers, client := startTestServer(t)
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() {},
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckConsulCatalogEntryDestroy,
+		Providers:    providers,
+		CheckDestroy: testAccCheckConsulCatalogEntryDestroy(client),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccConsulCatalogEntryConfig,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckConsulCatalogEntryExists(),
+					testAccCheckConsulCatalogEntryExists(client),
 					testAccCheckConsulCatalogEntryValue("consul_catalog_entry.app", "address", "127.0.0.1"),
 					testAccCheckConsulCatalogEntryValue("consul_catalog_entry.app", "node", "bastion"),
 					testAccCheckConsulCatalogEntryValue("consul_catalog_entry.app", "service.#", "1"),
@@ -38,18 +38,18 @@ func TestAccConsulCatalogEntry_basic(t *testing.T) {
 }
 
 func TestAccConsulCatalogEntry_extremove(t *testing.T) {
-	startTestServer(t)
+	providers, client := startTestServer(t)
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() {},
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckConsulCatalogEntryDestroy,
+		Providers:    providers,
+		CheckDestroy: testAccCheckConsulCatalogEntryDestroy(client),
 		Steps: []resource.TestStep{
 			{
 				Config:             testAccConsulCatalogEntryConfig,
 				ExpectNonEmptyPlan: true,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckConsulCatalogEntryExists(),
+					testAccCheckConsulCatalogEntryExists(client),
 					testAccCheckConsulCatalogEntryValue("consul_catalog_entry.app", "address", "127.0.0.1"),
 					testAccCheckConsulCatalogEntryValue("consul_catalog_entry.app", "node", "bastion"),
 					testAccCheckConsulCatalogEntryValue("consul_catalog_entry.app", "service.#", "1"),
@@ -60,31 +60,31 @@ func TestAccConsulCatalogEntry_extremove(t *testing.T) {
 					testAccCheckConsulCatalogEntryValue("consul_catalog_entry.app", "service.3112399829.tags.#", "2"),
 					testAccCheckConsulCatalogEntryValue("consul_catalog_entry.app", "service.3112399829.tags.2154398732", "tag0"),
 					testAccCheckConsulCatalogEntryValue("consul_catalog_entry.app", "service.3112399829.tags.4151227546", "tag1"),
-					testAccCheckConsulCatalogEntryDeregister("bastion"),
+					testAccCheckConsulCatalogEntryDeregister(client, "bastion"),
 				),
 			},
 		},
 	})
 }
 
-func testAccCheckConsulCatalogEntryDestroy(s *terraform.State) error {
-	client := getTestClient(testAccProvider.Meta())
-	catalog := client.Catalog()
-	qOpts := consulapi.QueryOptions{}
-	services, _, err := catalog.Services(&qOpts)
-	if err != nil {
-		return fmt.Errorf("Could not retrieve services: %#v", err)
+func testAccCheckConsulCatalogEntryDestroy(client *consulapi.Client) func(s *terraform.State) error {
+	return func(s *terraform.State) error {
+		catalog := client.Catalog()
+		qOpts := consulapi.QueryOptions{}
+		services, _, err := catalog.Services(&qOpts)
+		if err != nil {
+			return fmt.Errorf("Could not retrieve services: %#v", err)
+		}
+		_, ok := services["google"]
+		if ok {
+			return fmt.Errorf("Service still exists: %#v", "google")
+		}
+		return nil
 	}
-	_, ok := services["google"]
-	if ok {
-		return fmt.Errorf("Service still exists: %#v", "google")
-	}
-	return nil
 }
 
-func testAccCheckConsulCatalogEntryDeregister(node string) resource.TestCheckFunc {
+func testAccCheckConsulCatalogEntryDeregister(client *consulapi.Client, node string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		client := getTestClient(testAccProvider.Meta())
 		catalog := client.Catalog()
 		wOpts := consulapi.WriteOptions{}
 
@@ -109,9 +109,8 @@ func testAccCheckConsulCatalogEntryDeregister(node string) resource.TestCheckFun
 	}
 }
 
-func testAccCheckConsulCatalogEntryExists() resource.TestCheckFunc {
+func testAccCheckConsulCatalogEntryExists(client *consulapi.Client) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		client := getTestClient(testAccProvider.Meta())
 		catalog := client.Catalog()
 		qOpts := consulapi.QueryOptions{}
 		services, _, err := catalog.Services(&qOpts)

@@ -2,29 +2,18 @@ package consul
 
 import (
 	"encoding/json"
-	"fmt"
 	"io/ioutil"
-	"net/http"
 	"os"
 	"os/exec"
 	"strings"
 	"testing"
 	"time"
 
+	consulapi "github.com/hashicorp/consul/api"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 )
-
-var testAccProviders map[string]terraform.ResourceProvider
-var testAccProvider *schema.Provider
-
-func init() {
-	testAccProvider = Provider().(*schema.Provider)
-	testAccProviders = map[string]terraform.ResourceProvider{
-		"consul": testAccProvider,
-	}
-}
 
 func TestResourceProvider(t *testing.T) {
 	if err := Provider().(*schema.Provider).InternalValidate(); err != nil {
@@ -193,10 +182,10 @@ func TestResourceProvider_ConfigureTLSInsecureHttpsMismatch(t *testing.T) {
 // }
 
 func TestAccTokenReadProviderConfigureWithHeaders(t *testing.T) {
-	startTestServer(t)
+	providers, _ := startTestServer(t)
 
 	resource.Test(t, resource.TestCase{
-		Providers: testAccProviders,
+		Providers: providers,
 		Steps: []resource.TestStep{
 			{
 				Config: testHeaderConfig,
@@ -215,7 +204,7 @@ func TestAccTokenReadProviderConfigureWithHeaders(t *testing.T) {
 	}
 }
 
-func startServerWithConfig(t *testing.T, httpPort, serverPort int, config string) {
+func startServerWithConfig(t *testing.T, config string) {
 	if os.Getenv("TF_ACC") == "" {
 		t.Skip("Acceptance tests skipped unless env 'TF_ACC' set")
 	}
@@ -244,37 +233,40 @@ func startServerWithConfig(t *testing.T, httpPort, serverPort int, config string
 		cmd.Process.Kill()
 		cmd.Process.Wait()
 	})
+}
 
-	var response string
+func waitForService(t *testing.T) (map[string]terraform.ResourceProvider, *consulapi.Client) {
+	config := consulapi.DefaultConfig()
+	config.Address = "http://localhost:8500"
+	config.Token = "master-token"
+
+	client, err := consulapi.NewClient(config)
+	if err != nil {
+		t.Fatalf("failed to instantiate client: %v", err)
+	}
+
+	var services []*consulapi.ServiceEntry
 	for i := 0; i < 10; i++ {
-		var b []byte
-		resp, err := http.Get(fmt.Sprintf("http://localhost:%d/v1/status/leader", httpPort))
-		if err != nil {
-			response = err.Error()
-			goto CONTINUE
-		}
-		b, err = ioutil.ReadAll(resp.Body)
-		if err != nil {
-			goto CONTINUE
-		}
-		response = string(b)
-		if response == fmt.Sprintf("\"127.0.0.1:%d\"\n", serverPort) {
+		services, _, err = client.Health().Service("consul", "", true, nil)
+		if err == nil && len(services) == 1 {
 			// Once the service is up we have to wait for the info to be synced
 			time.Sleep(200 * time.Millisecond)
-			return
+
+			return map[string]terraform.ResourceProvider{
+				"consul": Provider().(*schema.Provider),
+			}, client
 		}
-	CONTINUE:
+
 		time.Sleep(200 * time.Millisecond)
 	}
 
-	t.Fatalf("timeout while waiting for Consul to start, last response: %#v", response)
+	t.Fatalf("timeout while waiting for Consul to start, last error: %v, %d services", err, len(services))
+	return nil, nil
 }
 
-func startTestServer(t *testing.T) {
+func startTestServer(t *testing.T) (map[string]terraform.ResourceProvider, *consulapi.Client) {
 	startServerWithConfig(
 		t,
-		8500,
-		8300,
 		`
 			ui = true
 
@@ -293,13 +285,13 @@ func startTestServer(t *testing.T) {
 			}
 		`,
 	)
+
+	return waitForService(t)
 }
 
-func startRemoteDatacenterTestServer(t *testing.T) {
+func startRemoteDatacenterTestServer(t *testing.T) (map[string]terraform.ResourceProvider, *consulapi.Client) {
 	startServerWithConfig(
 		t,
-		8501,
-		8305,
 		`
 			ui = true
 			datacenter = "dc2"
@@ -331,8 +323,6 @@ func startRemoteDatacenterTestServer(t *testing.T) {
 	)
 	startServerWithConfig(
 		t,
-		8500,
-		8300,
 		`
 			ui = true
 			primary_datacenter = "dc1"
@@ -354,6 +344,19 @@ func startRemoteDatacenterTestServer(t *testing.T) {
 			retry_join_wan = ["127.0.0.1:8307"]
 		`,
 	)
+
+	providers, client := waitForService(t)
+	for i := 0; i < 10; i++ {
+		datacenters, err := client.Catalog().Datacenters()
+		if err == nil && len(datacenters) == 2 {
+			return providers, client
+		}
+
+		time.Sleep(200 * time.Millisecond)
+	}
+
+	t.Fatal("wait for the two datacenters to get synced")
+	return nil, nil
 }
 
 func serverIsConsulCommunityEdition(t *testing.T) bool {

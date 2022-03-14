@@ -12,12 +12,12 @@ import (
 )
 
 func TestAccConsulACLAuthMethod_basic(t *testing.T) {
-	startTestServer(t)
+	providers, client := startTestServer(t)
 
 	resource.Test(t, resource.TestCase{
-		Providers: testAccProviders,
+		Providers: providers,
 
-		CheckDestroy: testAuthMethodDestroy,
+		CheckDestroy: testAuthMethodDestroy(client),
 		Steps: []resource.TestStep{
 			{
 				Config:      testResourceACLAuthMethodConfigBasic_NoConfig,
@@ -36,7 +36,7 @@ func TestAccConsulACLAuthMethod_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("consul_acl_auth_method.test", "config.Host", "https://192.0.2.42:8443"),
 					resource.TestCheckResourceAttr("consul_acl_auth_method.test", "config.CACert", testCert+"\n"),
 					resource.TestCheckResourceAttr("consul_acl_auth_method.test", "config.ServiceAccountJWT", "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c"),
-					testAuthMethodCACert("minikube", testCert),
+					testAuthMethodCACert(client, "minikube", testCert),
 				),
 			},
 			{
@@ -53,16 +53,16 @@ func TestAccConsulACLAuthMethod_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("consul_acl_auth_method.test", "config.CACert", testCert2+"\n"),
 					resource.TestCheckResourceAttr("consul_acl_auth_method.test", "config.ServiceAccountJWT", "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0IiwibmFtZSI6InRlc3QiLCJpYXQiOjE1MTYyMzkwMjJ9.uOnQsCs6ZAqj2F1VMA09tdgRZyFT1GQH2DwIC4TTn-A"),
 					resource.TestCheckResourceAttr("consul_acl_auth_method.test", "config_json", "{\"CACert\":\"-----BEGIN CERTIFICATE-----\\nMIIBsTCCARoCCQCOgZn2+rDWSDANBgkqhkiG9w0BAQsFADAdMQswCQYDVQQGEwJG\\nUjEOMAwGA1UECAwFUGFyaXMwHhcNMTkwNjI4MTA1NzA4WhcNMjAwNjI3MTA1NzA4\\nWjAdMQswCQYDVQQGEwJGUjEOMAwGA1UECAwFUGFyaXMwgZ8wDQYJKoZIhvcNAQEB\\nBQADgY0AMIGJAoGBAMMBf+kSoZYon8fGBWqoyY7QzPXbg3GWMt2bxVxc6EmV/tcN\\nPIWGFFlycjnzDWwaGqzdqWkUrfi/o1VdlQobnzr4i+qcZpxlrZi2oa7FmkJMimsX\\nVmjXaeqpZA4JXLUzGHi+oCl2zX8wVGaUf7avcUxI3FVLCiibjWofpOf2pyUTAgMB\\nAAEwDQYJKoZIhvcNAQELBQADgYEAMddaDm4csxGnT47sths8CDxtzNdBhIXVIOLy\\njfvmBQ0aqC46gaUEoqNSzBPTTKJQGHxlGrF6fcnoUyjMcgHYZDrVySgmQpcfL9Uo\\nh61wQqlvkoFb/qPC/gvxdoQKUcddd7IhEujJjaddo9TV0w4nYX4Cq2Ybd5N3hgED\\n8GuzduY=\\n-----END CERTIFICATE-----\\n\\n\",\"Host\":\"https://localhost:8443\",\"ServiceAccountJWT\":\"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0IiwibmFtZSI6InRlc3QiLCJpYXQiOjE1MTYyMzkwMjJ9.uOnQsCs6ZAqj2F1VMA09tdgRZyFT1GQH2DwIC4TTn-A\"}"),
-					testAuthMethodCACert("auth_method", testCert2),
+					testAuthMethodCACert(client, "auth_method", testCert2),
 				),
 			},
 			{
 				Config: testResourceACLAuthMethodConfigBasic_ConfigJSON,
-				Check:  testAuthMethodCACert("auth_method", testCert),
+				Check:  testAuthMethodCACert(client, "auth_method", testCert),
 			},
 			{
 				Config: testResourceACLAuthMethodConfigBasic_ConfigJSONUpdate,
-				Check:  testAuthMethodCACert("auth_method", testCert2),
+				Check:  testAuthMethodCACert(client, "auth_method", testCert2),
 			},
 			{
 				Config: testResourceACLAuthMethodConfigBasicConfigJSON,
@@ -81,10 +81,10 @@ func TestAccConsulACLAuthMethod_basic(t *testing.T) {
 }
 
 func TestAccConsulACLAuthMethod_namespaceCE(t *testing.T) {
-	startTestServer(t)
+	providers, _ := startTestServer(t)
 
 	resource.Test(t, resource.TestCase{
-		Providers: testAccProviders,
+		Providers: providers,
 		PreCheck:  func() { skipTestOnConsulEnterpriseEdition(t) },
 		Steps: []resource.TestStep{
 			{
@@ -96,10 +96,10 @@ func TestAccConsulACLAuthMethod_namespaceCE(t *testing.T) {
 }
 
 func TestAccConsulACLAuthMethod_namespaceEE(t *testing.T) {
-	startTestServer(t)
+	providers, _ := startTestServer(t)
 
 	resource.Test(t, resource.TestCase{
-		Providers: testAccProviders,
+		Providers: providers,
 		PreCheck:  func() { skipTestOnConsulCommunityEdition(t) },
 		Steps: []resource.TestStep{
 			{
@@ -124,9 +124,9 @@ func TestAccConsulACLAuthMethod_namespaceEE(t *testing.T) {
 	})
 }
 
-func testAuthMethodCACert(name, v string) func(s *terraform.State) error {
+func testAuthMethodCACert(client *consulapi.Client, name, v string) func(s *terraform.State) error {
 	return func(s *terraform.State) error {
-		ACL := getTestClient(testAccProvider.Meta()).ACL()
+		ACL := client.ACL()
 
 		authMethod, _, err := ACL.AuthMethodRead(name, nil)
 		if err != nil {
@@ -147,20 +147,22 @@ func testAuthMethodCACert(name, v string) func(s *terraform.State) error {
 	}
 }
 
-func testAuthMethodDestroy(s *terraform.State) error {
-	ACL := getTestClient(testAccProvider.Meta()).ACL()
-	qOpts := &consulapi.QueryOptions{}
+func testAuthMethodDestroy(client *consulapi.Client) func(s *terraform.State) error {
+	return func(s *terraform.State) error {
+		ACL := client.ACL()
+		qOpts := &consulapi.QueryOptions{}
 
-	role, _, err := ACL.AuthMethodRead("minikube2", qOpts)
-	if err != nil {
-		return err
+		role, _, err := ACL.AuthMethodRead("minikube2", qOpts)
+		if err != nil {
+			return err
+		}
+
+		if role != nil {
+			return fmt.Errorf("Auth method 'minikube2' still exists")
+		}
+
+		return nil
 	}
-
-	if role != nil {
-		return fmt.Errorf("Auth method 'minikube2' still exists")
-	}
-
-	return nil
 }
 
 const testResourceACLAuthMethodConfigBasic_NoConfig = `

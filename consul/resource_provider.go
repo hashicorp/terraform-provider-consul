@@ -221,7 +221,7 @@ func providerConfigure(d *schema.ResourceData) (interface{}, error) {
 }
 
 func getClient(d *schema.ResourceData, meta interface{}) (*consulapi.Client, *consulapi.QueryOptions, *consulapi.WriteOptions) {
-	client := getTestClient(meta)
+	client := meta.(*Config).client
 	var dc, token, namespace, partition string
 	if v, ok := d.GetOk("datacenter"); ok {
 		dc = v.(string)
@@ -260,12 +260,6 @@ func getClient(d *schema.ResourceData, meta interface{}) (*consulapi.Client, *co
 		Token:      token,
 	}
 	return client, qOpts, wOpts
-}
-
-// during the tests we only have access to the definition of the provider, not
-// the ResourceData
-func getTestClient(meta interface{}) *consulapi.Client {
-	return meta.(*Config).client
 }
 
 type stateWriter struct {

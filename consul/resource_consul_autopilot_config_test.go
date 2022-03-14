@@ -11,11 +11,11 @@ import (
 )
 
 func TestAccConsulAutopilotConfig_basic(t *testing.T) {
-	startTestServer(t)
+	providers, client := startTestServer(t)
 
 	resource.Test(t, resource.TestCase{
-		Providers:    testAccProviders,
-		CheckDestroy: testFinalConfiguration,
+		Providers:    providers,
+		CheckDestroy: testFinalConfiguration(client),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccConsulAutopilotConfigBasic,
@@ -48,11 +48,11 @@ func TestAccConsulAutopilotConfig_basic(t *testing.T) {
 }
 
 func TestAccConsulAutopilotConfig_parseduration(t *testing.T) {
-	startTestServer(t)
+	providers, _ := startTestServer(t)
 
 	errorRegexp := regexp.MustCompile("could not parse 'last_contact_threshold': time: invalid duration")
 	resource.Test(t, resource.TestCase{
-		Providers: testAccProviders,
+		Providers: providers,
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccConsulAutopilotConfigParseDuration,
@@ -63,20 +63,19 @@ func TestAccConsulAutopilotConfig_parseduration(t *testing.T) {
 }
 
 func TestAccConsulAutopilogConfig_datacenter(t *testing.T) {
-	startRemoteDatacenterTestServer(t)
+	providers, client := startRemoteDatacenterTestServer(t)
 
 	resource.Test(t, resource.TestCase{
-		Providers: testAccProviders,
+		Providers: providers,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccConsulAutopilotDatacenter,
 				Check: func(s *terraform.State) error {
 					test := func(dc string, expected int) error {
-						c := getTestClient(testAccProvider.Meta()).Operator()
 						opts := &consulapi.QueryOptions{
 							Datacenter: dc,
 						}
-						autopilot, err := c.AutopilotGetConfiguration(opts)
+						autopilot, err := client.Operator().AutopilotGetConfiguration(opts)
 						if err != nil {
 							return err
 						}
@@ -99,36 +98,37 @@ func TestAccConsulAutopilogConfig_datacenter(t *testing.T) {
 
 // when destroying the consul_autopilot_config resource, the configuration
 // should not be changed
-func testFinalConfiguration(s *terraform.State) error {
-	client := getTestClient(testAccProvider.Meta())
-	operator := client.Operator()
-	qOpts := &consulapi.QueryOptions{}
-	config, err := operator.AutopilotGetConfiguration(qOpts)
-	if err != nil {
-		return fmt.Errorf("err: %v", err)
+func testFinalConfiguration(client *consulapi.Client) func(s *terraform.State) error {
+	return func(s *terraform.State) error {
+		operator := client.Operator()
+		qOpts := &consulapi.QueryOptions{}
+		config, err := operator.AutopilotGetConfiguration(qOpts)
+		if err != nil {
+			return fmt.Errorf("err: %v", err)
+		}
+		if config.CleanupDeadServers != false {
+			return fmt.Errorf("err: cleanup_dead_servers during destroy: %v", config.CleanupDeadServers)
+		}
+		if config.LastContactThreshold.String() != "1s" {
+			return fmt.Errorf("err: last_contact_threshold during destroy: %v", config.LastContactThreshold)
+		}
+		if config.MaxTrailingLogs != 100 {
+			return fmt.Errorf("err: max_trailing_logs during destroy: %v", config.MaxTrailingLogs)
+		}
+		if config.ServerStabilizationTime.String() != "5s" {
+			return fmt.Errorf("err: server_stabilization_time during destroy: %v", config.ServerStabilizationTime)
+		}
+		if config.RedundancyZoneTag != "redundancy_tag" {
+			return fmt.Errorf("err: redundancy_zone_tag during destroy: %v", config.RedundancyZoneTag)
+		}
+		if config.DisableUpgradeMigration != true {
+			return fmt.Errorf("err: disable_upgrade_migration during destroy: %v", config.DisableUpgradeMigration)
+		}
+		if config.UpgradeVersionTag != "version_tag" {
+			return fmt.Errorf("err: upgrade_version_tag during destroy: %v", config.UpgradeVersionTag)
+		}
+		return nil
 	}
-	if config.CleanupDeadServers != false {
-		return fmt.Errorf("err: cleanup_dead_servers during destroy: %v", config.CleanupDeadServers)
-	}
-	if config.LastContactThreshold.String() != "1s" {
-		return fmt.Errorf("err: last_contact_threshold during destroy: %v", config.LastContactThreshold)
-	}
-	if config.MaxTrailingLogs != 100 {
-		return fmt.Errorf("err: max_trailing_logs during destroy: %v", config.MaxTrailingLogs)
-	}
-	if config.ServerStabilizationTime.String() != "5s" {
-		return fmt.Errorf("err: server_stabilization_time during destroy: %v", config.ServerStabilizationTime)
-	}
-	if config.RedundancyZoneTag != "redundancy_tag" {
-		return fmt.Errorf("err: redundancy_zone_tag during destroy: %v", config.RedundancyZoneTag)
-	}
-	if config.DisableUpgradeMigration != true {
-		return fmt.Errorf("err: disable_upgrade_migration during destroy: %v", config.DisableUpgradeMigration)
-	}
-	if config.UpgradeVersionTag != "version_tag" {
-		return fmt.Errorf("err: upgrade_version_tag during destroy: %v", config.UpgradeVersionTag)
-	}
-	return nil
 }
 
 const testAccConsulAutopilotConfigBasic = `

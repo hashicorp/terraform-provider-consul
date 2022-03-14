@@ -8,10 +8,10 @@ import (
 )
 
 func TestAccDataConsulServices_basic(t *testing.T) {
-	startTestServer(t)
+	providers, _ := startTestServer(t)
 
 	resource.Test(t, resource.TestCase{
-		Providers: testAccProviders,
+		Providers: providers,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDataConsulCatalogServicesConfig,
@@ -26,10 +26,10 @@ func TestAccDataConsulServices_basic(t *testing.T) {
 }
 
 func TestAccDataConsulCatalogServices_alias(t *testing.T) {
-	startTestServer(t)
+	providers, _ := startTestServer(t)
 
 	resource.Test(t, resource.TestCase{
-		Providers: testAccProviders,
+		Providers: providers,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDataConsulCatalogServicesConfig,
@@ -40,10 +40,10 @@ func TestAccDataConsulCatalogServices_alias(t *testing.T) {
 }
 
 func TestAccDataConsulCatalogServices_badToken(t *testing.T) {
-	startTestServer(t)
+	providers, _ := startTestServer(t)
 
 	resource.Test(t, resource.TestCase{
-		Providers: testAccProviders,
+		Providers: providers,
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccDataConsulCatalogServicesBadTokenConfig,
@@ -54,10 +54,10 @@ func TestAccDataConsulCatalogServices_badToken(t *testing.T) {
 }
 
 func TestAccDataConsulServices_namespaceCE(t *testing.T) {
-	startTestServer(t)
+	providers, _ := startTestServer(t)
 
 	resource.Test(t, resource.TestCase{
-		Providers: testAccProviders,
+		Providers: providers,
 		PreCheck:  func() { skipTestOnConsulEnterpriseEdition(t) },
 		Steps: []resource.TestStep{
 			{
@@ -69,10 +69,10 @@ func TestAccDataConsulServices_namespaceCE(t *testing.T) {
 }
 
 func TestAccDataConsulServices_namespaceEE(t *testing.T) {
-	startTestServer(t)
+	providers, _ := startTestServer(t)
 
 	resource.Test(t, resource.TestCase{
-		Providers: testAccProviders,
+		Providers: providers,
 		PreCheck:  func() { skipTestOnConsulCommunityEdition(t) },
 		Steps: []resource.TestStep{
 			{
@@ -83,10 +83,10 @@ func TestAccDataConsulServices_namespaceEE(t *testing.T) {
 }
 
 func TestAccDataConsulServices_datacenter(t *testing.T) {
-	startRemoteDatacenterTestServer(t)
+	providers, _ := startRemoteDatacenterTestServer(t)
 
 	resource.Test(t, resource.TestCase{
-		Providers: testAccProviders,
+		Providers: providers,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDataConsulCatalogServicesDatacenter,

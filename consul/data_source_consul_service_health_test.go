@@ -7,10 +7,10 @@ import (
 )
 
 func TestAccDataConsulServiceHealth(t *testing.T) {
-	startTestServer(t)
+	providers, _ := startTestServer(t)
 
 	resource.Test(t, resource.TestCase{
-		Providers: testAccProviders,
+		Providers: providers,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDataConsulServiceHealth,
@@ -65,10 +65,10 @@ func TestAccDataConsulServiceHealth(t *testing.T) {
 }
 
 func TestAccDataConsulServiceHealthPassing(t *testing.T) {
-	startTestServer(t)
+	providers, _ := startTestServer(t)
 
 	resource.Test(t, resource.TestCase{
-		Providers: testAccProviders,
+		Providers: providers,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDataConsulServiceHealthPassingSetup,
@@ -95,10 +95,10 @@ func TestAccDataConsulServiceHealthPassing(t *testing.T) {
 }
 
 func TestAccDataConsulServiceHealthDatacenter(t *testing.T) {
-	startRemoteDatacenterTestServer(t)
+	providers, _ := startRemoteDatacenterTestServer(t)
 
 	resource.Test(t, resource.TestCase{
-		Providers: testAccProviders,
+		Providers: providers,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDataConsulServiceHealthDatacenter,

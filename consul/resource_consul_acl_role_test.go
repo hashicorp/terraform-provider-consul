@@ -10,11 +10,11 @@ import (
 )
 
 func TestAccConsulACLRole_basic(t *testing.T) {
-	startTestServer(t)
+	providers, client := startTestServer(t)
 
 	resource.Test(t, resource.TestCase{
-		Providers:    testAccProviders,
-		CheckDestroy: testRoleDestroy,
+		Providers:    providers,
+		CheckDestroy: testRoleDestroy(client),
 		Steps: []resource.TestStep{
 			{
 				Config: testResourceACLRoleConfigBasic,
@@ -57,10 +57,10 @@ func TestAccConsulACLRole_basic(t *testing.T) {
 }
 
 func TestAccConsulACLRole_NamespaceCE(t *testing.T) {
-	startTestServer(t)
+	providers, _ := startTestServer(t)
 
 	resource.Test(t, resource.TestCase{
-		Providers: testAccProviders,
+		Providers: providers,
 		PreCheck:  func() { skipTestOnConsulEnterpriseEdition(t) },
 		Steps: []resource.TestStep{
 			{
@@ -72,10 +72,10 @@ func TestAccConsulACLRole_NamespaceCE(t *testing.T) {
 }
 
 func TestAccConsulACLRole_NamespaceEE(t *testing.T) {
-	startTestServer(t)
+	providers, _ := startTestServer(t)
 
 	resource.Test(t, resource.TestCase{
-		Providers: testAccProviders,
+		Providers: providers,
 		PreCheck:  func() { skipTestOnConsulCommunityEdition(t) },
 		Steps: []resource.TestStep{
 			{
@@ -85,20 +85,22 @@ func TestAccConsulACLRole_NamespaceEE(t *testing.T) {
 	})
 }
 
-func testRoleDestroy(s *terraform.State) error {
-	ACL := getTestClient(testAccProvider.Meta()).ACL()
-	qOpts := &consulapi.QueryOptions{}
+func testRoleDestroy(client *consulapi.Client) func(s *terraform.State) error {
+	return func(s *terraform.State) error {
+		ACL := client.ACL()
+		qOpts := &consulapi.QueryOptions{}
 
-	role, _, err := ACL.RoleReadByName("baz", qOpts)
-	if err != nil {
-		return err
+		role, _, err := ACL.RoleReadByName("baz", qOpts)
+		if err != nil {
+			return err
+		}
+
+		if role != nil {
+			return fmt.Errorf("Role 'baz' still exists")
+		}
+
+		return nil
 	}
-
-	if role != nil {
-		return fmt.Errorf("Role 'baz' still exists")
-	}
-
-	return nil
 }
 
 const testResourceACLRoleConfigBasic = `

@@ -4,86 +4,89 @@ import (
 	"fmt"
 	"testing"
 
+	consulapi "github.com/hashicorp/consul/api"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 )
 
-func testAccCheckConsulACLTokenPolicyAttachmentDestroy(s *terraform.State) error {
-	client := getTestClient(testAccProvider.Meta())
-
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "consul_acl_token_policy_attachment" {
-			continue
-		}
-		tokenID, policyName, err := parseTwoPartID(rs.Primary.ID, "token", "policy")
-		if err != nil {
-			return fmt.Errorf("Invalid ACL token policy attachment id '%q'", rs.Primary.ID)
-		}
-		aclToken, _, _ := client.ACL().TokenRead(tokenID, nil)
-		if aclToken != nil {
-			for _, iPolicy := range aclToken.Policies {
-				if iPolicy.Name == policyName {
-					return fmt.Errorf("ACL token policy attachment %q still exists", rs.Primary.ID)
+func testAccCheckConsulACLTokenPolicyAttachmentDestroy(client *consulapi.Client) func(s *terraform.State) error {
+	return func(s *terraform.State) error {
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "consul_acl_token_policy_attachment" {
+				continue
+			}
+			tokenID, policyName, err := parseTwoPartID(rs.Primary.ID, "token", "policy")
+			if err != nil {
+				return fmt.Errorf("Invalid ACL token policy attachment id '%q'", rs.Primary.ID)
+			}
+			aclToken, _, _ := client.ACL().TokenRead(tokenID, nil)
+			if aclToken != nil {
+				for _, iPolicy := range aclToken.Policies {
+					if iPolicy.Name == policyName {
+						return fmt.Errorf("ACL token policy attachment %q still exists", rs.Primary.ID)
+					}
 				}
 			}
 		}
+		return nil
 	}
-	return nil
+
 }
 
-func testAccCheckTokenPolicyID(s *terraform.State) error {
-	rs, ok := s.RootModule().Resources["consul_acl_token.test"]
-	if !ok {
-		return fmt.Errorf("Not Found: consul_acl_token.test")
-	}
+func testAccCheckTokenPolicyID(client *consulapi.Client) func(s *terraform.State) error {
+	return func(s *terraform.State) error {
+		rs, ok := s.RootModule().Resources["consul_acl_token.test"]
+		if !ok {
+			return fmt.Errorf("Not Found: consul_acl_token.test")
+		}
 
-	tokenID := rs.Primary.Attributes["id"]
-	if tokenID == "" {
-		return fmt.Errorf("No token ID is set")
-	}
+		tokenID := rs.Primary.Attributes["id"]
+		if tokenID == "" {
+			return fmt.Errorf("No token ID is set")
+		}
 
-	client := getTestClient(testAccProvider.Meta())
-	_, _, err := client.ACL().TokenRead(tokenID, nil)
-	if err != nil {
-		return fmt.Errorf("Unable to retrieve token %q", tokenID)
-	}
+		_, _, err := client.ACL().TokenRead(tokenID, nil)
+		if err != nil {
+			return fmt.Errorf("Unable to retrieve token %q", tokenID)
+		}
 
-	// Make sure the policy has then same token_id
-	rs, ok = s.RootModule().Resources["consul_acl_token_policy_attachment.test"]
-	if !ok {
-		return fmt.Errorf("Not Found: consul_acl_token_policy_attachment.test")
-	}
+		// Make sure the policy has then same token_id
+		rs, ok = s.RootModule().Resources["consul_acl_token_policy_attachment.test"]
+		if !ok {
+			return fmt.Errorf("Not Found: consul_acl_token_policy_attachment.test")
+		}
 
-	policyTokenID := rs.Primary.Attributes["token_id"]
-	if policyTokenID == "" {
-		return fmt.Errorf("No policy token_id is set")
-	}
+		policyTokenID := rs.Primary.Attributes["token_id"]
+		if policyTokenID == "" {
+			return fmt.Errorf("No policy token_id is set")
+		}
 
-	if policyTokenID != tokenID {
-		return fmt.Errorf("%s != %s", policyTokenID, tokenID)
-	}
+		if policyTokenID != tokenID {
+			return fmt.Errorf("%s != %s", policyTokenID, tokenID)
+		}
 
-	return nil
+		return nil
+	}
 }
 
 func TestAccConsulACLTokenPolicyAttachment_basic(t *testing.T) {
-	startTestServer(t)
+	providers, client := startTestServer(t)
 
 	resource.Test(t, resource.TestCase{
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckConsulACLTokenPolicyAttachmentDestroy,
+		Providers:    providers,
+		CheckDestroy: testAccCheckConsulACLTokenPolicyAttachmentDestroy(client),
 		Steps: []resource.TestStep{
 			{
 				Config: testResourceACLTokenPolicyAttachmentConfigBasic,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTokenPolicyID,
+					testAccCheckTokenPolicyID(client),
 					resource.TestCheckResourceAttr("consul_acl_token_policy_attachment.test", "policy", "test-attachment"),
 				),
 			},
 			{
 				Config: testResourceACLTokenPolicyAttachmentConfigUpdate,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTokenPolicyID,
+					testAccCheckTokenPolicyID(client),
 					resource.TestCheckResourceAttr("consul_acl_token_policy_attachment.test", "policy", "test2"),
 				),
 			},
@@ -95,7 +98,7 @@ func TestAccConsulACLTokenPolicyAttachment_basic(t *testing.T) {
 }
 
 func TestAccConsulACLTokenPolicyAttachment_import(t *testing.T) {
-	startTestServer(t)
+	providers, _ := startTestServer(t)
 
 	checkFn := func(s []*terraform.InstanceState) error {
 		if len(s) != 1 {
@@ -114,7 +117,7 @@ func TestAccConsulACLTokenPolicyAttachment_import(t *testing.T) {
 	}
 
 	resource.Test(t, resource.TestCase{
-		Providers: testAccProviders,
+		Providers: providers,
 		Steps: []resource.TestStep{
 			{
 				Config: testResourceACLTokenPolicyAttachmentConfigBasic,

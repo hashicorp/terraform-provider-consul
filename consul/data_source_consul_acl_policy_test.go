@@ -8,10 +8,10 @@ import (
 )
 
 func TestAccDataACLPolicy_basic(t *testing.T) {
-	startTestServer(t)
+	providers, _ := startTestServer(t)
 
 	resource.Test(t, resource.TestCase{
-		Providers: testAccProviders,
+		Providers: providers,
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccDataSourceACLPolicyConfigNotFound,
@@ -32,10 +32,10 @@ func TestAccDataACLPolicy_basic(t *testing.T) {
 }
 
 func TestAccDataACLPolicy_namespaceCE(t *testing.T) {
-	startTestServer(t)
+	providers, _ := startTestServer(t)
 
 	resource.Test(t, resource.TestCase{
-		Providers: testAccProviders,
+		Providers: providers,
 		PreCheck:  func() { skipTestOnConsulEnterpriseEdition(t) },
 		Steps: []resource.TestStep{
 			{
@@ -47,10 +47,10 @@ func TestAccDataACLPolicy_namespaceCE(t *testing.T) {
 }
 
 func TestAccDataACLPolicy_namespaceEE(t *testing.T) {
-	startTestServer(t)
+	providers, _ := startTestServer(t)
 
 	resource.Test(t, resource.TestCase{
-		Providers: testAccProviders,
+		Providers: providers,
 		PreCheck:  func() { skipTestOnConsulCommunityEdition(t) },
 		Steps: []resource.TestStep{
 			{

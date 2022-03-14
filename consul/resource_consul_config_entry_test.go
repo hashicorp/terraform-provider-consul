@@ -9,7 +9,7 @@ import (
 )
 
 func TestAccConsulConfigEntry_basic(t *testing.T) {
-	startTestServer(t)
+	providers, _ := startTestServer(t)
 
 	// Expected values for Consul Community Edition
 	extraConf := ""
@@ -33,7 +33,7 @@ func TestAccConsulConfigEntry_basic(t *testing.T) {
 	}
 
 	resource.Test(t, resource.TestCase{
-		Providers: testAccProviders,
+		Providers: providers,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccConsulConfigEntry_ServiceDefaults(extraConf),
@@ -139,11 +139,11 @@ func TestAccConsulConfigEntry_basic(t *testing.T) {
 }
 
 func TestAccConsulConfigEntry_Errors(t *testing.T) {
-	startTestServer(t)
+	providers, _ := startTestServer(t)
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() {},
-		Providers: testAccProviders,
+		Providers: providers,
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccConsulConfigEntry_ProxyDefaultsWrongName,
@@ -154,11 +154,11 @@ func TestAccConsulConfigEntry_Errors(t *testing.T) {
 }
 
 func TestAccConsulConfigEntry_NamespaceEE(t *testing.T) {
-	startTestServer(t)
+	providers, _ := startTestServer(t)
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { skipTestOnConsulCommunityEdition(t) },
-		Providers: testAccProviders,
+		Providers: providers,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccConsulConfigEntry_DefaultNamespace,
@@ -182,11 +182,11 @@ func TestAccConsulConfigEntry_NamespaceEE(t *testing.T) {
 }
 
 func TestAccConsulConfigEntry_ServicesExportedCE(t *testing.T) {
-	startTestServer(t)
+	providers, _ := startTestServer(t)
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { skipTestOnConsulEnterpriseEdition(t) },
-		Providers: testAccProviders,
+		Providers: providers,
 		Steps: []resource.TestStep{
 			{
 				Config:      TestAccConsulConfigEntry_exportedServicesCE,
@@ -197,11 +197,11 @@ func TestAccConsulConfigEntry_ServicesExportedCE(t *testing.T) {
 }
 
 func TestAccConsulConfigEntry_ServicesExportedEE(t *testing.T) {
-	startTestServer(t)
+	providers, _ := startTestServer(t)
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { skipTestOnConsulCommunityEdition(t) },
-		Providers: testAccProviders,
+		Providers: providers,
 		Steps: []resource.TestStep{
 			{
 				Config: TestAccConsulConfigEntry_exportedServicesEE,
@@ -215,11 +215,11 @@ func TestAccConsulConfigEntry_ServicesExportedEE(t *testing.T) {
 }
 
 func TestAccConsulConfigEntry_MeshCE(t *testing.T) {
-	startTestServer(t)
+	providers, _ := startTestServer(t)
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { skipTestOnConsulEnterpriseEdition(t) },
-		Providers: testAccProviders,
+		Providers: providers,
 		Steps: []resource.TestStep{
 			{
 				Config: TestAccConsulConfigEntry_meshCE,
@@ -233,11 +233,11 @@ func TestAccConsulConfigEntry_MeshCE(t *testing.T) {
 }
 
 func TestAccConsulConfigEntry_MeshEE(t *testing.T) {
-	startTestServer(t)
+	providers, _ := startTestServer(t)
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { skipTestOnConsulCommunityEdition(t) },
-		Providers: testAccProviders,
+		Providers: providers,
 		Steps: []resource.TestStep{
 			{
 				Config: TestAccConsulConfigEntry_meshEE,

@@ -8,10 +8,10 @@ import (
 )
 
 func TestAccDataConsulAutopilotHealth_basic(t *testing.T) {
-	startTestServer(t)
+	providers, _ := startTestServer(t)
 
 	resource.Test(t, resource.TestCase{
-		Providers: testAccProviders,
+		Providers: providers,
 		Steps: []resource.TestStep{
 			resource.TestStep{
 				Config: testAccDataAutopilotHealth,
@@ -38,10 +38,10 @@ func TestAccDataConsulAutopilotHealth_basic(t *testing.T) {
 }
 
 func TestAccDataConsulAutopilotHealth_config(t *testing.T) {
-	startTestServer(t)
+	providers, _ := startTestServer(t)
 
 	resource.Test(t, resource.TestCase{
-		Providers: testAccProviders,
+		Providers: providers,
 		Steps: []resource.TestStep{
 			resource.TestStep{
 				Config: testAccDataAutopilotHealthDatacenter,
@@ -54,7 +54,7 @@ func TestAccDataConsulAutopilotHealth_config(t *testing.T) {
 }
 
 func TestAccDataConsulAutopilotHealth_wrongDatacenter(t *testing.T) {
-	startTestServer(t)
+	providers, _ := startTestServer(t)
 
 	re, err := regexp.Compile("No path to datacenter")
 	if err != nil {
@@ -62,7 +62,7 @@ func TestAccDataConsulAutopilotHealth_wrongDatacenter(t *testing.T) {
 	}
 
 	resource.Test(t, resource.TestCase{
-		Providers: testAccProviders,
+		Providers: providers,
 		Steps: []resource.TestStep{
 			resource.TestStep{
 				Config:      testAccDataAutopilotHealthWrongDatacenter,

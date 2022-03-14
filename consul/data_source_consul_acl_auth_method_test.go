@@ -8,10 +8,10 @@ import (
 )
 
 func TestAccDataACLAuthMethod_basic(t *testing.T) {
-	startTestServer(t)
+	providers, _ := startTestServer(t)
 
 	resource.Test(t, resource.TestCase{
-		Providers: testAccProviders,
+		Providers: providers,
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccDataSourceACLAuthMethodConfigNotFound,
@@ -45,10 +45,10 @@ func TestAccDataACLAuthMethod_basic(t *testing.T) {
 }
 
 func TestAccDataACLAuthMethod_namespaceCE(t *testing.T) {
-	startTestServer(t)
+	providers, _ := startTestServer(t)
 
 	resource.Test(t, resource.TestCase{
-		Providers: testAccProviders,
+		Providers: providers,
 		PreCheck:  func() { skipTestOnConsulEnterpriseEdition(t) },
 		Steps: []resource.TestStep{
 			{
@@ -60,10 +60,10 @@ func TestAccDataACLAuthMethod_namespaceCE(t *testing.T) {
 }
 
 func TestAccDataACLAuthMethod_namespaceEE(t *testing.T) {
-	startTestServer(t)
+	providers, _ := startTestServer(t)
 
 	resource.Test(t, resource.TestCase{
-		Providers: testAccProviders,
+		Providers: providers,
 		PreCheck:  func() { skipTestOnConsulCommunityEdition(t) },
 		Steps: []resource.TestStep{
 			{

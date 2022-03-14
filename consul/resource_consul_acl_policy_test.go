@@ -4,34 +4,36 @@ import (
 	"fmt"
 	"testing"
 
+	consulapi "github.com/hashicorp/consul/api"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 )
 
-func testAccCheckConsulACLPolicyDestroy(s *terraform.State) error {
-	client := getTestClient(testAccProvider.Meta())
-
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "consul_acl_policy" {
-			continue
+func testAccCheckConsulACLPolicyDestroy(client *consulapi.Client) func(s *terraform.State) error {
+	return func(s *terraform.State) error {
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "consul_acl_policy" {
+				continue
+			}
+			secret, _, err := client.ACL().Info(rs.Primary.ID, nil)
+			if err != nil {
+				return err
+			}
+			if secret != nil {
+				return fmt.Errorf("ACL %q still exists", rs.Primary.ID)
+			}
 		}
-		secret, _, err := client.ACL().Info(rs.Primary.ID, nil)
-		if err != nil {
-			return err
-		}
-		if secret != nil {
-			return fmt.Errorf("ACL %q still exists", rs.Primary.ID)
-		}
+		return nil
 	}
-	return nil
+
 }
 
 func TestAccConsulACLPolicy_basic(t *testing.T) {
-	startTestServer(t)
+	providers, client := startTestServer(t)
 
 	resource.Test(t, resource.TestCase{
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckConsulACLPolicyDestroy,
+		Providers:    providers,
+		CheckDestroy: testAccCheckConsulACLPolicyDestroy(client),
 		Steps: []resource.TestStep{
 			{
 				Config: testResourceACLPolicyConfigBasic,
@@ -58,7 +60,7 @@ func TestAccConsulACLPolicy_basic(t *testing.T) {
 }
 
 func TestAccConsulACLPolicy_import(t *testing.T) {
-	startTestServer(t)
+	providers, _ := startTestServer(t)
 
 	checkFn := func(s []*terraform.InstanceState) error {
 		if len(s) != 1 {
@@ -81,7 +83,7 @@ func TestAccConsulACLPolicy_import(t *testing.T) {
 	}
 
 	resource.Test(t, resource.TestCase{
-		Providers: testAccProviders,
+		Providers: providers,
 		Steps: []resource.TestStep{
 			{
 				Config: testResourceACLPolicyConfigBasic,
@@ -96,10 +98,10 @@ func TestAccConsulACLPolicy_import(t *testing.T) {
 }
 
 func TestAccConsulACLPolicy_NamespaceCE(t *testing.T) {
-	startTestServer(t)
+	providers, _ := startTestServer(t)
 
 	resource.Test(t, resource.TestCase{
-		Providers: testAccProviders,
+		Providers: providers,
 		PreCheck:  func() { skipTestOnConsulEnterpriseEdition(t) },
 		Steps: []resource.TestStep{
 			{
@@ -111,10 +113,10 @@ func TestAccConsulACLPolicy_NamespaceCE(t *testing.T) {
 }
 
 func TestAccConsulACLPolicy_NamespaceEE(t *testing.T) {
-	startTestServer(t)
+	providers, _ := startTestServer(t)
 
 	resource.Test(t, resource.TestCase{
-		Providers: testAccProviders,
+		Providers: providers,
 		PreCheck:  func() { skipTestOnConsulCommunityEdition(t) },
 		Steps: []resource.TestStep{
 			{

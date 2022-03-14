@@ -12,11 +12,11 @@ import (
 )
 
 func TestAccConsulService_basic(t *testing.T) {
-	startTestServer(t)
+	providers, client := startTestServer(t)
 
 	resource.Test(t, resource.TestCase{
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckConsulServiceDestroy,
+		Providers:    providers,
+		CheckDestroy: testAccCheckConsulServiceDestroy(client),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccConsulServiceConfigBasic,
@@ -29,7 +29,7 @@ func TestAccConsulService_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("consul_service.example", "tags.#", "1"),
 					resource.TestCheckResourceAttr("consul_service.example", "tags.0", "tag0"),
 					resource.TestCheckResourceAttr("consul_service.example", "meta.%", "0"),
-					testAccConsulExternalSource,
+					testAccConsulExternalSource(client),
 				),
 			},
 			{
@@ -47,7 +47,7 @@ func TestAccConsulService_basic(t *testing.T) {
 				),
 			},
 			{
-				PreConfig: testAccRemoveConsulService(t, "compute-example", "example"),
+				PreConfig: testAccRemoveConsulService(t, client, "compute-example", "example"),
 				Config:    testAccConsulServiceConfigBasicMeta,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("consul_service.example", "id", "example"),
@@ -67,11 +67,11 @@ func TestAccConsulService_basic(t *testing.T) {
 }
 
 func TestAccConsulService_basicModify(t *testing.T) {
-	startTestServer(t)
+	providers, client := startTestServer(t)
 
 	resource.Test(t, resource.TestCase{
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckConsulServiceDestroy,
+		Providers:    providers,
+		CheckDestroy: testAccCheckConsulServiceDestroy(client),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccConsulServiceConfigBasic,
@@ -104,11 +104,11 @@ func TestAccConsulService_basicModify(t *testing.T) {
 }
 
 func TestAccConsulService_serviceID(t *testing.T) {
-	startTestServer(t)
+	providers, client := startTestServer(t)
 
 	resource.Test(t, resource.TestCase{
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckConsulServiceDestroy,
+		Providers:    providers,
+		CheckDestroy: testAccCheckConsulServiceDestroy(client),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccConsulServiceConfigServiceID,
@@ -124,11 +124,11 @@ func TestAccConsulService_serviceID(t *testing.T) {
 }
 
 func TestAccConsulServiceCheck(t *testing.T) {
-	startTestServer(t)
+	providers, client := startTestServer(t)
 
 	resource.Test(t, resource.TestCase{
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckConsulServiceDestroy,
+		Providers:    providers,
+		CheckDestroy: testAccCheckConsulServiceDestroy(client),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccConsulServiceCheck,
@@ -166,7 +166,7 @@ func TestAccConsulServiceCheck(t *testing.T) {
 				// Changes in a registered check should be detected
 				// See https://github.com/hashicorp/terraform-provider-consul/issues/237
 				PreConfig: func() {
-					c := getTestClient(testAccProvider.Meta()).Catalog()
+					c := client.Catalog()
 					_, err := c.Register(&consulapi.CatalogRegistration{
 						Node: "example",
 						Service: &consulapi.AgentService{
@@ -208,10 +208,10 @@ func TestAccConsulServiceCheck(t *testing.T) {
 }
 
 func TestAccConsulServiceCheckOrder(t *testing.T) {
-	startTestServer(t)
+	providers, _ := startTestServer(t)
 
 	resource.Test(t, resource.TestCase{
-		Providers: testAccProviders,
+		Providers: providers,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccConsulServiceCheckOrder,
@@ -223,10 +223,10 @@ func TestAccConsulServiceCheckOrder(t *testing.T) {
 // When the same service is defined on multiple nodes, the health-checks must
 // be associated to the correct instance.
 func TestAccDataConsulServiceSameServiceMultipleNodes(t *testing.T) {
-	startTestServer(t)
+	providers, _ := startTestServer(t)
 
 	resource.Test(t, resource.TestCase{
-		Providers: testAccProviders,
+		Providers: providers,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDataConsulServiceSameServiceMultipleNodes,
@@ -236,11 +236,11 @@ func TestAccDataConsulServiceSameServiceMultipleNodes(t *testing.T) {
 }
 
 func TestAccConsulService_nodeDoesNotExist(t *testing.T) {
-	startTestServer(t)
+	providers, client := startTestServer(t)
 
 	resource.Test(t, resource.TestCase{
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckConsulServiceDestroy,
+		Providers:    providers,
+		CheckDestroy: testAccCheckConsulServiceDestroy(client),
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccConsulServiceConfigNoNode,
@@ -251,12 +251,12 @@ func TestAccConsulService_nodeDoesNotExist(t *testing.T) {
 }
 
 func TestAccConsulService_dontOverrideNodeMeta(t *testing.T) {
-	startTestServer(t)
+	providers, _ := startTestServer(t)
 
 	// This would raise an error if consul_service changed attributes of consul_node
 	// since the next plan would not be empty
 	resource.Test(t, resource.TestCase{
-		Providers: testAccProviders,
+		Providers: providers,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccConsulServiceDontOverrideNodeMeta,
@@ -266,16 +266,16 @@ func TestAccConsulService_dontOverrideNodeMeta(t *testing.T) {
 }
 
 func TestAccConsulService_multipleInstances(t *testing.T) {
-	startTestServer(t)
+	providers, client := startTestServer(t)
 
 	resource.Test(t, resource.TestCase{
-		Providers: testAccProviders,
+		Providers: providers,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccConsulServiceMultipleInstances,
 			},
 			{
-				PreConfig: testAccRemoveConsulService(t, "redis/redis1", "redis"),
+				PreConfig: testAccRemoveConsulService(t, client, "redis/redis1", "redis"),
 				Config:    testAccConsulServiceMultipleInstances,
 			},
 		},
@@ -283,11 +283,11 @@ func TestAccConsulService_multipleInstances(t *testing.T) {
 }
 
 func TestAccConsulService_NamespaceCE(t *testing.T) {
-	startTestServer(t)
+	providers, _ := startTestServer(t)
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { skipTestOnConsulEnterpriseEdition(t) },
-		Providers: testAccProviders,
+		Providers: providers,
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccConsulServiceNamespaceCE,
@@ -298,11 +298,11 @@ func TestAccConsulService_NamespaceCE(t *testing.T) {
 }
 
 func TestAccConsulService_NamespaceEE(t *testing.T) {
-	startTestServer(t)
+	providers, _ := startTestServer(t)
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { skipTestOnConsulCommunityEdition(t) },
-		Providers: testAccProviders,
+		Providers: providers,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccConsulServiceNamespaceEE,
@@ -312,16 +312,16 @@ func TestAccConsulService_NamespaceEE(t *testing.T) {
 }
 
 func TestAccConsulService_datacenter(t *testing.T) {
-	startRemoteDatacenterTestServer(t)
+	providers, client := startRemoteDatacenterTestServer(t)
 
 	resource.Test(t, resource.TestCase{
-		Providers: testAccProviders,
+		Providers: providers,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccConsulServiceDatacenter,
 				Check: func(s *terraform.State) error {
 					test := func(dc string, expected bool) error {
-						c := getTestClient(testAccProvider.Meta()).Catalog()
+						c := client.Catalog()
 						opts := &consulapi.QueryOptions{
 							Datacenter: dc,
 						}
@@ -352,42 +352,43 @@ func TestAccConsulService_datacenter(t *testing.T) {
 	})
 }
 
-func testAccConsulExternalSource(s *terraform.State) error {
-	client := getTestClient(testAccProvider.Meta())
-	qOpts := consulapi.QueryOptions{}
+func testAccConsulExternalSource(client *consulapi.Client) func(s *terraform.State) error {
+	return func(s *terraform.State) error {
+		qOpts := consulapi.QueryOptions{}
 
-	service, _, err := client.Catalog().Service("example", "", &qOpts)
-	if err != nil {
-		return fmt.Errorf("Failed to retrieve service: %v", err)
-	}
-
-	for _, s := range service {
-		source, ok := s.ServiceMeta["external-source"]
-		if !ok || source != "terraform" {
-			return fmt.Errorf("external-source not set")
+		service, _, err := client.Catalog().Service("example", "", &qOpts)
+		if err != nil {
+			return fmt.Errorf("Failed to retrieve service: %v", err)
 		}
+
+		for _, s := range service {
+			source, ok := s.ServiceMeta["external-source"]
+			if !ok || source != "terraform" {
+				return fmt.Errorf("external-source not set")
+			}
+		}
+		return nil
 	}
-	return nil
 }
 
-func testAccCheckConsulServiceDestroy(s *terraform.State) error {
-	client := getTestClient(testAccProvider.Meta())
-	qOpts := consulapi.QueryOptions{}
-	services, _, err := client.Catalog().Services(&qOpts)
-	if err != nil {
-		return fmt.Errorf("Failed to retrieve services: %v", err)
-	}
+func testAccCheckConsulServiceDestroy(client *consulapi.Client) func(s *terraform.State) error {
+	return func(s *terraform.State) error {
+		qOpts := consulapi.QueryOptions{}
+		services, _, err := client.Catalog().Services(&qOpts)
+		if err != nil {
+			return fmt.Errorf("Failed to retrieve services: %v", err)
+		}
 
-	if len(services) > 1 {
-		return fmt.Errorf("Matching services still exist: %v", services)
-	}
+		if len(services) > 1 {
+			return fmt.Errorf("Matching services still exist: %v", services)
+		}
 
-	return nil
+		return nil
+	}
 }
 
-func testAccRemoveConsulService(t *testing.T, node, serviceID string) func() {
+func testAccRemoveConsulService(t *testing.T, client *consulapi.Client, node, serviceID string) func() {
 	return func() {
-		client := getTestClient(testAccProvider.Meta())
 		catalog := client.Catalog()
 		wOpts := &consulapi.WriteOptions{}
 		dereg := &consulapi.CatalogDeregistration{

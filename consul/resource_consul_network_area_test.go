@@ -11,12 +11,12 @@ import (
 )
 
 func TestAccConsulNetworkArea_basic(t *testing.T) {
-	startTestServer(t)
+	providers, client := startTestServer(t)
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { skipTestOnConsulCommunityEdition(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccConsulNetworkAreaCheckDestroy,
+		Providers:    providers,
+		CheckDestroy: testAccConsulNetworkAreaCheckDestroy(client),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccConsulNetworkAreaBasic,
@@ -49,11 +49,11 @@ func TestAccConsulNetworkArea_basic(t *testing.T) {
 }
 
 func TestAccConsulNetworkArea_CommunityEdition(t *testing.T) {
-	startTestServer(t)
+	providers, _ := startTestServer(t)
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { skipTestOnConsulEnterpriseEdition(t) },
-		Providers: testAccProviders,
+		Providers: providers,
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccConsulNetworkAreaBasic,
@@ -64,20 +64,20 @@ func TestAccConsulNetworkArea_CommunityEdition(t *testing.T) {
 }
 
 func TestAccConsulNetworkArea_datacenter(t *testing.T) {
-	startRemoteDatacenterTestServer(t)
+	providers, client := startRemoteDatacenterTestServer(t)
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			skipTestOnConsulCommunityEdition(t)
 		},
-		Providers:    testAccProviders,
-		CheckDestroy: testAccConsulNetworkAreaCheckDestroy,
+		Providers:    providers,
+		CheckDestroy: testAccConsulNetworkAreaCheckDestroy(client),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccConsulNetworkAreaDatacenter,
 				Check: func(s *terraform.State) error {
 					test := func(dc, peer string) error {
-						c := getTestClient(testAccProvider.Meta()).Operator()
+						c := client.Operator()
 						opts := &consulapi.QueryOptions{
 							Datacenter: dc,
 						}
@@ -120,21 +120,22 @@ func TestAccConsulNetworkArea_datacenter(t *testing.T) {
 	})
 }
 
-func testAccConsulNetworkAreaCheckDestroy(s *terraform.State) error {
-	client := getTestClient(testAccProvider.Meta())
-	operator := client.Operator()
+func testAccConsulNetworkAreaCheckDestroy(client *consulapi.Client) func(s *terraform.State) error {
+	return func(s *terraform.State) error {
+		operator := client.Operator()
 
-	qOpts := &consulapi.QueryOptions{}
-	areas, _, err := operator.AreaList(qOpts)
-	if err != nil {
-		return fmt.Errorf("Failed to fetch network areas: %v", err)
+		qOpts := &consulapi.QueryOptions{}
+		areas, _, err := operator.AreaList(qOpts)
+		if err != nil {
+			return fmt.Errorf("Failed to fetch network areas: %v", err)
+		}
+
+		if len(areas) != 0 {
+			return fmt.Errorf("Some areas have not been destroyed: %v", areas)
+		}
+
+		return nil
 	}
-
-	if len(areas) != 0 {
-		return fmt.Errorf("Some areas have not been destroyed: %v", areas)
-	}
-
-	return nil
 }
 
 const testAccConsulNetworkAreaBasic = `

@@ -10,8 +10,6 @@ jobs:
     env:
       GO111MODULE: on
       GOFLAGS: -mod=vendor
-      CONSUL_HTTP_TOKEN: master-token
-      CONSUL_HTTP_ADDR: http://localhost:8500
     strategy:
       fail-fast: false
       matrix:

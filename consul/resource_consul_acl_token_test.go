@@ -4,31 +4,32 @@ import (
 	"fmt"
 	"testing"
 
+	consulapi "github.com/hashicorp/consul/api"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 )
 
-func testAccCheckConsulACLTokenDestroy(s *terraform.State) error {
-	client := getTestClient(testAccProvider.Meta())
-
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "consul_acl_token" {
-			continue
+func testAccCheckConsulACLTokenDestroy(client *consulapi.Client) func(s *terraform.State) error {
+	return func(s *terraform.State) error {
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "consul_acl_token" {
+				continue
+			}
+			aclToken, _, _ := client.ACL().TokenRead(rs.Primary.ID, nil)
+			if aclToken != nil {
+				return fmt.Errorf("ACL token %q still exists", rs.Primary.ID)
+			}
 		}
-		aclToken, _, _ := client.ACL().TokenRead(rs.Primary.ID, nil)
-		if aclToken != nil {
-			return fmt.Errorf("ACL token %q still exists", rs.Primary.ID)
-		}
+		return nil
 	}
-	return nil
 }
 
 func TestAccConsulACLToken_basic(t *testing.T) {
-	startTestServer(t)
+	providers, client := startTestServer(t)
 
 	resource.Test(t, resource.TestCase{
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckConsulACLTokenDestroy,
+		Providers:    providers,
+		CheckDestroy: testAccCheckConsulACLTokenDestroy(client),
 		Steps: []resource.TestStep{
 			{
 				Config: testResourceACLTokenConfigBasic,
@@ -85,7 +86,7 @@ func TestAccConsulACLToken_basic(t *testing.T) {
 }
 
 func TestAccConsulACLToken_import(t *testing.T) {
-	startTestServer(t)
+	providers, _ := startTestServer(t)
 
 	checkFn := func(s []*terraform.InstanceState) error {
 		if len(s) != 1 {
@@ -108,7 +109,7 @@ func TestAccConsulACLToken_import(t *testing.T) {
 	}
 
 	resource.Test(t, resource.TestCase{
-		Providers: testAccProviders,
+		Providers: providers,
 		Steps: []resource.TestStep{
 			{
 				Config: testResourceACLTokenConfigBasic,
@@ -123,10 +124,10 @@ func TestAccConsulACLToken_import(t *testing.T) {
 }
 
 func TestAccConsulACLToken_namespaceCE(t *testing.T) {
-	startTestServer(t)
+	providers, _ := startTestServer(t)
 
 	resource.Test(t, resource.TestCase{
-		Providers: testAccProviders,
+		Providers: providers,
 		PreCheck:  func() { skipTestOnConsulEnterpriseEdition(t) },
 		Steps: []resource.TestStep{
 			{
@@ -138,10 +139,10 @@ func TestAccConsulACLToken_namespaceCE(t *testing.T) {
 }
 
 func TestAccConsulACLToken_namespaceEE(t *testing.T) {
-	startTestServer(t)
+	providers, _ := startTestServer(t)
 
 	resource.Test(t, resource.TestCase{
-		Providers: testAccProviders,
+		Providers: providers,
 		PreCheck:  func() { skipTestOnConsulCommunityEdition(t) },
 		Steps: []resource.TestStep{
 			{

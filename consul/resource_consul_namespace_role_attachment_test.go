@@ -9,11 +9,10 @@ import (
 )
 
 func TestAccConsulNamespaceRoleAttachment(t *testing.T) {
-	startTestServer(t)
+	providers, client := startTestServer(t)
 
 	testRole := func(name string) func(*terraform.State) error {
 		return func(s *terraform.State) error {
-			client := getTestClient(testAccProvider.Meta())
 			namespace, _, err := client.Namespaces().Read("testroleattachment", nil)
 			if err != nil {
 				return fmt.Errorf("failed to read namespace testroleattachment: %s", err)
@@ -32,7 +31,7 @@ func TestAccConsulNamespaceRoleAttachment(t *testing.T) {
 	}
 
 	resource.Test(t, resource.TestCase{
-		Providers: testAccProviders,
+		Providers: providers,
 		PreCheck:  func() { skipTestOnConsulCommunityEdition(t) },
 		Steps: []resource.TestStep{
 			{

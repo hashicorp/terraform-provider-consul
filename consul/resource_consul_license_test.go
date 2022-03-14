@@ -8,13 +8,13 @@ import (
 )
 
 func TestAccConsulLicense_CommunityEdition(t *testing.T) {
-	startTestServer(t)
+	providers, _ := startTestServer(t)
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			skipTestOnConsulEnterpriseEdition(t)
 		},
-		Providers: testAccProviders,
+		Providers: providers,
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccConsulLicense,
@@ -25,13 +25,13 @@ func TestAccConsulLicense_CommunityEdition(t *testing.T) {
 }
 
 func TestAccConsulLicense_EnterpriseEdition(t *testing.T) {
-	startTestServer(t)
+	providers, _ := startTestServer(t)
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			skipTestOnConsulCommunityEdition(t)
 		},
-		Providers: testAccProviders,
+		Providers: providers,
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccConsulLicense,

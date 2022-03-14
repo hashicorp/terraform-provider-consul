@@ -8,10 +8,10 @@ import (
 )
 
 func TestAccDataConsulKeys_basic(t *testing.T) {
-	startTestServer(t)
+	providers, _ := startTestServer(t)
 
 	resource.Test(t, resource.TestCase{
-		Providers: testAccProviders,
+		Providers: providers,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDataConsulKeysConfig,
@@ -24,10 +24,10 @@ func TestAccDataConsulKeys_basic(t *testing.T) {
 }
 
 func TestAccDataConsulKeys_namespaceCE(t *testing.T) {
-	startTestServer(t)
+	providers, _ := startTestServer(t)
 
 	resource.Test(t, resource.TestCase{
-		Providers: testAccProviders,
+		Providers: providers,
 		PreCheck:  func() { skipTestOnConsulEnterpriseEdition(t) },
 		Steps: []resource.TestStep{
 			{
@@ -39,10 +39,10 @@ func TestAccDataConsulKeys_namespaceCE(t *testing.T) {
 }
 
 func TestAccDataConsulKeys_namespaceEE(t *testing.T) {
-	startTestServer(t)
+	providers, _ := startTestServer(t)
 
 	resource.Test(t, resource.TestCase{
-		Providers: testAccProviders,
+		Providers: providers,
 		PreCheck:  func() { skipTestOnConsulCommunityEdition(t) },
 		Steps: []resource.TestStep{
 			{
@@ -53,10 +53,10 @@ func TestAccDataConsulKeys_namespaceEE(t *testing.T) {
 }
 
 func TestAccDataConsulKeys_datacenter(t *testing.T) {
-	startRemoteDatacenterTestServer(t)
+	providers, _ := startRemoteDatacenterTestServer(t)
 
 	resource.Test(t, resource.TestCase{
-		Providers: testAccProviders,
+		Providers: providers,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDataConsulKeysConfigDatacenter,

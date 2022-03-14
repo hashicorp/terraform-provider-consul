@@ -8,14 +8,14 @@ import (
 )
 
 func TestAccConsulAdminParition_CEBasic(t *testing.T) {
-	startTestServer(t)
+	providers, client := startTestServer(t)
 
 	resource.Test(t, resource.TestCase{
-		Providers: testAccProviders,
+		Providers: providers,
 		PreCheck: func() {
 			skipTestOnConsulEnterpriseEdition(t)
 		},
-		CheckDestroy: testAccCheckConsulACLTokenDestroy,
+		CheckDestroy: testAccCheckConsulACLTokenDestroy(client),
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccConsulAdminPartitionBasic,

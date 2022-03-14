@@ -8,14 +8,14 @@ import (
 )
 
 func TestAccConsulAdminParition_EntBasic(t *testing.T) {
-	startTestServer(t)
+	providers, client := startTestServer(t)
 
 	resource.Test(t, resource.TestCase{
-		Providers: testAccProviders,
+		Providers: providers,
 		PreCheck: func() {
 			skipTestOnConsulCommunityEdition(t)
 		},
-		CheckDestroy: testAccCheckConsulACLTokenDestroy,
+		CheckDestroy: testAccCheckConsulACLTokenDestroy(client),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccConsulAdminPartitionBasic,
@@ -26,7 +26,6 @@ func TestAccConsulAdminParition_EntBasic(t *testing.T) {
 			},
 			{
 				PreConfig: func() {
-					client := getTestClient(testAccProvider.Meta())
 					partitions := client.Partitions()
 					if _, err := partitions.Delete(context.TODO(), "hello", nil); err != nil {
 						t.Fatalf("failed to remove partition: %s", err)
