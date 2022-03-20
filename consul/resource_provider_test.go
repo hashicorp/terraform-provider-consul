@@ -236,10 +236,10 @@ func startServerWithConfig(t *testing.T, config string) {
 }
 
 func waitForService(t *testing.T) (map[string]terraform.ResourceProvider, *consulapi.Client) {
-	config := consulapi.DefaultConfig()
-	config.Address = "http://localhost:8500"
-	config.Token = "master-token"
+	os.Setenv("CONSUL_HTTP_ADDR", "http://localhost:8500")
+	os.Setenv("CONSUL_HTTP_TOKEN", "master-token")
 
+	config := consulapi.DefaultConfig()
 	client, err := consulapi.NewClient(config)
 	if err != nil {
 		t.Fatalf("failed to instantiate client: %v", err)
@@ -253,7 +253,7 @@ func waitForService(t *testing.T) (map[string]terraform.ResourceProvider, *consu
 			time.Sleep(200 * time.Millisecond)
 
 			return map[string]terraform.ResourceProvider{
-				"consul": Provider().(*schema.Provider),
+				"consul": Provider(),
 			}, client
 		}
 

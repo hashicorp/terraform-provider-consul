@@ -70,8 +70,7 @@ to start a development server. The binary used by the acceptance tests can be
 specified by setting the `CONSUL_TEST_BINARY` environment variable.
 
 ```sh
-$ export CONSUL_HTTP_TOKEN=master-token
-$ make testacc
+make testacc
 ```
 
 Documentation
