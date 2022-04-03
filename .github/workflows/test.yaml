@@ -31,6 +31,6 @@ jobs:
       run: |
         curl -LO https://releases.hashicorp.com/consul/1.11.4/consul_1.11.4_linux_amd64.zip
         sudo unzip consul_1.11.4_linux_amd64.zip consul -d /usr/local/bin
-        make testacc TESTARGS="-count=1"
+        SKIP_REMOTE_DATACENTER_TESTS=1 make testacc TESTARGS="-count=1"
     - name: Run go vet
       run: make vet

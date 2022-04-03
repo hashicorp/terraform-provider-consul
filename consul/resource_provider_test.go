@@ -287,6 +287,10 @@ func startTestServer(t *testing.T) (map[string]terraform.ResourceProvider, *cons
 }
 
 func startRemoteDatacenterTestServer(t *testing.T) (map[string]terraform.ResourceProvider, *consulapi.Client) {
+	if os.Getenv("SKIP_REMOTE_DATACENTER_TESTS") != "" {
+		t.Skip("Remote datacenter skipped because SKIP_REMOTE_DATACENTER_TESTS is set")
+	}
+
 	startServerWithConfig(
 		t,
 		`
