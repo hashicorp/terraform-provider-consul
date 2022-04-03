@@ -343,7 +343,7 @@ func startRemoteDatacenterTestServer(t *testing.T) (map[string]terraform.Resourc
 	)
 
 	providers, client := waitForService(t)
-	for i := 0; i < 10; i++ {
+	for i := 0; i < 20; i++ {
 		datacenters, err := client.Catalog().Datacenters()
 		if err == nil && len(datacenters) == 2 {
 			return providers, client
