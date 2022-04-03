@@ -238,12 +238,11 @@ resource "consul_config_entry" "exported_services" {
 
 ```hcl
 resource "consul_config_entry" "mesh" {
-	name = "mesh"
-	kind = "mesh"
+	name      = "mesh"
+	kind      = "mesh"
+  partition = "default"
 
 	config_json = jsonencode({
-		Partition = "default"
-
 		TransparentProxy = {
 			MeshDestinationsOnly = true
 		}
@@ -260,6 +259,8 @@ The following arguments are supported:
 
 * `name` - (Required) The name of the configuration entry being registered.
 
+* `partition` - (Optional, Enterprise Only) The partition the config entry is associated with.
+
 * `namespace` - (Optional, Enterprise Only) The namespace to create the config entry within.
 
 * `config_json` - (Optional) An arbitrary map of configuration values.
@@ -273,5 +274,9 @@ The following attributes are exported:
 * `kind` - The kind of the configuration entry.
 
 * `name` - The name of the configuration entry.
+
+* `partition` - The partition the config entry is associated with.
+
+* `namespace` - The namespace to create the config entry within.
 
 * `config_json` - A map of configuration values.

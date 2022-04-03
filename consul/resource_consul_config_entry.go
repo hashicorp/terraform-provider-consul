@@ -30,6 +30,13 @@ func resourceConsulConfigEntry() *schema.Resource {
 				ForceNew: true,
 			},
 
+			"partition": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				ForceNew:    true,
+				Description: "The partition the config entry is associated with.",
+			},
+
 			"namespace": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -63,7 +70,7 @@ func resourceConsulConfigEntryUpdate(d *schema.ResourceData, meta interface{}) e
 
 	fixQOptsForConfigEntry(name, kind, qOpts)
 
-	configEntry, err := makeConfigEntry(kind, name, d.Get("config_json").(string), wOpts.Namespace)
+	configEntry, err := makeConfigEntry(kind, name, d.Get("config_json").(string), wOpts.Namespace, wOpts.Partition)
 	if err != nil {
 		return err
 	}
@@ -77,7 +84,7 @@ func resourceConsulConfigEntryUpdate(d *schema.ResourceData, meta interface{}) e
 			return fmt.Errorf(`failed to read config entry after setting it.
 This may happen when some attributes have an unexpected value.
 Read the documentation at https://www.consul.io/docs/agent/config-entries/%s.html
-to see what values are expected.`, configEntry.GetKind())
+to see what values are expected`, configEntry.GetKind())
 		}
 		return fmt.Errorf("failed to read config entry: %v", err)
 	}
@@ -129,7 +136,7 @@ func resourceConsulConfigEntryDelete(d *schema.ResourceData, meta interface{}) e
 	return nil
 }
 
-func makeConfigEntry(kind, name, config, namespace string) (consulapi.ConfigEntry, error) {
+func makeConfigEntry(kind, name, config, namespace, partition string) (consulapi.ConfigEntry, error) {
 	var configMap map[string]interface{}
 	if err := json.Unmarshal([]byte(config), &configMap); err != nil {
 		return nil, fmt.Errorf("failed to unmarshal configMap: %v", err)
@@ -138,6 +145,7 @@ func makeConfigEntry(kind, name, config, namespace string) (consulapi.ConfigEntr
 	configMap["kind"] = kind
 	configMap["name"] = name
 	configMap["Namespace"] = namespace
+	configMap["Partition"] = partition
 
 	configEntry, err := consulapi.DecodeConfigEntry(configMap)
 	if err != nil {
@@ -165,6 +173,7 @@ func configEntryToMap(configEntry consulapi.ConfigEntry) (map[string]interface{}
 	delete(configMap, "Kind")
 	delete(configMap, "Name")
 	delete(configMap, "Namespace")
+	delete(configMap, "Partition")
 
 	return configMap, nil
 }
@@ -191,12 +200,13 @@ func diffConfigJSON(k, old, new string, d *schema.ResourceData) bool {
 	kind := d.Get("kind").(string)
 	name := d.Get("name").(string)
 	namespace := d.Get("namespace").(string)
+	partition := d.Get("partition").(string)
 
-	oldEntry, err := makeConfigEntry(kind, name, old, namespace)
+	oldEntry, err := makeConfigEntry(kind, name, old, namespace, partition)
 	if err != nil {
 		return false
 	}
-	newEntry, err := makeConfigEntry(kind, name, new, namespace)
+	newEntry, err := makeConfigEntry(kind, name, new, namespace, partition)
 	if err != nil {
 		return false
 	}
