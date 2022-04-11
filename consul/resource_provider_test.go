@@ -246,12 +246,9 @@ func waitForService(t *testing.T) (map[string]terraform.ResourceProvider, *consu
 	}
 
 	var services []*consulapi.ServiceEntry
-	for i := 0; i < 10; i++ {
+	for i := 0; i < 20; i++ {
 		services, _, err = client.Health().Service("consul", "", true, nil)
-		if err == nil && len(services) == 1 {
-			// Once the service is up we have to wait for the info to be synced
-			time.Sleep(200 * time.Millisecond)
-
+		if err == nil && len(services) == 1 && len(services[0].Node.Meta) == 1 {
 			return map[string]terraform.ResourceProvider{
 				"consul": Provider(),
 			}, client
@@ -290,6 +287,10 @@ func startTestServer(t *testing.T) (map[string]terraform.ResourceProvider, *cons
 }
 
 func startRemoteDatacenterTestServer(t *testing.T) (map[string]terraform.ResourceProvider, *consulapi.Client) {
+	if os.Getenv("SKIP_REMOTE_DATACENTER_TESTS") != "" {
+		t.Skip("Remote datacenter skipped because SKIP_REMOTE_DATACENTER_TESTS is set")
+	}
+
 	startServerWithConfig(
 		t,
 		`
@@ -346,7 +347,7 @@ func startRemoteDatacenterTestServer(t *testing.T) (map[string]terraform.Resourc
 	)
 
 	providers, client := waitForService(t)
-	for i := 0; i < 10; i++ {
+	for i := 0; i < 20; i++ {
 		datacenters, err := client.Catalog().Datacenters()
 		if err == nil && len(datacenters) == 2 {
 			return providers, client

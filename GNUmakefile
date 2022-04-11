@@ -1,13 +1,20 @@
-TEST?=$$(go list ./... |grep -v 'vendor')
+TEST?=$$(go list ./... | grep -v 'vendor')
 GOFMT_FILES?=$$(find . -name '*.go' |grep -v vendor)
-PKG_NAME=consul
-CONSUL_VERSION ?= "latest"
-CONSUL_IMAGE ?= "docker.mirror.hashicorp.services/consul:$(CONSUL_VERSION)"
+HOSTNAME=hashicorp.com
+NAMESPACE=hashicorp
+NAME=consul
+BINARY=terraform-provider-${NAME}
+VERSION=2.15.1
+OS_ARCH=darwin_amd64
 
 default: build
 
 build: fmtcheck
-	go install
+	go build -o ${BINARY}
+
+install: build
+	mkdir -p ~/.terraform.d/plugins/${HOSTNAME}/${NAMESPACE}/${NAME}/${VERSION}/${OS_ARCH}
+	mv ${BINARY} ~/.terraform.d/plugins/${HOSTNAME}/${NAMESPACE}/${NAME}/${VERSION}/${OS_ARCH}
 
 test: fmtcheck
 	go test -i $(TEST) || exit 1
@@ -38,7 +45,7 @@ errcheck:
 test-compile:
 	@if [ "$(TEST)" = "./..." ]; then \
 		echo "ERROR: Set TEST to a specific package. For example,"; \
-		echo "  make test-compile TEST=./$(PKG_NAME)"; \
+		echo "  make test-compile TEST=./$(NAME)"; \
 		exit 1; \
 	fi
 	go test -c $(TEST) $(TESTARGS)

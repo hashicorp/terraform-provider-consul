@@ -90,6 +90,9 @@ func TestAccDataConsulServices_datacenter(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDataConsulCatalogServicesDatacenter,
+			},
+			{
+				Config: testAccDataConsulCatalogServicesDatacenter,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDataSourceValue("data.consul_services.read", "services.%", "2"),
 					testAccCheckDataSourceValue("data.consul_services.read", "tags.tag0", "test"),

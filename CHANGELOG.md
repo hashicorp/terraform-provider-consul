@@ -1,3 +1,9 @@
+## 2.15.1 (Unreleased)
+
+BUG FIXES:
+
+* The support of Admin Partition has been fixed for `consul_config_entry`: a new `partition` argument is now present and should be used instead of setting `Partition` in `config_json`.
+
 ## 2.15.0 (March 21, 2022)
 
 CHANGES:
