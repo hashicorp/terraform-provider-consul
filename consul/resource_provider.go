@@ -152,6 +152,8 @@ func Provider() terraform.ResourceProvider {
 			"consul_network_segments":     dataSourceConsulNetworkSegments(),
 			"consul_network_area_members": dataSourceConsulNetworkAreaMembers(),
 			"consul_datacenters":          dataSourceConsulDatacenters(),
+			"consul_peering":              dataSourceConsulPeering(),
+			"consul_peerings":             dataSourceConsulPeerings(),
 
 			// Aliases to limit the impact of rename of catalog
 			// datasources
@@ -185,6 +187,8 @@ func Provider() terraform.ResourceProvider {
 			"consul_service":                     resourceConsulService(),
 			"consul_intention":                   resourceConsulIntention(),
 			"consul_network_area":                resourceConsulNetworkArea(),
+			"consul_peering_token":               resourceSourceConsulPeeringToken(),
+			"consul_peering":                     resourceSourceConsulPeering(),
 		},
 
 		ConfigureFunc: providerConfigure,

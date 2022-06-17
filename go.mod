@@ -1,7 +1,7 @@
 module github.com/hashicorp/terraform-provider-consul
 
 require (
-	github.com/hashicorp/consul/api v1.12.0
+	github.com/hashicorp/consul/api v1.10.1-0.20220614213650-6453375ab228
 	github.com/hashicorp/errwrap v1.0.0
 	github.com/hashicorp/terraform-plugin-sdk v1.17.2
 	github.com/mitchellh/mapstructure v1.4.1
@@ -30,7 +30,7 @@ require (
 	github.com/golang/groupcache v0.0.0-20200121045136-8c9f03a8e57e // indirect
 	github.com/golang/protobuf v1.4.2 // indirect
 	github.com/golang/snappy v0.0.1 // indirect
-	github.com/google/go-cmp v0.5.5 // indirect
+	github.com/google/go-cmp v0.5.7 // indirect
 	github.com/google/uuid v1.1.2 // indirect
 	github.com/googleapis/gax-go/v2 v2.0.5 // indirect
 	github.com/hashicorp/go-checkpoint v0.5.0 // indirect
