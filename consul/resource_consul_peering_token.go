@@ -10,6 +10,16 @@ import (
 
 func resourceSourceConsulPeeringToken() *schema.Resource {
 	return &schema.Resource{
+		Description: `
+[Cluster Peering](https://www.consul.io/docs/connect/cluster-peering) can be used to create connections between two or more independent clusters so that services deployed to different partitions or datacenters can communicate.
+
+The ` + "`cluster_peering_token`" + ` resource can be used to generate a peering token that can later be used to establish a peering connection.
+
+~> **Cluster peering is currently in technical preview:** Functionality associated with cluster peering is subject to change. You should never use the technical preview release in secure environments or production scenarios. Features in technical preview may have performance issues, scaling issues, and limited support.
+
+The functionality described here is available only in Consul version 1.13.0 and later.
+`,
+
 		Create: resourceConsulPeeringTokenCreate,
 		Read: func(*schema.ResourceData, interface{}) error {
 			return nil
@@ -20,9 +30,10 @@ func resourceSourceConsulPeeringToken() *schema.Resource {
 
 		Schema: map[string]*schema.Schema{
 			"peer_name": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
+				Type:        schema.TypeString,
+				Required:    true,
+				ForceNew:    true,
+				Description: "The name assigned to the peer cluster. The `peer_name` is used to reference the peer cluster in service discovery queries and configuration entries such as `service-intentions`. This field must be a valid DNS hostname label.",
 			},
 			"partition": {
 				Type:     schema.TypeString,
@@ -30,28 +41,32 @@ func resourceSourceConsulPeeringToken() *schema.Resource {
 				ForceNew: true,
 			},
 			"datacenter": {
-				Type:     schema.TypeString,
-				Optional: true,
-				ForceNew: true,
+				Type:        schema.TypeString,
+				Optional:    true,
+				ForceNew:    true,
+				Description: "Specifies the datacenter where the peering token is generated. Defaults to the agent's datacenter when not specified.",
 			},
 			"token": {
-				Type:     schema.TypeString,
-				Optional: true,
-				ForceNew: true,
+				Type:        schema.TypeString,
+				Optional:    true,
+				ForceNew:    true,
+				Description: "Specifies the ACL token to use in the request. Takes precedence over the token used by the provider.",
 			},
 			"meta": {
-				Type:     schema.TypeMap,
-				Optional: true,
-				ForceNew: true,
+				Type:        schema.TypeMap,
+				Optional:    true,
+				ForceNew:    true,
+				Description: "Specifies KV metadata to associate with the peering. This parameter is not required and does not directly impact the cluster peering process.",
 
 				Elem: &schema.Schema{
 					Type: schema.TypeString,
 				},
 			},
 			"peering_token": {
-				Type:      schema.TypeString,
-				Computed:  true,
-				Sensitive: true,
+				Type:        schema.TypeString,
+				Computed:    true,
+				Sensitive:   true,
+				Description: "The generated peering token",
 			},
 		},
 	}

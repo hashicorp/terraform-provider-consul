@@ -6,7 +6,7 @@ provider "consul" {
 
 # Setup an AWS provider
 provider "aws" {
-  region = "${var.aws_region}"
+  region = var.aws_region
 }
 
 # Setup a key in Consul to provide inputs
@@ -21,8 +21,8 @@ data "consul_keys" "input" {
 # Setup a new AWS instance using a dynamic ami and
 # instance type
 resource "aws_instance" "test" {
-  ami           = "${lookup(var.aws_amis, var.aws_region)}"
-  instance_type = "${data.consul_keys.input.var.size}"
+  ami           = lookup(var.aws_amis, var.aws_region)
+  instance_type = data.consul_keys.input.var.size
 }
 
 # Setup a key in Consul to store the instance id and
@@ -31,14 +31,14 @@ resource "consul_keys" "test" {
   key {
     name   = "id"
     path   = "tf_test/id"
-    value  = "${aws_instance.test.id}"
+    value  = aws_instance.test.id
     delete = true
   }
 
   key {
     name   = "address"
     path   = "tf_test/public_dns"
-    value  = "${aws_instance.test.public_dns}"
+    value  = aws_instance.test.public_dns
     delete = true
   }
 }
