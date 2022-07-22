@@ -27,7 +27,7 @@ func resourceConsulPreparedQuery() *schema.Resource {
 
 			"name": {
 				Type:     schema.TypeString,
-				Required: true,
+				Optional: true,
 			},
 
 			"session": {
@@ -137,6 +137,10 @@ func resourceConsulPreparedQuery() *schema.Resource {
 							Type:     schema.TypeString,
 							Required: true,
 						},
+						"remove_empty_tags": {
+							Type:     schema.TypeBool,
+							Optional: true,
+						},
 					},
 				},
 			},
@@ -238,8 +242,9 @@ func resourceConsulPreparedQueryRead(d *schema.ResourceData, meta interface{}) e
 
 	if userWroteTemplate || pq.Template.Type != "" {
 		template = append(template, map[string]interface{}{
-			"type":   pq.Template.Type,
-			"regexp": pq.Template.Regexp,
+			"type":              pq.Template.Type,
+			"regexp":            pq.Template.Regexp,
+			"remove_empty_tags": pq.Template.RemoveEmptyTags,
 		})
 	}
 	sw.set("template", template)
@@ -310,8 +315,9 @@ func preparedQueryDefinitionFromResourceData(d *schema.ResourceData) *consulapi.
 
 	if _, ok := d.GetOk("template.0"); ok {
 		pq.Template = consulapi.QueryTemplate{
-			Type:   d.Get("template.0.type").(string),
-			Regexp: d.Get("template.0.regexp").(string),
+			Type:            d.Get("template.0.type").(string),
+			Regexp:          d.Get("template.0.regexp").(string),
+			RemoveEmptyTags: d.Get("template.0.remove_empty_tags").(bool),
 		}
 	}
 

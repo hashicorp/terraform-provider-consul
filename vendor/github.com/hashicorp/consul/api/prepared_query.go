@@ -81,6 +81,10 @@ type QueryTemplate struct {
 	// Regexp allows specifying a regex pattern to match against the name
 	// of the query being executed.
 	Regexp string
+
+	// RemoveEmptyTags if set to true, will cause the Tags list inside
+	// the Service structure to be stripped of any empty strings.
+	RemoveEmptyTags bool
 }
 
 // PreparedQueryDefinition defines a complete prepared query.
