@@ -24,6 +24,11 @@ func dataSourceConsulACLTokenSecretID() *schema.Resource {
 				Optional: true,
 			},
 
+			"partition": {
+				Type:     schema.TypeString,
+				Optional: true,
+			},
+
 			// Out parameters
 			"secret_id": {
 				Type:      schema.TypeString,
