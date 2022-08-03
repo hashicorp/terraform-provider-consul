@@ -52,6 +52,7 @@ The following arguments are supported:
 
 * `accessor_id` - (Required) The accessor ID of the ACL token.
 * `namespace` - (Optional, Enterprise Only) The namespace to lookup the token.
+* `partition` - (Optional, Enterprise Only) The partition to lookup the token.
 * `pgp_key` - (Optional) Either a base-64 encoded PGP public key, or a keybase
   username in the form `keybase:some_person_that_exists`. **If you do not set this
   argument, the token secret ID will be written as plain text in the Terraform
