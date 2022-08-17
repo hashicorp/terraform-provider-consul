@@ -1,5 +1,9 @@
 ## 2.15.1 (Unreleased)
 
+IMPROVEMENTS:
+
+* The `consul_acl_token_secret` datasource now supports reading tokens in a Consul Admin Partition ([#315](https://github.com/hashicorp/terraform-provider-consul/pull/315)).
+
 BUG FIXES:
 
 * The support of Admin Partition has been fixed for `consul_config_entry`: a new `partition` argument is now present and should be used instead of setting `Partition` in `config_json`.
