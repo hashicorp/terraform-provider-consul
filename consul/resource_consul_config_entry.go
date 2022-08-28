@@ -16,6 +16,38 @@ func resourceConsulConfigEntry() *schema.Resource {
 		Update: resourceConsulConfigEntryUpdate,
 		Read:   resourceConsulConfigEntryRead,
 		Delete: resourceConsulConfigEntryDelete,
+		Importer: &schema.ResourceImporter{
+			State: func(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+				parts := strings.Split(d.Id(), "/")
+				var kind, name, partition, namespace string
+				switch len(parts) {
+				case 2:
+					kind = parts[0]
+					name = parts[1]
+				case 4:
+					kind = parts[0]
+					name = parts[1]
+					partition = parts[2]
+					namespace = parts[3]
+				default:
+					return nil, fmt.Errorf(`expected path of the form "<kind>/<name>" or "<kind>/<name>/<partition>/<namespace>"`)
+				}
+
+				d.SetId(fmt.Sprintf("%s-%s", kind, name))
+				sw := newStateWriter(d)
+				sw.set("kind", kind)
+				sw.set("name", name)
+				sw.set("partition", partition)
+				sw.set("namespace", namespace)
+
+				err := sw.error()
+				if err != nil {
+					return nil, err
+				}
+
+				return []*schema.ResourceData{d}, nil
+			},
+		},
 
 		Schema: map[string]*schema.Schema{
 			"kind": {
@@ -56,7 +88,7 @@ func fixQOptsForConfigEntry(name, kind string, qOpts *consulapi.QueryOptions) {
 	// exported-services config entries are weird in that their name correspond
 	// to the partition they are created in, see
 	// https://www.consul.io/docs/connect/config-entries/exported-services#configuration-parameters
-	if kind == "exported-services" {
+	if kind == "exported-services" && name != "default" {
 		qOpts.Partition = name
 	}
 }

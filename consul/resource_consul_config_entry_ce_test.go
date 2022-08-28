@@ -109,6 +109,18 @@ func TestAccConsulConfigEntryCE_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("consul_config_entry.service_intentions", "kind", "service-intentions"),
 				),
 			},
+			{
+				Config:       testAccConsulConfigEntryCE_ServiceConfigL7Mixed,
+				ImportState:  true,
+				ResourceName: "consul_config_entry.service_intentions",
+				ExpectError:  regexp.MustCompile(`expected path of the form "<kind>/<name>" or "<kind>/<name>/<partition>/<namespace>"`),
+			},
+			{
+				Config:        testAccConsulConfigEntryCE_ServiceConfigL7Mixed,
+				ImportState:   true,
+				ResourceName:  "consul_config_entry.service_intentions",
+				ImportStateId: "service-defaults/api",
+			},
 		},
 	})
 }
@@ -135,8 +147,13 @@ func TestAccConsulConfigEntryCE_ServicesExported(t *testing.T) {
 		Providers: providers,
 		Steps: []resource.TestStep{
 			{
-				Config:      TestAccConsulConfigEntryCE_exportedServicesCE,
-				ExpectError: regexp.MustCompile(`Config entry kind "exported-services" requires Consul Enterprise`),
+				Config: TestAccConsulConfigEntryCE_exportedServicesCE,
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr("consul_config_entry.exported_services", "config_json", "{\"Services\":[{\"Consumers\":[{\"Partition\":\"default\"}],\"Name\":\"test\"}]}"),
+					resource.TestCheckResourceAttr("consul_config_entry.exported_services", "id", "exported-services-default"),
+					resource.TestCheckResourceAttr("consul_config_entry.exported_services", "kind", "exported-services"),
+					resource.TestCheckResourceAttr("consul_config_entry.exported_services", "name", "default"),
+				),
 			},
 		},
 	})
@@ -625,13 +642,12 @@ const TestAccConsulConfigEntryCE_mesh = `
 
 const TestAccConsulConfigEntryCE_exportedServicesCE = `
 resource "consul_config_entry" "exported_services" {
-	name = "test"
+	name = "default"
 	kind = "exported-services"
 
 	config_json = jsonencode({
 		Services = [{
 			Name = "test"
-			Namespace = "default"
 			Consumers = [{
 				Partition = "default"
 			}]
