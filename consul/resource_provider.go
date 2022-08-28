@@ -13,6 +13,11 @@ import (
 	"github.com/mitchellh/mapstructure"
 )
 
+var (
+	tokenDeprecationMessage = `The token argument has been deprecated and will be removed in a future release.
+Please use the token argument in the provider configuration`
+)
+
 // Provider returns a terraform.ResourceProvider.
 func Provider() terraform.ResourceProvider {
 	return &schema.Provider{
