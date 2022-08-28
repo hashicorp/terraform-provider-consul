@@ -152,6 +152,7 @@ func Provider() terraform.ResourceProvider {
 			"consul_network_segments":     dataSourceConsulNetworkSegments(),
 			"consul_network_area_members": dataSourceConsulNetworkAreaMembers(),
 			"consul_datacenters":          dataSourceConsulDatacenters(),
+			"consul_config_entry":         dataSourceConsulConfigEntry(),
 
 			// Aliases to limit the impact of rename of catalog
 			// datasources
@@ -294,7 +295,7 @@ func (sw *stateWriter) setJson(key string, value interface{}) {
 	if err != nil {
 		sw.errors = append(
 			sw.errors,
-			fmt.Sprintf("failed to marshal '%s': %v", key, err),
+			fmt.Sprintf(" - failed to marshal '%s': %v", key, err),
 		)
 		return
 	}
