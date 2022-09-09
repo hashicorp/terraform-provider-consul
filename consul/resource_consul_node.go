@@ -9,11 +9,11 @@ import (
 
 func resourceConsulNode() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceConsulNodeCreate,
-		Update: resourceConsulNodeCreate,
-		Read:   resourceConsulNodeRead,
-		Delete: resourceConsulNodeDelete,
-
+		Create:   resourceConsulNodeCreate,
+		Update:   resourceConsulNodeCreate,
+		Read:     resourceConsulNodeRead,
+		Delete:   resourceConsulNodeDelete,
+		Importer: resourceImporterWithCustomID("name"),
 		Schema: map[string]*schema.Schema{
 			"address": {
 				Type:     schema.TypeString,

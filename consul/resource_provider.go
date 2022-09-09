@@ -309,3 +309,15 @@ func (sw *stateWriter) error() error {
 	errors := strings.Join(sw.errors, "\n")
 	return fmt.Errorf("failed to write the state:\n%s", errors)
 }
+
+// Used to specify when the resource id is not the "id", e.g.: consul nodes are identified by name
+func resourceImporterWithCustomID(id string) *schema.ResourceImporter {
+	return &schema.ResourceImporter{
+		State: func(d *schema.ResourceData, _ interface{}) ([]*schema.ResourceData, error) {
+			// consul_node uses the "name" as resource ID
+			d.Set(id, d.Id())
+
+			return []*schema.ResourceData{d}, nil
+		},
+	}
+}
