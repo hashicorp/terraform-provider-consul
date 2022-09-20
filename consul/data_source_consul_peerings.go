@@ -11,11 +11,6 @@ func dataSourceConsulPeerings() *schema.Resource {
 	return &schema.Resource{
 		Read: dataSourceConsulPeeringsRead,
 		Schema: map[string]*schema.Schema{
-			"datacenter": {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-
 			"partition": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -79,6 +74,14 @@ func dataSourceConsulPeerings() *schema.Resource {
 								Type: schema.TypeString,
 							},
 						},
+						"imported_service_count": {
+							Type:     schema.TypeInt,
+							Computed: true,
+						},
+						"exported_service_count": {
+							Type:     schema.TypeInt,
+							Computed: true,
+						},
 					},
 				},
 			},
@@ -101,16 +104,18 @@ func dataSourceConsulPeeringsRead(d *schema.ResourceData, meta interface{}) erro
 			deletedAt = peer.DeletedAt.String()
 		}
 		peers[i] = map[string]interface{}{
-			"id":                    peer.ID,
-			"name":                  peer.Name,
-			"partition":             peer.Partition,
-			"deleted_at":            deletedAt,
-			"meta":                  peer.Meta,
-			"state":                 peer.State,
-			"peer_id":               peer.PeerID,
-			"peer_ca_pems":          peer.PeerCAPems,
-			"peer_server_name":      peer.PeerServerName,
-			"peer_server_addresses": peer.PeerServerAddresses,
+			"id":                     peer.ID,
+			"name":                   peer.Name,
+			"partition":              peer.Partition,
+			"deleted_at":             deletedAt,
+			"meta":                   peer.Meta,
+			"state":                  peer.State,
+			"peer_id":                peer.PeerID,
+			"peer_ca_pems":           peer.PeerCAPems,
+			"peer_server_name":       peer.PeerServerName,
+			"peer_server_addresses":  peer.PeerServerAddresses,
+			"imported_service_count": peer.ImportedServiceCount,
+			"exported_service_count": peer.ExportedServiceCount,
 		}
 	}
 

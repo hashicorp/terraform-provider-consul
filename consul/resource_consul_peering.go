@@ -41,18 +41,6 @@ The functionality described here is available only in Consul version 1.13.0 and 
 				Sensitive:   true,
 				Description: "The peering token fetched from the peer cluster.",
 			},
-			"datacenter": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				ForceNew:    true,
-				Description: "Specifies the datacenter where the peering is established. Defaults to the agent's datacenter when not specified.",
-			},
-			"token": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				ForceNew:    true,
-				Description: "Specifies the ACL token to use in the request. Takes precedence over the token used by the provider.",
-			},
 			"meta": {
 				Type:        schema.TypeMap,
 				Optional:    true,
@@ -62,6 +50,11 @@ The functionality described here is available only in Consul version 1.13.0 and 
 				Elem: &schema.Schema{
 					Type: schema.TypeString,
 				},
+			},
+			"partition": {
+				Type:     schema.TypeString,
+				Optional: true,
+				ForceNew: true,
 			},
 
 			// Out
@@ -97,6 +90,14 @@ The functionality described here is available only in Consul version 1.13.0 and 
 					Type: schema.TypeString,
 				},
 			},
+			"imported_service_count": {
+				Type:     schema.TypeInt,
+				Computed: true,
+			},
+			"exported_service_count": {
+				Type:     schema.TypeInt,
+				Computed: true,
+			},
 		},
 	}
 }
@@ -113,9 +114,8 @@ func resourceConsulPeeringCreate(d *schema.ResourceData, meta interface{}) error
 	req := api.PeeringEstablishRequest{
 		PeerName:     name,
 		PeeringToken: d.Get("peering_token").(string),
-		Datacenter:   d.Get("datacenter").(string),
-		Token:        d.Get("token").(string),
 		Meta:         m,
+		Partition:    d.Get("partition").(string),
 	}
 
 	_, _, err := client.Peerings().Establish(context.Background(), req, wOpts)
@@ -154,6 +154,8 @@ func resourceConsulPeeringRead(d *schema.ResourceData, meta interface{}) error {
 	sw.set("peer_ca_pems", peer.PeerCAPems)
 	sw.set("peer_server_name", peer.PeerServerName)
 	sw.set("peer_server_addresses", peer.PeerServerAddresses)
+	sw.set("imported_service_count", peer.ImportedServiceCount)
+	sw.set("exported_service_count", peer.ExportedServiceCount)
 
 	return sw.error()
 }

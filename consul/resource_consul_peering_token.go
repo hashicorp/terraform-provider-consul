@@ -40,18 +40,6 @@ The functionality described here is available only in Consul version 1.13.0 and 
 				Optional: true,
 				ForceNew: true,
 			},
-			"datacenter": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				ForceNew:    true,
-				Description: "Specifies the datacenter where the peering token is generated. Defaults to the agent's datacenter when not specified.",
-			},
-			"token": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				ForceNew:    true,
-				Description: "Specifies the ACL token to use in the request. Takes precedence over the token used by the provider.",
-			},
 			"meta": {
 				Type:        schema.TypeMap,
 				Optional:    true,
@@ -82,11 +70,9 @@ func resourceConsulPeeringTokenCreate(d *schema.ResourceData, meta interface{}) 
 	}
 
 	req := api.PeeringGenerateTokenRequest{
-		PeerName:   name,
-		Partition:  d.Get("partition").(string),
-		Datacenter: d.Get("datacenter").(string),
-		Token:      d.Get("token").(string),
-		Meta:       m,
+		PeerName:  name,
+		Partition: d.Get("partition").(string),
+		Meta:      m,
 	}
 
 	resp, _, err := client.Peerings().GenerateToken(context.Background(), req, wOpts)
