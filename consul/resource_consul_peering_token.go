@@ -21,12 +21,8 @@ The functionality described here is available only in Consul version 1.13.0 and 
 `,
 
 		Create: resourceConsulPeeringTokenCreate,
-		Read: func(*schema.ResourceData, interface{}) error {
-			return nil
-		},
-		Delete: func(*schema.ResourceData, interface{}) error {
-			return nil
-		},
+		Read:   resourceConsulPeeringTokenRead,
+		Delete: resourceConsulPeeringTokenDelete,
 
 		Schema: map[string]*schema.Schema{
 			"peer_name": {
@@ -86,4 +82,31 @@ func resourceConsulPeeringTokenCreate(d *schema.ResourceData, meta interface{}) 
 	sw.set("peering_token", resp.PeeringToken)
 
 	return sw.error()
+}
+
+func resourceConsulPeeringTokenRead(d *schema.ResourceData, meta interface{}) error {
+	name := d.Id()
+	client, qOpts, _ := getClient(d, meta)
+
+	peer, _, err := client.Peerings().Read(context.Background(), name, qOpts)
+	if err != nil {
+		return fmt.Errorf("failed to find peer %q: %s", name, err)
+	}
+
+	if peer == nil {
+		d.SetId("")
+	}
+
+	return nil
+}
+
+func resourceConsulPeeringTokenDelete(d *schema.ResourceData, meta interface{}) error {
+	name := d.Id()
+	client, _, wOpts := getClient(d, meta)
+
+	_, err := client.Peerings().Delete(context.Background(), name, wOpts)
+	if err != nil {
+		return fmt.Errorf("failed to delete peer %q: %s", name, err)
+	}
+	return nil
 }

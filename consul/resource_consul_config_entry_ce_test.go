@@ -1,7 +1,6 @@
 package consul
 
 import (
-	"regexp"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
@@ -108,20 +107,6 @@ func TestAccConsulConfigEntryCE_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("consul_config_entry.service_intentions", "name", "api"),
 					resource.TestCheckResourceAttr("consul_config_entry.service_intentions", "kind", "service-intentions"),
 				),
-			},
-		},
-	})
-}
-
-func TestAccConsulConfigEntry_Errors(t *testing.T) {
-	providers, _ := startTestServer(t)
-
-	resource.Test(t, resource.TestCase{
-		Providers: providers,
-		Steps: []resource.TestStep{
-			{
-				Config:      testAccConsulConfigEntryCE_ProxyDefaultsWrongName,
-				ExpectError: regexp.MustCompile("failed to read config entry after setting it.\nThis may happen when some attributes have an unexpected value.\nRead the documentation at https://www.consul.io/docs/agent/config-entries/proxy-defaults.html\nto see what values are expected"),
 			},
 		},
 	})
