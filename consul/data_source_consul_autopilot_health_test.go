@@ -16,7 +16,7 @@ func TestAccDataConsulAutopilotHealth_basic(t *testing.T) {
 			resource.TestStep{
 				Config: testAccDataAutopilotHealth,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDataSourceValue("data.consul_autopilot_health.read", "healthy", "true"),
+					resource.TestCheckResourceAttrSet("data.consul_autopilot_health.read", "healthy"),
 					testAccCheckDataSourceValue("data.consul_autopilot_health.read", "failure_tolerance", "0"),
 					testAccCheckDataSourceValue("data.consul_autopilot_health.read", "servers.#", "1"),
 					testAccCheckDataSourceValue("data.consul_autopilot_health.read", "servers.0.id", "<any>"),
@@ -24,11 +24,11 @@ func TestAccDataConsulAutopilotHealth_basic(t *testing.T) {
 					testAccCheckDataSourceValue("data.consul_autopilot_health.read", "servers.0.address", "<any>"),
 					testAccCheckDataSourceValue("data.consul_autopilot_health.read", "servers.0.serf_status", "alive"),
 					testAccCheckDataSourceValue("data.consul_autopilot_health.read", "servers.0.version", "<any>"),
-					testAccCheckDataSourceValue("data.consul_autopilot_health.read", "servers.0.leader", "true"),
+					resource.TestCheckResourceAttrSet("data.consul_autopilot_health.read", "servers.0.leader"),
 					testAccCheckDataSourceValue("data.consul_autopilot_health.read", "servers.0.last_contact", "<any>"),
 					testAccCheckDataSourceValue("data.consul_autopilot_health.read", "servers.0.last_term", "<any>"),
 					testAccCheckDataSourceValue("data.consul_autopilot_health.read", "servers.0.last_index", "<any>"),
-					testAccCheckDataSourceValue("data.consul_autopilot_health.read", "servers.0.healthy", "true"),
+					resource.TestCheckResourceAttrSet("data.consul_autopilot_health.read", "servers.0.healthy"),
 					testAccCheckDataSourceValue("data.consul_autopilot_health.read", "servers.0.voter", "true"),
 					testAccCheckDataSourceValue("data.consul_autopilot_health.read", "servers.0.stable_since", "<any>"),
 				),
