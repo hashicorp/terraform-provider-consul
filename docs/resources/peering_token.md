@@ -36,10 +36,8 @@ resource "consul_peering_token" "token" {
 
 ### Optional
 
-- `datacenter` (String) Specifies the datacenter where the peering token is generated. Defaults to the agent's datacenter when not specified.
 - `meta` (Map of String) Specifies KV metadata to associate with the peering. This parameter is not required and does not directly impact the cluster peering process.
 - `partition` (String)
-- `token` (String) Specifies the ACL token to use in the request. Takes precedence over the token used by the provider.
 
 ### Read-Only
 

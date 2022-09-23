@@ -61,14 +61,15 @@ resource "consul_peering" "eu-us" {
 
 ### Optional
 
-- `datacenter` (String) Specifies the datacenter where the peering is established. Defaults to the agent's datacenter when not specified.
 - `meta` (Map of String) Specifies KV metadata to associate with the peering. This parameter is not required and does not directly impact the cluster peering process.
-- `token` (String) Specifies the ACL token to use in the request. Takes precedence over the token used by the provider.
+- `partition` (String)
 
 ### Read-Only
 
 - `deleted_at` (String)
+- `exported_service_count` (Number)
 - `id` (String) The ID of this resource.
+- `imported_service_count` (Number)
 - `peer_ca_pems` (List of String)
 - `peer_id` (String)
 - `peer_server_addresses` (List of String)
