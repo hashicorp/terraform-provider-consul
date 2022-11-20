@@ -7,7 +7,7 @@ import (
 )
 
 func TestAccDataConsulPeerings_basic(t *testing.T) {
-	providers, _ := startRemoteDatacenterTestServer(t)
+	providers, _ := startPeeringTestServers(t)
 
 	resource.Test(t, resource.TestCase{
 		Providers: providers,
@@ -24,17 +24,15 @@ func TestAccDataConsulPeerings_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("data.consul_peerings.basic", "id", "peers"),
 					resource.TestCheckResourceAttrSet("data.consul_peerings.basic", "peers.#"),
 					resource.TestCheckResourceAttr("data.consul_peerings.basic", "peers.0.deleted_at", ""),
-					resource.TestCheckResourceAttr("data.consul_peerings.basic", "peers.0.exported_service_count", "0"),
 					resource.TestCheckResourceAttrSet("data.consul_peerings.basic", "peers.0.id"),
-					resource.TestCheckResourceAttr("data.consul_peerings.basic", "peers.0.imported_service_count", "0"),
 					resource.TestCheckResourceAttrSet("data.consul_peerings.basic", "peers.0.meta.%"),
 					resource.TestCheckResourceAttr("data.consul_peerings.basic", "peers.0.meta.foo", "bar"),
 					resource.TestCheckResourceAttrSet("data.consul_peerings.basic", "peers.0.name"),
 					resource.TestCheckResourceAttr("data.consul_peerings.basic", "peers.0.partition", ""),
-					resource.TestCheckResourceAttr("data.consul_peerings.basic", "peers.0.peer_ca_pems.#", "0"),
+					resource.TestCheckResourceAttr("data.consul_peerings.basic", "peers.0.peer_ca_pems.#", "1"),
 					resource.TestCheckResourceAttrSet("data.consul_peerings.basic", "peers.0.peer_id"),
 					resource.TestCheckResourceAttrSet("data.consul_peerings.basic", "peers.0.peer_server_addresses.#"),
-					resource.TestCheckResourceAttr("data.consul_peerings.basic", "peers.0.peer_server_addresses.0", "127.0.0.1:8508"),
+					resource.TestCheckResourceAttr("data.consul_peerings.basic", "peers.0.peer_server_addresses.0", "127.0.0.1:9503"),
 					resource.TestCheckResourceAttrSet("data.consul_peerings.basic", "peers.0.peer_server_name"),
 					resource.TestCheckResourceAttrSet("data.consul_peerings.basic", "peers.0.state"),
 				),
@@ -51,7 +49,7 @@ const testAccDataConsulPeeringsBasic = `
 provider "consul" {}
 
 provider "consulremote" {
-  address = "http://localhost:8501"
+  address = "http://localhost:9500"
 }
 
 resource "consul_peering_token" "basic" {

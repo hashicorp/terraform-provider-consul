@@ -1,3 +1,9 @@
+## 2.17.0
+
+NEW FEATURES:
+
+* The `consul_config_entry` now supports specifying the name of the peered cluster to export the service to.
+
 ## 2.16.0 (September 24, 2022)
 
 NEW FEATURES:

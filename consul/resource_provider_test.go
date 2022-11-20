@@ -2,7 +2,7 @@ package consul
 
 import (
 	"encoding/json"
-	"io/ioutil"
+	"net/http"
 	"os"
 	"os/exec"
 	"strings"
@@ -10,9 +10,14 @@ import (
 	"time"
 
 	consulapi "github.com/hashicorp/consul/api"
+	"github.com/hashicorp/consul/sdk/testutil/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+)
+
+const (
+	initialManagementToken = "12345678-1234-1234-1234-1234567890ab"
 )
 
 func TestResourceProvider(t *testing.T) {
@@ -61,15 +66,15 @@ func TestResourceProvider_ConfigureTLS(t *testing.T) {
 func TestResourceProvider_ConfigureTLSPem(t *testing.T) {
 	rp := Provider()
 
-	caPem, err := ioutil.ReadFile("test-fixtures/cacert.pem")
+	caPem, err := os.ReadFile("test-fixtures/cacert.pem")
 	if err != nil {
 		t.Fatalf("err: %s", err)
 	}
-	certPem, err := ioutil.ReadFile("test-fixtures/usercert.pem")
+	certPem, err := os.ReadFile("test-fixtures/usercert.pem")
 	if err != nil {
 		t.Fatalf("err: %s", err)
 	}
-	keyPem, err := ioutil.ReadFile("test-fixtures/userkey.pem")
+	keyPem, err := os.ReadFile("test-fixtures/userkey.pem")
 	if err != nil {
 		t.Fatalf("err: %s", err)
 	}
@@ -204,29 +209,23 @@ func TestAccTokenReadProviderConfigureWithHeaders(t *testing.T) {
 	}
 }
 
-func startServerWithConfig(t *testing.T, config string) {
+func startServerWithConfig(t *testing.T, configFile string) {
 	if os.Getenv("TF_ACC") == "" {
 		t.Skip("Acceptance tests skipped unless env 'TF_ACC' set")
 	}
 
-	os.Setenv("CONSUL_HTTP_TOKEN", "master-token")
-
-	f, err := os.CreateTemp("", "consul_*.hcl")
-	if err != nil {
-		t.Fatalf("fail to create Consul config file: %s", err)
-	}
-	if _, err := f.WriteString(config); err != nil {
-		t.Fatalf("fail to write Consul config: %s", err)
-	}
-	if err := f.Close(); err != nil {
-		t.Fatalf("fail to close Consul config file: %s", err)
-	}
+	os.Setenv("CONSUL_HTTP_TOKEN", initialManagementToken)
 
 	path := os.Getenv("CONSUL_TEST_BINARY")
 	if path == "" {
 		path = "consul"
 	}
-	cmd := exec.Command(path, "agent", "-dev", "-config-file", f.Name())
+	cmd := exec.Command(path, "agent", "-dev", "-config-file", "test-fixtures/"+configFile)
+
+	if os.Getenv("TF_ACC_CONSUL_LOG") != "" {
+		cmd.Stdout = os.Stdout
+		cmd.Stderr = os.Stderr
+	}
 
 	if err := cmd.Start(); err != nil {
 		t.Fatalf("failed to start Consul: %s", err)
@@ -240,7 +239,7 @@ func startServerWithConfig(t *testing.T, config string) {
 func waitForService(t *testing.T, address string) (terraform.ResourceProvider, *consulapi.Client) {
 	config := consulapi.DefaultConfig()
 	config.Address = address
-	config.Token = "master-token"
+	config.Token = initialManagementToken
 	client, err := consulapi.NewClient(config)
 	if err != nil {
 		t.Fatalf("failed to instantiate client: %v", err)
@@ -261,30 +260,7 @@ func waitForService(t *testing.T, address string) (terraform.ResourceProvider, *
 }
 
 func startTestServer(t *testing.T) (map[string]terraform.ResourceProvider, *consulapi.Client) {
-	startServerWithConfig(
-		t,
-		`
-			ui = true
-
-			limits = {
-				http_max_conns_per_client = -1
-			}
-
-			acl = {
-				enabled = true
-				default_policy = "allow"
-				down_policy = "extend-cache"
-
-				tokens = {
-					master = "master-token"
-				}
-			}
-
-			peering = {
-				enabled = true
-			}
-		`,
-	)
+	startServerWithConfig(t, "consul.hcl")
 
 	provider, client := waitForService(t, "http://localhost:8500")
 
@@ -298,72 +274,11 @@ func startRemoteDatacenterTestServer(t *testing.T) (map[string]terraform.Resourc
 		t.Skip("Remote datacenter skipped because SKIP_REMOTE_DATACENTER_TESTS is set")
 	}
 
-	startServerWithConfig(
-		t,
-		`
-			ui = true
-			datacenter = "dc2"
-			primary_datacenter = "dc1"
-
-			limits = {
-				http_max_conns_per_client = -1
-			}
-
-			acl = {
-				enabled = true
-				default_policy = "allow"
-				down_policy = "extend-cache"
-
-				tokens = {
-					master = "master-token"
-					// replication = "master-token"
-				}
-			}
-
-			ports = {
-				dns = -1
-				grpc = 8508
-				http = 8501
-				server = 8305
-				serf_lan = 8306
-				serf_wan = 8307
-			}
-
-			peering = {
-				enabled = true
-			}
-		`,
-	)
-	startServerWithConfig(
-		t,
-		`
-			ui = true
-			primary_datacenter = "dc1"
-
-			limits = {
-				http_max_conns_per_client = -1
-			}
-
-			acl = {
-				enabled = true
-				default_policy = "allow"
-				down_policy = "extend-cache"
-
-				tokens = {
-					master = "master-token"
-				}
-			}
-
-			peering = {
-				enabled = true
-			}
-
-			retry_join_wan = ["127.0.0.1:8307"]
-		`,
-	)
+	startServerWithConfig(t, "consul.hcl")
+	startServerWithConfig(t, "consul-secondary.hcl")
 
 	provider, client := waitForService(t, "http://localhost:8500")
-	remoteProvider, _ := waitForService(t, "http://localhost:8501")
+	remoteProvider, _ := waitForService(t, "http://localhost:9500")
 
 	for i := 0; i < 20; i++ {
 		datacenters, err := client.Catalog().Datacenters()
@@ -379,6 +294,68 @@ func startRemoteDatacenterTestServer(t *testing.T) (map[string]terraform.Resourc
 
 	t.Fatal("wait for the two datacenters to get synced")
 	return nil, nil
+}
+
+func waitForActiveCARoot(t testing.TB, address string) {
+	// don't need to fully decode the response
+	type rootsResponse struct {
+		ActiveRootID string
+		TrustDomain  string
+		Roots        []interface{}
+	}
+
+	retry.Run(t, func(r *retry.R) {
+		// Query the API and check the status code.
+		url := address + "/v1/agent/connect/ca/roots"
+		req, err := http.NewRequest("GET", url, nil)
+		if err != nil {
+			t.Fatal(err)
+		}
+		req.Header.Set("x-consul-token", initialManagementToken)
+		resp, err := http.DefaultClient.Do(req)
+		if err != nil {
+			r.Fatalf("failed http get '%s': %v", url, err)
+		}
+		defer resp.Body.Close()
+		// Roots will return an error status until it's been bootstrapped. We could
+		// parse the body and sanity check but that causes either import cycles
+		// since this is used in both `api` and consul test or duplication. The 200
+		// is all we really need to wait for.
+		if resp.StatusCode != 200 {
+			r.Fatalf("failed OK response: Bad status code: %d", resp.StatusCode)
+		}
+
+		var roots rootsResponse
+
+		dec := json.NewDecoder(resp.Body)
+		if err := dec.Decode(&roots); err != nil {
+			r.Fatal(err)
+		}
+
+		if roots.ActiveRootID == "" || len(roots.Roots) < 1 {
+			r.Fatalf("/v1/agent/connect/ca/roots returned 200 but without roots: %+v", roots)
+		}
+	})
+}
+
+func startPeeringTestServers(t *testing.T) (map[string]terraform.ResourceProvider, *consulapi.Client) {
+	if os.Getenv("SKIP_REMOTE_DATACENTER_TESTS") != "" {
+		t.Skip("Remote datacenter skipped because SKIP_REMOTE_DATACENTER_TESTS is set")
+	}
+
+	startServerWithConfig(t, "consul-peering-blue.hcl")
+	startServerWithConfig(t, "consul-peering-green.hcl")
+
+	provider, client := waitForService(t, "http://localhost:8500")
+	remoteProvider, _ := waitForService(t, "http://localhost:9500")
+
+	waitForActiveCARoot(t, "http://localhost:8500")
+	waitForActiveCARoot(t, "http://localhost:9500")
+
+	return map[string]terraform.ResourceProvider{
+		"consul":       provider,
+		"consulremote": remoteProvider,
+	}, client
 }
 
 func serverIsConsulCommunityEdition(t *testing.T) bool {
