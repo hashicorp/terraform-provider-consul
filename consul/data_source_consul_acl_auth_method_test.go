@@ -1,10 +1,12 @@
 package consul
 
 import (
+	"fmt"
 	"regexp"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 )
 
 func TestAccDataACLAuthMethod_basic(t *testing.T) {
@@ -84,6 +86,27 @@ func TestAccDataACLAuthMethod_namespaceEE(t *testing.T) {
 			},
 		},
 	})
+}
+
+func testAccCheckDataSourceValue(n, attr, val string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		rn, ok := s.RootModule().Resources[n]
+		if !ok {
+			return fmt.Errorf("Resource not found")
+		}
+		out, found := rn.Primary.Attributes[attr]
+		switch {
+		case !found:
+			return fmt.Errorf("Attribute '%s' not found: %#v", attr, rn.Primary.Attributes)
+		case val == "<all>":
+			// Value found, don't care what the payload is (including the zero value)
+		case val != "<any>" && out != val:
+			return fmt.Errorf("Attribute '%s' value '%s' != '%s'", attr, out, val)
+		case val == "<any>" && out == "":
+			return fmt.Errorf("Attribute '%s' value '%s'", attr, out)
+		}
+		return nil
+	}
 }
 
 const testAccDataSourceACLAuthMethodConfigNotFound = `
