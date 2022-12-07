@@ -56,7 +56,7 @@ func fixQOptsForConfigEntry(name, kind string, qOpts *consulapi.QueryOptions) {
 	// exported-services config entries are weird in that their name correspond
 	// to the partition they are created in, see
 	// https://www.consul.io/docs/connect/config-entries/exported-services#configuration-parameters
-	if kind == "exported-services" {
+	if kind == "exported-services" && name != "default" {
 		qOpts.Partition = name
 	}
 }

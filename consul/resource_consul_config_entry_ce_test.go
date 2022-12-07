@@ -1,7 +1,6 @@
 package consul
 
 import (
-	"regexp"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
@@ -113,20 +112,6 @@ func TestAccConsulConfigEntryCE_basic(t *testing.T) {
 	})
 }
 
-func TestAccConsulConfigEntry_Errors(t *testing.T) {
-	providers, _ := startTestServer(t)
-
-	resource.Test(t, resource.TestCase{
-		Providers: providers,
-		Steps: []resource.TestStep{
-			{
-				Config:      testAccConsulConfigEntryCE_ProxyDefaultsWrongName,
-				ExpectError: regexp.MustCompile("failed to read config entry after setting it.\nThis may happen when some attributes have an unexpected value.\nRead the documentation at https://www.consul.io/docs/agent/config-entries/proxy-defaults.html\nto see what values are expected"),
-			},
-		},
-	})
-}
-
 func TestAccConsulConfigEntryCE_ServicesExported(t *testing.T) {
 	providers, _ := startTestServer(t)
 
@@ -135,8 +120,13 @@ func TestAccConsulConfigEntryCE_ServicesExported(t *testing.T) {
 		Providers: providers,
 		Steps: []resource.TestStep{
 			{
-				Config:      TestAccConsulConfigEntryCE_exportedServicesCE,
-				ExpectError: regexp.MustCompile(`Config entry kind "exported-services" requires Consul Enterprise`),
+				Config: TestAccConsulConfigEntryCE_exportedServicesCE,
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr("consul_config_entry.exported_services", "config_json", "{\"Services\":[{\"Consumers\":[{}],\"Name\":\"test\"}]}"),
+					resource.TestCheckResourceAttr("consul_config_entry.exported_services", "id", "exported-services-default"),
+					resource.TestCheckResourceAttr("consul_config_entry.exported_services", "kind", "exported-services"),
+					resource.TestCheckResourceAttr("consul_config_entry.exported_services", "name", "default"),
+				),
 			},
 		},
 	})
@@ -625,15 +615,14 @@ const TestAccConsulConfigEntryCE_mesh = `
 
 const TestAccConsulConfigEntryCE_exportedServicesCE = `
 resource "consul_config_entry" "exported_services" {
-	name = "test"
+	name = "default"
 	kind = "exported-services"
 
 	config_json = jsonencode({
 		Services = [{
 			Name = "test"
-			Namespace = "default"
 			Consumers = [{
-				Partition = "default"
+				Peer = "us-east-2"
 			}]
 		}]
 	})

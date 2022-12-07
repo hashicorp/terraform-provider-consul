@@ -1,8 +1,15 @@
-## 2.15.1 (Unreleased)
+## 2.16.0 (September 24, 2022)
+
+NEW FEATURES:
+
+* The `consul_peering` and `consul_peering_token` resources can now be used to manage Consul Cluster Peering configuration ([#309](https://github.com/hashicorp/terraform-provider-consul/pull/309)).
+* The `consul_peering` and `consul_peerings` datasources can now be used to introspect Consul Cluster Peering configuration ([#309](https://github.com/hashicorp/terraform-provider-consul/pull/309)).
 
 IMPROVEMENTS:
 
-* The `consul_acl_token_secret` datasource now supports reading tokens in a Consul Admin Partition ([#315](https://github.com/hashicorp/terraform-provider-consul/pull/315)).
+* The `consul_acl_token_secret_id` datasource now supports reading tokens in a Consul Admin Partition ([#315](https://github.com/hashicorp/terraform-provider-consul/pull/315)).
+
+## 2.15.1 (April 11, 2022)
 
 BUG FIXES:
 

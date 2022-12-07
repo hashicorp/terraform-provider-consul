@@ -14,7 +14,6 @@ func TestAccConsulNode_basic(t *testing.T) {
 	providers, client := startTestServer(t)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() {},
 		Providers:    providers,
 		CheckDestroy: testAccCheckConsulNodeDestroy(client),
 		Steps: []resource.TestStep{
