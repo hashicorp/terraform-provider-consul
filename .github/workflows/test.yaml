@@ -7,9 +7,6 @@ on:
       - master
 jobs:
   test:
-    env:
-      GO111MODULE: on
-      GOFLAGS: -mod=vendor
     strategy:
       fail-fast: false
       matrix:
