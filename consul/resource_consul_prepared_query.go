@@ -297,7 +297,7 @@ func preparedQueryDefinitionFromResourceData(d *schema.ResourceData) *consulapi.
 	}
 
 	if _, ok := d.GetOk("failover.0"); ok {
-		failover := consulapi.QueryDatacenterOptions{
+		failover := consulapi.QueryFailoverOptions{
 			NearestN: d.Get("failover.0.nearest_n").(int),
 		}
 
