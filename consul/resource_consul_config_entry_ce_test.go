@@ -122,7 +122,7 @@ func TestAccConsulConfigEntryCE_ServicesExported(t *testing.T) {
 			{
 				Config: TestAccConsulConfigEntryCE_exportedServicesCE,
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr("consul_config_entry.exported_services", "config_json", "{\"Services\":[{\"Consumers\":[{\"Partition\":\"default\"}],\"Name\":\"test\"}]}"),
+					resource.TestCheckResourceAttr("consul_config_entry.exported_services", "config_json", "{\"Services\":[{\"Consumers\":[{}],\"Name\":\"test\"}]}"),
 					resource.TestCheckResourceAttr("consul_config_entry.exported_services", "id", "exported-services-default"),
 					resource.TestCheckResourceAttr("consul_config_entry.exported_services", "kind", "exported-services"),
 					resource.TestCheckResourceAttr("consul_config_entry.exported_services", "name", "default"),
