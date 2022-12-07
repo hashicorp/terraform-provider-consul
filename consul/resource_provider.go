@@ -13,6 +13,11 @@ import (
 	"github.com/mitchellh/mapstructure"
 )
 
+func deprecated(name string, resource *schema.Resource) *schema.Resource {
+	resource.DeprecationMessage = fmt.Sprintf("%s is deprecated and will be removed in a future version.", name)
+	return resource
+}
+
 // Provider returns a terraform.ResourceProvider.
 func Provider() terraform.ResourceProvider {
 	return &schema.Provider{
@@ -153,12 +158,14 @@ func Provider() terraform.ResourceProvider {
 			"consul_network_area_members": dataSourceConsulNetworkAreaMembers(),
 			"consul_datacenters":          dataSourceConsulDatacenters(),
 			"consul_config_entry":         dataSourceConsulConfigEntry(),
+			"consul_peering":              dataSourceConsulPeering(),
+			"consul_peerings":             dataSourceConsulPeerings(),
 
 			// Aliases to limit the impact of rename of catalog
 			// datasources
-			"consul_catalog_nodes":    dataSourceConsulNodes(),
-			"consul_catalog_service":  dataSourceConsulService(),
-			"consul_catalog_services": dataSourceConsulServices(),
+			"consul_catalog_nodes":    deprecated("consul_catalog_nodes", dataSourceConsulNodes()),
+			"consul_catalog_service":  deprecated("consul_catalog_service", dataSourceConsulService()),
+			"consul_catalog_services": deprecated("consul_catalog_services", dataSourceConsulServices()),
 		},
 
 		ResourcesMap: map[string]*schema.Resource{
@@ -186,6 +193,8 @@ func Provider() terraform.ResourceProvider {
 			"consul_service":                     resourceConsulService(),
 			"consul_intention":                   resourceConsulIntention(),
 			"consul_network_area":                resourceConsulNetworkArea(),
+			"consul_peering_token":               resourceSourceConsulPeeringToken(),
+			"consul_peering":                     resourceSourceConsulPeering(),
 		},
 
 		ConfigureFunc: providerConfigure,

@@ -209,6 +209,8 @@ func startServerWithConfig(t *testing.T, config string) {
 		t.Skip("Acceptance tests skipped unless env 'TF_ACC' set")
 	}
 
+	os.Setenv("CONSUL_HTTP_TOKEN", "master-token")
+
 	f, err := os.CreateTemp("", "consul_*.hcl")
 	if err != nil {
 		t.Fatalf("fail to create Consul config file: %s", err)
@@ -235,11 +237,10 @@ func startServerWithConfig(t *testing.T, config string) {
 	})
 }
 
-func waitForService(t *testing.T) (map[string]terraform.ResourceProvider, *consulapi.Client) {
-	os.Setenv("CONSUL_HTTP_ADDR", "http://localhost:8500")
-	os.Setenv("CONSUL_HTTP_TOKEN", "master-token")
-
+func waitForService(t *testing.T, address string) (terraform.ResourceProvider, *consulapi.Client) {
 	config := consulapi.DefaultConfig()
+	config.Address = address
+	config.Token = "master-token"
 	client, err := consulapi.NewClient(config)
 	if err != nil {
 		t.Fatalf("failed to instantiate client: %v", err)
@@ -249,15 +250,13 @@ func waitForService(t *testing.T) (map[string]terraform.ResourceProvider, *consu
 	for i := 0; i < 20; i++ {
 		services, _, err = client.Health().Service("consul", "", true, nil)
 		if err == nil && len(services) == 1 && len(services[0].Node.Meta) == 1 {
-			return map[string]terraform.ResourceProvider{
-				"consul": Provider(),
-			}, client
+			return Provider(), client
 		}
 
 		time.Sleep(200 * time.Millisecond)
 	}
 
-	t.Fatalf("timeout while waiting for Consul to start, last error: %v, %d services", err, len(services))
+	t.Fatalf("timeout while waiting for %s to start, last error: %v, %d services", address, err, len(services))
 	return nil, nil
 }
 
@@ -280,10 +279,18 @@ func startTestServer(t *testing.T) (map[string]terraform.ResourceProvider, *cons
 					master = "master-token"
 				}
 			}
+
+			peering = {
+				enabled = true
+			}
 		`,
 	)
 
-	return waitForService(t)
+	provider, client := waitForService(t, "http://localhost:8500")
+
+	return map[string]terraform.ResourceProvider{
+		"consul": provider,
+	}, client
 }
 
 func startRemoteDatacenterTestServer(t *testing.T) (map[string]terraform.ResourceProvider, *consulapi.Client) {
@@ -308,17 +315,22 @@ func startRemoteDatacenterTestServer(t *testing.T) (map[string]terraform.Resourc
 				down_policy = "extend-cache"
 
 				tokens = {
-					replication = "master-token"
+					master = "master-token"
+					// replication = "master-token"
 				}
 			}
 
 			ports = {
 				dns = -1
-				grpc = -1
+				grpc = 8508
 				http = 8501
 				server = 8305
 				serf_lan = 8306
 				serf_wan = 8307
+			}
+
+			peering = {
+				enabled = true
 			}
 		`,
 	)
@@ -342,15 +354,24 @@ func startRemoteDatacenterTestServer(t *testing.T) (map[string]terraform.Resourc
 				}
 			}
 
+			peering = {
+				enabled = true
+			}
+
 			retry_join_wan = ["127.0.0.1:8307"]
 		`,
 	)
 
-	providers, client := waitForService(t)
+	provider, client := waitForService(t, "http://localhost:8500")
+	remoteProvider, _ := waitForService(t, "http://localhost:8501")
+
 	for i := 0; i < 20; i++ {
 		datacenters, err := client.Catalog().Datacenters()
 		if err == nil && len(datacenters) == 2 {
-			return providers, client
+			return map[string]terraform.ResourceProvider{
+				"consul":       provider,
+				"consulremote": remoteProvider,
+			}, client
 		}
 
 		time.Sleep(200 * time.Millisecond)
