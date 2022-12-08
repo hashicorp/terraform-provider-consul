@@ -40,8 +40,8 @@ The following attributes are exported:
 
 ## Import
 
-`consul_node` can be imported:
+The `consul_node` resource can be imported:
 
 ```
-$ terraform import consul_node.example $name
+$ terraform import consul_node.example node-name
 ```

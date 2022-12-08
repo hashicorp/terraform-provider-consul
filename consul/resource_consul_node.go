@@ -9,11 +9,20 @@ import (
 
 func resourceConsulNode() *schema.Resource {
 	return &schema.Resource{
-		Create:   resourceConsulNodeCreate,
-		Update:   resourceConsulNodeCreate,
-		Read:     resourceConsulNodeRead,
-		Delete:   resourceConsulNodeDelete,
-		Importer: resourceImporterWithCustomID("name"),
+		Create: resourceConsulNodeCreate,
+		Update: resourceConsulNodeCreate,
+		Read:   resourceConsulNodeRead,
+		Delete: resourceConsulNodeDelete,
+
+		Importer: &schema.ResourceImporter{
+			State: func(d *schema.ResourceData, _ interface{}) ([]*schema.ResourceData, error) {
+				// consul_node uses the "name" as resource ID
+				d.Set("name", d.Id())
+
+				return []*schema.ResourceData{d}, nil
+			},
+		},
+
 		Schema: map[string]*schema.Schema{
 			"address": {
 				Type:     schema.TypeString,

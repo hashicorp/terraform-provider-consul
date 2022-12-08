@@ -110,8 +110,6 @@ of the `name` attribute.
 
 * `namespace` - (Optional, Enterprise Only) The namespace to create the service within.
 
-* `partition` - (Optional, Enterprise Only) The partition the service is associated with.
-
 The following attributes are available for each health-check:
 
 * `check_id` - (Optional, string) An ID, *unique per agent*. Will default to *name*

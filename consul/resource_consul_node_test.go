@@ -2,7 +2,6 @@ package consul
 
 import (
 	"fmt"
-	"regexp"
 	"testing"
 
 	consulapi "github.com/hashicorp/consul/api"
@@ -26,27 +25,10 @@ func TestAccConsulNode_basic(t *testing.T) {
 				),
 			},
 			{
-				PreConfig:     testAccCreateConsulNode(t, client),
-				Config:        testAccConsulNodeConfigBasic,
-				ExpectError:   regexp.MustCompile(`Cannot import non-existent remote object`),
-				ResourceName:  "consul_node.foo",
-				ImportState:   true,
-				ImportStateId: "invalid",
-			},
-			{
-				PreConfig:     testAccCreateConsulNode(t, client),
 				Config:        testAccConsulNodeConfigBasic,
 				ResourceName:  "consul_node.foo",
 				ImportState:   true,
 				ImportStateId: "foo",
-			},
-			{
-				Config: testAccConsulNodeConfigBasic,
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckConsulNodeExists(client),
-					testAccCheckConsulNodeValue("consul_node.foo", "address", "127.0.0.1"),
-					testAccCheckConsulNodeValue("consul_node.foo", "name", "foo"),
-				),
 			},
 			{
 				PreConfig: testAccRemoveConsulNode(t, client),
@@ -228,22 +210,6 @@ func testAccRemoveConsulNode(t *testing.T, client *consulapi.Client) func() {
 	}
 }
 
-func testAccCreateConsulNode(t *testing.T, client *consulapi.Client) func() {
-	return func() {
-		catalog := client.Catalog()
-		wOpts := &consulapi.WriteOptions{}
-
-		registration := &consulapi.CatalogRegistration{
-			Address:    "127.0.0.1",
-			Datacenter: "dc1",
-			Node:       "foo",
-		}
-		_, err := catalog.Register(registration, wOpts)
-		if err != nil {
-			t.Errorf("err: %v", err)
-		}
-	}
-}
 func testAccChangeConsulNodeAddress(t *testing.T, client *consulapi.Client) func() {
 	return func() {
 		catalog := client.Catalog()
