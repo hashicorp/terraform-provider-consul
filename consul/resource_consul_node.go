@@ -14,6 +14,15 @@ func resourceConsulNode() *schema.Resource {
 		Read:   resourceConsulNodeRead,
 		Delete: resourceConsulNodeDelete,
 
+		Importer: &schema.ResourceImporter{
+			State: func(d *schema.ResourceData, _ interface{}) ([]*schema.ResourceData, error) {
+				// consul_node uses the "name" as resource ID
+				d.Set("name", d.Id())
+
+				return []*schema.ResourceData{d}, nil
+			},
+		},
+
 		Schema: map[string]*schema.Schema{
 			"address": {
 				Type:     schema.TypeString,

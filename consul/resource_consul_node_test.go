@@ -25,6 +25,12 @@ func TestAccConsulNode_basic(t *testing.T) {
 				),
 			},
 			{
+				Config:        testAccConsulNodeConfigBasic,
+				ResourceName:  "consul_node.foo",
+				ImportState:   true,
+				ImportStateId: "foo",
+			},
+			{
 				PreConfig: testAccRemoveConsulNode(t, client),
 				Config:    testAccConsulNodeConfigBasic,
 				Check: resource.ComposeTestCheckFunc(
@@ -223,6 +229,7 @@ func testAccChangeConsulNodeAddress(t *testing.T, client *consulapi.Client) func
 		}
 	}
 }
+
 func testAccChangeConsulNodeAddressMeta(t *testing.T, client *consulapi.Client) func() {
 	return func() {
 		catalog := client.Catalog()
