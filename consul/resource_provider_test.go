@@ -136,6 +136,52 @@ func TestResourceProvider_ConfigureTLSInsecureHttpsMismatch(t *testing.T) {
 	}
 }
 
+// Some resources have some attributes that allows for overriding the configuration
+// of the provider like "token", "datacenter", "namespace" or "partition". This
+// causes some issues when reading resources after a user changed it as the new
+// value is not available to the provider when refreshing the state. This is a
+// limitation of the gRPC protocol between Terraform Core and the Plugins so
+// there is not much that we can do. To avoid having confusing behavior there
+// (see https://github.com/hashicorp/terraform-provider-consul/issues/298 for
+// example) we will deprecated the "token" attribute and mark the others as
+// ForceNew. This way we will not attempt to read a resource in the wrong
+// datacenter, partition or namespace. This test just makes sure that I did not
+// forget one of those parameters in a schema.
+func TestProviderAttributesInResources(t *testing.T) {
+	rp := Provider().(*schema.Provider)
+
+	forceNewAttributes := []string{"datacenter", "namespace", "partition"}
+
+	for name, resource := range rp.ResourcesMap {
+		attr, found := resource.Schema["token"]
+
+		if found && attr.Deprecated == "" {
+			t.Logf(`"token" attribute need to be marked as deprecated in resource %q`, name)
+			t.Fail()
+		}
+
+		for _, fna := range forceNewAttributes {
+			attr, found := resource.Schema[fna]
+			if !found {
+				continue
+			}
+			if !attr.ForceNew {
+				t.Logf(`%q attribute need to be marked as ForceNew in resource %q`, fna, name)
+				t.Fail()
+			}
+		}
+	}
+
+	for name, resource := range rp.DataSourcesMap {
+		attr, found := resource.Schema["token"]
+
+		if found && attr.Deprecated == "" {
+			t.Logf(`"token" attribute need to be marked as deprecated in datasource %q`, name)
+			t.Fail()
+		}
+	}
+}
+
 // token is sometime nested inside the object
 // func checkToken(name string, resource *configschema.Block) error {
 // 	for key, value := range resource.BlockTypes {

@@ -13,6 +13,11 @@ import (
 	"github.com/mitchellh/mapstructure"
 )
 
+var (
+	tokenDeprecationMessage = `The token argument has been deprecated and will be removed in a future release.
+Please use the token argument in the provider configuration`
+)
+
 func deprecated(name string, resource *schema.Resource) *schema.Resource {
 	resource.DeprecationMessage = fmt.Sprintf("%s is deprecated and will be removed in a future version.", name)
 	return resource
