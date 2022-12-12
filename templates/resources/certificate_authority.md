@@ -11,9 +11,11 @@ description: |-
 The `consul_certificate_authority` resource can be used to manage the configuration of
 the Certificate Authority used by [Consul Connect](https://www.consul.io/docs/connect/ca).
 
+-> **Note:** The keys in the `config` argument must be using Camel case.
+
 ## Example Usage
 
-Use the built-in CA with specific TTL:
+### Using the built-in CA with specific TTL
 
 ```hcl
 resource "consul_certificate_authority" "connect" {
@@ -27,29 +29,29 @@ resource "consul_certificate_authority" "connect" {
 }
 ```
 
-Use Vault to manage and sign certificates:
+### Using Vault to manage and sign certificates
 
 ```hcl
 resource "consul_certificate_authority" "connect" {
   connect_provider = "vault"
 
   config = {
-    address = "http://localhost:8200"
-    token = "..."
-    root_pki_path = "connect-root"
-    intermediate_pki_path = "connect-intermediate"
+    Address             = "http://localhost:8200"
+    Token               = "..."
+    RootPKIPath         = "connect-root"
+    IntermediatePKIPath = "connect-intermediate"
   }
 }
 ```
 
-Use the [AWS Certificate Manager Private Certificate Authority](https://aws.amazon.com/certificate-manager/private-certificate-authority/):
+### Using the [AWS Certificate Manager Private Certificate Authority](https://aws.amazon.com/certificate-manager/private-certificate-authority/)
 
 ```hcl
 resource "consul_certificate_authority" "connect" {
   connect_provider = "aws-pca"
 
   config = {
-    existing_arn = "arn:aws:acm-pca:region:account:certificate-authority/12345678-1234-1234-123456789012"
+    ExistingARN = "arn:aws:acm-pca:region:account:certificate-authority/12345678-1234-1234-123456789012"
   }
 }
 ```
