@@ -1,7 +1,7 @@
 module github.com/hashicorp/terraform-provider-consul
 
 require (
-	github.com/hashicorp/consul/api v1.16.0
+	github.com/hashicorp/consul/api v1.18.0
 	github.com/hashicorp/errwrap v1.0.0
 	github.com/hashicorp/terraform-plugin-sdk v1.17.2
 	github.com/mitchellh/mapstructure v1.4.3
