@@ -286,7 +286,7 @@ The following attributes are exported:
 
 `consul_config_entry` can be imported using the syntax `<kind>/<name>` if the
 config entry is in the default partition and default namespace, or
-`<kind>/<name>/<partition>/<namespace>` for config entries in a non-default
+`<partition>/<namespace>/<kind>/<name>` for config entries in a non-default
 partition or namespace:
 
 ```

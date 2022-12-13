@@ -129,7 +129,8 @@ The following attributes are available for each health-check:
   to `GET`.
 * `interval` - (Required, string) The interval to wait between each health-check
   invocation.
-* `timeout` - (Required, string) The timeout value for HTTP checks.
+* `timeout` - (Required, string) Specifies a timeout for outgoing connections in
+  the case of a HTTP or TCP check.
 * `deregister_critical_service_after` - (Optional, string) The time after which
   the service is automatically deregistered when in the `critical` state.
   Defaults to `30s`.

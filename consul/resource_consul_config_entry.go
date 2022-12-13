@@ -25,12 +25,12 @@ func resourceConsulConfigEntry() *schema.Resource {
 					kind = parts[0]
 					name = parts[1]
 				case 4:
-					kind = parts[0]
-					name = parts[1]
-					partition = parts[2]
-					namespace = parts[3]
+					partition = parts[0]
+					namespace = parts[1]
+					kind = parts[2]
+					name = parts[3]
 				default:
-					return nil, fmt.Errorf(`expected path of the form "<kind>/<name>" or "<kind>/<name>/<partition>/<namespace>"`)
+					return nil, fmt.Errorf(`expected path of the form "<kind>/<name>" or "<partition>/<namespace>/<kind>/<name>"`)
 				}
 
 				d.SetId(fmt.Sprintf("%s-%s", kind, name))

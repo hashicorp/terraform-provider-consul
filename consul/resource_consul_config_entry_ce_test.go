@@ -113,13 +113,19 @@ func TestAccConsulConfigEntryCE_basic(t *testing.T) {
 				Config:       testAccConsulConfigEntryCE_ServiceConfigL7Mixed,
 				ImportState:  true,
 				ResourceName: "consul_config_entry.service_intentions",
-				ExpectError:  regexp.MustCompile(`expected path of the form "<kind>/<name>" or "<kind>/<name>/<partition>/<namespace>"`),
+				ExpectError:  regexp.MustCompile(`expected path of the form "<kind>/<name>" or "<partition>/<namespace>/<kind>/<name>"`),
 			},
 			{
 				Config:        testAccConsulConfigEntryCE_ServiceConfigL7Mixed,
 				ImportState:   true,
 				ResourceName:  "consul_config_entry.service_intentions",
 				ImportStateId: "service-defaults/api",
+			},
+			{
+				Config:        testAccConsulConfigEntryCE_ServiceConfigL7Mixed,
+				ImportState:   true,
+				ResourceName:  "consul_config_entry.service_intentions",
+				ImportStateId: "default/default/service-defaults/api",
 			},
 		},
 	})

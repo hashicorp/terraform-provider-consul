@@ -280,3 +280,15 @@ The following attributes are exported:
 * `namespace` - The namespace to create the config entry within.
 
 * `config_json` - A map of configuration values.
+
+
+## Import
+
+`consul_config_entry` can be imported using the syntax `<kind>/<name>` if the
+config entry is in the default partition and default namespace, or
+`<partition>/<namespace>/<kind>/<name>` for config entries in a non-default
+partition or namespace:
+
+```
+$ terraform import consul_config_entry.service_splitter 816a195f-6cb1-2e8d-92af-3011ae706318
+```
