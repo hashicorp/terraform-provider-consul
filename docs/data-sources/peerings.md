@@ -34,9 +34,7 @@ data "consul_peerings" "peers" {}
 Read-Only:
 
 - `deleted_at` (String)
-- `exported_service_count` (Number)
 - `id` (String)
-- `imported_service_count` (Number)
 - `meta` (Map of String)
 - `name` (String)
 - `partition` (String)

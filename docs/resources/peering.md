@@ -67,9 +67,7 @@ resource "consul_peering" "eu-us" {
 ### Read-Only
 
 - `deleted_at` (String)
-- `exported_service_count` (Number)
 - `id` (String) The ID of this resource.
-- `imported_service_count` (Number)
 - `peer_ca_pems` (List of String)
 - `peer_id` (String)
 - `peer_server_addresses` (List of String)
