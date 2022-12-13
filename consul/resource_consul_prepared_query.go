@@ -23,6 +23,7 @@ func resourceConsulPreparedQuery() *schema.Resource {
 			"datacenter": {
 				Type:     schema.TypeString,
 				Optional: true,
+				ForceNew: true,
 			},
 
 			"name": {
@@ -36,9 +37,10 @@ func resourceConsulPreparedQuery() *schema.Resource {
 			},
 
 			"token": {
-				Type:      schema.TypeString,
-				Optional:  true,
-				Sensitive: true,
+				Type:       schema.TypeString,
+				Optional:   true,
+				Sensitive:  true,
+				Deprecated: tokenDeprecationMessage,
 			},
 
 			"stored_token": {

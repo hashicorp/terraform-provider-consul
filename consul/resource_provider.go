@@ -13,6 +13,11 @@ import (
 	"github.com/mitchellh/mapstructure"
 )
 
+var (
+	tokenDeprecationMessage = `The token argument has been deprecated and will be removed in a future release.
+Please use the token argument in the provider configuration`
+)
+
 func deprecated(name string, resource *schema.Resource) *schema.Resource {
 	resource.DeprecationMessage = fmt.Sprintf("%s is deprecated and will be removed in a future version.", name)
 	return resource
@@ -157,6 +162,7 @@ func Provider() terraform.ResourceProvider {
 			"consul_network_segments":     dataSourceConsulNetworkSegments(),
 			"consul_network_area_members": dataSourceConsulNetworkAreaMembers(),
 			"consul_datacenters":          dataSourceConsulDatacenters(),
+			"consul_config_entry":         dataSourceConsulConfigEntry(),
 			"consul_peering":              dataSourceConsulPeering(),
 			"consul_peerings":             dataSourceConsulPeerings(),
 
@@ -303,7 +309,7 @@ func (sw *stateWriter) setJson(key string, value interface{}) {
 	if err != nil {
 		sw.errors = append(
 			sw.errors,
-			fmt.Sprintf("failed to marshal '%s': %v", key, err),
+			fmt.Sprintf(" - failed to marshal '%s': %v", key, err),
 		)
 		return
 	}

@@ -63,14 +63,6 @@ func dataSourceConsulPeering() *schema.Resource {
 					Type: schema.TypeString,
 				},
 			},
-			"imported_service_count": {
-				Type:     schema.TypeInt,
-				Computed: true,
-			},
-			"exported_service_count": {
-				Type:     schema.TypeInt,
-				Computed: true,
-			},
 		},
 	}
 }
@@ -101,8 +93,6 @@ func dataSourceConsulPeeringRead(d *schema.ResourceData, meta interface{}) error
 	sw.set("peer_ca_pems", peer.PeerCAPems)
 	sw.set("peer_server_name", peer.PeerServerName)
 	sw.set("peer_server_addresses", peer.PeerServerAddresses)
-	sw.set("imported_service_count", peer.ImportedServiceCount)
-	sw.set("exported_service_count", peer.ExportedServiceCount)
 
 	return sw.error()
 }

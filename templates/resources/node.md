@@ -37,3 +37,11 @@ The following attributes are exported:
 * `address` - The address of the node.
 * `name` - The name of the node.
 * `meta` - (Optional, map) Key/value pairs that are associated with the node.
+
+## Import
+
+The `consul_node` resource can be imported:
+
+```
+$ terraform import consul_node.example node-name
+```

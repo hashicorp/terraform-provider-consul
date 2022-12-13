@@ -90,14 +90,6 @@ The functionality described here is available only in Consul version 1.13.0 and 
 					Type: schema.TypeString,
 				},
 			},
-			"imported_service_count": {
-				Type:     schema.TypeInt,
-				Computed: true,
-			},
-			"exported_service_count": {
-				Type:     schema.TypeInt,
-				Computed: true,
-			},
 		},
 	}
 }
@@ -154,8 +146,6 @@ func resourceConsulPeeringRead(d *schema.ResourceData, meta interface{}) error {
 	sw.set("peer_ca_pems", peer.PeerCAPems)
 	sw.set("peer_server_name", peer.PeerServerName)
 	sw.set("peer_server_addresses", peer.PeerServerAddresses)
-	sw.set("imported_service_count", peer.ImportedServiceCount)
-	sw.set("exported_service_count", peer.ExportedServiceCount)
 
 	return sw.error()
 }

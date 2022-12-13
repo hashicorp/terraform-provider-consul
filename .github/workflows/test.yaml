@@ -22,12 +22,10 @@ jobs:
       uses: actions/checkout@5a4ac9002d0be2fb38bd78e4b4dbde5606d7042f
     - name: Run go tests
       run: make test
-    - name: Run tfproviderlint
-      run: docker run -v $PWD:/src docker.mirror.hashicorp.services/bflad/tfproviderlint -S006 -S022 -S023 ./...
     - name: Run OSS acceptance tests
       run: |
-        curl -LO https://releases.hashicorp.com/consul/1.13.1/consul_1.13.1_linux_amd64.zip
-        sudo unzip consul_1.13.1_linux_amd64.zip consul -d /usr/local/bin
+        curl -LO https://releases.hashicorp.com/consul/1.14.2/consul_1.14.2_linux_amd64.zip
+        sudo unzip consul_1.14.2_linux_amd64.zip consul -d /usr/local/bin
         SKIP_REMOTE_DATACENTER_TESTS=1 make testacc TESTARGS="-count=1"
     - name: Run go vet
       run: make vet

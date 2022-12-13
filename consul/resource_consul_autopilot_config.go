@@ -19,6 +19,7 @@ func resourceConsulAutopilotConfig() *schema.Resource {
 			"datacenter": {
 				Type:     schema.TypeString,
 				Optional: true,
+				ForceNew: true,
 			},
 			"cleanup_dead_servers": {
 				Type:     schema.TypeBool,
