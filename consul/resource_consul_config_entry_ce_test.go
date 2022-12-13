@@ -1,6 +1,7 @@
 package consul
 
 import (
+	"regexp"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
@@ -107,6 +108,24 @@ func TestAccConsulConfigEntryCE_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("consul_config_entry.service_intentions", "name", "api"),
 					resource.TestCheckResourceAttr("consul_config_entry.service_intentions", "kind", "service-intentions"),
 				),
+			},
+			{
+				Config:       testAccConsulConfigEntryCE_ServiceConfigL7Mixed,
+				ImportState:  true,
+				ResourceName: "consul_config_entry.service_intentions",
+				ExpectError:  regexp.MustCompile(`expected path of the form "<kind>/<name>" or "<partition>/<namespace>/<kind>/<name>"`),
+			},
+			{
+				Config:        testAccConsulConfigEntryCE_ServiceConfigL7Mixed,
+				ImportState:   true,
+				ResourceName:  "consul_config_entry.service_intentions",
+				ImportStateId: "service-defaults/api",
+			},
+			{
+				Config:        testAccConsulConfigEntryCE_ServiceConfigL7Mixed,
+				ImportState:   true,
+				ResourceName:  "consul_config_entry.service_intentions",
+				ImportStateId: "default/default/service-defaults/api",
 			},
 		},
 	})

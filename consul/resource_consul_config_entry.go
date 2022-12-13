@@ -16,6 +16,38 @@ func resourceConsulConfigEntry() *schema.Resource {
 		Update: resourceConsulConfigEntryUpdate,
 		Read:   resourceConsulConfigEntryRead,
 		Delete: resourceConsulConfigEntryDelete,
+		Importer: &schema.ResourceImporter{
+			State: func(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+				parts := strings.Split(d.Id(), "/")
+				var kind, name, partition, namespace string
+				switch len(parts) {
+				case 2:
+					kind = parts[0]
+					name = parts[1]
+				case 4:
+					partition = parts[0]
+					namespace = parts[1]
+					kind = parts[2]
+					name = parts[3]
+				default:
+					return nil, fmt.Errorf(`expected path of the form "<kind>/<name>" or "<partition>/<namespace>/<kind>/<name>"`)
+				}
+
+				d.SetId(fmt.Sprintf("%s-%s", kind, name))
+				sw := newStateWriter(d)
+				sw.set("kind", kind)
+				sw.set("name", name)
+				sw.set("partition", partition)
+				sw.set("namespace", namespace)
+
+				err := sw.error()
+				if err != nil {
+					return nil, err
+				}
+
+				return []*schema.ResourceData{d}, nil
+			},
+		},
 
 		Schema: map[string]*schema.Schema{
 			"kind": {
