@@ -4,6 +4,7 @@
 package consul
 
 import (
+	"regexp"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
@@ -26,6 +27,13 @@ func TestAccConsulCertificateAuthority(t *testing.T) {
 				),
 			},
 			{
+				Config:      testAccConsulCertificateAuthorityConfigBoth,
+				ExpectError: regexp.MustCompile(`"config": conflicts with config_json`),
+			},
+			{
+				Config: testAccConsulCertificateAuthorityConfigJSON,
+			},
+			{
 				Config:            testAccConsulCertificateAuthorityConfig,
 				ResourceName:      "consul_certificate_authority.test",
 				ImportState:       true,
@@ -44,5 +52,40 @@ resource "consul_certificate_authority" "test" {
 		RotationPeriod      = "1234h"
 		IntermediateCertTTL = "5678h"
 	}
+}
+`
+
+const testAccConsulCertificateAuthorityConfigBoth = `
+resource "consul_certificate_authority" "test" {
+	connect_provider = "consul"
+
+	config = {
+		LeafCertTTL         = "72h"
+		RotationPeriod      = "1234h"
+		IntermediateCertTTL = "5678h"
+	}
+
+	config_json = jsonencode({})
+}
+`
+
+const testAccConsulCertificateAuthorityConfigJSON = `
+resource "consul_certificate_authority" "test" {
+	connect_provider = "consul"
+
+	config_json = jsonencode({
+		address = "http://localhost:8200"
+		auth_method = {
+			type       = "approle"
+			mount_path = "approle"
+			params = {
+				role_id   = "role_id"
+				secret_id = "secret_id"
+			}
+		}
+		namespace             = "namespace"
+		root_pki_path         = "root_pki_path"
+		intermediate_pki_path = "intermediate_pki_path"
+	})
 }
 `

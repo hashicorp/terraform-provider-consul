@@ -1,5 +1,3 @@
-# Copyright (c) HashiCorp, Inc.
-# SPDX-License-Identifier: MPL-2.0
 
 # Setup the Consul provisioner to use the demo cluster
 provider "consul" {
