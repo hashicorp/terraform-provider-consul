@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"os"
 	"strings"
 
 	consulapi "github.com/hashicorp/consul/api"
@@ -31,8 +32,9 @@ func Provider() terraform.ResourceProvider {
 	return &schema.Provider{
 		Schema: map[string]*schema.Schema{
 			"datacenter": {
-				Type:     schema.TypeString,
-				Optional: true,
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "The datacenter to use. Defaults to that of the agent.",
 			},
 
 			"address": {
@@ -42,6 +44,7 @@ func Provider() terraform.ResourceProvider {
 					"CONSUL_ADDRESS",
 					"CONSUL_HTTP_ADDR",
 				}, "localhost:8500"),
+				Description: `The HTTP(S) API address of the agent to use. Defaults to "127.0.0.1:8500".`,
 			},
 
 			"scheme": {
@@ -51,12 +54,14 @@ func Provider() terraform.ResourceProvider {
 					"CONSUL_SCHEME",
 					"CONSUL_HTTP_SCHEME",
 				}, ""),
+				Description: `The URL scheme of the agent to use ("http" or "https"). Defaults to "http".`,
 			},
 
 			"http_auth": {
 				Type:        schema.TypeString,
 				Optional:    true,
-				DefaultFunc: schema.EnvDefaultFunc("CONSUL_HTTP_AUTH", ""),
+				DefaultFunc: schema.EnvDefaultFunc("CONSUL_HTTP_AUTH", nil),
+				Description: "HTTP Basic Authentication credentials to be used when communicating with Consul, in the format of either `user` or `user:pass`. This may also be specified using the `CONSUL_HTTP_AUTH` environment variable.",
 			},
 
 			"ca_file": {
@@ -64,12 +69,14 @@ func Provider() terraform.ResourceProvider {
 				Optional:      true,
 				DefaultFunc:   schema.EnvDefaultFunc("CONSUL_CA_FILE", nil),
 				ConflictsWith: []string{"ca_pem"},
+				Description:   "A path to a PEM-encoded certificate authority used to verify the remote agent's certificate.",
 			},
 
 			"ca_pem": {
 				Type:          schema.TypeString,
 				Optional:      true,
 				ConflictsWith: []string{"ca_file"},
+				Description:   "PEM-encoded certificate authority used to verify the remote agent's certificate.",
 			},
 
 			"cert_file": {
@@ -77,12 +84,14 @@ func Provider() terraform.ResourceProvider {
 				Optional:      true,
 				DefaultFunc:   schema.EnvDefaultFunc("CONSUL_CERT_FILE", nil),
 				ConflictsWith: []string{"cert_pem"},
+				Description:   "A path to a PEM-encoded certificate provided to the remote agent; requires use of `key_file` or `key_pem`.",
 			},
 
 			"cert_pem": {
 				Type:          schema.TypeString,
 				Optional:      true,
 				ConflictsWith: []string{"cert_file"},
+				Description:   "PEM-encoded certificate provided to the remote agent; requires use of `key_file` or `key_pem`.",
 			},
 
 			"key_file": {
@@ -90,24 +99,28 @@ func Provider() terraform.ResourceProvider {
 				Optional:      true,
 				DefaultFunc:   schema.EnvDefaultFunc("CONSUL_KEY_FILE", nil),
 				ConflictsWith: []string{"key_pem"},
+				Description:   "A path to a PEM-encoded private key, required if `cert_file` or `cert_pem` is specified.",
 			},
 
 			"key_pem": {
 				Type:          schema.TypeString,
 				Optional:      true,
 				ConflictsWith: []string{"key_file"},
+				Description:   "PEM-encoded private key, required if `cert_file` or `cert_pem` is specified.",
 			},
 
 			"ca_path": {
 				Type:        schema.TypeString,
 				Optional:    true,
 				DefaultFunc: schema.EnvDefaultFunc("CONSUL_CAPATH", ""),
+				Description: "A path to a directory of PEM-encoded certificate authority files to use to check the authenticity of client and server connections. Can also be specified with the `CONSUL_CAPATH` environment variable.",
 			},
 
 			"insecure_https": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  false,
+				Type:        schema.TypeBool,
+				Optional:    true,
+				Default:     false,
+				Description: `Boolean value to disable SSL certificate verification; setting this value to true is not recommended for production use. Only use this with scheme set to "https".`,
 			},
 
 			"token": {
@@ -117,7 +130,42 @@ func Provider() terraform.ResourceProvider {
 				DefaultFunc: schema.MultiEnvDefaultFunc([]string{
 					"CONSUL_TOKEN",
 					"CONSUL_HTTP_TOKEN",
-				}, ""),
+				}, nil),
+				Description: "The ACL token to use by default when making requests to the agent. Can also be specified with `CONSUL_HTTP_TOKEN` or `CONSUL_TOKEN` as an environment variable.",
+			},
+
+			"auth_jwt": {
+				Type:        schema.TypeList,
+				Optional:    true,
+				MaxItems:    1,
+				Description: "Authenticates to Consul using a JWT authentication method.",
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"auth_method": {
+							Type:        schema.TypeString,
+							Required:    true,
+							Description: "The name of the auth method to use for login.",
+						},
+						"bearer_token": {
+							Type:        schema.TypeString,
+							Optional:    true,
+							Description: "The bearer token to present to the auth method during login for authentication purposes. For the Kubernetes auth method this is a [Service Account Token (JWT)](https://kubernetes.io/docs/reference/access-authn-authz/authentication/#service-account-tokens).",
+						},
+						"use_terraform_cloud_workload_identity": {
+							Type:        schema.TypeBool,
+							Optional:    true,
+							Description: "Whether to use a [Terraform Workload Identity token](https://developer.hashicorp.com/terraform/cloud-docs/workspaces/dynamic-provider-credentials/workload-identity-tokens). The token will be read from the `TFC_WORKLOAD_IDENTITY_TOKEN` environment variable.",
+						},
+						"meta": {
+							Type:     schema.TypeMap,
+							Optional: true,
+							Elem: &schema.Schema{
+								Type: schema.TypeString,
+							},
+							Description: "Specifies arbitrary KV metadata linked to the token. Can be useful to track origins.",
+						},
+					},
+				},
 			},
 
 			"namespace": {
@@ -129,18 +177,18 @@ func Provider() terraform.ResourceProvider {
 				Type:        schema.TypeList,
 				Optional:    true,
 				Sensitive:   true,
-				Description: "Additional headers to send with each Consul request.",
+				Description: "A configuration block, described below, that provides additional headers to be sent along with all requests to the Consul server. This block can be specified multiple times.",
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"name": {
 							Type:        schema.TypeString,
 							Required:    true,
-							Description: "The header name",
+							Description: "The name of the header.",
 						},
 						"value": {
 							Type:        schema.TypeString,
 							Required:    true,
-							Description: "The header value",
+							Description: "The value of the header.",
 						},
 					},
 				},
@@ -235,11 +283,53 @@ func providerConfigure(d *schema.ResourceData) (interface{}, error) {
 		parsedHeaders.Add(header["name"].(string), header["value"].(string))
 	}
 	client.SetHeaders(parsedHeaders)
+
+	authJWT := d.Get("auth_jwt").([]interface{})
+	if len(authJWT) > 0 {
+		authConfig := authJWT[0].(map[string]interface{})
+		authMethod := authConfig["auth_method"].(string)
+		tfeWorkloadIdentity := authConfig["use_terraform_cloud_workload_identity"].(bool)
+		bearerToken := authConfig["bearer_token"].(string)
+
+		if tfeWorkloadIdentity {
+			bearerToken = os.Getenv("TFC_WORKLOAD_IDENTITY_TOKEN")
+			if bearerToken == "" {
+				return nil, fmt.Errorf("auth_jwt.use_terraform_cloud_workload_identity has been set but no token found in TFC_WORKLOAD_IDENTITY_TOKEN environment variable")
+			}
+
+		} else if bearerToken == "" {
+			return nil, fmt.Errorf("either auth_jwt.bearer_token or auth_jwt.use_terraform_cloud_workload_identity should be set")
+		}
+
+		meta := map[string]string{}
+		for k, v := range authConfig["meta"].(map[string]interface{}) {
+			meta[k] = v.(string)
+		}
+		_, wOpts := getOptions(d, config)
+		token, _, err := client.ACL().Login(&consulapi.ACLLoginParams{
+			AuthMethod:  authMethod,
+			BearerToken: bearerToken,
+			Meta:        meta,
+		}, wOpts)
+		if err != nil {
+			return nil, fmt.Errorf("failed to login using JWT auth method %q: %v", authMethod, err)
+		}
+		config.Token = token.SecretID
+	}
+
 	return config, nil
 }
 
 func getClient(d *schema.ResourceData, meta interface{}) (*consulapi.Client, *consulapi.QueryOptions, *consulapi.WriteOptions) {
-	client := meta.(*Config).client
+	config := meta.(*Config)
+	client := config.client
+	qOpts, wOpts := getOptions(d, config)
+	return client, qOpts, wOpts
+}
+
+func getOptions(d *schema.ResourceData, meta interface{}) (*consulapi.QueryOptions, *consulapi.WriteOptions) {
+	config := meta.(*Config)
+	client := config.client
 	var dc, token, namespace, partition string
 	if v, ok := d.GetOk("datacenter"); ok {
 		dc = v.(string)
@@ -255,8 +345,8 @@ func getClient(d *schema.ResourceData, meta interface{}) (*consulapi.Client, *co
 	}
 
 	if dc == "" {
-		if meta.(*Config).Datacenter != "" {
-			dc = meta.(*Config).Datacenter
+		if config.Datacenter != "" {
+			dc = config.Datacenter
 		} else {
 			info, _ := client.Agent().Self()
 			if info != nil {
@@ -277,7 +367,8 @@ func getClient(d *schema.ResourceData, meta interface{}) (*consulapi.Client, *co
 		Partition:  partition,
 		Token:      token,
 	}
-	return client, qOpts, wOpts
+
+	return qOpts, wOpts
 }
 
 type stateWriter struct {

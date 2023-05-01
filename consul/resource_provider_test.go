@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"os"
 	"os/exec"
+	"regexp"
 	"strings"
 	"testing"
 	"time"
@@ -23,14 +24,116 @@ const (
 	initialManagementToken = "12345678-1234-1234-1234-1234567890ab"
 )
 
+var _ terraform.ResourceProvider = Provider()
+
 func TestResourceProvider(t *testing.T) {
 	if err := Provider().(*schema.Provider).InternalValidate(); err != nil {
 		t.Fatalf("err: %s", err)
 	}
-}
 
-func TestResourceProvider_impl(t *testing.T) {
-	var _ terraform.ResourceProvider = Provider()
+	testCases := map[string]struct {
+		Config      string
+		ExpectError *regexp.Regexp
+	}{
+		"ca_path": {
+			Config: `
+				provider "consul" {
+					ca_path = "test-fixtures/capath"
+					scheme  = "https"
+				}
+
+				data "consul_key_prefix" "app" {
+					path_prefix = "test"
+				}`,
+			ExpectError: regexp.MustCompile("server gave HTTP response to HTTPS client"),
+		},
+		"insecure_https": {
+			Config: `
+				provider "consul" {
+					scheme         = "https"
+					insecure_https = true
+				}
+
+				data "consul_key_prefix" "app" {
+					path_prefix = "test"
+				}`,
+			ExpectError: regexp.MustCompile("server gave HTTP response to HTTPS client"),
+		},
+		"insecure_https_err": {
+			Config: `
+				provider "consul" {
+					address        = "demo.consul.io:80"
+					datacenter     = "nyc3"
+					scheme         = "http"
+					insecure_https = true
+				}
+
+				data "consul_key_prefix" "app" {
+					path_prefix = "test"
+				}`,
+			ExpectError: regexp.MustCompile("insecure_https is meant to be used when scheme is https"),
+		},
+		"auth_jwt": {
+			Config: `
+				provider "consul" {
+					address = "demo.consul.io:80"
+					auth_jwt {
+						auth_method  = "jwt"
+						bearer_token = "..."
+					}
+				}
+
+				data "consul_key_prefix" "app" {
+					path_prefix = "test"
+				}`,
+			ExpectError: regexp.MustCompile("failed to login using JWT auth method"),
+		},
+		"auth_jwt_no_token": {
+			Config: `
+				provider "consul" {
+					address = "demo.consul.io:80"
+					auth_jwt {
+						auth_method  = "jwt"
+					}
+				}
+
+				data "consul_key_prefix" "app" {
+					path_prefix = "test"
+				}`,
+			ExpectError: regexp.MustCompile("either auth_jwt.bearer_token or auth_jwt.use_terraform_cloud_workload_identity should be set"),
+		},
+		"auth_jwt_tfc_workload_identity": {
+			Config: `
+				provider "consul" {
+					address = "demo.consul.io:80"
+					auth_jwt {
+						auth_method  = "jwt"
+						use_terraform_cloud_workload_identity = true
+					}
+				}
+
+				data "consul_key_prefix" "app" {
+					path_prefix = "test"
+				}`,
+			ExpectError: regexp.MustCompile("no token found in TFC_WORKLOAD_IDENTITY_TOKEN environment variable"),
+		},
+	}
+
+	for name, tc := range testCases {
+		t.Run(name, func(t *testing.T) {
+			providers, _ := startTestServer(t)
+
+			resource.Test(t, resource.TestCase{
+				Providers: providers,
+				Steps: []resource.TestStep{
+					{
+						Config:      tc.Config,
+						ExpectError: tc.ExpectError,
+					},
+				},
+			})
+		})
+	}
 }
 
 func TestResourceProvider_Configure(t *testing.T) {
@@ -94,53 +197,6 @@ func TestResourceProvider_ConfigureTLSPem(t *testing.T) {
 	err = rp.Configure(terraform.NewResourceConfigRaw(raw))
 	if err != nil {
 		t.Fatalf("err: %s", err)
-	}
-}
-
-func TestResourceProvider_CAPath(t *testing.T) {
-	rp := Provider()
-
-	raw := map[string]interface{}{
-		"address": "demo.consul.io:90",
-		"ca_path": "test-fixtures/capath",
-		"scheme":  "https",
-	}
-
-	err := rp.Configure(terraform.NewResourceConfigRaw(raw))
-	if err != nil {
-		t.Fatalf("err: %s", err)
-	}
-}
-
-func TestResourceProvider_ConfigureTLSInsecureHttps(t *testing.T) {
-	rp := Provider()
-
-	raw := map[string]interface{}{
-		"address":        "demo.consul.io:80",
-		"datacenter":     "nyc3",
-		"scheme":         "https",
-		"insecure_https": true,
-	}
-
-	err := rp.Configure(terraform.NewResourceConfigRaw(raw))
-	if err != nil {
-		t.Fatalf("err: %s", err)
-	}
-}
-
-func TestResourceProvider_ConfigureTLSInsecureHttpsMismatch(t *testing.T) {
-	rp := Provider()
-
-	raw := map[string]interface{}{
-		"address":        "demo.consul.io:80",
-		"datacenter":     "nyc3",
-		"scheme":         "http",
-		"insecure_https": true,
-	}
-
-	err := rp.Configure(terraform.NewResourceConfigRaw(raw))
-	if err == nil {
-		t.Fatal("Provider should error if insecure_https is set but scheme is not https")
 	}
 }
 

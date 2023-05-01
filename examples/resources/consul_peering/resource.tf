@@ -1,6 +1,3 @@
-# Copyright (c) HashiCorp, Inc.
-# SPDX-License-Identifier: MPL-2.0
-
 # Create a peering between the EU and US Consul clusters
 
 provider "consul" {
