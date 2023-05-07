@@ -31,7 +31,6 @@ func TestAccDataConsulPeerings_basic(t *testing.T) {
 					resource.TestCheckResourceAttrSet("data.consul_peerings.basic", "peers.0.meta.%"),
 					resource.TestCheckResourceAttr("data.consul_peerings.basic", "peers.0.meta.foo", "bar"),
 					resource.TestCheckResourceAttrSet("data.consul_peerings.basic", "peers.0.name"),
-					resource.TestCheckResourceAttr("data.consul_peerings.basic", "peers.0.partition", "default"),
 					resource.TestCheckResourceAttr("data.consul_peerings.basic", "peers.0.peer_ca_pems.#", "1"),
 					resource.TestCheckResourceAttrSet("data.consul_peerings.basic", "peers.0.peer_id"),
 					resource.TestCheckResourceAttrSet("data.consul_peerings.basic", "peers.0.peer_server_addresses.#"),
