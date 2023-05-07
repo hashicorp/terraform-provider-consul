@@ -39,7 +39,7 @@ func TestAccConsulConfigEntryEE_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("consul_config_entry.foo", "name", "global"),
 					resource.TestCheckResourceAttr("consul_config_entry.foo", "kind", "proxy-defaults"),
-					resource.TestCheckResourceAttr("consul_config_entry.foo", "config_json", "{\"Config\":{\"foo\":\"bar\"},\"Expose\":{},\"MeshGateway\":{},\"TransparentProxy\":{}}"),
+					resource.TestCheckResourceAttr("consul_config_entry.foo", "config_json", "{\"AccessLogs\":{},\"Config\":{\"foo\":\"bar\"},\"Expose\":{},\"MeshGateway\":{},\"TransparentProxy\":{}}"),
 				),
 			},
 			{
@@ -238,6 +238,7 @@ resource "consul_config_entry" "foo" {
 	kind = "proxy-defaults"
 
 	config_json = jsonencode({
+		AccessLogs = {}
 		Config = {
 			foo = "bar"
 		}
