@@ -33,7 +33,7 @@ func TestAccDataConsulPeering_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("data.consul_peering.basic", "peer_server_addresses.#", "1"),
 					resource.TestCheckResourceAttr("data.consul_peering.basic", "peer_server_addresses.0", "127.0.0.1:9503"),
 					resource.TestCheckResourceAttrSet("data.consul_peering.basic", "peer_server_name"),
-					resource.TestCheckResourceAttr("data.consul_peering.basic", "state", "ESTABLISHING"),
+					resource.TestCheckResourceAttrSet("data.consul_peering.basic", "state"),
 				),
 			},
 		},

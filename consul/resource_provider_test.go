@@ -412,22 +412,14 @@ func serverIsConsulCommunityEdition(t *testing.T) bool {
 	if path == "" {
 		path = "consul"
 	}
-	cmd := exec.Command(path, "version", "-format=json")
+	cmd := exec.Command(path, "version")
 
 	data, err := cmd.Output()
 	if err != nil {
 		t.Fatalf("failed to get `consul version` output: %v", err)
 	}
 
-	type Output struct {
-		Version string
-	}
-	var output Output
-	if err := json.Unmarshal(data, &output); err != nil {
-		t.Fatalf("failed to unmarshal Consul version: %v", err)
-	}
-
-	return !strings.HasSuffix(output.Version, "+ent")
+	return !strings.Contains(string(data), "+ent")
 }
 
 func skipTestOnConsulCommunityEdition(t *testing.T) {

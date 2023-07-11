@@ -10,7 +10,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        go-version: [1.18.x, 1.19.x]
+        go-version: [1.19.x, 1.20.x]
         os: [ubuntu-latest]
     runs-on: ${{ matrix.os }}
     steps:
@@ -24,8 +24,8 @@ jobs:
       run: make test
     - name: Run OSS acceptance tests
       run: |
-        curl -LO https://releases.hashicorp.com/consul/1.14.2/consul_1.14.2_linux_amd64.zip
-        sudo unzip consul_1.14.2_linux_amd64.zip consul -d /usr/local/bin
+        curl -LO https://releases.hashicorp.com/consul/1.15.2/consul_1.15.2_linux_amd64.zip
+        sudo unzip consul_1.15.2_linux_amd64.zip consul -d /usr/local/bin
         SKIP_REMOTE_DATACENTER_TESTS=1 make testacc TESTARGS="-count=1"
     - name: Run go vet
       run: make vet
