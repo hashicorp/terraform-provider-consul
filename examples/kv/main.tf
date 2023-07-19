@@ -1,4 +1,3 @@
-
 # Setup the Consul provisioner to use the demo cluster
 provider "consul" {
   address    = "demo.consul.io:80"

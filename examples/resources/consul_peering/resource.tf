@@ -1,4 +1,3 @@
-
 # Create a peering between the EU and US Consul clusters
 
 provider "consul" {
