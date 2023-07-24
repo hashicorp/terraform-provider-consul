@@ -1,3 +1,18 @@
+## 2.18.0 (July 24, 2023)
+
+NEW FEATURES
+
+* The provider can now use [Terraform Cloud Workload Identity](https://developer.hashicorp.com/terraform/cloud-docs/workspaces/dynamic-provider-credentials/workload-identity-tokens) to connect to Consul using the `use_terraform_cloud_workload_identity` argument in the provider configuration [[#342](https://github.com/hashicorp/terraform-provider-consul/issues/342)].
+* The `consul_config_entry` resource now supports the `jwt-provider` configuration entries [[#349](https://github.com/hashicorp/terraform-provider-consul/issues/349)].
+* The `consul_prepared_query` resource can now specify `targets` in their configuration [[#340](https://github.com/hashicorp/terraform-provider-consul/issues/340)].
+* The `consul_prepared_query` resource can now specify `remove_empty_tags` in their configuration [[#312](https://github.com/hashicorp/terraform-provider-consul/issues/312)].
+* The `consul_certificate_authority` now supports the `config_json` argument to set complex configuration [[#341](https://github.com/hashicorp/terraform-provider-consul/issues/341)].
+
+CHANGES:
+
+* The `name` argument of the `consul_prepared_query` resource is now optional [[#312](https://github.com/hashicorp/terraform-provider-consul/issues/312)].
+* The `consul_acl_role` now return an explicit error message if a policy is specified using its name instead of its ID [[#345](https://github.com/hashicorp/terraform-provider-consul/issues/345)].
+
 ## 2.17.0 (December 13, 2022)
 
 CHANGES:
