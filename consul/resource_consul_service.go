@@ -17,13 +17,15 @@ import (
 var headerResource = &schema.Resource{
 	Schema: map[string]*schema.Schema{
 		"name": {
-			Type:     schema.TypeString,
-			Required: true,
+			Type:        schema.TypeString,
+			Required:    true,
+			Description: "The name of the header.",
 		},
 		"value": {
-			Type:     schema.TypeList,
-			Required: true,
-			Elem:     &schema.Schema{Type: schema.TypeString},
+			Type:        schema.TypeList,
+			Required:    true,
+			Elem:        &schema.Schema{Type: schema.TypeString},
+			Description: "The header's list of values.",
 		},
 	},
 }
@@ -45,37 +47,53 @@ func resourceConsulService() *schema.Resource {
 		Read:   resourceConsulServiceRead,
 		Delete: resourceConsulServiceDelete,
 
+		Description: `
+A high-level resource for creating a Service in Consul in the Consul catalog. This
+is appropriate for registering [external services](https://www.consul.io/docs/guides/external.html) and
+can be used to create services addressable by Consul that cannot be registered
+with a [local agent](https://www.consul.io/docs/agent/basics.html).
+
+-> **NOTE:** If a Consul agent is running on the node where this service is
+registered, it is not recommended to use this resource as the service will be
+removed during the next [anti-entropy synchronization](https://www.consul.io/docs/architecture/anti-entropy).
+`,
+
 		Schema: map[string]*schema.Schema{
 			"address": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
+				Type:        schema.TypeString,
+				Optional:    true,
+				Computed:    true,
+				Description: "The address of the service. Defaults to the address of the node.",
 			},
 
 			"service_id": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-				ForceNew: true,
+				Type:        schema.TypeString,
+				Optional:    true,
+				Computed:    true,
+				ForceNew:    true,
+				Description: "If the service ID is not provided, it will be defaulted to the value of the `name` attribute.",
 			},
 
 			"name": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
+				Type:        schema.TypeString,
+				Required:    true,
+				ForceNew:    true,
+				Description: "The name of the service.",
 			},
 
 			"node": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
+				Type:        schema.TypeString,
+				Required:    true,
+				ForceNew:    true,
+				Description: "The name of the node the to register the service on.",
 			},
 
 			"datacenter": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-				ForceNew: true,
+				Type:        schema.TypeString,
+				Optional:    true,
+				Computed:    true,
+				ForceNew:    true,
+				Description: "The datacenter to use. This overrides the agent's default datacenter and the datacenter in the provider setup.",
 			},
 
 			"external": {
@@ -85,14 +103,16 @@ func resourceConsulService() *schema.Resource {
 			},
 
 			"port": {
-				Type:     schema.TypeInt,
-				Optional: true,
+				Type:        schema.TypeInt,
+				Optional:    true,
+				Description: "The port of the service.",
 			},
 
 			"tags": {
-				Type:     schema.TypeList,
-				Optional: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
+				Type:        schema.TypeList,
+				Optional:    true,
+				Elem:        &schema.Schema{Type: schema.TypeString},
+				Description: "A list of values that are opaque to Consul, but can be used to distinguish between services or nodes.",
 			},
 
 			"meta": {
@@ -101,6 +121,7 @@ func resourceConsulService() *schema.Resource {
 				Elem: &schema.Schema{
 					Type: schema.TypeString,
 				},
+				Description: "A map of arbitrary KV metadata linked to the service instance.",
 			},
 
 			"check": {
@@ -137,76 +158,89 @@ func resourceConsulService() *schema.Resource {
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"check_id": {
-							Type:     schema.TypeString,
-							Required: true,
+							Type:        schema.TypeString,
+							Required:    true,
+							Description: "An ID, *unique per agent*.",
 						},
 
 						"name": {
-							Type:     schema.TypeString,
-							Required: true,
+							Type:        schema.TypeString,
+							Required:    true,
+							Description: "The name of the health-check.",
 						},
 
 						"notes": {
-							Type:     schema.TypeString,
-							Optional: true,
+							Type:        schema.TypeString,
+							Optional:    true,
+							Description: "An opaque field meant to hold human readable text.",
 						},
 
 						"status": {
-							Type:     schema.TypeString,
-							Optional: true,
-							Computed: true,
+							Type:        schema.TypeString,
+							Optional:    true,
+							Computed:    true,
+							Description: "The initial health-check status.",
 						},
 						"tcp": {
-							Type:     schema.TypeString,
-							Optional: true,
+							Type:        schema.TypeString,
+							Optional:    true,
+							Description: "The TCP address and port to connect to for a TCP check.",
 						},
 
 						"http": {
-							Type:     schema.TypeString,
-							Optional: true,
+							Type:        schema.TypeString,
+							Optional:    true,
+							Description: "The HTTP endpoint to call for an HTTP check.",
 						},
 
 						"header": {
-							Type:     schema.TypeSet,
-							Optional: true,
-							Elem:     headerResource,
+							Type:        schema.TypeSet,
+							Optional:    true,
+							Elem:        headerResource,
+							Description: "The headers to send for an HTTP check. The attributes of each header is given below.",
 						},
 
 						"tls_skip_verify": {
-							Type:     schema.TypeBool,
-							Optional: true,
-							Default:  false,
+							Type:        schema.TypeBool,
+							Optional:    true,
+							Default:     false,
+							Description: "Whether to deactivate certificate verification for HTTP health-checks. Defaults to `false`.",
 						},
 
 						"method": {
-							Type:     schema.TypeString,
-							Optional: true,
-							Default:  "GET",
+							Type:        schema.TypeString,
+							Optional:    true,
+							Default:     "GET",
+							Description: "The method to use for HTTP health-checks. Defaults to `GET`.",
 						},
 
 						"interval": {
-							Type:     schema.TypeString,
-							Required: true,
+							Type:        schema.TypeString,
+							Required:    true,
+							Description: "The interval to wait between each health-check invocation.",
 						},
 
 						"timeout": {
-							Type:     schema.TypeString,
-							Required: true,
+							Type:        schema.TypeString,
+							Required:    true,
+							Description: "Specifies a timeout for outgoing connections in the case of a HTTP or TCP check.",
 						},
 
 						"deregister_critical_service_after": {
-							Type:     schema.TypeString,
-							Optional: true,
-							Default:  "30s",
+							Type:        schema.TypeString,
+							Optional:    true,
+							Default:     "30s",
+							Description: "The time after which the service is automatically deregistered when in the `critical` state. Defaults to `30s`.",
 						},
 					},
 				},
 			},
 
 			"namespace": {
-				Type:     schema.TypeString,
-				Optional: true,
-				ForceNew: true,
+				Type:        schema.TypeString,
+				Optional:    true,
+				ForceNew:    true,
+				Description: "The namespace to create the service within.",
 			},
 
 			"partition": {
@@ -217,8 +251,9 @@ func resourceConsulService() *schema.Resource {
 			},
 
 			"enable_tag_override": {
-				Type:     schema.TypeBool,
-				Optional: true,
+				Type:        schema.TypeBool,
+				Optional:    true,
+				Description: "Specifies to disable the anti-entropy feature for this service's tags. Defaults to `false`.",
 			},
 		},
 	}
