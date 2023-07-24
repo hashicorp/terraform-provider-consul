@@ -134,6 +134,10 @@ Required:
 - `regexp` (String) The regular expression to match with. When using `name_prefix_match`, this regex is applied against the query name.
 - `type` (String) The type of template matching to perform. Currently only `name_prefix_match` is supported.
 
+Optional:
+
+- `remove_empty_tags` (Boolean) If set to true, will cause the tags list inside the service structure to be stripped of any empty strings.
+
 ## Import
 
 Import is supported using the following syntax:

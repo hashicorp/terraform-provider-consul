@@ -187,8 +187,9 @@ Managing prepared queries is done using Consul's REST API. This resource is usef
 							Description: "The regular expression to match with. When using `name_prefix_match`, this regex is applied against the query name.",
 						},
 						"remove_empty_tags": {
-							Type:     schema.TypeBool,
-							Optional: true,
+							Type:        schema.TypeBool,
+							Optional:    true,
+							Description: "If set to true, will cause the tags list inside the service structure to be stripped of any empty strings.",
 						},
 					},
 				},
