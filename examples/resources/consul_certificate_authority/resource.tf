@@ -1,3 +1,6 @@
+# Copyright (c) HashiCorp, Inc.
+# SPDX-License-Identifier: MPL-2.0
+
 # Using the built-in CA with specific TTL
 resource "consul_certificate_authority" "connect" {
   connect_provider = "consul"

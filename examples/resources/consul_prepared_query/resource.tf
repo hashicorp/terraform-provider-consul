@@ -1,3 +1,6 @@
+# Copyright (c) HashiCorp, Inc.
+# SPDX-License-Identifier: MPL-2.0
+
 # Creates a prepared query myquery.query.consul that finds the nearest
 # healthy myapp.service.consul instance that has the active tag and not
 # the standby tag.
