@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package consul
 
 import (
@@ -137,6 +140,19 @@ func TestAccConsulPreparedQuery_blocks(t *testing.T) {
 			},
 			{
 				Config: testAccConsulPreparedQueryBlocks4,
+			},
+			{
+				Config: testAccConsulPreparedQueryBlocks5,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("consul_prepared_query.foo", "failover.#", "1"),
+					resource.TestCheckResourceAttr("consul_prepared_query.foo", "failover.0.nearest_n", "0"),
+					resource.TestCheckResourceAttr("consul_prepared_query.foo", "failover.0.datacenters.#", "0"),
+					resource.TestCheckResourceAttr("consul_prepared_query.foo", "failover.0.targets.#", "2"),
+					resource.TestCheckResourceAttr("consul_prepared_query.foo", "failover.0.targets.0.peer", "test2"),
+					resource.TestCheckResourceAttr("consul_prepared_query.foo", "failover.0.targets.0.datacenter", "dc2"),
+					resource.TestCheckResourceAttr("consul_prepared_query.foo", "failover.0.targets.1.peer", "test3"),
+					resource.TestCheckResourceAttr("consul_prepared_query.foo", "failover.0.targets.1.datacenter", "dc3"),
+				),
 			},
 		},
 	})
@@ -400,6 +416,27 @@ resource "consul_prepared_query" "foo" {
 	template {
 		type   = ""
 		regexp = ""
+	}
+}
+`
+
+const testAccConsulPreparedQueryBlocks5 = `
+resource "consul_prepared_query" "foo" {
+	name = "foo"
+	stored_token = "pq-token"
+	service = "redis"
+
+
+	failover {
+		targets {
+			peer = "test2"
+			datacenter = "dc2"
+		}
+
+		targets {
+			peer = "test3"
+			datacenter = "dc3"
+		}
 	}
 }
 `

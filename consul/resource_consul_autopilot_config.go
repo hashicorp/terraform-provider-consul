@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package consul
 
 import (
@@ -19,6 +22,7 @@ func resourceConsulAutopilotConfig() *schema.Resource {
 			"datacenter": {
 				Type:     schema.TypeString,
 				Optional: true,
+				ForceNew: true,
 			},
 			"cleanup_dead_servers": {
 				Type:     schema.TypeBool,

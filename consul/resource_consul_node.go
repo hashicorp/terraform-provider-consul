@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package consul
 
 import (
@@ -13,6 +16,15 @@ func resourceConsulNode() *schema.Resource {
 		Update: resourceConsulNodeCreate,
 		Read:   resourceConsulNodeRead,
 		Delete: resourceConsulNodeDelete,
+
+		Importer: &schema.ResourceImporter{
+			State: func(d *schema.ResourceData, _ interface{}) ([]*schema.ResourceData, error) {
+				// consul_node uses the "name" as resource ID
+				d.Set("name", d.Id())
+
+				return []*schema.ResourceData{d}, nil
+			},
+		},
 
 		Schema: map[string]*schema.Schema{
 			"address": {
@@ -44,9 +56,10 @@ func resourceConsulNode() *schema.Resource {
 			},
 
 			"token": {
-				Type:      schema.TypeString,
-				Optional:  true,
-				Sensitive: true,
+				Type:       schema.TypeString,
+				Optional:   true,
+				Sensitive:  true,
+				Deprecated: tokenDeprecationMessage,
 			},
 
 			"partition": {

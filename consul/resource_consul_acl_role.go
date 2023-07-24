@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package consul
 
 import (
@@ -5,6 +8,7 @@ import (
 
 	consulapi "github.com/hashicorp/consul/api"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
 )
 
 func resourceConsulACLRole() *schema.Resource {
@@ -32,7 +36,8 @@ func resourceConsulACLRole() *schema.Resource {
 				Type:     schema.TypeSet,
 				Optional: true,
 				Elem: &schema.Schema{
-					Type: schema.TypeString,
+					ValidateFunc: validation.IsUUID,
+					Type:         schema.TypeString,
 				},
 				Description: "The list of policies that should be applied to the role.",
 			},

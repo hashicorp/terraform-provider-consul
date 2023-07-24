@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package consul
 
 import (
@@ -83,9 +86,10 @@ func resourceConsulCatalogEntry() *schema.Resource {
 			},
 
 			"token": {
-				Type:      schema.TypeString,
-				Optional:  true,
-				Sensitive: true,
+				Type:       schema.TypeString,
+				Optional:   true,
+				Sensitive:  true,
+				Deprecated: tokenDeprecationMessage,
 			},
 		},
 	}

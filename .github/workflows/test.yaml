@@ -7,30 +7,25 @@ on:
       - master
 jobs:
   test:
-    env:
-      GO111MODULE: on
-      GOFLAGS: -mod=vendor
     strategy:
       fail-fast: false
       matrix:
-        go-version: [1.16.x, 1.17.x]
+        go-version: [1.19.x, 1.20.x]
         os: [ubuntu-latest]
     runs-on: ${{ matrix.os }}
     steps:
     - name: Install Go
-      uses: actions/setup-go@37335c7bb261b353407cff977110895fa0b4f7d8
+      uses: actions/setup-go@4d34df0c2316fe8122ab82dc22947d607c0c91f9 # v4.0.0
       with:
         go-version: ${{ matrix.go-version }}
     - name: Checkout code
-      uses: actions/checkout@5a4ac9002d0be2fb38bd78e4b4dbde5606d7042f
+      uses: actions/checkout@8f4b7f84864484a7bf31766abe9204da3cbe65b3 # v3.5.0
     - name: Run go tests
       run: make test
-    - name: Run tfproviderlint
-      run: docker run -v $PWD:/src docker.mirror.hashicorp.services/bflad/tfproviderlint -S006 -S022 -S023 ./...
     - name: Run OSS acceptance tests
       run: |
-        curl -LO https://releases.hashicorp.com/consul/1.11.4/consul_1.11.4_linux_amd64.zip
-        sudo unzip consul_1.11.4_linux_amd64.zip consul -d /usr/local/bin
+        curl -LO https://releases.hashicorp.com/consul/1.16.0/consul_1.16.0_linux_amd64.zip
+        sudo unzip consul_1.16.0_linux_amd64.zip consul -d /usr/local/bin
         SKIP_REMOTE_DATACENTER_TESTS=1 make testacc TESTARGS="-count=1"
     - name: Run go vet
       run: make vet

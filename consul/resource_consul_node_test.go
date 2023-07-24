@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package consul
 
 import (
@@ -13,7 +16,6 @@ func TestAccConsulNode_basic(t *testing.T) {
 	providers, client := startTestServer(t)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() {},
 		Providers:    providers,
 		CheckDestroy: testAccCheckConsulNodeDestroy(client),
 		Steps: []resource.TestStep{
@@ -24,6 +26,12 @@ func TestAccConsulNode_basic(t *testing.T) {
 					testAccCheckConsulNodeValue("consul_node.foo", "address", "127.0.0.1"),
 					testAccCheckConsulNodeValue("consul_node.foo", "name", "foo"),
 				),
+			},
+			{
+				Config:        testAccConsulNodeConfigBasic,
+				ResourceName:  "consul_node.foo",
+				ImportState:   true,
+				ImportStateId: "foo",
 			},
 			{
 				PreConfig: testAccRemoveConsulNode(t, client),
@@ -224,6 +232,7 @@ func testAccChangeConsulNodeAddress(t *testing.T, client *consulapi.Client) func
 		}
 	}
 }
+
 func testAccChangeConsulNodeAddressMeta(t *testing.T, client *consulapi.Client) func() {
 	return func() {
 		catalog := client.Catalog()

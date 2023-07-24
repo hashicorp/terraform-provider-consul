@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package consul
 
 import (
@@ -20,6 +23,11 @@ func dataSourceConsulACLTokenSecretID() *schema.Resource {
 			},
 
 			"namespace": {
+				Type:     schema.TypeString,
+				Optional: true,
+			},
+
+			"partition": {
 				Type:     schema.TypeString,
 				Optional: true,
 			},

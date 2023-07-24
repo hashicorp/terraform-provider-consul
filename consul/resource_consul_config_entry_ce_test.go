@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package consul
 
 import (
@@ -35,7 +38,7 @@ func TestAccConsulConfigEntryCE_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("consul_config_entry.foo", "name", "global"),
 					resource.TestCheckResourceAttr("consul_config_entry.foo", "kind", "proxy-defaults"),
-					resource.TestCheckResourceAttr("consul_config_entry.foo", "config_json", "{\"Config\":{\"foo\":\"bar\"},\"Expose\":{},\"MeshGateway\":{},\"TransparentProxy\":{}}"),
+					resource.TestCheckResourceAttr("consul_config_entry.foo", "config_json", "{\"AccessLogs\":{},\"Config\":{\"foo\":\"bar\"},\"Expose\":{},\"MeshGateway\":{},\"TransparentProxy\":{}}"),
 				),
 			},
 			{
@@ -75,21 +78,24 @@ func TestAccConsulConfigEntryCE_basic(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccConsulConfigEntryCE_ServiceConfigL4,
+				Config:             testAccConsulConfigEntryCE_ServiceConfigL4,
+				ExpectNonEmptyPlan: true,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("consul_config_entry.service_intentions", "name", "api-service"),
 					resource.TestCheckResourceAttr("consul_config_entry.service_intentions", "kind", "service-intentions"),
 				),
 			},
 			{
-				Config: testAccConsulConfigEntryCE_ServiceConfigL7,
+				Config:             testAccConsulConfigEntryCE_ServiceConfigL7,
+				ExpectNonEmptyPlan: true,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("consul_config_entry.service_intentions", "name", "fort-knox"),
 					resource.TestCheckResourceAttr("consul_config_entry.service_intentions", "kind", "service-intentions"),
 				),
 			},
 			{
-				Config: testAccConsulConfigEntryCE_ServiceConfigL7b,
+				Config:             testAccConsulConfigEntryCE_ServiceConfigL7b,
+				ExpectNonEmptyPlan: true,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("consul_config_entry.service_intentions", "name", "api"),
 					resource.TestCheckResourceAttr("consul_config_entry.service_intentions", "kind", "service-intentions"),
@@ -109,19 +115,23 @@ func TestAccConsulConfigEntryCE_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("consul_config_entry.service_intentions", "kind", "service-intentions"),
 				),
 			},
-		},
-	})
-}
-
-func TestAccConsulConfigEntry_Errors(t *testing.T) {
-	providers, _ := startTestServer(t)
-
-	resource.Test(t, resource.TestCase{
-		Providers: providers,
-		Steps: []resource.TestStep{
 			{
-				Config:      testAccConsulConfigEntryCE_ProxyDefaultsWrongName,
-				ExpectError: regexp.MustCompile("failed to read config entry after setting it.\nThis may happen when some attributes have an unexpected value.\nRead the documentation at https://www.consul.io/docs/agent/config-entries/proxy-defaults.html\nto see what values are expected"),
+				Config:       testAccConsulConfigEntryCE_ServiceConfigL7Mixed,
+				ImportState:  true,
+				ResourceName: "consul_config_entry.service_intentions",
+				ExpectError:  regexp.MustCompile(`expected path of the form "<kind>/<name>" or "<partition>/<namespace>/<kind>/<name>"`),
+			},
+			{
+				Config:        testAccConsulConfigEntryCE_ServiceConfigL7Mixed,
+				ImportState:   true,
+				ResourceName:  "consul_config_entry.service_intentions",
+				ImportStateId: "service-defaults/api",
+			},
+			{
+				Config:        testAccConsulConfigEntryCE_ServiceConfigL7Mixed,
+				ImportState:   true,
+				ResourceName:  "consul_config_entry.service_intentions",
+				ImportStateId: "default/default/service-defaults/api",
 			},
 		},
 	})
@@ -135,8 +145,13 @@ func TestAccConsulConfigEntryCE_ServicesExported(t *testing.T) {
 		Providers: providers,
 		Steps: []resource.TestStep{
 			{
-				Config:      TestAccConsulConfigEntryCE_exportedServicesCE,
-				ExpectError: regexp.MustCompile(`Config entry kind "exported-services" requires Consul Enterprise`),
+				Config: TestAccConsulConfigEntryCE_exportedServicesCE,
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr("consul_config_entry.exported_services", "config_json", "{\"Services\":[{\"Consumers\":[{\"Peer\":\"us-east-2\"}],\"Name\":\"test\"}]}"),
+					resource.TestCheckResourceAttr("consul_config_entry.exported_services", "id", "exported-services-default"),
+					resource.TestCheckResourceAttr("consul_config_entry.exported_services", "kind", "exported-services"),
+					resource.TestCheckResourceAttr("consul_config_entry.exported_services", "name", "default"),
+				),
 			},
 		},
 	})
@@ -154,6 +169,48 @@ func TestAccConsulConfigEntryCE_Mesh(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr("consul_config_entry.mesh", "name", "mesh"),
 					resource.TestCheckResourceAttr("consul_config_entry.mesh", "kind", "mesh"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccConsulConfigEntryCE_JWTProvider_Remote(t *testing.T) {
+	providers, _ := startTestServer(t)
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:  func() { skipTestOnConsulEnterpriseEdition(t) },
+		Providers: providers,
+		Steps: []resource.TestStep{
+			{
+				Config:             TestAccConsulConfigEntryCE_jwtRemote,
+				ExpectNonEmptyPlan: true,
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr("consul_config_entry.jwt_provider", "id", "jwt-provider-okta"),
+					resource.TestCheckResourceAttr("consul_config_entry.jwt_provider", "name", "okta"),
+					resource.TestCheckResourceAttr("consul_config_entry.jwt_provider", "kind", "jwt-provider"),
+					resource.TestCheckResourceAttr("consul_config_entry.jwt_provider", "config_json", "{\"ClockSkewSeconds\":30,\"Forwarding\":{\"HeaderName\":\"test-token\"},\"Issuer\":\"test-issuer\",\"JSONWebKeySet\":{\"Remote\":{\"FetchAsynchronously\":true,\"URI\":\"https://127.0.0.1:9091\"}}}"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccConsulConfigEntryCE_JWTProvider_Local(t *testing.T) {
+	providers, _ := startTestServer(t)
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:  func() { skipTestOnConsulEnterpriseEdition(t) },
+		Providers: providers,
+		Steps: []resource.TestStep{
+			{
+				ExpectNonEmptyPlan: true,
+				Config:             TestAccConsulConfigEntryCE_jwtLocal,
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr("consul_config_entry.jwt_provider", "id", "jwt-provider-auth0"),
+					resource.TestCheckResourceAttr("consul_config_entry.jwt_provider", "name", "auth0"),
+					resource.TestCheckResourceAttr("consul_config_entry.jwt_provider", "kind", "jwt-provider"),
+					resource.TestCheckResourceAttr("consul_config_entry.jwt_provider", "config_json", "{\"ClockSkewSeconds\":30,\"Issuer\":\"auth0-issuer\",\"JSONWebKeySet\":{\"Local\":{\"JWKS\":\"eyJrZXlzIjogW3sKICAiY3J2IjogIlAtMjU2IiwKICAia2V5X29wcyI6IFsKICAgICJ2ZXJpZnkiCiAgXSwKICAia3R5IjogIkVDIiwKICAieCI6ICJXYzl1WnVQYUI3S2gyRk1jOXd0SmpSZThYRDR5VDJBWU5BQWtyWWJWanV3IiwKICAieSI6ICI2OGhSVEppSk5Pd3RyaDRFb1BYZVZuUnVIN2hpU0RKX2xtYmJqZkRmV3EwIiwKICAiYWxnIjogIkVTMjU2IiwKICAidXNlIjogInNpZyIsCiAgImtpZCI6ICJhYzFlOGY5MGVkZGY2MWM0MjljNjFjYTA1YjRmMmUwNyIKfV19\"}}}"),
 				),
 			},
 		},
@@ -192,6 +249,7 @@ resource "consul_config_entry" "foo" {
 	kind = "proxy-defaults"
 
 	config_json = jsonencode({
+		AccessLogs = {}
 		Config = {
 			foo = "bar"
 		}
@@ -382,11 +440,31 @@ resource "consul_config_entry" "terminating_gateway" {
 `
 
 const testAccConsulConfigEntryCE_ServiceConfigL4 = `
+resource "consul_config_entry" "jwt_provider" {
+	name = "okta"
+	kind = "jwt-provider"
+
+	config_json = jsonencode({
+		Issuer = "test-issuer"
+		JSONWebKeySet = {
+			Remote = {
+				URI = "https://127.0.0.1:9091"
+				FetchAsynchronously = true
+			}
+		}
+	})
+}
+
 resource "consul_config_entry" "service_intentions" {
 	name = "api-service"
 	kind = "service-intentions"
 
 	config_json = jsonencode({
+		JWT = {
+			Providers = [
+				{ name = consul_config_entry.jwt_provider.name }
+			]
+		}
 		Sources = [
 			{
 				Action     = "allow"
@@ -418,6 +496,21 @@ resource "consul_config_entry" "sd" {
 	})
 }
 
+resource "consul_config_entry" "jwt_provider" {
+	name = "okta"
+	kind = "jwt-provider"
+
+	config_json = jsonencode({
+		Issuer = "test-issuer"
+		JSONWebKeySet = {
+			Remote = {
+				URI = "https://127.0.0.1:9091"
+				FetchAsynchronously = true
+			}
+		}
+	})
+}
+
 resource "consul_config_entry" "service_intentions" {
 	name = consul_config_entry.sd.name
 	kind = "service-intentions"
@@ -432,6 +525,11 @@ resource "consul_config_entry" "service_intentions" {
 						HTTP   = {
 							Methods   = ["GET", "HEAD"]
 							PathExact = "/healtz"
+						}
+						JWT = {
+							Providers = [
+								{ name = consul_config_entry.jwt_provider.name }
+							]
 						}
 					}
 				]
@@ -475,6 +573,21 @@ resource "consul_config_entry" "sd" {
 	})
 }
 
+resource "consul_config_entry" "jwt_provider" {
+	name = "okta"
+	kind = "jwt-provider"
+
+	config_json = jsonencode({
+		Issuer = "test-issuer"
+		JSONWebKeySet = {
+			Remote = {
+				URI = "https://127.0.0.1:9091"
+				FetchAsynchronously = true
+			}
+		}
+	})
+}
+
 resource "consul_config_entry" "service_intentions" {
 	name = consul_config_entry.sd.name
 	kind = "service-intentions"
@@ -489,6 +602,11 @@ resource "consul_config_entry" "service_intentions" {
 						HTTP = {
 							Methods    = ["GET", "PUT", "POST", "DELETE", "HEAD"]
 							PathPrefix = "/v2"
+						}
+						JWT = {
+							Providers = [
+								{ name = consul_config_entry.jwt_provider.name }
+							]
 						}
 					}
 				],
@@ -625,15 +743,14 @@ const TestAccConsulConfigEntryCE_mesh = `
 
 const TestAccConsulConfigEntryCE_exportedServicesCE = `
 resource "consul_config_entry" "exported_services" {
-	name = "test"
+	name = "default"
 	kind = "exported-services"
 
 	config_json = jsonencode({
 		Services = [{
 			Name = "test"
-			Namespace = "default"
 			Consumers = [{
-				Partition = "default"
+				Peer = "us-east-2"
 			}]
 		}]
 	})
@@ -685,6 +802,41 @@ resource "consul_config_entry" "mesh" {
 
 		TransparentProxy = {
 			MeshDestinationsOnly = true
+		}
+	})
+}
+`
+const TestAccConsulConfigEntryCE_jwtRemote = `
+resource "consul_config_entry" "jwt_provider" {
+	name = "okta"
+	kind = "jwt-provider"
+
+	config_json = jsonencode({
+		Issuer = "test-issuer"
+		JSONWebKeySet = {
+			Remote = {
+				URI = "https://127.0.0.1:9091"
+				FetchAsynchronously = true
+			}
+		}
+		Forwarding = {
+			HeaderName = "test-token"
+		}
+	})
+}
+`
+
+const TestAccConsulConfigEntryCE_jwtLocal = `
+resource "consul_config_entry" "jwt_provider" {
+	name = "auth0"
+	kind = "jwt-provider"
+
+	config_json = jsonencode({
+		Issuer = "auth0-issuer"
+		JSONWebKeySet = {
+			Local = {
+        JWKS = "eyJrZXlzIjogW3sKICAiY3J2IjogIlAtMjU2IiwKICAia2V5X29wcyI6IFsKICAgICJ2ZXJpZnkiCiAgXSwKICAia3R5IjogIkVDIiwKICAieCI6ICJXYzl1WnVQYUI3S2gyRk1jOXd0SmpSZThYRDR5VDJBWU5BQWtyWWJWanV3IiwKICAieSI6ICI2OGhSVEppSk5Pd3RyaDRFb1BYZVZuUnVIN2hpU0RKX2xtYmJqZkRmV3EwIiwKICAiYWxnIjogIkVTMjU2IiwKICAidXNlIjogInNpZyIsCiAgImtpZCI6ICJhYzFlOGY5MGVkZGY2MWM0MjljNjFjYTA1YjRmMmUwNyIKfV19"
+    	}
 		}
 	})
 }

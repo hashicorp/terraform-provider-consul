@@ -1,7 +1,11 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package consul
 
 import (
 	"fmt"
+	"regexp"
 	"testing"
 
 	consulapi "github.com/hashicorp/consul/api"
@@ -45,6 +49,10 @@ func TestAccConsulACLRole_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("consul_acl_role.test", "service_identities.2708159462.datacenters.#", "0"),
 					resource.TestCheckResourceAttr("consul_acl_role.test", "service_identities.2708159462.service_name", "bar"),
 				),
+			},
+			{
+				Config:      testResourceACLRoleConfigPolicyName,
+				ExpectError: regexp.MustCompile(`expected "policies.0" to be a valid UUID`),
 			},
 			{
 				Config:            testResourceACLRoleConfigUpdate,
@@ -115,7 +123,7 @@ resource "consul_acl_role" "test" {
 	description = "bar"
 
 	policies = [
-		"${consul_acl_policy.test-read.id}"
+		consul_acl_policy.test-read.id
 	]
 
 	service_identities {
@@ -135,6 +143,12 @@ resource "consul_acl_role" "test" {
 		node_name = "hello"
 		datacenter = "world"
 	}
+}`
+
+const testResourceACLRoleConfigPolicyName = `
+resource "consul_acl_role" "test" {
+	name    = "baz"
+	policies = ["test"]
 }`
 
 const testResourceACLRoleNamespaceCE = `

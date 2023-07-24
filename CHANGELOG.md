@@ -1,4 +1,33 @@
-## 2.15.1 (Unreleased)
+## 2.17.0 (December 13, 2022)
+
+CHANGES:
+
+* The `token` argument in the resources and datasources has been deprecated. The `token` argument in the provider configuration should be used instead ([[#332](https://github.com/hashicorp/terraform-provider-consul/issues/332)] and [[#298](https://github.com/hashicorp/terraform-provider-consul/issues/298)]).
+
+NEW FEATURES:
+
+* The `consul_config_entry` datasource can now be used to read the configuration of a given config entry ([[#318](https://github.com/hashicorp/terraform-provider-consul/issues/318)]).
+
+IMPROVEMENTS:
+
+* The `consul_node` resource can now be imported ([[#323](https://github.com/hashicorp/terraform-provider-consul/issues/323)]).
+* The `consul_config_entry` resource can now be imported ([Gh-319] and [[#316](https://github.com/hashicorp/terraform-provider-consul/issues/316)]).
+* The `consul_peering` resource has been updated to support the changes in Consul 1.14 ([[#328](https://github.com/hashicorp/terraform-provider-consul/issues/328)]).
+* The `consul_peering`, `consul_peerings` datasources have been updated to support the changes in Consul 1.14 ([[#328](https://github.com/hashicorp/terraform-provider-consul/issues/328)]).
+* The `consul_config_entry` resource now support the new peer parameters introduced in Consul 1.14 ([[#328](https://github.com/hashicorp/terraform-provider-consul/issues/328)]).
+
+## 2.16.0 (September 24, 2022)
+
+NEW FEATURES:
+
+* The `consul_peering` and `consul_peering_token` resources can now be used to manage Consul Cluster Peering configuration ([#309](https://github.com/hashicorp/terraform-provider-consul/pull/309)).
+* The `consul_peering` and `consul_peerings` datasources can now be used to introspect Consul Cluster Peering configuration ([#309](https://github.com/hashicorp/terraform-provider-consul/pull/309)).
+
+IMPROVEMENTS:
+
+* The `consul_acl_token_secret_id` datasource now supports reading tokens in a Consul Admin Partition ([#315](https://github.com/hashicorp/terraform-provider-consul/pull/315)).
+
+## 2.15.1 (April 11, 2022)
 
 BUG FIXES:
 

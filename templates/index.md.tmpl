@@ -1,0 +1,72 @@
+---
+layout: "consul"
+page_title: "Provider: Consul"
+sidebar_current: "docs-consul-index"
+description: |-
+  Consul is a tool for service discovery, configuration and orchestration. The Consul provider exposes resources used to interact with a Consul cluster. Configuration of the provider is optional, as it provides defaults for all arguments.
+---
+
+# Consul Provider
+
+[Consul](https://www.consul.io) is a service networking platform which provides
+service discovery, service mesh, and application configuration capabilities.
+The Consul provider exposes resources used to interact with a
+Consul cluster. Configuration of the provider is optional, as it provides
+reasonable defaults for all arguments.
+
+Use the navigation to the left to read about the available resources.
+
+~> **NOTE:** The Consul provider should not be confused with the [Consul remote
+state backend][consul-remote-state-backend], which is one of many backends that
+can be used to store Terraform state. The Consul provider is instead used to
+manage resources within Consul itself, such as adding external services or
+working with the key/value store.
+
+[consul-remote-state-backend]: /docs/backends/types/consul.html
+
+## Example Usage
+
+```hcl
+# Configure the Consul provider
+provider "consul" {
+  address    = "demo.consul.io:80"
+  datacenter = "nyc1"
+}
+
+# Access a key in Consul
+data "consul_keys" "app" {
+  key {
+    name    = "ami"
+    path    = "service/app/launch_ami"
+    default = "ami-1234"
+  }
+}
+
+# Use our variable from Consul
+resource "aws_instance" "app" {
+  ami = data.consul_keys.app.var.ami
+}
+```
+
+## Compatibility
+
+The Consul Terraform provider uses features of the latest version of Consul.
+Some resources may not be supported by older versions of Consul.
+
+The known compatibility between this provider and Consul is:
+
+| Terraform provider version | Consul version |
+| -------------------------- | -------------- |
+| 2.17.0                     | >= 1.14.0      |
+| 2.16.0                     | >= 1.13.0      |
+| 2.15.0                     | >= 1.11.0      |
+| 2.14.0                     | >= 1.10.0      |
+| 2.13.0                     | >= 1.10.0      |
+
+
+{{ .SchemaMarkdown | trimspace }}
+
+## Environment Variables
+
+All environment variables listed in the [Consul environment variables](https://www.consul.io/docs/commands/index.html#environment-variables)
+documentation are supported by the Terraform provider.
