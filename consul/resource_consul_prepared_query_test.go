@@ -36,6 +36,7 @@ func TestAccConsulPreparedQuery_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("consul_prepared_query.foo", "failover.0.datacenters.#", "2"),
 					resource.TestCheckResourceAttr("consul_prepared_query.foo", "template.0.type", "name_prefix_match"),
 					resource.TestCheckResourceAttr("consul_prepared_query.foo", "template.0.regexp", "hello"),
+					resource.TestCheckResourceAttr("consul_prepared_query.foo", "template.0.remove_empty_tags", "true"),
 					resource.TestCheckResourceAttr("consul_prepared_query.foo", "dns.0.ttl", "8m"),
 				),
 			},
@@ -305,8 +306,9 @@ resource "consul_prepared_query" "foo" {
 	}
 
 	template {
-		type = "name_prefix_match"
-		regexp = "hello"
+		type              = "name_prefix_match"
+		regexp            = "hello"
+		remove_empty_tags = true
 	}
 
 	dns {

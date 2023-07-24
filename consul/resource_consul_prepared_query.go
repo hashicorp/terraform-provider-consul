@@ -186,6 +186,11 @@ Managing prepared queries is done using Consul's REST API. This resource is usef
 							Required:    true,
 							Description: "The regular expression to match with. When using `name_prefix_match`, this regex is applied against the query name.",
 						},
+						"remove_empty_tags": {
+							Type:        schema.TypeBool,
+							Optional:    true,
+							Description: "If set to true, will cause the tags list inside the service structure to be stripped of any empty strings.",
+						},
 					},
 				},
 			},
@@ -295,8 +300,9 @@ func resourceConsulPreparedQueryRead(d *schema.ResourceData, meta interface{}) e
 
 	if userWroteTemplate || pq.Template.Type != "" {
 		template = append(template, map[string]interface{}{
-			"type":   pq.Template.Type,
-			"regexp": pq.Template.Regexp,
+			"type":              pq.Template.Type,
+			"regexp":            pq.Template.Regexp,
+			"remove_empty_tags": pq.Template.RemoveEmptyTags,
 		})
 	}
 	sw.set("template", template)
@@ -377,8 +383,9 @@ func preparedQueryDefinitionFromResourceData(d *schema.ResourceData) *consulapi.
 
 	if _, ok := d.GetOk("template.0"); ok {
 		pq.Template = consulapi.QueryTemplate{
-			Type:   d.Get("template.0.type").(string),
-			Regexp: d.Get("template.0.regexp").(string),
+			Type:            d.Get("template.0.type").(string),
+			Regexp:          d.Get("template.0.regexp").(string),
+			RemoveEmptyTags: d.Get("template.0.remove_empty_tags").(bool),
 		}
 	}
 

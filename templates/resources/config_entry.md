@@ -171,6 +171,24 @@ resource "consul_config_entry" "sd" {
   })
 }
 
+resource "consul_config_entry" "jwt_provider" {
+	name = "test-provider"
+	kind = "jwt-provider"
+
+	config_json = jsonencode({
+		Issuer = "test-issuer"
+		JSONWebKeySet = {
+			Remote = {
+				URI = "https://127.0.0.1:9091"
+				FetchAsynchronously = true
+			}
+		}
+		Forwarding = {
+			HeaderName = "test-token"
+		}
+	})
+}
+
 resource "consul_config_entry" "service_intentions" {
   name = consul_config_entry.sd.name
   kind = "service-intentions"
@@ -185,6 +203,13 @@ resource "consul_config_entry" "service_intentions" {
             HTTP   = {
               Methods   = ["GET", "HEAD"]
               PathExact = "/healtz"
+            }
+            JWT = {
+              Providers = [
+                {
+                  Name = consul_config_entry.jwt_provider.name
+                }
+              ]
             }
           }
         ]
@@ -247,6 +272,29 @@ resource "consul_config_entry" "mesh" {
 			MeshDestinationsOnly = true
 		}
 	})
+}
+```
+
+### `jwt-provider` config entry
+
+```hcl
+resource "consul_config_entry" "jwt_provider" {
+  name = "provider-name"
+  kind = "jwt-provider"
+
+  config_json = jsonencode({
+    Issuer = "https://your.issuer.com"
+    JSONWebKeySet = {
+      Remote = {
+        URI = "https://your-remote.jwks.com"
+        FetchAsynchronously = true
+        CacheDuration = "10s"
+      }
+    }
+    Forwarding = {
+      HeaderName = "test-token"
+    }
+  })
 }
 ```
 

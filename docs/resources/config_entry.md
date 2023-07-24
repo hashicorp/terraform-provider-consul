@@ -281,7 +281,7 @@ resource "consul_config_entry" "mesh" {
 resource "consul_config_entry" "jwt_provider" {
   name = "provider-name"
   kind = "jwt-provider"
-  
+
   config_json = jsonencode({
     Issuer = "https://your.issuer.com"
     JSONWebKeySet = {
