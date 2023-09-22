@@ -4,15 +4,75 @@
 package consul
 
 import (
-	"encoding/json"
+	"bytes"
 	"fmt"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/hashcode"
+	"reflect"
+	"sort"
 	"strings"
 
 	consulapi "github.com/hashicorp/consul/api"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	schema "github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 )
 
 func resourceServiceDefaultsConfigEntry() *schema.Resource {
+	//var upstreamConfigSchema = &schema.Resource{
+	//	Schema: map[string]*schema.Schema{
+	//		"name": {
+	//			Type:     schema.TypeString,
+	//			Optional: true,
+	//		},
+	//		"partition": {
+	//			Type:     schema.TypeString,
+	//			Optional: true,
+	//		},
+	//		"namespace": {
+	//			Type:     schema.TypeString,
+	//			Optional: true,
+	//		},
+	//		"peer": {
+	//			Type:     schema.TypeString,
+	//			Optional: true,
+	//		},
+	//		"envoy_listener_json": {
+	//			Type:     schema.TypeString,
+	//			Optional: true,
+	//		},
+	//		"envoy_cluster_json": {
+	//			Type:     schema.TypeString,
+	//			Optional: true,
+	//		},
+	//		"protocol": {
+	//			Type:     schema.TypeString,
+	//			Optional: true,
+	//		},
+	//		"connect_timeout_ms": {
+	//			Type:     schema.TypeString,
+	//			Optional: true,
+	//		},
+	//		"limits": {
+	//			Type:     schema.TypeList,
+	//			Optional: true,
+	//			Elem: &schema.Resource{
+	//				Schema: map[string]*schema.Schema{
+	//					"max_connections": {
+	//						Type: schema.TypeInt,
+	//					},
+	//					"max_pending_requests": {
+	//						Type: schema.TypeInt,
+	//					},
+	//					"max_concurrent_requests": {
+	//						Type: schema.TypeInt,
+	//					},
+	//				},
+	//			},
+	//		},
+	//		"passive_health_check": {
+	//			Type:     schema.TypeList,
+	//			Optional: true,
+	//		},
+	//	},
+	//}
 	return &schema.Resource{
 		Create: resourceConsulServiceDefaultsConfigEntryUpdate,
 		Update: resourceConsulServiceDefaultsConfigEntryUpdate,
@@ -54,8 +114,9 @@ func resourceServiceDefaultsConfigEntry() *schema.Resource {
 		Schema: map[string]*schema.Schema{
 			"kind": {
 				Type:     schema.TypeString,
-				Required: true,
+				Required: false,
 				ForceNew: true,
+				Computed: true,
 			},
 
 			"name": {
@@ -64,98 +125,136 @@ func resourceServiceDefaultsConfigEntry() *schema.Resource {
 				ForceNew: true,
 			},
 
-			"partition": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				ForceNew:    true,
-				Description: "The partition the config entry is associated with.",
-			},
-
 			"namespace": {
 				Type:     schema.TypeString,
 				Optional: true,
-				ForceNew: true,
+			},
+
+			"partition": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "The partition the config entry is associated with.",
+			},
+
+			"meta": {
+				Type:     schema.TypeMap,
+				Optional: true,
 			},
 
 			"protocol": {
 				Type:     schema.TypeString,
 				Required: true,
-				ForceNew: true,
 			},
+
+			"balance_inbound_connections": {
+				Type:     schema.TypeString,
+				Optional: true,
+			},
+
 			"mode": {
 				Type:     schema.TypeString,
 				Optional: true,
-				ForceNew: true,
 			},
+
+			//"upstream_config": {
+			//	Type:     schema.TypeList,
+			//	Optional: true,
+			//	Elem:     upstreamConfigSchema,
+			//},
+
 			"transparent_proxy": {
-				Type:     schema.TypeMap,
+				Type:     schema.TypeSet,
 				Optional: true,
-				ForceNew: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"outbound_listener_port": {
+							Required: true,
+							Type:     schema.TypeInt,
+						},
+						"dialed_directly": {
+							Required: true,
+							Type:     schema.TypeBool,
+						},
+					},
+				},
 			},
 			"mutual_tls_mode": {
 				Type:     schema.TypeString,
 				Optional: true,
-				ForceNew: true,
 			},
 			"mesh_gateway": {
-				Type:     schema.TypeMap,
+				Type:     schema.TypeSet,
 				Optional: true,
-				ForceNew: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"mode": {
+							Required: true,
+							Type:     schema.TypeString,
+						},
+					},
+				},
 			},
 			"expose": {
-				Type:     schema.TypeMap,
-				Optional: true,
-				ForceNew: true,
+				Type:     schema.TypeSet,
+				Required: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"checks": {
+							Type:     schema.TypeBool,
+							Optional: true,
+							ForceNew: true,
+						},
+						"paths": {
+							Type:     schema.TypeList,
+							Optional: true,
+							ForceNew: true,
+							Elem:     &schema.Schema{Type: schema.TypeString},
+						},
+					},
+				},
 			},
 			"external_sni": {
 				Type:     schema.TypeString,
 				Optional: true,
-				ForceNew: true,
-			},
-			"upstream_config": {
-				Type:     schema.TypeMap,
-				Optional: true,
-				ForceNew: true,
 			},
 			"destination": {
-				Type:     schema.TypeMap,
-				Optional: true,
-				ForceNew: true,
+				Type:     schema.TypeSet,
+				Required: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"port": {
+							Type:     schema.TypeInt,
+							Required: true,
+						},
+						"addresses": {
+							Type:     schema.TypeList,
+							Required: true,
+							Elem:     &schema.Schema{Type: schema.TypeString},
+						},
+					},
+				},
+				Set: resourceConsulServiceDefaultsDestinationHash,
 			},
 			"max_inbound_connections": {
 				Type:     schema.TypeInt,
 				Optional: true,
-				ForceNew: true,
 			},
 			"local_connect_timeout_ms": {
 				Type:     schema.TypeInt,
 				Optional: true,
-				ForceNew: true,
 			},
 			"local_request_timeout_ms": {
 				Type:     schema.TypeInt,
 				Optional: true,
-				ForceNew: true,
-			},
-			"balance_inbound_connections": {
-				Type:     schema.TypeString,
-				Optional: true,
-				ForceNew: true,
 			},
 			"rate_limits": {
 				Type:     schema.TypeMap,
 				Optional: true,
-				ForceNew: true,
 			},
 			"envoy_extensions": {
 				Type:     schema.TypeList,
 				Optional: true,
-				ForceNew: true,
-			},
-			"meta": {
-				Type:     schema.TypeMap,
-				Optional: true,
-				ForceNew: true,
+				Elem:     &schema.Schema{Type: schema.TypeMap},
 			},
 		},
 	}
@@ -174,31 +273,39 @@ func resourceConsulServiceDefaultsConfigEntryUpdate(d *schema.ResourceData, meta
 	client, qOpts, wOpts := getClient(d, meta)
 	configEntries := client.ConfigEntries()
 
-	kind := d.Get("kind").(string)
 	name := d.Get("name").(string)
+
+	configMap := make(map[string]interface{})
+
+	configMap["kind"] = "service-defaults"
+	configMap["name"] = name
+
+	kind := configMap["kind"].(string)
+	d.Set("kind", kind)
 
 	fixQOptsForServiceDefaultsConfigEntry(name, kind, qOpts)
 
-	attributes := []string{"partition", "namespace", "protocol", "mode", "transparent_proxy", "mutual_tls_mode", "mesh_gateway",
-		"expose", "external_sni", "upstream_config", "destination", "max_inbound_connections", "local_connect_timeout_ms",
-		"local_request_timeout_ms", "balance_inbound_connections", "rate_limits", "envoy_extensions", "meta"}
-
-	var configJson map[string]interface{}
+	attributes := []string{"partition", "namespace",
+		"protocol", "mode", "transparent_proxy",
+		"mutual_tls_mode", "mesh_gateway",
+		"expose", "external_sni",
+		"upstream_config", "destination",
+		"max_inbound_connections", "local_connect_timeout_ms",
+		"local_request_timeout_ms", "balance_inbound_connections",
+		"rate_limits", "envoy_extensions", "meta"}
 
 	for _, attribute := range attributes {
 		value := d.Get(attribute)
 		if value != nil {
-			configJson[attribute] = value
+			configMap[attribute] = value
 		}
 	}
 
-	err := d.Set("config_json", configJson)
+	destinationSet := configMap["destination"].(*schema.Set)
+	destinationList := destinationSet.List()
+	configMap["destination"] = destinationList[0]
 
-	if err != nil {
-		return fmt.Errorf("failed to create config json to make config entry")
-	}
-
-	configEntry, err := makeServiceDefaultsConfigEntry(kind, name, d.Get("config_json").(string), wOpts.Namespace, wOpts.Partition)
+	configEntry, err := makeServiceDefaultsConfigEntry(kind, name, configMap, wOpts.Namespace, wOpts.Partition)
 	if err != nil {
 		return err
 	}
@@ -230,11 +337,7 @@ func resourceConsulServiceDefaultsConfigEntryRead(d *schema.ResourceData, meta i
 	fixQOptsForConfigEntry(configName, configKind, qOpts)
 
 	_, _, err := configEntries.Get(configKind, configName, qOpts)
-	if err != nil {
-		return err
-	}
-
-	return nil
+	return err
 }
 
 func resourceConsulServiceDefaultsConfigEntryDelete(d *schema.ResourceData, meta interface{}) error {
@@ -250,12 +353,7 @@ func resourceConsulServiceDefaultsConfigEntryDelete(d *schema.ResourceData, meta
 	return nil
 }
 
-func makeServiceDefaultsConfigEntry(kind, name, config, namespace, partition string) (consulapi.ConfigEntry, error) {
-	var configMap map[string]interface{}
-	if err := json.Unmarshal([]byte(config), &configMap); err != nil {
-		return nil, fmt.Errorf("failed to unmarshal configMap: %v", err)
-	}
-
+func makeServiceDefaultsConfigEntry(kind, name string, configMap map[string]interface{}, namespace, partition string) (consulapi.ConfigEntry, error) {
 	configMap["kind"] = kind
 	configMap["name"] = name
 	configMap["Namespace"] = namespace
@@ -267,4 +365,28 @@ func makeServiceDefaultsConfigEntry(kind, name, config, namespace, partition str
 	}
 
 	return configEntry, nil
+}
+
+func resourceConsulServiceDefaultsDestinationHash(v interface{}) int {
+	var buf bytes.Buffer
+	m := v.(map[string]interface{})
+	buf.WriteString(fmt.Sprintf("%s-", m["port"].(int)))
+	addresses := reflect.ValueOf(m["addresses"])
+	for i := 0; i < addresses.Len(); i++ {
+		address := addresses.Index(i)
+		buf.WriteString(fmt.Sprintf("%d-", address))
+	}
+	if v, ok := m["tags"]; ok {
+		vs := v.(*schema.Set).List()
+		s := make([]string, len(vs))
+		for i, raw := range vs {
+			s[i] = raw.(string)
+		}
+		sort.Strings(s)
+
+		for _, v := range s {
+			buf.WriteString(fmt.Sprintf("%s-", v))
+		}
+	}
+	return hashcode.String(buf.String())
 }
