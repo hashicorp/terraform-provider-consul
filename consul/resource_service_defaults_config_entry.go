@@ -16,63 +16,90 @@ import (
 )
 
 func resourceServiceDefaultsConfigEntry() *schema.Resource {
-	//var upstreamConfigSchema = &schema.Resource{
-	//	Schema: map[string]*schema.Schema{
-	//		"name": {
-	//			Type:     schema.TypeString,
-	//			Optional: true,
-	//		},
-	//		"partition": {
-	//			Type:     schema.TypeString,
-	//			Optional: true,
-	//		},
-	//		"namespace": {
-	//			Type:     schema.TypeString,
-	//			Optional: true,
-	//		},
-	//		"peer": {
-	//			Type:     schema.TypeString,
-	//			Optional: true,
-	//		},
-	//		"envoy_listener_json": {
-	//			Type:     schema.TypeString,
-	//			Optional: true,
-	//		},
-	//		"envoy_cluster_json": {
-	//			Type:     schema.TypeString,
-	//			Optional: true,
-	//		},
-	//		"protocol": {
-	//			Type:     schema.TypeString,
-	//			Optional: true,
-	//		},
-	//		"connect_timeout_ms": {
-	//			Type:     schema.TypeString,
-	//			Optional: true,
-	//		},
-	//		"limits": {
-	//			Type:     schema.TypeList,
-	//			Optional: true,
-	//			Elem: &schema.Resource{
-	//				Schema: map[string]*schema.Schema{
-	//					"max_connections": {
-	//						Type: schema.TypeInt,
-	//					},
-	//					"max_pending_requests": {
-	//						Type: schema.TypeInt,
-	//					},
-	//					"max_concurrent_requests": {
-	//						Type: schema.TypeInt,
-	//					},
-	//				},
-	//			},
-	//		},
-	//		"passive_health_check": {
-	//			Type:     schema.TypeList,
-	//			Optional: true,
-	//		},
-	//	},
-	//}
+	upstreamConfigSchema := &schema.Resource{
+		Schema: map[string]*schema.Schema{
+			"name": {
+				Type:     schema.TypeString,
+				Optional: true,
+			},
+			"partition": {
+				Type:     schema.TypeString,
+				Optional: true,
+			},
+			"namespace": {
+				Type:     schema.TypeString,
+				Optional: true,
+			},
+			"peer": {
+				Type:     schema.TypeString,
+				Optional: true,
+			},
+			"envoy_listener_json": {
+				Type:     schema.TypeString,
+				Optional: true,
+			},
+			"envoy_cluster_json": {
+				Type:     schema.TypeString,
+				Optional: true,
+			},
+			"protocol": {
+				Type:     schema.TypeString,
+				Optional: true,
+			},
+			"connect_timeout_ms": {
+				Type:     schema.TypeString,
+				Optional: true,
+			},
+			"limits": {
+				Type:     schema.TypeList,
+				Optional: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"max_connections": {
+							Type:     schema.TypeInt,
+							Optional: true,
+						},
+						"max_pending_requests": {
+							Type:     schema.TypeInt,
+							Optional: true,
+						},
+						"max_concurrent_requests": {
+							Type:     schema.TypeInt,
+							Optional: true,
+						},
+					},
+				},
+			},
+			"passive_health_check": {
+				Type:     schema.TypeList,
+				Optional: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"interval": {
+							Type:     schema.TypeInt,
+							Optional: true,
+						},
+						"max_failures": {
+							Type:     schema.TypeInt,
+							Optional: true,
+						},
+						"enforcing_consecutive_5xx": {
+							Type:     schema.TypeInt,
+							Optional: true,
+						},
+						"max_ejection_percent": {
+							Type:     schema.TypeInt,
+							Optional: true,
+						},
+						"base_ejection_time": {
+							Type:     schema.TypeInt,
+							Optional: true,
+						},
+					},
+				},
+			},
+		},
+	}
 	return &schema.Resource{
 		Create: resourceConsulServiceDefaultsConfigEntryUpdate,
 		Update: resourceConsulServiceDefaultsConfigEntryUpdate,
@@ -156,11 +183,11 @@ func resourceServiceDefaultsConfigEntry() *schema.Resource {
 				Optional: true,
 			},
 
-			//"upstream_config": {
-			//	Type:     schema.TypeList,
-			//	Optional: true,
-			//	Elem:     upstreamConfigSchema,
-			//},
+			"upstream_config": {
+				Type:     schema.TypeList,
+				Optional: true,
+				Elem:     upstreamConfigSchema,
+			},
 
 			"transparent_proxy": {
 				Type:     schema.TypeSet,
