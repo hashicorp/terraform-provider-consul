@@ -377,6 +377,34 @@ func fixQOptsForServiceDefaultsConfigEntry(name, kind string, qOpts *consulapi.Q
 	}
 }
 
+func formatKey(key string) string {
+	tokens := strings.Split(key, "_")
+	res := ""
+	for _, token := range tokens {
+		if token == "tls" {
+			res += strings.ToUpper(token)
+		} else {
+			res += strings.ToTitle(token)
+		}
+	}
+	return res
+}
+
+func formatMapKeys(m map[string]interface{}, formatFunc func(string) string) map[string]interface{} {
+	formattedMap := make(map[string]interface{})
+	for key, value := range m {
+		formattedKey := formatFunc(key)
+
+		if nestedMap, isNestedMap := value.(map[string]interface{}); isNestedMap {
+			formattedValue := formatMapKeys(nestedMap, formatFunc)
+			formattedMap[formattedKey] = formattedValue
+		} else {
+			formattedMap[formattedKey] = value
+		}
+	}
+	return formattedMap
+}
+
 func resourceConsulServiceDefaultsConfigEntryUpdate(d *schema.ResourceData, meta interface{}) error {
 	client, qOpts, wOpts := getClient(d, meta)
 	configEntries := client.ConfigEntries()
@@ -410,15 +438,24 @@ func resourceConsulServiceDefaultsConfigEntryUpdate(d *schema.ResourceData, meta
 			switch reflect.TypeOf(value).String() {
 			case "*schema.Set":
 				valueList := value.(*schema.Set).List()
-				configMap[attribute] = valueList[0]
+				if len(valueList) > 0 {
+					configMap[attribute] = valueList[0]
+				} else {
+					delete(configMap, attribute)
+				}
 			}
 		}
 	}
 
-	configEntry, err := makeServiceDefaultsConfigEntry(kind, name, configMap, wOpts.Namespace, wOpts.Partition)
+	configEntry, err := makeServiceDefaultsConfigEntry(kind, name, formatMapKeys(configMap, formatKey),
+		wOpts.Namespace, wOpts.Partition)
 	if err != nil {
 		return err
 	}
+
+	fmt.Println("config entry decoded")
+	sericeDefaultCE := configEntry.(*consulapi.ServiceConfigEntry)
+	fmt.Println(sericeDefaultCE.TransparentProxy)
 
 	if _, _, err := configEntries.Set(configEntry, wOpts); err != nil {
 		return fmt.Errorf("failed to set '%s' config entry: %v", name, err)
