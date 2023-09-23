@@ -15,91 +15,318 @@ import (
 	schema "github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 )
 
-func resourceServiceDefaultsConfigEntry() *schema.Resource {
-	upstreamConfigSchema := &schema.Resource{
-		Schema: map[string]*schema.Schema{
-			"name": {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			"partition": {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			"namespace": {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			"peer": {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			"envoy_listener_json": {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			"envoy_cluster_json": {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			"protocol": {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			"connect_timeout_ms": {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			"limits": {
-				Type:     schema.TypeList,
-				Optional: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"max_connections": {
-							Type:     schema.TypeInt,
-							Optional: true,
-						},
-						"max_pending_requests": {
-							Type:     schema.TypeInt,
-							Optional: true,
-						},
-						"max_concurrent_requests": {
-							Type:     schema.TypeInt,
-							Optional: true,
-						},
+var upstreamConfigSchema = &schema.Resource{
+	Schema: map[string]*schema.Schema{
+		"name": {
+			Type:     schema.TypeString,
+			Optional: true,
+		},
+		"partition": {
+			Type:     schema.TypeString,
+			Optional: true,
+		},
+		"namespace": {
+			Type:     schema.TypeString,
+			Optional: true,
+		},
+		"peer": {
+			Type:     schema.TypeString,
+			Optional: true,
+		},
+		"envoy_listener_json": {
+			Type:     schema.TypeString,
+			Optional: true,
+		},
+		"envoy_cluster_json": {
+			Type:     schema.TypeString,
+			Optional: true,
+		},
+		"protocol": {
+			Type:     schema.TypeString,
+			Optional: true,
+		},
+		"connect_timeout_ms": {
+			Type:     schema.TypeString,
+			Optional: true,
+		},
+		"limits": {
+			Type:     schema.TypeSet,
+			Optional: true,
+			Elem: &schema.Resource{
+				Schema: map[string]*schema.Schema{
+					"max_connections": {
+						Type:     schema.TypeInt,
+						Optional: true,
+					},
+					"max_pending_requests": {
+						Type:     schema.TypeInt,
+						Optional: true,
+					},
+					"max_concurrent_requests": {
+						Type:     schema.TypeInt,
+						Optional: true,
 					},
 				},
 			},
-			"passive_health_check": {
-				Type:     schema.TypeList,
-				Optional: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"interval": {
-							Type:     schema.TypeInt,
-							Optional: true,
-						},
-						"max_failures": {
-							Type:     schema.TypeInt,
-							Optional: true,
-						},
-						"enforcing_consecutive_5xx": {
-							Type:     schema.TypeInt,
-							Optional: true,
-						},
-						"max_ejection_percent": {
-							Type:     schema.TypeInt,
-							Optional: true,
-						},
-						"base_ejection_time": {
-							Type:     schema.TypeInt,
-							Optional: true,
+		},
+		"passive_health_check": {
+			Type:     schema.TypeSet,
+			Optional: true,
+			Elem: &schema.Resource{
+				Schema: map[string]*schema.Schema{
+					"interval": {
+						Type:     schema.TypeInt,
+						Optional: true,
+					},
+					"max_failures": {
+						Type:     schema.TypeInt,
+						Optional: true,
+					},
+					"enforcing_consecutive_5xx": {
+						Type:     schema.TypeInt,
+						Optional: true,
+					},
+					"max_ejection_percent": {
+						Type:     schema.TypeInt,
+						Optional: true,
+					},
+					"base_ejection_time": {
+						Type:     schema.TypeInt,
+						Optional: true,
+					},
+				},
+			},
+		},
+		"mesh_gateway": {
+			Type:     schema.TypeSet,
+			Optional: true,
+			Elem: &schema.Resource{
+				Schema: map[string]*schema.Schema{
+					"mode": {
+						Type:     schema.TypeString,
+						Optional: true,
+					},
+				},
+			},
+		},
+		"balance_outbound_connections": {
+			Type:     schema.TypeString,
+			Optional: true,
+		},
+	},
+}
+
+var serviceDefaultsConfigEntrySchema = map[string]*schema.Schema{
+	"kind": {
+		Type:     schema.TypeString,
+		Required: false,
+		ForceNew: true,
+		Computed: true,
+	},
+
+	"name": {
+		Type:     schema.TypeString,
+		Required: true,
+		ForceNew: true,
+	},
+
+	"namespace": {
+		Type:     schema.TypeString,
+		Optional: true,
+	},
+
+	"partition": {
+		Type:        schema.TypeString,
+		Optional:    true,
+		Description: "The partition the config entry is associated with.",
+	},
+
+	"meta": {
+		Type:     schema.TypeMap,
+		Optional: true,
+		Elem:     &schema.Schema{Type: schema.TypeString},
+	},
+
+	"protocol": {
+		Type:     schema.TypeString,
+		Required: true,
+	},
+
+	"balance_inbound_connections": {
+		Type:     schema.TypeString,
+		Optional: true,
+	},
+
+	"mode": {
+		Type:     schema.TypeString,
+		Optional: true,
+	},
+
+	"upstream_config": {
+		Type:     schema.TypeSet,
+		Optional: true,
+		Elem: &schema.Resource{
+			Schema: map[string]*schema.Schema{
+				"overrides": {
+					Type:     schema.TypeList,
+					Optional: true,
+					Elem:     upstreamConfigSchema,
+				},
+				"defaults": {
+					Type:     schema.TypeSet,
+					Optional: true,
+					Elem:     upstreamConfigSchema,
+				},
+			},
+		},
+	},
+
+	"transparent_proxy": {
+		Type:     schema.TypeSet,
+		Optional: true,
+		Elem: &schema.Resource{
+			Schema: map[string]*schema.Schema{
+				"outbound_listener_port": {
+					Required: true,
+					Type:     schema.TypeInt,
+				},
+				"dialed_directly": {
+					Required: true,
+					Type:     schema.TypeBool,
+				},
+			},
+		},
+	},
+
+	"mutual_tls_mode": {
+		Type:     schema.TypeString,
+		Optional: true,
+	},
+
+	"envoy_extensions": {
+		Type:     schema.TypeList,
+		Optional: true,
+		Elem: &schema.Resource{
+			Schema: map[string]*schema.Schema{
+				"name": {
+					Type:     schema.TypeString,
+					Optional: true,
+				},
+				"required": {
+					Type:     schema.TypeBool,
+					Optional: true,
+				},
+				"arguments": {
+					Type:     schema.TypeMap,
+					Optional: true,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+				},
+				"consul_version": {
+					Type:     schema.TypeString,
+					Optional: true,
+				},
+				"envoy_version": {
+					Type:     schema.TypeString,
+					Optional: true,
+				},
+			},
+		},
+	},
+
+	"destination": {
+		Type:     schema.TypeSet,
+		Required: true,
+		Elem: &schema.Resource{
+			Schema: map[string]*schema.Schema{
+				"port": {
+					Type:     schema.TypeInt,
+					Required: true,
+				},
+				"addresses": {
+					Type:     schema.TypeList,
+					Required: true,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+				},
+			},
+		},
+		Set: resourceConsulServiceDefaultsDestinationHash,
+	},
+
+	"local_connect_timeout_ms": {
+		Type:     schema.TypeInt,
+		Optional: true,
+	},
+
+	"max_inbound_connections": {
+		Type:     schema.TypeInt,
+		Optional: true,
+	},
+
+	"local_request_timeout_ms": {
+		Type:     schema.TypeInt,
+		Optional: true,
+	},
+
+	"mesh_gateway": {
+		Type:     schema.TypeSet,
+		Optional: true,
+		Elem: &schema.Resource{
+			Schema: map[string]*schema.Schema{
+				"mode": {
+					Required: true,
+					Type:     schema.TypeString,
+				},
+			},
+		},
+	},
+
+	"external_sni": {
+		Type:     schema.TypeString,
+		Optional: true,
+	},
+
+	"expose": {
+		Type:     schema.TypeSet,
+		Required: true,
+		Elem: &schema.Resource{
+			Schema: map[string]*schema.Schema{
+				"checks": {
+					Type:     schema.TypeBool,
+					Optional: true,
+					ForceNew: true,
+				},
+				"paths": {
+					Type:     schema.TypeList,
+					Optional: true,
+					ForceNew: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"path": {
+								Type:     schema.TypeString,
+								Optional: true,
+							},
+							"local_path_port": {
+								Type:     schema.TypeInt,
+								Optional: true,
+							},
+							"listener_port": {
+								Type:     schema.TypeInt,
+								Optional: true,
+							},
+							"protocol": {
+								Type:     schema.TypeString,
+								Optional: true,
+							},
 						},
 					},
 				},
 			},
 		},
-	}
+	},
+}
+
+func resourceServiceDefaultsConfigEntry() *schema.Resource {
+
 	return &schema.Resource{
 		Create: resourceConsulServiceDefaultsConfigEntryUpdate,
 		Update: resourceConsulServiceDefaultsConfigEntryUpdate,
@@ -137,153 +364,7 @@ func resourceServiceDefaultsConfigEntry() *schema.Resource {
 				return []*schema.ResourceData{d}, nil
 			},
 		},
-
-		Schema: map[string]*schema.Schema{
-			"kind": {
-				Type:     schema.TypeString,
-				Required: false,
-				ForceNew: true,
-				Computed: true,
-			},
-
-			"name": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-
-			"namespace": {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-
-			"partition": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				Description: "The partition the config entry is associated with.",
-			},
-
-			"meta": {
-				Type:     schema.TypeMap,
-				Optional: true,
-			},
-
-			"protocol": {
-				Type:     schema.TypeString,
-				Required: true,
-			},
-
-			"balance_inbound_connections": {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-
-			"mode": {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-
-			"upstream_config": {
-				Type:     schema.TypeList,
-				Optional: true,
-				Elem:     upstreamConfigSchema,
-			},
-
-			"transparent_proxy": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"outbound_listener_port": {
-							Required: true,
-							Type:     schema.TypeInt,
-						},
-						"dialed_directly": {
-							Required: true,
-							Type:     schema.TypeBool,
-						},
-					},
-				},
-			},
-			"mutual_tls_mode": {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			"mesh_gateway": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"mode": {
-							Required: true,
-							Type:     schema.TypeString,
-						},
-					},
-				},
-			},
-			"expose": {
-				Type:     schema.TypeSet,
-				Required: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"checks": {
-							Type:     schema.TypeBool,
-							Optional: true,
-							ForceNew: true,
-						},
-						"paths": {
-							Type:     schema.TypeList,
-							Optional: true,
-							ForceNew: true,
-							Elem:     &schema.Schema{Type: schema.TypeString},
-						},
-					},
-				},
-			},
-			"external_sni": {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			"destination": {
-				Type:     schema.TypeSet,
-				Required: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"port": {
-							Type:     schema.TypeInt,
-							Required: true,
-						},
-						"addresses": {
-							Type:     schema.TypeList,
-							Required: true,
-							Elem:     &schema.Schema{Type: schema.TypeString},
-						},
-					},
-				},
-				Set: resourceConsulServiceDefaultsDestinationHash,
-			},
-			"max_inbound_connections": {
-				Type:     schema.TypeInt,
-				Optional: true,
-			},
-			"local_connect_timeout_ms": {
-				Type:     schema.TypeInt,
-				Optional: true,
-			},
-			"local_request_timeout_ms": {
-				Type:     schema.TypeInt,
-				Optional: true,
-			},
-			"rate_limits": {
-				Type:     schema.TypeMap,
-				Optional: true,
-			},
-			"envoy_extensions": {
-				Type:     schema.TypeList,
-				Optional: true,
-				Elem:     &schema.Schema{Type: schema.TypeMap},
-			},
-		},
+		Schema: serviceDefaultsConfigEntrySchema,
 	}
 }
 
@@ -303,34 +384,36 @@ func resourceConsulServiceDefaultsConfigEntryUpdate(d *schema.ResourceData, meta
 	name := d.Get("name").(string)
 
 	configMap := make(map[string]interface{})
-
 	configMap["kind"] = "service-defaults"
+
 	configMap["name"] = name
 
 	kind := configMap["kind"].(string)
-	d.Set("kind", kind)
+	err := d.Set("kind", kind)
+
+	if err != nil {
+		return err
+	}
 
 	fixQOptsForServiceDefaultsConfigEntry(name, kind, qOpts)
 
-	attributes := []string{"partition", "namespace",
-		"protocol", "mode", "transparent_proxy",
-		"mutual_tls_mode", "mesh_gateway",
-		"expose", "external_sni",
-		"upstream_config", "destination",
-		"max_inbound_connections", "local_connect_timeout_ms",
-		"local_request_timeout_ms", "balance_inbound_connections",
-		"rate_limits", "envoy_extensions", "meta"}
+	var attributes []string
+
+	for key, _ := range serviceDefaultsConfigEntrySchema {
+		attributes = append(attributes, key)
+	}
 
 	for _, attribute := range attributes {
 		value := d.Get(attribute)
 		if value != nil {
 			configMap[attribute] = value
+			switch reflect.TypeOf(value).String() {
+			case "*schema.Set":
+				valueList := value.(*schema.Set).List()
+				configMap[attribute] = valueList[0]
+			}
 		}
 	}
-
-	destinationSet := configMap["destination"].(*schema.Set)
-	destinationList := destinationSet.List()
-	configMap["destination"] = destinationList[0]
 
 	configEntry, err := makeServiceDefaultsConfigEntry(kind, name, configMap, wOpts.Namespace, wOpts.Partition)
 	if err != nil {
