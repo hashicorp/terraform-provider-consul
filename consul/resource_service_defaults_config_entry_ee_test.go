@@ -8,18 +8,20 @@ import (
 	"testing"
 )
 
-func TestAccConsulServiceDefaultsConfigCEEntryTest(t *testing.T) {
+func TestAccConsulServiceDefaultsConfigEEEntryTest(t *testing.T) {
 	providers, _ := startTestServer(t)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:  func() { skipTestOnConsulEnterpriseEdition(t) },
+		PreCheck:  func() { skipTestOnConsulCommunityEdition(t) },
 		Providers: providers,
 		Steps: []resource.TestStep{
 			{
-				Config: testConsulServiceDefaultsConfigEntryWithDestination,
+				Config: testConsulServiceDefaultsConfigEntryWithDestinationEE,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("consul_service_defaults_config_entry.foo", "name", "service-defaults-test-1"),
 					resource.TestCheckResourceAttr("consul_service_defaults_config_entry.foo", "kind", "service-defaults"),
+					resource.TestCheckResourceAttr("consul_service_defaults_config_entry.foo", "namespace", "namespace1"),
+					resource.TestCheckResourceAttr("consul_service_defaults_config_entry.foo", "partition", "partition1"),
 					resource.TestCheckResourceAttr("consul_service_defaults_config_entry.foo", "meta.key", "value"),
 					resource.TestCheckResourceAttr("consul_service_defaults_config_entry.foo", "protocol", "tcp"),
 					resource.TestCheckResourceAttr("consul_service_defaults_config_entry.foo", "balance_inbound_connections", "exact_balance"),
@@ -57,10 +59,12 @@ func TestAccConsulServiceDefaultsConfigCEEntryTest(t *testing.T) {
 				),
 			},
 			{
-				Config: testConsulServiceDefaultsConfigEntryWithUpstreamConfig,
+				Config: testConsulServiceDefaultsConfigEntryWithUpstreamConfigEE,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("consul_service_defaults_config_entry.bar", "name", "service-defaults-test-2"),
 					resource.TestCheckResourceAttr("consul_service_defaults_config_entry.bar", "kind", "service-defaults"),
+					resource.TestCheckResourceAttr("consul_service_defaults_config_entry.foo", "namespace", "namespace2"),
+					resource.TestCheckResourceAttr("consul_service_defaults_config_entry.foo", "partition", "partition2"),
 					resource.TestCheckResourceAttr("consul_service_defaults_config_entry.bar", "meta.key", "value"),
 					resource.TestCheckResourceAttr("consul_service_defaults_config_entry.bar", "protocol", "tcp"),
 					resource.TestCheckResourceAttr("consul_service_defaults_config_entry.bar", "balance_inbound_connections", "exact_balance"),
@@ -140,9 +144,11 @@ func TestAccConsulServiceDefaultsConfigCEEntryTest(t *testing.T) {
 }
 
 // Destination and Upstream Config are exlusive.
-const testConsulServiceDefaultsConfigEntryWithDestination = `
+const testConsulServiceDefaultsConfigEntryWithDestinationEE = `
 resource "consul_service_defaults_config_entry" "foo" {
 	name      = "service-defaults-test-1"
+    namespace = "namespace1"
+    partition = "partition1"
 	meta      = {
 		key = "value"
 	}
@@ -196,9 +202,11 @@ resource "consul_service_defaults_config_entry" "foo" {
 }
 `
 
-const testConsulServiceDefaultsConfigEntryWithUpstreamConfig = `
+const testConsulServiceDefaultsConfigEntryWithUpstreamConfigEE = `
 resource "consul_service_defaults_config_entry" "bar" {
 	name      = "service-defaults-test-2"
+    namespace = "namespace2"
+    partition = "partition2"
 	meta      = {
 		key = "value"
 	}
