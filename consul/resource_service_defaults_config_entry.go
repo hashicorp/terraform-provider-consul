@@ -5,6 +5,7 @@ package consul
 
 import (
 	"bytes"
+	"encoding/json"
 	"fmt"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/hashcode"
 	"reflect"
@@ -235,7 +236,7 @@ var serviceDefaultsConfigEntrySchema = map[string]*schema.Schema{
 
 	"destination": {
 		Type:     schema.TypeSet,
-		Required: true,
+		Optional: true,
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
 				"port": {
@@ -390,19 +391,81 @@ func formatKey(key string) string {
 	return res
 }
 
-func formatMapKeys(m map[string]interface{}, formatFunc func(string) string) map[string]interface{} {
-	formattedMap := make(map[string]interface{})
-	for key, value := range m {
-		formattedKey := formatFunc(key)
+func isSlice(v interface{}) bool {
+	return reflect.TypeOf(v).Kind() == reflect.Slice || reflect.TypeOf(v).Kind() == reflect.Array
+}
 
-		if nestedMap, isNestedMap := value.(map[string]interface{}); isNestedMap {
-			formattedValue := formatMapKeys(nestedMap, formatFunc)
-			formattedMap[formattedKey] = formattedValue
-		} else {
-			formattedMap[formattedKey] = value
+func isMap(v interface{}) bool {
+	return reflect.TypeOf(v).Kind() == reflect.Map
+}
+
+func isSetSchema(v interface{}) bool {
+	return reflect.TypeOf(v).String() == "*schema.Set"
+}
+
+func isStruct(v interface{}) bool {
+	return reflect.TypeOf(v).Kind() == reflect.Struct
+}
+
+func formatKeys(config interface{}, formatFunc func(string) string) (interface{}, error) {
+	if isMap(config) {
+		fmt.Println("isMap", config)
+		formattedMap := make(map[string]interface{})
+		for key, value := range config.(map[string]interface{}) {
+			formattedKey := formatFunc(key)
+			formattedValue, err := formatKeys(value, formatKey)
+			if err != nil {
+				return nil, err
+			}
+			if formattedValue != nil {
+				formattedMap[formattedKey] = formattedValue
+			}
 		}
+		return formattedMap, nil
+	} else if isSlice(config) {
+		fmt.Println("isSlice", config)
+		var newSlice []interface{}
+		listValue := config.([]interface{})
+		for _, elem := range listValue {
+			newElem, err := formatKeys(elem, formatKey)
+			if err != nil {
+				return nil, err
+			}
+			newSlice = append(newSlice, newElem)
+		}
+		return newSlice, nil
+	} else if isStruct(config) {
+		fmt.Println("isStruct", config)
+		var modifiedStruct map[string]interface{}
+		jsonValue, err := json.Marshal(config)
+		if err != nil {
+			return nil, err
+		}
+		err = json.Unmarshal(jsonValue, &modifiedStruct)
+		if err != nil {
+			return nil, err
+		}
+		formattedStructKeys, err := formatKeys(modifiedStruct, formatKey)
+		if err != nil {
+			return nil, err
+		}
+		return formattedStructKeys, nil
+	} else if isSetSchema(config) {
+		fmt.Println("isSetSchema", config)
+		valueList := config.(*schema.Set).List()
+		if len(valueList) > 0 {
+			formattedSetValue, err := formatKeys(valueList[0], formatKey)
+			fmt.Println("formatted set value", formattedSetValue)
+			if err != nil {
+				return nil, err
+			}
+			return formattedSetValue, nil
+		}
+		return nil, nil
+	} else {
+		fmt.Println("Type not found - hence not modifying keys", config)
 	}
-	return formattedMap
+	return config, nil
 }
 
 func resourceConsulServiceDefaultsConfigEntryUpdate(d *schema.ResourceData, meta interface{}) error {
@@ -432,30 +495,20 @@ func resourceConsulServiceDefaultsConfigEntryUpdate(d *schema.ResourceData, meta
 	}
 
 	for _, attribute := range attributes {
-		value := d.Get(attribute)
-		if value != nil {
-			configMap[attribute] = value
-			switch reflect.TypeOf(value).String() {
-			case "*schema.Set":
-				valueList := value.(*schema.Set).List()
-				if len(valueList) > 0 {
-					configMap[attribute] = valueList[0]
-				} else {
-					delete(configMap, attribute)
-				}
-			}
-		}
+		configMap[attribute] = d.Get(attribute)
 	}
 
-	configEntry, err := makeServiceDefaultsConfigEntry(kind, name, formatMapKeys(configMap, formatKey),
-		wOpts.Namespace, wOpts.Partition)
+	formattedMap, err := formatKeys(configMap, formatKey)
 	if err != nil {
 		return err
 	}
 
-	fmt.Println("config entry decoded")
-	sericeDefaultCE := configEntry.(*consulapi.ServiceConfigEntry)
-	fmt.Println(sericeDefaultCE.TransparentProxy)
+	fmt.Println("formattedmap = ", formattedMap.(string))
+
+	configEntry, err := makeServiceDefaultsConfigEntry(kind, name, formattedMap.(map[string]interface{}), wOpts.Namespace, wOpts.Partition)
+	if err != nil {
+		return err
+	}
 
 	if _, _, err := configEntries.Set(configEntry, wOpts); err != nil {
 		return fmt.Errorf("failed to set '%s' config entry: %v", name, err)
