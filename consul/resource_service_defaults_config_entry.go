@@ -4,12 +4,9 @@
 package consul
 
 import (
-	"bytes"
 	"encoding/json"
 	"fmt"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/hashcode"
 	"reflect"
-	"sort"
 	"strings"
 
 	consulapi "github.com/hashicorp/consul/api"
@@ -250,7 +247,6 @@ var serviceDefaultsConfigEntrySchema = map[string]*schema.Schema{
 				},
 			},
 		},
-		Set: resourceConsulServiceDefaultsDestinationHash,
 	},
 
 	"local_connect_timeout_ms": {
@@ -380,15 +376,15 @@ func fixQOptsForServiceDefaultsConfigEntry(name, kind string, qOpts *consulapi.Q
 
 func formatKey(key string) string {
 	tokens := strings.Split(key, "_")
-	res := ""
+	keyToReturn := ""
 	for _, token := range tokens {
 		if token == "tls" {
-			res += strings.ToUpper(token)
+			keyToReturn += strings.ToUpper(token)
 		} else {
-			res += strings.ToTitle(token)
+			keyToReturn += strings.ToTitle(token)
 		}
 	}
-	return res
+	return keyToReturn
 }
 
 func isSlice(v interface{}) bool {
@@ -409,7 +405,6 @@ func isStruct(v interface{}) bool {
 
 func formatKeys(config interface{}, formatFunc func(string) string) (interface{}, error) {
 	if isMap(config) {
-		fmt.Println("isMap", config)
 		formattedMap := make(map[string]interface{})
 		for key, value := range config.(map[string]interface{}) {
 			formattedKey := formatFunc(key)
@@ -423,7 +418,6 @@ func formatKeys(config interface{}, formatFunc func(string) string) (interface{}
 		}
 		return formattedMap, nil
 	} else if isSlice(config) {
-		fmt.Println("isSlice", config)
 		var newSlice []interface{}
 		listValue := config.([]interface{})
 		for _, elem := range listValue {
@@ -435,7 +429,6 @@ func formatKeys(config interface{}, formatFunc func(string) string) (interface{}
 		}
 		return newSlice, nil
 	} else if isStruct(config) {
-		fmt.Println("isStruct", config)
 		var modifiedStruct map[string]interface{}
 		jsonValue, err := json.Marshal(config)
 		if err != nil {
@@ -451,19 +444,15 @@ func formatKeys(config interface{}, formatFunc func(string) string) (interface{}
 		}
 		return formattedStructKeys, nil
 	} else if isSetSchema(config) {
-		fmt.Println("isSetSchema", config)
 		valueList := config.(*schema.Set).List()
 		if len(valueList) > 0 {
 			formattedSetValue, err := formatKeys(valueList[0], formatKey)
-			fmt.Println("formatted set value", formattedSetValue)
 			if err != nil {
 				return nil, err
 			}
 			return formattedSetValue, nil
 		}
 		return nil, nil
-	} else {
-		fmt.Println("Type not found - hence not modifying keys", config)
 	}
 	return config, nil
 }
@@ -502,8 +491,6 @@ func resourceConsulServiceDefaultsConfigEntryUpdate(d *schema.ResourceData, meta
 	if err != nil {
 		return err
 	}
-
-	fmt.Println("formattedmap = ", formattedMap.(string))
 
 	configEntry, err := makeServiceDefaultsConfigEntry(kind, name, formattedMap.(map[string]interface{}), wOpts.Namespace, wOpts.Partition)
 	if err != nil {
@@ -565,28 +552,4 @@ func makeServiceDefaultsConfigEntry(kind, name string, configMap map[string]inte
 	}
 
 	return configEntry, nil
-}
-
-func resourceConsulServiceDefaultsDestinationHash(v interface{}) int {
-	var buf bytes.Buffer
-	m := v.(map[string]interface{})
-	buf.WriteString(fmt.Sprintf("%s-", m["port"].(int)))
-	addresses := reflect.ValueOf(m["addresses"])
-	for i := 0; i < addresses.Len(); i++ {
-		address := addresses.Index(i)
-		buf.WriteString(fmt.Sprintf("%d-", address))
-	}
-	if v, ok := m["tags"]; ok {
-		vs := v.(*schema.Set).List()
-		s := make([]string, len(vs))
-		for i, raw := range vs {
-			s[i] = raw.(string)
-		}
-		sort.Strings(s)
-
-		for _, v := range s {
-			buf.WriteString(fmt.Sprintf("%s-", v))
-		}
-	}
-	return hashcode.String(buf.String())
 }
