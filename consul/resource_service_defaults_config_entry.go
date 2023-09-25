@@ -131,11 +131,13 @@ var serviceDefaultsConfigEntrySchema = map[string]*schema.Schema{
 	"namespace": {
 		Type:     schema.TypeString,
 		Optional: true,
+		ForceNew: true,
 	},
 
 	"partition": {
 		Type:        schema.TypeString,
 		Optional:    true,
+		ForceNew:    true,
 		Description: "The partition the config entry is associated with.",
 	},
 
