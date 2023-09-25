@@ -251,7 +251,7 @@ func resourceConsulServiceSplitterConfigEntryUpdate(d *schema.ResourceData, meta
 	name := d.Get("name").(string)
 
 	configMap := make(map[string]interface{})
-	configMap["kind"] = "service-defaults"
+	configMap["kind"] = "service-splitter"
 
 	configMap["name"] = name
 
@@ -279,7 +279,7 @@ func resourceConsulServiceSplitterConfigEntryUpdate(d *schema.ResourceData, meta
 		return err
 	}
 
-	configEntry, err := makeServiceDefaultsConfigEntry(kind, name, formattedMap.(map[string]interface{}), wOpts.Namespace, wOpts.Partition)
+	configEntry, err := makeServiceSplitterConfigEntry(kind, name, formattedMap.(map[string]interface{}), wOpts.Namespace, wOpts.Partition)
 	if err != nil {
 		return err
 	}
@@ -327,7 +327,7 @@ func resourceConsulServiceSplitterConfigEntryDelete(d *schema.ResourceData, meta
 	return nil
 }
 
-func makeServiceDefaultsConfigEntry(kind, name string, configMap map[string]interface{}, namespace, partition string) (consulapi.ConfigEntry, error) {
+func makeServiceSplitterConfigEntry(kind, name string, configMap map[string]interface{}, namespace, partition string) (consulapi.ConfigEntry, error) {
 	configMap["kind"] = kind
 	configMap["name"] = name
 	configMap["Namespace"] = namespace
