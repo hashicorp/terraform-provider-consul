@@ -75,6 +75,19 @@ func (c *keyClient) Put(path, value string, flags int) error {
 	return nil
 }
 
+func (c *keyClient) Cas(path, value string, flags int, cas int) (bool, error) {
+	log.Printf(
+		"[DEBUG] Setting key '%s' to '%v' with cas %d in %s",
+		path, value, cas, c.wOpts.Datacenter,
+	)
+	pair := consulapi.KVPair{Key: path, Value: []byte(value), Flags: uint64(flags), ModifyIndex: uint64(cas)}
+	written, _, err := c.client.CAS(&pair, c.wOpts)
+	if err != nil {
+		return false, fmt.Errorf("failed to write Consul key '%s': %s", path, err)
+	}
+	return written, nil
+}
+
 func (c *keyClient) Delete(path string) error {
 	log.Printf(
 		"[DEBUG] Deleting key '%s' in %s",

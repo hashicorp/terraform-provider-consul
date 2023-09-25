@@ -70,7 +70,11 @@ func resourceConsulKeys() *schema.Resource {
 							Optional: true,
 							Default:  0,
 						},
-
+						"cas": {
+							Type:     schema.TypeInt,
+							Optional: true,
+							Default:  -1,
+						},
 						"default": {
 							Type:     schema.TypeString,
 							Optional: true,
@@ -111,7 +115,6 @@ func resourceConsulKeys() *schema.Resource {
 
 func resourceConsulKeysCreateUpdate(d *schema.ResourceData, meta interface{}) error {
 	keyClient := newKeyClient(d, meta)
-
 	if d.HasChange("key") {
 		o, n := d.GetChange("key")
 		if o == nil {
@@ -154,7 +157,17 @@ func resourceConsulKeysCreateUpdate(d *schema.ResourceData, meta interface{}) er
 			}
 
 			flags := sub["flags"].(int)
-
+			cas := sub["cas"].(int)
+			if cas != -1 {
+				written, err := keyClient.Cas(path, value, flags, cas)
+				if err != nil {
+					return err
+				}
+				if written {
+					addedPaths[path] = true
+				}
+				continue
+			}
 			if err := keyClient.Put(path, value, flags); err != nil {
 				return err
 			}
