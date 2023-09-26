@@ -16,7 +16,8 @@ const KindServiceSplitter = "service-splitter"
 var serviceSplitterConfigEntrySchema = map[string]*schema.Schema{
 	"name": {
 		Type:     schema.TypeString,
-		Optional: true,
+		Required: true,
+		ForceNew: true,
 	},
 	"kind": {
 		Type:     schema.TypeString,
@@ -27,10 +28,12 @@ var serviceSplitterConfigEntrySchema = map[string]*schema.Schema{
 	"partition": {
 		Type:     schema.TypeString,
 		Optional: true,
+		ForceNew: true,
 	},
 	"namespace": {
 		Type:     schema.TypeString,
 		Optional: true,
+		ForceNew: true,
 	},
 	"meta": {
 		Type:     schema.TypeMap,
