@@ -16,7 +16,7 @@ func TestAccConsulServiceSplitterConfigEEEntryTest(t *testing.T) {
 		Providers: providers,
 		Steps: []resource.TestStep{
 			{
-				Config: testConsulServiceSplitterConfigEntryCE,
+				Config: testConsulServiceSplitterConfigEntryEE,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("consul_service_splitter_config_entry.foo", "name", "web"),
 					resource.TestCheckResourceAttr("consul_service_splitter_config_entry.foo", "namespace", "ns"),
@@ -26,9 +26,13 @@ func TestAccConsulServiceSplitterConfigEEEntryTest(t *testing.T) {
 					resource.TestCheckResourceAttr("consul_service_splitter_config_entry.foo", "splits.0.weight", "90"),
 					resource.TestCheckResourceAttr("consul_service_splitter_config_entry.foo", "splits.0.service", "web"),
 					resource.TestCheckResourceAttr("consul_service_splitter_config_entry.foo", "splits.0.service_subset", "v1"),
+					resource.TestCheckResourceAttr("consul_service_splitter_config_entry.foo", "splits.0.request_headers.810692046.set.x-web-version", "from-v1"),
+					resource.TestCheckResourceAttr("consul_service_splitter_config_entry.foo", "splits.0.response_headers.3374032271.set.x-web-version", "to-v1"),
 					resource.TestCheckResourceAttr("consul_service_splitter_config_entry.foo", "splits.1.weight", "10"),
 					resource.TestCheckResourceAttr("consul_service_splitter_config_entry.foo", "splits.1.service_subset", "v2"),
 					resource.TestCheckResourceAttr("consul_service_splitter_config_entry.foo", "splits.1.service", "web"),
+					resource.TestCheckResourceAttr("consul_service_splitter_config_entry.foo", "splits.1.request_headers.585597472.set.x-web-version", "from-v2"),
+					resource.TestCheckResourceAttr("consul_service_splitter_config_entry.foo", "splits.1.response_headers.3685616225.set.x-web-version", "to-v2"),
 				),
 			},
 		},
@@ -77,11 +81,31 @@ resource "consul_service_splitter_config_entry" "foo" {
 		weight  = 90                   
 		service_subset  = "v1"                
 		service = "web"
+		request_headers {
+			set = {
+				"x-web-version": "from-v1"
+			}
+		}
+		response_headers {
+			set = {
+				"x-web-version": "to-v1"
+			}
+		}
 	}
 	splits {
 		weight  = 10
 		service = "web"
 		service_subset  = "v2"
+		request_headers {
+			set = {
+				"x-web-version": "from-v2"
+			}
+		}
+		response_headers {
+			set = {
+				"x-web-version": "to-v2"
+			}
+		}
 	}
 }
 `
