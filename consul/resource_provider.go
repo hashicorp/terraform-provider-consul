@@ -252,6 +252,7 @@ func Provider() terraform.ResourceProvider {
 			"consul_peering_token":                 resourceSourceConsulPeeringToken(),
 			"consul_peering":                       resourceSourceConsulPeering(),
 			"consul_service_defaults_config_entry": resourceServiceDefaultsConfigEntry(),
+			"consul_service_splitter_config_entry": resourceServiceSplitterConfigEntry(),
 		},
 
 		ConfigureFunc: providerConfigure,

@@ -4,16 +4,14 @@
 package consul
 
 import (
-	"encoding/json"
 	"fmt"
-	"reflect"
 	"strings"
 
 	consulapi "github.com/hashicorp/consul/api"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 )
 
-const Kind = "service-defaults"
+const KindServiceDefaults = "service-defaults"
 
 var upstreamConfigSchema = &schema.Resource{
 	Schema: map[string]*schema.Schema{
@@ -369,89 +367,6 @@ func resourceServiceDefaultsConfigEntry() *schema.Resource {
 	}
 }
 
-func formatKey(key string) string {
-	tokens := strings.Split(key, "_")
-	keyToReturn := ""
-	for _, token := range tokens {
-		if token == "tls" {
-			keyToReturn += strings.ToUpper(token)
-		} else {
-			keyToReturn += strings.ToTitle(token)
-		}
-	}
-	return keyToReturn
-}
-
-func isSlice(v interface{}) bool {
-	return reflect.TypeOf(v).Kind() == reflect.Slice || reflect.TypeOf(v).Kind() == reflect.Array
-}
-
-func isMap(v interface{}) bool {
-	return reflect.TypeOf(v).Kind() == reflect.Map
-}
-
-func isSetSchema(v interface{}) bool {
-	return reflect.TypeOf(v).String() == "*schema.Set"
-}
-
-func isStruct(v interface{}) bool {
-	return reflect.TypeOf(v).Kind() == reflect.Struct
-}
-
-func formatKeys(config interface{}, formatFunc func(string) string) (interface{}, error) {
-	if isMap(config) {
-		formattedMap := make(map[string]interface{})
-		for key, value := range config.(map[string]interface{}) {
-			formattedKey := formatFunc(key)
-			formattedValue, err := formatKeys(value, formatKey)
-			if err != nil {
-				return nil, err
-			}
-			if formattedValue != nil {
-				formattedMap[formattedKey] = formattedValue
-			}
-		}
-		return formattedMap, nil
-	} else if isSlice(config) {
-		var newSlice []interface{}
-		listValue := config.([]interface{})
-		for _, elem := range listValue {
-			newElem, err := formatKeys(elem, formatKey)
-			if err != nil {
-				return nil, err
-			}
-			newSlice = append(newSlice, newElem)
-		}
-		return newSlice, nil
-	} else if isStruct(config) {
-		var modifiedStruct map[string]interface{}
-		jsonValue, err := json.Marshal(config)
-		if err != nil {
-			return nil, err
-		}
-		err = json.Unmarshal(jsonValue, &modifiedStruct)
-		if err != nil {
-			return nil, err
-		}
-		formattedStructKeys, err := formatKeys(modifiedStruct, formatKey)
-		if err != nil {
-			return nil, err
-		}
-		return formattedStructKeys, nil
-	} else if isSetSchema(config) {
-		valueList := config.(*schema.Set).List()
-		if len(valueList) > 0 {
-			formattedSetValue, err := formatKeys(valueList[0], formatKey)
-			if err != nil {
-				return nil, err
-			}
-			return formattedSetValue, nil
-		}
-		return nil, nil
-	}
-	return config, nil
-}
-
 func resourceConsulServiceDefaultsConfigEntryUpdate(d *schema.ResourceData, meta interface{}) error {
 	client, qOpts, wOpts := getClient(d, meta)
 	configEntries := client.ConfigEntries()
@@ -459,7 +374,8 @@ func resourceConsulServiceDefaultsConfigEntryUpdate(d *schema.ResourceData, meta
 	name := d.Get("name").(string)
 
 	configMap := make(map[string]interface{})
-	configMap["kind"] = Kind
+
+	configMap["kind"] = KindServiceDefaults
 
 	configMap["name"] = name
 
@@ -480,7 +396,8 @@ func resourceConsulServiceDefaultsConfigEntryUpdate(d *schema.ResourceData, meta
 		configMap[attribute] = d.Get(attribute)
 	}
 
-	formattedMap, err := formatKeys(configMap, formatKey)
+	formattedMap, err := FormatKeys(configMap, formatKey)
+
 	if err != nil {
 		return err
 	}
@@ -534,7 +451,7 @@ func resourceConsulServiceDefaultsConfigEntryDelete(d *schema.ResourceData, meta
 }
 
 func makeServiceDefaultsConfigEntry(name string, configMap map[string]interface{}, namespace, partition string) (consulapi.ConfigEntry, error) {
-	configMap["kind"] = Kind
+	configMap["kind"] = KindServiceDefaults
 	configMap["name"] = name
 	configMap["Namespace"] = namespace
 	configMap["Partition"] = partition
