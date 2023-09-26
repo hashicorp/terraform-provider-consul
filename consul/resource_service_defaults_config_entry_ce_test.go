@@ -139,7 +139,7 @@ func TestAccConsulServiceDefaultsConfigCEEntryTest(t *testing.T) {
 	})
 }
 
-// Destination and Upstream Config are exlusive.
+// Destination and Upstream Config are exclusive.
 const testConsulServiceDefaultsConfigEntryWithDestination = `
 resource "consul_service_defaults_config_entry" "foo" {
 	name      = "service-defaults-test-1"

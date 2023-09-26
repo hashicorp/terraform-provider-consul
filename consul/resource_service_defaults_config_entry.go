@@ -374,6 +374,7 @@ func resourceConsulServiceDefaultsConfigEntryUpdate(d *schema.ResourceData, meta
 	name := d.Get("name").(string)
 
 	configMap := make(map[string]interface{})
+
 	configMap["kind"] = KindServiceDefaults
 
 	configMap["name"] = name
@@ -396,6 +397,7 @@ func resourceConsulServiceDefaultsConfigEntryUpdate(d *schema.ResourceData, meta
 	}
 
 	formattedMap, err := FormatKeys(configMap, formatKey)
+
 	if err != nil {
 		return err
 	}
