@@ -26,7 +26,7 @@ func TestAccConsulKeys_basic(t *testing.T) {
 					testAccCheckConsulKeysValue("consul_keys.app", "enabled", "true"),
 					testAccCheckConsulKeysValue("consul_keys.app", "set", "acceptance"),
 					testAccCheckConsulKeysValue("consul_keys.app", "remove_one", "hello"),
-					resource.TestCheckResourceAttr("consul_keys.app", "key.4258512057.flags", "0"),
+					resource.TestCheckResourceAttr("consul_keys.app", "key.3606807749.flags", "0"),
 				),
 			},
 			{
@@ -37,6 +37,20 @@ func TestAccConsulKeys_basic(t *testing.T) {
 					testAccCheckConsulKeysValue("consul_keys.app", "set", "acceptanceUpdated"),
 					testAccCheckConsulKeysRemoved("consul_keys.app", "remove_one"),
 				),
+			},
+		},
+	})
+}
+
+func TestTestAccConsulKeys_Cas(t *testing.T) {
+	providers, _ := startTestServer(t)
+
+	resource.Test(t, resource.TestCase{
+		Providers: providers,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccConsulKeysConfig_Cas,
+				Check:  resource.TestCheckResourceAttr("consul_keys.app", "key.2637474718.cas", "0"),
 			},
 		},
 	})
@@ -283,6 +297,17 @@ resource "consul_keys" "dc2" {
 		path   = "foo/dc"
 		value  = "dc2"
 		delete = true
+	}
+}
+`
+
+const testAccConsulKeysConfig_Cas = `
+resource "consul_keys" "app" {
+	datacenter = "dc1"
+	key {
+		path = "test/testKey"
+		value = "testVal"
+		cas = 0
 	}
 }
 `
