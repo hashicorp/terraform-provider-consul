@@ -50,7 +50,11 @@ func TestAccConsulKeys_Cas(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccConsulKeysConfig_Cas,
-				Check:  resource.TestCheckResourceAttr("consul_keys.app", "key.2637474718.cas", "0"),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("consul_keys.app", "key.2637474718.value", "testVal"),
+					resource.TestCheckResourceAttr("consul_keys.app", "key.2637474718.path", "test/testKey"),
+					resource.TestCheckResourceAttr("consul_keys.app", "key.2637474718.cas", "0"),
+				),
 			},
 		},
 	})
