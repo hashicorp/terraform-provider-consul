@@ -159,13 +159,11 @@ func resourceConsulKeysCreateUpdate(d *schema.ResourceData, meta interface{}) er
 			flags := sub["flags"].(int)
 			cas := sub["cas"].(int)
 			if cas != -1 {
-				written, err := keyClient.Cas(path, value, flags, cas)
+				_, err := keyClient.Cas(path, value, flags, cas)
 				if err != nil {
 					return err
 				}
-				if written {
-					addedPaths[path] = true
-				}
+				addedPaths[path] = true
 				continue
 			}
 			if err := keyClient.Put(path, value, flags); err != nil {
