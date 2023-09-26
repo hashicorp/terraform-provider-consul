@@ -39,12 +39,12 @@ func formatKey(key string) string {
 	return keyToReturn
 }
 
-func FormatKeys(config interface{}, formatFunc func(string) string) (interface{}, error) {
+func formatKeys(config interface{}, formatFunc func(string) string) (interface{}, error) {
 	if isMap(config) {
 		formattedMap := make(map[string]interface{})
 		for key, value := range config.(map[string]interface{}) {
 			formattedKey := formatFunc(key)
-			formattedValue, err := FormatKeys(value, formatKey)
+			formattedValue, err := formatKeys(value, formatKey)
 			if err != nil {
 				return nil, err
 			}
@@ -57,7 +57,7 @@ func FormatKeys(config interface{}, formatFunc func(string) string) (interface{}
 		var newSlice []interface{}
 		listValue := config.([]interface{})
 		for _, elem := range listValue {
-			newElem, err := FormatKeys(elem, formatKey)
+			newElem, err := formatKeys(elem, formatKey)
 			if err != nil {
 				return nil, err
 			}
@@ -74,7 +74,7 @@ func FormatKeys(config interface{}, formatFunc func(string) string) (interface{}
 		if err != nil {
 			return nil, err
 		}
-		formattedStructKeys, err := FormatKeys(modifiedStruct, formatKey)
+		formattedStructKeys, err := formatKeys(modifiedStruct, formatKey)
 		if err != nil {
 			return nil, err
 		}
@@ -82,7 +82,7 @@ func FormatKeys(config interface{}, formatFunc func(string) string) (interface{}
 	} else if isSetSchema(config) {
 		valueList := config.(*schema.Set).List()
 		if len(valueList) > 0 {
-			formattedSetValue, err := FormatKeys(valueList[0], formatKey)
+			formattedSetValue, err := formatKeys(valueList[0], formatKey)
 			if err != nil {
 				return nil, err
 			}
