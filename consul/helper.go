@@ -4,8 +4,9 @@
 package consul
 
 import (
-	"encoding/json"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"golang.org/x/text/cases"
+	"golang.org/x/text/language"
 	"reflect"
 	"strings"
 )
@@ -33,7 +34,8 @@ func formatKey(key string) string {
 		if token == "tls" {
 			keyToReturn += strings.ToUpper(token)
 		} else {
-			keyToReturn += strings.ToTitle(token)
+			caser := cases.Title(language.English)
+			keyToReturn += caser.String(token)
 		}
 	}
 	return keyToReturn
@@ -64,21 +66,6 @@ func formatKeys(config interface{}, formatFunc func(string) string) (interface{}
 			newSlice = append(newSlice, newElem)
 		}
 		return newSlice, nil
-	} else if isStruct(config) {
-		var modifiedStruct map[string]interface{}
-		jsonValue, err := json.Marshal(config)
-		if err != nil {
-			return nil, err
-		}
-		err = json.Unmarshal(jsonValue, &modifiedStruct)
-		if err != nil {
-			return nil, err
-		}
-		formattedStructKeys, err := formatKeys(modifiedStruct, formatKey)
-		if err != nil {
-			return nil, err
-		}
-		return formattedStructKeys, nil
 	} else if isSetSchema(config) {
 		valueList := config.(*schema.Set).List()
 		if len(valueList) > 0 {
