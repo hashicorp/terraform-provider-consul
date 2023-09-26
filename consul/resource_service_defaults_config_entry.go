@@ -13,6 +13,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 )
 
+const Kind = "service-defaults"
+
 var upstreamConfigSchema = &schema.Resource{
 	Schema: map[string]*schema.Schema{
 		"name": {
@@ -367,15 +369,6 @@ func resourceServiceDefaultsConfigEntry() *schema.Resource {
 	}
 }
 
-func fixQOptsForServiceDefaultsConfigEntry(name, kind string, qOpts *consulapi.QueryOptions) {
-	// exported-services config entries are weird in that their name correspond
-	// to the partition they are created in, see
-	// https://www.consul.io/docs/connect/config-entries/exported-services#configuration-parameters
-	if kind == "exported-services" && name != "default" {
-		qOpts.Partition = name
-	}
-}
-
 func formatKey(key string) string {
 	tokens := strings.Split(key, "_")
 	keyToReturn := ""
@@ -466,7 +459,7 @@ func resourceConsulServiceDefaultsConfigEntryUpdate(d *schema.ResourceData, meta
 	name := d.Get("name").(string)
 
 	configMap := make(map[string]interface{})
-	configMap["kind"] = "service-defaults"
+	configMap["kind"] = Kind
 
 	configMap["name"] = name
 
@@ -476,8 +469,6 @@ func resourceConsulServiceDefaultsConfigEntryUpdate(d *schema.ResourceData, meta
 	if err != nil {
 		return err
 	}
-
-	fixQOptsForServiceDefaultsConfigEntry(name, kind, qOpts)
 
 	var attributes []string
 
@@ -494,7 +485,7 @@ func resourceConsulServiceDefaultsConfigEntryUpdate(d *schema.ResourceData, meta
 		return err
 	}
 
-	configEntry, err := makeServiceDefaultsConfigEntry(kind, name, formattedMap.(map[string]interface{}), wOpts.Namespace, wOpts.Partition)
+	configEntry, err := makeServiceDefaultsConfigEntry(name, formattedMap.(map[string]interface{}), wOpts.Namespace, wOpts.Partition)
 	if err != nil {
 		return err
 	}
@@ -542,8 +533,8 @@ func resourceConsulServiceDefaultsConfigEntryDelete(d *schema.ResourceData, meta
 	return nil
 }
 
-func makeServiceDefaultsConfigEntry(kind, name string, configMap map[string]interface{}, namespace, partition string) (consulapi.ConfigEntry, error) {
-	configMap["kind"] = kind
+func makeServiceDefaultsConfigEntry(name string, configMap map[string]interface{}, namespace, partition string) (consulapi.ConfigEntry, error) {
+	configMap["kind"] = Kind
 	configMap["name"] = name
 	configMap["Namespace"] = namespace
 	configMap["Partition"] = partition
