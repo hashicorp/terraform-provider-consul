@@ -23,10 +23,6 @@ func isSetSchema(v interface{}) bool {
 	return reflect.TypeOf(v).String() == "*schema.Set"
 }
 
-func isStruct(v interface{}) bool {
-	return reflect.TypeOf(v).Kind() == reflect.Struct
-}
-
 func formatKey(key string) string {
 	tokens := strings.Split(key, "_")
 	keyToReturn := ""
