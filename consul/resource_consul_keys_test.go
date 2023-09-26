@@ -42,7 +42,7 @@ func TestAccConsulKeys_basic(t *testing.T) {
 	})
 }
 
-func TestTestAccConsulKeys_Cas(t *testing.T) {
+func TestAccConsulKeys_Cas(t *testing.T) {
 	providers, _ := startTestServer(t)
 
 	resource.Test(t, resource.TestCase{
