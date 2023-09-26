@@ -88,19 +88,6 @@ func (c *keyClient) Cas(path, value string, flags int, cas int) (bool, error) {
 	return written, nil
 }
 
-func (c *keyClient) DeleteCas(path string, cas int) (bool, error) {
-	log.Printf(
-		"[DEBUG] Deleting key '%s' in %s with cas %d",
-		path, c.wOpts.Datacenter, cas,
-	)
-	pair := consulapi.KVPair{Key: path, ModifyIndex: uint64(cas)}
-	written, _, err := c.client.DeleteCAS(&pair, c.wOpts)
-	if err != nil {
-		return false, fmt.Errorf("failed to delete Consul key '%s': %s", path, err)
-	}
-	return written, nil
-}
-
 func (c *keyClient) Delete(path string) error {
 	log.Printf(
 		"[DEBUG] Deleting key '%s' in %s",

@@ -273,14 +273,6 @@ func resourceConsulKeysDelete(d *schema.ResourceData, meta interface{}) error {
 		if !ok || !shouldDelete {
 			continue
 		}
-		cas := sub["cas"].(int)
-		if cas > 0 {
-			_, err := keyClient.DeleteCas(path, cas)
-			if err != nil {
-				return err
-			}
-			continue
-		}
 		if err := keyClient.Delete(path); err != nil {
 			return err
 		}
