@@ -4,6 +4,8 @@
 package consul
 
 import (
+	"fmt"
+
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 )
 
@@ -81,11 +83,11 @@ func dataSourceConsulKeysRead(d *schema.ResourceData, meta interface{}) error {
 			return err
 		}
 
-		value, _, err := keyClient.Get(path)
+		value, _, modifyInd, err := keyClient.Get(path)
 		if err != nil {
 			return err
 		}
-
+		vars[key+"_modifyindex"] = fmt.Sprint(modifyInd)
 		value = attributeValue(sub, value)
 		vars[key] = value
 	}

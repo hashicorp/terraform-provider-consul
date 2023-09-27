@@ -29,14 +29,14 @@ func newKeyClient(d *schema.ResourceData, meta interface{}) *keyClient {
 	}
 }
 
-func (c *keyClient) Get(path string) (string, int, error) {
+func (c *keyClient) Get(path string) (string, int, int, error) {
 	log.Printf(
 		"[DEBUG] Reading key '%s' in %s",
 		path, c.qOpts.Datacenter,
 	)
 	pair, _, err := c.client.Get(path, c.qOpts)
 	if err != nil {
-		return "", 0, fmt.Errorf("failed to read Consul key '%s': %s", path, err)
+		return "", 0, 0, fmt.Errorf("failed to read Consul key '%s': %s", path, err)
 	}
 	value := ""
 	if pair != nil {
@@ -46,7 +46,11 @@ func (c *keyClient) Get(path string) (string, int, error) {
 	if pair != nil {
 		flags = int(pair.Flags)
 	}
-	return value, flags, nil
+	modifyInd := 0
+	if pair != nil {
+		modifyInd = int(pair.ModifyIndex)
+	}
+	return value, flags, modifyInd, nil
 }
 
 func (c *keyClient) GetUnderPrefix(pathPrefix string) (consulapi.KVPairs, error) {
@@ -84,6 +88,19 @@ func (c *keyClient) Cas(path, value string, flags int, cas int) (bool, error) {
 	written, _, err := c.client.CAS(&pair, c.wOpts)
 	if err != nil {
 		return false, fmt.Errorf("failed to write Consul key '%s': %s", path, err)
+	}
+	return written, nil
+}
+
+func (c *keyClient) DeleteCas(path string, cas int) (bool, error) {
+	log.Printf(
+		"[DEBUG] Deleting key '%s' in %s with cas %d",
+		path, c.wOpts.Datacenter, cas,
+	)
+	pair := consulapi.KVPair{Key: path, ModifyIndex: uint64(cas)}
+	written, _, err := c.client.DeleteCAS(&pair, c.wOpts)
+	if err != nil {
+		return false, fmt.Errorf("failed to delete Consul key '%s': %s", path, err)
 	}
 	return written, nil
 }

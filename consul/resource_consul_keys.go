@@ -189,6 +189,15 @@ func resourceConsulKeysCreateUpdate(d *schema.ResourceData, meta interface{}) er
 				continue
 			}
 
+			cas := sub["cas"].(int)
+			if cas >= 0 {
+				_, err := keyClient.DeleteCas(path, cas)
+				if err != nil {
+					return err
+				}
+				continue
+			}
+
 			if err := keyClient.Delete(path); err != nil {
 				return err
 			}
@@ -219,7 +228,7 @@ func resourceConsulKeysRead(d *schema.ResourceData, meta interface{}) error {
 			return err
 		}
 
-		value, flags, err := keyClient.Get(path)
+		value, flags, _, err := keyClient.Get(path)
 		if err != nil {
 			return err
 		}
@@ -273,6 +282,16 @@ func resourceConsulKeysDelete(d *schema.ResourceData, meta interface{}) error {
 		if !ok || !shouldDelete {
 			continue
 		}
+
+		cas := sub["cas"].(int)
+		if cas >= 0 {
+			_, err := keyClient.DeleteCas(path, cas)
+			if err != nil {
+				return err
+			}
+			continue
+		}
+
 		if err := keyClient.Delete(path); err != nil {
 			return err
 		}
