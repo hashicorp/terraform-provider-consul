@@ -6,6 +6,7 @@ package consul
 import (
 	"fmt"
 	"strings"
+	"time"
 
 	consulapi "github.com/hashicorp/consul/api"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
@@ -344,7 +345,6 @@ func resourceConsulServiceResolverConfigEntryUpdate(d *schema.ResourceData, meta
 				return err
 			}
 			configMap["failover"] = failover
-			continue
 		} else if attribute == "subsets" {
 			value := d.Get(attribute)
 			subsets := make(map[string]interface{})
@@ -362,13 +362,19 @@ func resourceConsulServiceResolverConfigEntryUpdate(d *schema.ResourceData, meta
 				return err
 			}
 			configMap["subsets"] = subsets
-			continue
+		} else if attribute == "request_timeout" || attribute == "connect_timeout" {
+			duration, err := time.ParseDuration(d.Get(attribute).(string))
+			if err != nil {
+				return err
+			}
+			configMap[formatKey(attribute)] = duration
+		} else {
+			keyFormattedMap, err := formatKeys(d.Get(attribute), formatKey)
+			if err != nil {
+				return err
+			}
+			configMap[formatKey(attribute)] = keyFormattedMap
 		}
-		keyFormattedMap, err := formatKeys(d.Get(attribute), formatKey)
-		if err != nil {
-			return err
-		}
-		configMap[attribute] = keyFormattedMap
 	}
 
 	configEntry, err := makeServiceResolverConfigEntry(name, configMap, wOpts.Namespace, wOpts.Partition)
@@ -391,7 +397,7 @@ to see what values are expected`, configEntry.GetKind())
 	}
 
 	d.SetId(fmt.Sprintf("%s-%s", kind, name))
-	return resourceConsulServiceSplitterConfigEntryRead(d, meta)
+	return resourceConsulServiceResolverConfigEntryRead(d, meta)
 }
 
 func resourceConsulServiceResolverConfigEntryRead(d *schema.ResourceData, meta interface{}) error {
@@ -399,8 +405,6 @@ func resourceConsulServiceResolverConfigEntryRead(d *schema.ResourceData, meta i
 	configEntries := client.ConfigEntries()
 	configKind := d.Get("kind").(string)
 	configName := d.Get("name").(string)
-
-	fixQOptsForConfigEntry(configName, configKind, qOpts)
 
 	_, _, err := configEntries.Get(configKind, configName, qOpts)
 	return err
