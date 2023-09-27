@@ -49,12 +49,14 @@ var serviceResolverConfigEntrySchema = map[string]*schema.Schema{
 		Optional: true,
 	},
 	"subsets": {
-		Type:     schema.TypeMap,
-		Required: true,
-		Elem: &schema.Schema{
-			Type:     schema.TypeMap,
-			Required: true,
-			Elem: &schema.Resource{Schema: map[string]*schema.Schema{
+		Type:     schema.TypeList,
+		Optional: true,
+		Elem: &schema.Resource{
+			Schema: map[string]*schema.Schema{
+				"name": {
+					Type:     schema.TypeString,
+					Required: true,
+				},
 				"filter": {
 					Type:     schema.TypeString,
 					Required: true,
@@ -63,7 +65,7 @@ var serviceResolverConfigEntrySchema = map[string]*schema.Schema{
 					Type:     schema.TypeBool,
 					Required: true,
 				},
-			}},
+			},
 		},
 	},
 	"default_subset": {
@@ -107,10 +109,14 @@ var serviceResolverConfigEntrySchema = map[string]*schema.Schema{
 		},
 	},
 	"failover": {
-		Type:     schema.TypeMap,
+		Type:     schema.TypeList,
 		Optional: true,
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
+				"subset_name": {
+					Type:     schema.TypeString,
+					Required: true,
+				},
 				"service": {
 					Type:     schema.TypeString,
 					Optional: true,
@@ -130,7 +136,7 @@ var serviceResolverConfigEntrySchema = map[string]*schema.Schema{
 				"datacenters": {
 					Type:     schema.TypeList,
 					Optional: true,
-					Elem:     schema.TypeString,
+					Elem:     &schema.Schema{Type: schema.TypeString},
 				},
 				"targets": {
 					Type:     schema.TypeList,
@@ -218,7 +224,7 @@ var serviceResolverConfigEntrySchema = map[string]*schema.Schema{
 								Optional: true,
 							},
 							"cookie_config": {
-								Type:     schema.TypeString,
+								Type:     schema.TypeSet,
 								Optional: true,
 								Elem: &schema.Resource{
 									Schema: map[string]*schema.Schema{
@@ -316,20 +322,56 @@ func resourceConsulServiceResolverConfigEntryUpdate(d *schema.ResourceData, meta
 
 	var attributes []string
 
-	for key, _ := range serviceSplitterConfigEntrySchema {
+	for key, _ := range serviceResolverConfigEntrySchema {
 		attributes = append(attributes, key)
 	}
 
 	for _, attribute := range attributes {
-		configMap[attribute] = d.Get(attribute)
+		if attribute == "failover" {
+			value := d.Get(attribute)
+			failover := make(map[string]interface{})
+			for _, elem := range value.([]interface{}) {
+				valueMap := elem.(map[string]interface{})
+				key := valueMap["subset_name"].(string)
+				delete(valueMap, "subset_name")
+				formattedValueMap, err := formatKeys(valueMap, formatKey)
+				if err != nil {
+					return err
+				}
+				failover[key] = formattedValueMap
+			}
+			if err != nil {
+				return err
+			}
+			configMap["failover"] = failover
+			continue
+		} else if attribute == "subsets" {
+			value := d.Get(attribute)
+			subsets := make(map[string]interface{})
+			for _, elem := range value.([]interface{}) {
+				valueMap := elem.(map[string]interface{})
+				key := valueMap["name"].(string)
+				delete(valueMap, "name")
+				formattedValueMap, err := formatKeys(valueMap, formatKey)
+				if err != nil {
+					return err
+				}
+				subsets[key] = formattedValueMap
+			}
+			if err != nil {
+				return err
+			}
+			configMap["subsets"] = subsets
+			continue
+		}
+		keyFormattedMap, err := formatKeys(d.Get(attribute), formatKey)
+		if err != nil {
+			return err
+		}
+		configMap[attribute] = keyFormattedMap
 	}
 
-	formattedMap, err := formatKeys(configMap, formatKey)
-	if err != nil {
-		return err
-	}
-
-	configEntry, err := makeServiceResolverConfigEntry(name, formattedMap.(map[string]interface{}), wOpts.Namespace, wOpts.Partition)
+	configEntry, err := makeServiceResolverConfigEntry(name, configMap, wOpts.Namespace, wOpts.Partition)
 	if err != nil {
 		return err
 	}

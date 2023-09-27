@@ -12,22 +12,22 @@ import (
 )
 
 func isSlice(v interface{}) bool {
-	return reflect.TypeOf(v).Kind() == reflect.Slice || reflect.TypeOf(v).Kind() == reflect.Array
+	return v != nil && (reflect.TypeOf(v).Kind() == reflect.Slice || reflect.TypeOf(v).Kind() == reflect.Array)
 }
 
 func isMap(v interface{}) bool {
-	return reflect.TypeOf(v).Kind() == reflect.Map
+	return v != nil && reflect.TypeOf(v).Kind() == reflect.Map
 }
 
 func isSetSchema(v interface{}) bool {
-	return reflect.TypeOf(v).String() == "*schema.Set"
+	return v != nil && reflect.TypeOf(v).String() == "*schema.Set"
 }
 
 func formatKey(key string) string {
 	tokens := strings.Split(key, "_")
 	keyToReturn := ""
 	for _, token := range tokens {
-		if token == "tls" || token == "ttl" {
+		if token == "tls" || token == "ttl" || token == "ip" {
 			keyToReturn += strings.ToUpper(token)
 		} else {
 			caser := cases.Title(language.English)

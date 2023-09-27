@@ -23,11 +23,13 @@ func TestFormatKeysFunc(t *testing.T) {
 				"test_key":     "value1",
 				"test_tls_key": "value2",
 				"ttl":          "value3",
+				"source_ip":    "value4",
 			},
 			"expected": map[string]interface{}{
 				"TestKey":    "value1",
 				"TestTLSKey": "value2",
 				"TTL":        "value3",
+				"SourceIP":   "value4",
 			},
 		},
 		{
