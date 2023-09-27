@@ -4,8 +4,9 @@
 package consul
 
 import (
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 	"testing"
+
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 )
 
 func TestAccConsulServiceSplitterConfigEEEntryTest(t *testing.T) {
@@ -18,21 +19,21 @@ func TestAccConsulServiceSplitterConfigEEEntryTest(t *testing.T) {
 			{
 				Config: testConsulServiceSplitterConfigEntryEE,
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("consul_service_splitter_config_entry.foo", "name", "web"),
-					resource.TestCheckResourceAttr("consul_service_splitter_config_entry.foo", "namespace", "ns"),
-					resource.TestCheckResourceAttr("consul_service_splitter_config_entry.foo", "partition", "pt"),
-					resource.TestCheckResourceAttr("consul_service_splitter_config_entry.foo", "meta.key", "value"),
-					resource.TestCheckResourceAttr("consul_service_splitter_config_entry.foo", "splits.#", "2"),
-					resource.TestCheckResourceAttr("consul_service_splitter_config_entry.foo", "splits.0.weight", "90"),
-					resource.TestCheckResourceAttr("consul_service_splitter_config_entry.foo", "splits.0.service", "web"),
-					resource.TestCheckResourceAttr("consul_service_splitter_config_entry.foo", "splits.0.service_subset", "v1"),
-					resource.TestCheckResourceAttr("consul_service_splitter_config_entry.foo", "splits.0.request_headers.810692046.set.x-web-version", "from-v1"),
-					resource.TestCheckResourceAttr("consul_service_splitter_config_entry.foo", "splits.0.response_headers.3374032271.set.x-web-version", "to-v1"),
-					resource.TestCheckResourceAttr("consul_service_splitter_config_entry.foo", "splits.1.weight", "10"),
-					resource.TestCheckResourceAttr("consul_service_splitter_config_entry.foo", "splits.1.service_subset", "v2"),
-					resource.TestCheckResourceAttr("consul_service_splitter_config_entry.foo", "splits.1.service", "web"),
-					resource.TestCheckResourceAttr("consul_service_splitter_config_entry.foo", "splits.1.request_headers.585597472.set.x-web-version", "from-v2"),
-					resource.TestCheckResourceAttr("consul_service_splitter_config_entry.foo", "splits.1.response_headers.3685616225.set.x-web-version", "to-v2"),
+					resource.TestCheckResourceAttr("consul_config_entry_service_splitter.foo", "name", "web"),
+					resource.TestCheckResourceAttr("consul_config_entry_service_splitter.foo", "namespace", "ns"),
+					resource.TestCheckResourceAttr("consul_config_entry_service_splitter.foo", "partition", "pt"),
+					resource.TestCheckResourceAttr("consul_config_entry_service_splitter.foo", "meta.key", "value"),
+					resource.TestCheckResourceAttr("consul_config_entry_service_splitter.foo", "splits.#", "2"),
+					resource.TestCheckResourceAttr("consul_config_entry_service_splitter.foo", "splits.0.weight", "90"),
+					resource.TestCheckResourceAttr("consul_config_entry_service_splitter.foo", "splits.0.service", "web"),
+					resource.TestCheckResourceAttr("consul_config_entry_service_splitter.foo", "splits.0.service_subset", "v1"),
+					resource.TestCheckResourceAttr("consul_config_entry_service_splitter.foo", "splits.0.request_headers.0.set.x-web-version", "from-v1"),
+					resource.TestCheckResourceAttr("consul_config_entry_service_splitter.foo", "splits.0.response_headers.0.set.x-web-version", "to-v1"),
+					resource.TestCheckResourceAttr("consul_config_entry_service_splitter.foo", "splits.1.weight", "10"),
+					resource.TestCheckResourceAttr("consul_config_entry_service_splitter.foo", "splits.1.service_subset", "v2"),
+					resource.TestCheckResourceAttr("consul_config_entry_service_splitter.foo", "splits.1.service", "web"),
+					resource.TestCheckResourceAttr("consul_config_entry_service_splitter.foo", "splits.1.request_headers.0.set.x-web-version", "from-v2"),
+					resource.TestCheckResourceAttr("consul_config_entry_service_splitter.foo", "splits.1.response_headers.0.set.x-web-version", "to-v2"),
 				),
 			},
 		},
@@ -70,7 +71,7 @@ resource "consul_config_entry" "service_resolver" {
 	})
 }
 
-resource "consul_service_splitter_config_entry" "foo" {
+resource "consul_config_entry_service_splitter" "foo" {
 	name = consul_config_entry.service_resolver.name
 	namespace = "ns"
 	partition = "pt"
@@ -78,8 +79,8 @@ resource "consul_service_splitter_config_entry" "foo" {
 		key = "value"
 	}
 	splits {
-		weight  = 90                   
-		service_subset  = "v1"                
+		weight  = 90
+		service_subset  = "v1"
 		service = "web"
 		request_headers {
 			set = {

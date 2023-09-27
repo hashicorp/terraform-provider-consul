@@ -9,17 +9,19 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 )
 
-func TestAccConsulServiceSplitterConfigCEEntryTest(t *testing.T) {
+func TestAccConsulConfigEntryServiceSplitterEETest(t *testing.T) {
 	providers, _ := startTestServer(t)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:  func() { skipTestOnConsulEnterpriseEdition(t) },
+		PreCheck:  func() { skipTestOnConsulCommunityEdition(t) },
 		Providers: providers,
 		Steps: []resource.TestStep{
 			{
-				Config: testConsulServiceSplitterConfigEntryCE,
+				Config: testConsulConfigEntryServiceSplitterEE,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("consul_config_entry_service_splitter.foo", "name", "web"),
+					resource.TestCheckResourceAttr("consul_config_entry_service_splitter.foo", "namespace", "ns"),
+					resource.TestCheckResourceAttr("consul_config_entry_service_splitter.foo", "partition", "pt"),
 					resource.TestCheckResourceAttr("consul_config_entry_service_splitter.foo", "meta.key", "value"),
 					resource.TestCheckResourceAttr("consul_config_entry_service_splitter.foo", "splits.#", "2"),
 					resource.TestCheckResourceAttr("consul_config_entry_service_splitter.foo", "splits.0.weight", "90"),
@@ -38,7 +40,7 @@ func TestAccConsulServiceSplitterConfigCEEntryTest(t *testing.T) {
 	})
 }
 
-const testConsulServiceSplitterConfigEntryCE = `
+const testConsulConfigEntryServiceSplitterEE = `
 resource "consul_config_entry" "web" {
 	name = "web"
 	kind = "service-defaults"
@@ -71,6 +73,8 @@ resource "consul_config_entry" "service_resolver" {
 
 resource "consul_config_entry_service_splitter" "foo" {
 	name = consul_config_entry.service_resolver.name
+	namespace = "ns"
+	partition = "pt"
 	meta = {
 		key = "value"
 	}

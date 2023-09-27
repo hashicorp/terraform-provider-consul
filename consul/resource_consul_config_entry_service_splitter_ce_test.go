@@ -9,7 +9,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 )
 
-func TestAccConsulServiceSplitterConfigCEEntryTest(t *testing.T) {
+func TestAccConsulConfigEntryServiceSplitterCETest(t *testing.T) {
 	providers, _ := startTestServer(t)
 
 	resource.Test(t, resource.TestCase{
@@ -17,8 +17,9 @@ func TestAccConsulServiceSplitterConfigCEEntryTest(t *testing.T) {
 		Providers: providers,
 		Steps: []resource.TestStep{
 			{
-				Config: testConsulServiceSplitterConfigEntryCE,
+				Config: testConsulConfigEntryServiceSplitterCE,
 				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("consul_config_entry_service_splitter.foo", "id", "web"),
 					resource.TestCheckResourceAttr("consul_config_entry_service_splitter.foo", "name", "web"),
 					resource.TestCheckResourceAttr("consul_config_entry_service_splitter.foo", "meta.key", "value"),
 					resource.TestCheckResourceAttr("consul_config_entry_service_splitter.foo", "splits.#", "2"),
@@ -38,7 +39,7 @@ func TestAccConsulServiceSplitterConfigCEEntryTest(t *testing.T) {
 	})
 }
 
-const testConsulServiceSplitterConfigEntryCE = `
+const testConsulConfigEntryServiceSplitterCE = `
 resource "consul_config_entry" "web" {
 	name = "web"
 	kind = "service-defaults"
