@@ -4,6 +4,7 @@
 package consul
 
 import (
+	"encoding/json"
 	"fmt"
 	"strings"
 
@@ -426,14 +427,38 @@ to see what values are expected`, configEntry.GetKind())
 }
 
 func resourceConsulServiceDefaultsConfigEntryRead(d *schema.ResourceData, meta interface{}) error {
+	var attributes []string
+
+	for key, _ := range serviceDefaultsConfigEntrySchema {
+		attributes = append(attributes, key)
+	}
+
 	client, qOpts, _ := getClient(d, meta)
 	configEntries := client.ConfigEntries()
 	configKind := d.Get("kind").(string)
 	configName := d.Get("name").(string)
 
-	fixQOptsForConfigEntry(configName, configKind, qOpts)
+	configEntry, _, err := configEntries.Get(configKind, configName, qOpts)
 
-	_, _, err := configEntries.Get(configKind, configName, qOpts)
+	_, _, configJSON, err := parseConfigEntry(configEntry)
+	if err != nil {
+		return fmt.Errorf("failed to parse ConfigEntry: %v", err)
+	}
+
+	configJsonMap := make(map[string]interface{})
+
+	err = json.Unmarshal([]byte(configJSON), &configJsonMap)
+	if err != nil {
+		return err
+	}
+
+	for _, attribute := range attributes {
+		value := configJsonMap[formatKey(attribute)]
+		if err = d.Set(attribute, value); err != nil {
+			return fmt.Errorf("failed to set attribute': %v with value %v", attribute, configJsonMap[formatKey(attribute)])
+		}
+	}
+
 	return err
 }
 
