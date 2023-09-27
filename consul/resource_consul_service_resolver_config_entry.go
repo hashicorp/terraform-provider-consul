@@ -170,7 +170,7 @@ func resourceConsulServiceResolverConfigEntryUpdate(d *schema.ResourceData, meta
 		configMap[attribute] = d.Get(attribute)
 	}
 
-	formattedMap, err := FormatKeys(configMap, formatKey)
+	formattedMap, err := formatKeys(configMap, formatKey)
 	if err != nil {
 		return err
 	}
