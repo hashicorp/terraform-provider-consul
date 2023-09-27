@@ -27,7 +27,7 @@ func formatKey(key string) string {
 	tokens := strings.Split(key, "_")
 	keyToReturn := ""
 	for _, token := range tokens {
-		if token == "tls" {
+		if token == "tls" || token == "ttl" {
 			keyToReturn += strings.ToUpper(token)
 		} else {
 			caser := cases.Title(language.English)

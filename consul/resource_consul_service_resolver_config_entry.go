@@ -40,10 +40,19 @@ var serviceResolverConfigEntrySchema = map[string]*schema.Schema{
 		Optional: true,
 		Elem:     &schema.Schema{Type: schema.TypeString},
 	},
+	"connect_timeout": {
+		Type:     schema.TypeString,
+		Optional: true,
+	},
+	"request_timeout": {
+		Type:     schema.TypeString,
+		Optional: true,
+	},
 	"subsets": {
 		Type:     schema.TypeMap,
 		Required: true,
-		Elem: &schema.Schema{Type: schema.TypeMap,
+		Elem: &schema.Schema{
+			Type:     schema.TypeMap,
 			Required: true,
 			Elem: &schema.Resource{Schema: map[string]*schema.Schema{
 				"filter": {
@@ -93,6 +102,151 @@ var serviceResolverConfigEntrySchema = map[string]*schema.Schema{
 				"peer": {
 					Type:     schema.TypeString,
 					Optional: true,
+				},
+			},
+		},
+	},
+	"failover": {
+		Type:     schema.TypeMap,
+		Optional: true,
+		Elem: &schema.Resource{
+			Schema: map[string]*schema.Schema{
+				"service": {
+					Type:     schema.TypeString,
+					Optional: true,
+				},
+				"service_subset": {
+					Type:     schema.TypeString,
+					Optional: true,
+				},
+				"namespace": {
+					Type:     schema.TypeString,
+					Optional: true,
+				},
+				"sameness_group": {
+					Type:     schema.TypeString,
+					Optional: true,
+				},
+				"datacenters": {
+					Type:     schema.TypeList,
+					Optional: true,
+					Elem:     schema.TypeString,
+				},
+				"targets": {
+					Type:     schema.TypeList,
+					Optional: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"service": {
+								Type:     schema.TypeString,
+								Optional: true,
+							},
+							"service_subset": {
+								Type:     schema.TypeString,
+								Optional: true,
+							},
+							"namespace": {
+								Type:     schema.TypeString,
+								Optional: true,
+							},
+							"partition": {
+								Type:     schema.TypeString,
+								Optional: true,
+							},
+							"datacenter": {
+								Type:     schema.TypeString,
+								Optional: true,
+							},
+							"peer": {
+								Type:     schema.TypeString,
+								Optional: true,
+							},
+						},
+					},
+				},
+			},
+		},
+	},
+	"load_balancer": {
+		Type:     schema.TypeSet,
+		Optional: true,
+		Elem: &schema.Resource{
+			Schema: map[string]*schema.Schema{
+				"policy": {
+					Type:     schema.TypeString,
+					Optional: true,
+				},
+				"least_request_config": {
+					Type:     schema.TypeSet,
+					Optional: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"choice_count": {
+								Type:     schema.TypeInt,
+								Optional: true,
+							},
+						},
+					},
+				},
+				"ring_hash_config": {
+					Type:     schema.TypeSet,
+					Optional: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"minimum_ring_size": {
+								Type:     schema.TypeInt,
+								Optional: true,
+							},
+							"maximum_ring_size": {
+								Type:     schema.TypeInt,
+								Optional: true,
+							},
+						},
+					},
+				},
+				"hash_policies": {
+					Type:     schema.TypeList,
+					Optional: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"field": {
+								Type:     schema.TypeString,
+								Optional: true,
+							},
+							"field_value": {
+								Type:     schema.TypeString,
+								Optional: true,
+							},
+							"cookie_config": {
+								Type:     schema.TypeString,
+								Optional: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"session": {
+											Type:     schema.TypeBool,
+											Optional: true,
+										},
+										"ttl": {
+											Type:     schema.TypeString,
+											Optional: true,
+										},
+										"path": {
+											Type:     schema.TypeString,
+											Optional: true,
+										},
+									},
+								},
+							},
+							"source_ip": {
+								Type:     schema.TypeBool,
+								Optional: true,
+							},
+							"terminal": {
+								Type:     schema.TypeBool,
+								Optional: true,
+							},
+						},
+					},
 				},
 			},
 		},
