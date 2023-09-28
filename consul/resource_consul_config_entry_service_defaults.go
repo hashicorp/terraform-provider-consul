@@ -533,7 +533,10 @@ func (s *serviceDefaults) Decode(d *schema.ResourceData) (consulapi.ConfigEntry,
 	configEntry.MaxInboundConnections = d.Get("max_inbound_connections").(int)
 	configEntry.LocalRequestTimeoutMs = d.Get("local_request_timeout_ms").(int)
 
-	configEntry.MeshGateway = *getMeshGateway(d.Get("mesh_gateway"))
+	if v := getMeshGateway(d.Get("mesh_gateway")); v != nil {
+		configEntry.MeshGateway = *v
+	}
+
 	configEntry.ExternalSNI = d.Get("external_sni").(string)
 
 	exposeList := d.Get("expose").(*schema.Set).List()
