@@ -13,7 +13,7 @@ import (
 type serviceDefaults struct{}
 
 func (s *serviceDefaults) GetKind() string {
-	return consulapi.ServiceSplitter
+	return consulapi.ServiceDefaults
 }
 
 func (s *serviceDefaults) GetDescription() string {
@@ -353,9 +353,18 @@ func (s *serviceDefaults) Decode(d *schema.ResourceData) (consulapi.ConfigEntry,
 
 	getLimits := func(limitsMap map[string]interface{}) *consulapi.UpstreamLimits {
 		upstreamLimit := &consulapi.UpstreamLimits{}
-		upstreamLimit.MaxPendingRequests = limitsMap["max_pending_requests"].(*int)
-		upstreamLimit.MaxConnections = limitsMap["max_connections"].(*int)
-		upstreamLimit.MaxConcurrentRequests = limitsMap["max_concurrent_requests"].(*int)
+		var maxPendingRequests *int
+		maxPendingRequests = new(int)
+		*maxPendingRequests = limitsMap["max_pending_requests"].(int)
+		upstreamLimit.MaxPendingRequests = maxPendingRequests
+		var maxConnections *int
+		maxConnections = new(int)
+		*maxConnections = limitsMap["max_connections"].(int)
+		upstreamLimit.MaxConnections = maxConnections
+		var maxConcurrentRequests *int
+		maxConcurrentRequests = new(int)
+		*maxConcurrentRequests = limitsMap["max_concurrent_requests"].(int)
+		upstreamLimit.MaxConcurrentRequests = maxConcurrentRequests
 		return upstreamLimit
 	}
 
@@ -369,9 +378,16 @@ func (s *serviceDefaults) Decode(d *schema.ResourceData) (consulapi.ConfigEntry,
 				return nil, err
 			}
 			passiveHealthCheck.Interval = duration
-			passiveHealthCheck.MaxFailures = passiveHealthCheckMap["max_failures"].(uint32)
-			passiveHealthCheck.EnforcingConsecutive5xx = passiveHealthCheckMap["enforcing_consecutive_5xx"].(*uint32)
-			passiveHealthCheck.MaxEjectionPercent = passiveHealthCheckMap["max_ejection_percent"].(*uint32)
+			passiveHealthCheck.MaxFailures = uint32(passiveHealthCheckMap["max_failures"].(int))
+			var enforcingConsecutive5xx *uint32
+			enforcingConsecutive5xx = new(uint32)
+			*enforcingConsecutive5xx = uint32(passiveHealthCheckMap["enforcing_consecutive_5xx"].(int))
+			passiveHealthCheck.EnforcingConsecutive5xx = enforcingConsecutive5xx
+			var maxEjectionPercentage *uint32
+			maxEjectionPercentage = new(uint32)
+			*maxEjectionPercentage = uint32(passiveHealthCheckMap["max_ejection_percent"].(int))
+			passiveHealthCheck.EnforcingConsecutive5xx = enforcingConsecutive5xx
+			passiveHealthCheck.MaxEjectionPercent = maxEjectionPercentage
 			baseEjectionTime, err := time.ParseDuration(passiveHealthCheckMap["base_ejection_time"].(string))
 			if err != nil {
 				return nil, err
@@ -404,7 +420,7 @@ func (s *serviceDefaults) Decode(d *schema.ResourceData) (consulapi.ConfigEntry,
 		upstreamConfig.EnvoyClusterJSON = upstreamConfigMap["envoy_cluster_json"].(string)
 		upstreamConfig.Protocol = upstreamConfigMap["protocol"].(string)
 		upstreamConfig.ConnectTimeoutMs = upstreamConfigMap["connect_timeout_ms"].(int)
-		upstreamConfig.Limits = getLimits(upstreamConfigMap["limits"].(map[string]interface{}))
+		upstreamConfig.Limits = getLimits(upstreamConfigMap["limits"].(*schema.Set).List()[0].(map[string]interface{}))
 		passiveHealthCheck, err := getPassiveHealthCheck(upstreamConfigMap["passive_health_check"])
 		if err != nil {
 			return nil, err
@@ -459,7 +475,9 @@ func (s *serviceDefaults) Decode(d *schema.ResourceData) (consulapi.ConfigEntry,
 		return exposeConfig
 	}
 
-	upstreamConfigMap := d.Get("upstream_config").(map[string]interface{})
+	configEntry.UpstreamConfig = &consulapi.UpstreamConfiguration{}
+
+	upstreamConfigMap := d.Get("upstream_config").(*schema.Set).List()[0].(map[string]interface{})
 	defaultsUpstreamConfigMapList := upstreamConfigMap["defaults"].(*schema.Set).List()
 	if len(defaultsUpstreamConfigMapList) > 0 {
 		defaultsUpstreamConfig, err := getUpstreamConfig(defaultsUpstreamConfigMapList[0].(map[string]interface{}))
@@ -472,14 +490,11 @@ func (s *serviceDefaults) Decode(d *schema.ResourceData) (consulapi.ConfigEntry,
 	overrideUpstreamConfigList := upstreamConfigMap["overrides"].([]interface{})
 	var overrideUpstreamConfig []*consulapi.UpstreamConfig
 	for _, elem := range overrideUpstreamConfigList {
-		overrideUpstreamConfigList := elem.(*schema.Set).List()
-		if len(overrideUpstreamConfigList) > 0 {
-			overrideUpstreamConfigElem, err := getUpstreamConfig(overrideUpstreamConfigList[0].(map[string]interface{}))
-			if err != nil {
-				return nil, err
-			}
-			overrideUpstreamConfig = append(overrideUpstreamConfig, overrideUpstreamConfigElem)
+		overrideUpstreamConfigElem, err := getUpstreamConfig(elem.(map[string]interface{}))
+		if err != nil {
+			return nil, err
 		}
+		overrideUpstreamConfig = append(overrideUpstreamConfig, overrideUpstreamConfigElem)
 	}
 	configEntry.UpstreamConfig.Overrides = overrideUpstreamConfig
 
@@ -530,7 +545,7 @@ func (s *serviceDefaults) Write(ce consulapi.ConfigEntry, sw *stateWriter) error
 	sw.set("partition", sp.Partition)
 	sw.set("namespace", sp.Partition)
 
-	var meta map[string]interface{}
+	meta := make(map[string]interface{})
 	for k, v := range sp.Meta {
 		meta[k] = v
 	}
@@ -541,7 +556,7 @@ func (s *serviceDefaults) Write(ce consulapi.ConfigEntry, sw *stateWriter) error
 	sw.set("mode", sp.Mode)
 
 	getUpstreamConfig := func(elem *consulapi.UpstreamConfig) map[string]interface{} {
-		var upstreamConfig map[string]interface{}
+		upstreamConfig := make(map[string]interface{})
 		upstreamConfig["name"] = elem.Name
 		upstreamConfig["partition"] = elem.Partition
 		upstreamConfig["namespace"] = elem.Namespace
@@ -550,21 +565,24 @@ func (s *serviceDefaults) Write(ce consulapi.ConfigEntry, sw *stateWriter) error
 		upstreamConfig["envoy_cluster_json"] = elem.EnvoyClusterJSON
 		upstreamConfig["protocol"] = elem.Protocol
 		upstreamConfig["connect_timeout_ms"] = elem.ConnectTimeoutMs
-		var limits map[string]interface{}
-		limits["max_connections"] = elem.Limits.MaxConnections
-		limits["max_pending_requests"] = elem.Limits.MaxPendingRequests
-		limits["max_concurrent_requests"] = elem.Limits.MaxConcurrentRequests
+		limits := make([]map[string]interface{}, 1)
+		limits[0] = make(map[string]interface{})
+		limits[0]["max_connections"] = elem.Limits.MaxConnections
+		limits[0]["max_pending_requests"] = elem.Limits.MaxPendingRequests
+		limits[0]["max_concurrent_requests"] = elem.Limits.MaxConcurrentRequests
 		upstreamConfig["limits"] = limits
-		var passiveHealthCheck map[string]interface{}
-		passiveHealthCheck["interval"] = elem.PassiveHealthCheck.Interval
-		passiveHealthCheck["max_failures"] = elem.PassiveHealthCheck.MaxFailures
-		passiveHealthCheck["enforcing_consecutive_5xx"] = elem.PassiveHealthCheck.EnforcingConsecutive5xx
-		passiveHealthCheck["max_ejection_percent"] = elem.PassiveHealthCheck.MaxEjectionPercent
-		passiveHealthCheck["base_ejection_time"] = elem.PassiveHealthCheck.BaseEjectionTime
+		passiveHealthCheck := make([]map[string]interface{}, 1)
+		passiveHealthCheck[0] = make(map[string]interface{})
+		passiveHealthCheck[0]["interval"] = elem.PassiveHealthCheck.Interval.String()
+		passiveHealthCheck[0]["max_failures"] = elem.PassiveHealthCheck.MaxFailures
+		passiveHealthCheck[0]["enforcing_consecutive_5xx"] = elem.PassiveHealthCheck.EnforcingConsecutive5xx
+		passiveHealthCheck[0]["max_ejection_percent"] = elem.PassiveHealthCheck.MaxEjectionPercent
+		passiveHealthCheck[0]["base_ejection_time"] = elem.PassiveHealthCheck.BaseEjectionTime.String()
 		upstreamConfig["passive_health_check"] = passiveHealthCheck
 
-		var meshGateway map[string]interface{}
-		meshGateway["mode"] = elem.MeshGateway.Mode
+		meshGateway := make([]map[string]interface{}, 1)
+		meshGateway[0] = make(map[string]interface{})
+		meshGateway[0]["mode"] = elem.MeshGateway.Mode
 		upstreamConfig["mesh_gateway"] = meshGateway
 
 		upstreamConfig["balance_outbound_connections"] = elem.BalanceOutboundConnections
@@ -576,23 +594,28 @@ func (s *serviceDefaults) Write(ce consulapi.ConfigEntry, sw *stateWriter) error
 		overrides = append(overrides, getUpstreamConfig(elem))
 	}
 
-	var upstreamConfig map[string]interface{}
+	upstreamConfig := make(map[string]interface{})
 	upstreamConfig["overrides"] = overrides
-	upstreamConfig["defaults"] = getUpstreamConfig(sp.UpstreamConfig.Defaults)
-	sw.set("upstream_config", upstreamConfig)
+	defaultsSlice := make([]map[string]interface{}, 1)
+	defaultsSlice[0] = getUpstreamConfig(sp.UpstreamConfig.Defaults)
+	upstreamConfig["defaults"] = defaultsSlice
+	upstreamConfigSlice := make([]map[string]interface{}, 1)
+	upstreamConfigSlice[0] = upstreamConfig
+	sw.set("upstream_config", upstreamConfigSlice)
 
-	var transparentProxy map[string]interface{}
-	transparentProxy["outbound_listener_port"] = sp.TransparentProxy.OutboundListenerPort
-	transparentProxy["dialed_directly"] = sp.TransparentProxy.DialedDirectly
+	transparentProxy := make([]map[string]interface{}, 1)
+	transparentProxy[0] = make(map[string]interface{})
+	transparentProxy[0]["outbound_listener_port"] = sp.TransparentProxy.OutboundListenerPort
+	transparentProxy[0]["dialed_directly"] = sp.TransparentProxy.DialedDirectly
 	sw.set("transparent_proxy", transparentProxy)
 
 	sw.set("mutual_tls_mode", sp.MutualTLSMode)
 
 	getEnvoyExtension := func(elem consulapi.EnvoyExtension) map[string]interface{} {
-		var envoyExtension map[string]interface{}
+		envoyExtension := make(map[string]interface{})
 		envoyExtension["name"] = elem.Name
 		envoyExtension["required"] = elem.Required
-		var arguments map[string]interface{}
+		arguments := make(map[string]interface{})
 		for k, v := range elem.Arguments {
 			arguments[k] = v
 		}
@@ -608,23 +631,28 @@ func (s *serviceDefaults) Write(ce consulapi.ConfigEntry, sw *stateWriter) error
 	}
 	sw.set("envoy_extensions", envoyExtensions)
 
-	destination := make(map[string]interface{})
-	destination["port"] = sp.Destination.Port
-	destination["addresses"] = sp.Destination.Addresses
-	sw.set("destination", destination)
+	destination := make([]map[string]interface{}, 1)
+	if sp.Destination != nil {
+		destination[0] = make(map[string]interface{})
+		destination[0]["port"] = sp.Destination.Port
+		destination[0]["addresses"] = sp.Destination.Addresses
+		sw.set("destination", destination)
+	}
 
 	sw.set("local_connect_timeout_ms", sp.LocalConnectTimeoutMs)
 	sw.set("max_inbound_connections", sp.MaxInboundConnections)
 	sw.set("local_request_timeout_ms", sp.LocalRequestTimeoutMs)
 
-	meshGateway := make(map[string]interface{})
-	meshGateway["mode"] = sp.MeshGateway.Mode
+	meshGateway := make([]map[string]interface{}, 1)
+	meshGateway[0] = make(map[string]interface{})
+	meshGateway[0]["mode"] = sp.MeshGateway.Mode
 	sw.set("mesh_gateway", meshGateway)
 
 	sw.set("external_sni", sp.ExternalSNI)
 
-	expose := make(map[string]interface{})
-	expose["checks"] = sp.Expose.Checks
+	expose := make([]map[string]interface{}, 1)
+	expose[0] = make(map[string]interface{})
+	expose[0]["checks"] = sp.Expose.Checks
 	var paths []map[string]interface{}
 	for _, elem := range sp.Expose.Paths {
 		path := make(map[string]interface{})
@@ -634,7 +662,7 @@ func (s *serviceDefaults) Write(ce consulapi.ConfigEntry, sw *stateWriter) error
 		path["protocol"] = elem.Protocol
 		paths = append(paths, path)
 	}
-	expose["paths"] = paths
+	expose[0]["paths"] = paths
 	sw.set("expose", expose)
 
 	return nil
