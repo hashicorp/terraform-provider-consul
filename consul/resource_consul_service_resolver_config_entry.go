@@ -16,6 +16,10 @@ func (s *serviceResolver) GetKind() string {
 	return consulapi.ServiceResolver
 }
 
+func (s *serviceResolver) GetDescription() string {
+	return "The `consul_config_entry_service_resolver` resource configures a [service resolver](https://developer.hashicorp.com/consul/docs/connect/config-entries/service-resolver) that creates named subsets of service instances and define their behavior when satisfying upstream requests."
+}
+
 func (s *serviceResolver) GetSchema() map[string]*schema.Schema {
 	return map[string]*schema.Schema{
 		"name": {
@@ -449,6 +453,105 @@ func (s *serviceResolver) Write(ce consulapi.ConfigEntry, sw *stateWriter) error
 	}
 	sw.set("meta", meta)
 	sw.set("connect_timeout", sr.ConnectTimeout)
+	sw.set("request_timeout", sr.RequestTimeout)
+
+	subsets := make([]map[string]interface{}, len(sr.Subsets))
+	indx := 0
+	for name, _ := range sr.Subsets {
+		subsetMap := make(map[string]interface{})
+		subsetMap["name"] = name
+		subsetSt := sr.Subsets[name]
+		subsetMap["filter"] = subsetSt.Filter
+		subsetMap["only_passing"] = subsetSt.OnlyPassing
+		subsets[indx] = subsetMap
+		indx++
+	}
+	sw.set("subsets", subsets)
+
+	sw.set("default_subset", sr.DefaultSubset)
+
+	redirect := make([]map[string]interface{}, 1)
+	if sr.Redirect != nil {
+		redirect[0] = make(map[string]interface{})
+		redirect[0]["service"] = sr.Redirect.Service
+		redirect[0]["service_subset"] = sr.Redirect.ServiceSubset
+		redirect[0]["namespace"] = sr.Redirect.Namespace
+		redirect[0]["partition"] = sr.Redirect.Partition
+		redirect[0]["sameness_group"] = sr.Redirect.SamenessGroup
+		redirect[0]["datacenter"] = sr.Redirect.Datacenter
+		redirect[0]["peer"] = sr.Redirect.Peer
+		sw.set("redirect", redirect)
+	}
+
+	failover := make([]map[string]interface{}, len(sr.Failover))
+	iter := 0
+	for name, _ := range sr.Failover {
+		failoverMap := make(map[string]interface{})
+		failoverMap["subset_name"] = name
+		failoverMap["service"] = sr.Failover[name].Service
+		failoverMap["service_subset"] = sr.Failover[name].ServiceSubset
+		failoverMap["namespace"] = sr.Failover[name].Namespace
+		failoverMap["sameness_group"] = sr.Failover[name].SamenessGroup
+		failoverDatacenters := make([]string, len(sr.Failover[name].Datacenters))
+		for indx, fd := range sr.Failover[name].Datacenters {
+			failoverDatacenters[indx] = fd
+		}
+		failoverMap["datacenters"] = failoverDatacenters
+		failoverTargets := make([]map[string]interface{}, len(sr.Failover[name].Targets))
+		for indx, ft := range sr.Failover[name].Targets {
+			failoverTargetMap := make(map[string]interface{})
+			failoverTargetMap["service"] = ft.Service
+			failoverTargetMap["service_subset"] = ft.ServiceSubset
+			failoverTargetMap["namespace"] = ft.Namespace
+			failoverTargetMap["partition"] = ft.Partition
+			failoverTargetMap["datacenter"] = ft.Datacenter
+			failoverTargetMap["peer"] = ft.Peer
+			failoverTargets[indx] = failoverTargetMap
+		}
+		failoverMap["targets"] = failoverTargets
+		failover[iter] = failoverMap
+		iter++
+	}
+	sw.set("failover", failover)
+
+	if sr.LoadBalancer != nil {
+		loadBalancer := make([]map[string]interface{}, 1)
+		loadBalancer[0] = make(map[string]interface{})
+		loadBalancer[0]["policy"] = sr.LoadBalancer.Policy
+		if sr.LoadBalancer.LeastRequestConfig != nil {
+			leastRequestConfig := make([]map[string]interface{}, 1)
+			leastRequestConfig[0] = make(map[string]interface{})
+			leastRequestConfig[0]["choice_count"] = sr.LoadBalancer.LeastRequestConfig.ChoiceCount
+			loadBalancer[0]["least_request_config"] = leastRequestConfig
+		}
+		if sr.LoadBalancer.RingHashConfig != nil {
+			ringHashConfig := make([]map[string]interface{}, 1)
+			ringHashConfig[0] = make(map[string]interface{})
+			ringHashConfig[0]["minimum_ring_size"] = sr.LoadBalancer.RingHashConfig.MinimumRingSize
+			ringHashConfig[0]["maximum_ring_size"] = sr.LoadBalancer.RingHashConfig.MaximumRingSize
+			loadBalancer[0]["ring_hash_config"] = ringHashConfig
+		}
+
+		if sr.LoadBalancer.HashPolicies != nil {
+			hashPolicyList := make([]map[string]interface{}, len(sr.LoadBalancer.HashPolicies))
+			for indx, hashPolicy := range sr.LoadBalancer.HashPolicies {
+				hashPolicyMap := make(map[string]interface{})
+				hashPolicyMap["field"] = hashPolicy.Field
+				hashPolicyMap["field_value"] = hashPolicy.FieldValue
+				cookieConfigSet := make([]map[string]interface{}, 1)
+				cookieConfigSet[0] = make(map[string]interface{})
+				cookieConfigSet[0]["session"] = hashPolicy.CookieConfig.Session
+				cookieConfigSet[0]["ttl"] = hashPolicy.CookieConfig.TTL
+				cookieConfigSet[0]["path"] = hashPolicy.CookieConfig.TTL
+				hashPolicyMap["cookie_config"] = cookieConfigSet
+				hashPolicyMap["source_ip"] = hashPolicy.SourceIP
+				hashPolicyMap["terminal"] = hashPolicy.Terminal
+				hashPolicyList[indx] = hashPolicyMap
+			}
+			loadBalancer[0]["hash_policies"] = hashPolicyList
+		}
+		sw.set("load_balancer", loadBalancer)
+	}
 
 	return nil
 }
