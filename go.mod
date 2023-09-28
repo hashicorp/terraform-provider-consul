@@ -5,7 +5,6 @@ require (
 	github.com/hashicorp/errwrap v1.1.0
 	github.com/hashicorp/terraform-plugin-sdk v1.17.2
 	github.com/mitchellh/mapstructure v1.5.0
-	github.com/stretchr/testify v1.8.3
 )
 
 require (
@@ -13,9 +12,7 @@ require (
 	cloud.google.com/go/compute/metadata v0.2.3 // indirect
 	cloud.google.com/go/iam v0.12.0 // indirect
 	github.com/googleapis/enterprise-certificate-proxy v0.2.3 // indirect
-	github.com/pmezard/go-difflib v1.0.1-0.20181226105442-5d4384ee4fb2 // indirect
 	golang.org/x/exp v0.0.0-20230321023759-10a507213a29 // indirect
-	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
 
 require (
@@ -94,7 +91,7 @@ require (
 	golang.org/x/net v0.12.0 // indirect
 	golang.org/x/oauth2 v0.6.0 // indirect
 	golang.org/x/sys v0.10.0 // indirect
-	golang.org/x/text v0.11.0
+	golang.org/x/text v0.11.0 // indirect
 	golang.org/x/xerrors v0.0.0-20220907171357-04be3eba64a2 // indirect
 	google.golang.org/api v0.114.0 // indirect
 	google.golang.org/appengine v1.6.7 // indirect
