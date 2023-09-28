@@ -24,12 +24,14 @@ func (s *serviceDefaults) GetSchema() map[string]*schema.Schema {
 	upstreamConfigSchema := &schema.Resource{
 		Schema: map[string]*schema.Schema{
 			"name": {
-				Type:     schema.TypeString,
-				Optional: true,
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "Specifies the name of the service you are setting the defaults for.",
 			},
 			"partition": {
-				Type:     schema.TypeString,
-				Optional: true,
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "Specifies the name of the name of the Consul admin partition that the configuration entry applies to.",
 			},
 			"namespace": {
 				Type:        schema.TypeString,
@@ -50,64 +52,76 @@ func (s *serviceDefaults) GetSchema() map[string]*schema.Schema {
 				Optional: true,
 			},
 			"protocol": {
-				Type:     schema.TypeString,
-				Optional: true,
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "Specifies the default protocol for the service.",
 			},
 			"connect_timeout_ms": {
 				Type:     schema.TypeInt,
 				Optional: true,
 			},
 			"limits": {
-				Type:     schema.TypeSet,
-				Optional: true,
+				Type:        schema.TypeSet,
+				Optional:    true,
+				Description: "Map that specifies a set of limits to apply to when connecting upstream services.",
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"max_connections": {
-							Type:     schema.TypeInt,
-							Optional: true,
+							Type:        schema.TypeInt,
+							Optional:    true,
+							Description: "Specifies the maximum number of connections a service instance can establish against the upstream.",
 						},
 						"max_pending_requests": {
-							Type:     schema.TypeInt,
-							Optional: true,
+							Type:        schema.TypeInt,
+							Optional:    true,
+							Description: "Specifies the maximum number of requests that are queued while waiting for a connection to establish.",
 						},
 						"max_concurrent_requests": {
-							Type:     schema.TypeInt,
-							Optional: true,
+							Type:        schema.TypeInt,
+							Optional:    true,
+							Description: "Specifies the maximum number of concurrent requests.",
 						},
 					},
 				},
 			},
 			"passive_health_check": {
-				Type:     schema.TypeSet,
-				Optional: true,
+				Type:        schema.TypeSet,
+				Optional:    true,
+				Description: "Map that specifies a set of rules that enable Consul to remove hosts from the upstream cluster that are unreachable or that return errors.",
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"interval": {
-							Type:     schema.TypeString,
-							Optional: true,
+							Type:        schema.TypeString,
+							Optional:    true,
+							Description: "Specifies the time between checks.",
 						},
 						"max_failures": {
-							Type:     schema.TypeInt,
-							Optional: true,
+							Type:        schema.TypeInt,
+							Optional:    true,
+							Description: "Specifies the number of consecutive failures allowed per check interval. If exceeded, Consul removes the host from the load balancer.",
 						},
 						"enforcing_consecutive_5xx": {
-							Type:     schema.TypeInt,
-							Optional: true,
+							Type:        schema.TypeInt,
+							Optional:    true,
+							Description: "Specifies a percentage that indicates how many times out of 100 that Consul ejects the host when it detects an outlier status.",
 						},
 						"max_ejection_percent": {
-							Type:     schema.TypeInt,
-							Optional: true,
+							Type:        schema.TypeInt,
+							Optional:    true,
+							Description: "Specifies the maximum percentage of an upstream cluster that Consul ejects when the proxy reports an outlier.",
 						},
 						"base_ejection_time": {
-							Type:     schema.TypeString,
-							Optional: true,
+							Type:        schema.TypeString,
+							Optional:    true,
+							Description: "Specifies the minimum amount of time that an ejected host must remain outside the cluster before rejoining.",
 						},
 					},
 				},
 			},
 			"mesh_gateway": {
-				Type:     schema.TypeSet,
-				Optional: true,
+				Type:        schema.TypeSet,
+				Optional:    true,
+				Description: "Specifies the default mesh gateway mode field for all upstreams.",
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"mode": {
@@ -118,8 +132,9 @@ func (s *serviceDefaults) GetSchema() map[string]*schema.Schema {
 				},
 			},
 			"balance_outbound_connections": {
-				Type:     schema.TypeString,
-				Optional: true,
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "Sets the strategy for allocating outbound connections from upstreams across Envoy proxy threads.",
 			},
 		},
 	}
