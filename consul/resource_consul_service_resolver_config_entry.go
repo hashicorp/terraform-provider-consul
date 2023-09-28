@@ -4,6 +4,7 @@
 package consul
 
 import (
+	"fmt"
 	consulapi "github.com/hashicorp/consul/api"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 	"time"
@@ -433,5 +434,21 @@ func (s *serviceResolver) Decode(d *schema.ResourceData) (consulapi.ConfigEntry,
 }
 
 func (s *serviceResolver) Write(ce consulapi.ConfigEntry, sw *stateWriter) error {
+	sr, ok := ce.(*consulapi.ServiceResolverConfigEntry)
+	if !ok {
+		return fmt.Errorf("expected '%s' but got '%s'", consulapi.ServiceResolver, ce.GetKind())
+	}
 
+	sw.set("name", sr.Name)
+	sw.set("partition", sr.Partition)
+	sw.set("namespace", sr.Namespace)
+
+	meta := map[string]interface{}{}
+	for k, v := range sr.Meta {
+		meta[k] = v
+	}
+	sw.set("meta", meta)
+	sw.set("connect_timeout", sr.ConnectTimeout)
+
+	return nil
 }
