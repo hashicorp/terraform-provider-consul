@@ -578,24 +578,24 @@ func (s *serviceDefaults) Decode(d *schema.ResourceData) (consulapi.ConfigEntry,
 }
 
 func (s *serviceDefaults) Write(ce consulapi.ConfigEntry, sw *stateWriter) error {
-	sp, ok := ce.(*consulapi.ServiceConfigEntry)
+	sd, ok := ce.(*consulapi.ServiceConfigEntry)
 	if !ok {
 		return fmt.Errorf("expected '%s' but got '%s'", consulapi.ServiceDefaults, ce.GetKind())
 	}
 
-	sw.set("name", sp.Name)
-	sw.set("partition", sp.Partition)
-	sw.set("namespace", sp.Partition)
+	sw.set("name", sd.Name)
+	sw.set("partition", sd.Partition)
+	sw.set("namespace", sd.Partition)
 
 	meta := make(map[string]interface{})
-	for k, v := range sp.Meta {
+	for k, v := range sd.Meta {
 		meta[k] = v
 	}
 	sw.set("meta", meta)
 
-	sw.set("protocol", sp.Protocol)
-	sw.set("balance_inbound_connections", sp.BalanceInboundConnections)
-	sw.set("mode", sp.Mode)
+	sw.set("protocol", sd.Protocol)
+	sw.set("balance_inbound_connections", sd.BalanceInboundConnections)
+	sw.set("mode", sd.Mode)
 
 	getUpstreamConfig := func(elem *consulapi.UpstreamConfig) map[string]interface{} {
 		upstreamConfig := make(map[string]interface{})
@@ -631,16 +631,16 @@ func (s *serviceDefaults) Write(ce consulapi.ConfigEntry, sw *stateWriter) error
 		return upstreamConfig
 	}
 
-	if sp.UpstreamConfig != nil {
+	if sd.UpstreamConfig != nil {
 		var overrides []interface{}
-		for _, elem := range sp.UpstreamConfig.Overrides {
+		for _, elem := range sd.UpstreamConfig.Overrides {
 			overrides = append(overrides, getUpstreamConfig(elem))
 		}
 
 		upstreamConfig := make(map[string]interface{})
 		upstreamConfig["overrides"] = overrides
 		defaultsSlice := make([]map[string]interface{}, 1)
-		defaultsSlice[0] = getUpstreamConfig(sp.UpstreamConfig.Defaults)
+		defaultsSlice[0] = getUpstreamConfig(sd.UpstreamConfig.Defaults)
 		upstreamConfig["defaults"] = defaultsSlice
 		upstreamConfigSlice := make([]map[string]interface{}, 1)
 		upstreamConfigSlice[0] = upstreamConfig
@@ -649,11 +649,11 @@ func (s *serviceDefaults) Write(ce consulapi.ConfigEntry, sw *stateWriter) error
 
 	transparentProxy := make([]map[string]interface{}, 1)
 	transparentProxy[0] = make(map[string]interface{})
-	transparentProxy[0]["outbound_listener_port"] = sp.TransparentProxy.OutboundListenerPort
-	transparentProxy[0]["dialed_directly"] = sp.TransparentProxy.DialedDirectly
+	transparentProxy[0]["outbound_listener_port"] = sd.TransparentProxy.OutboundListenerPort
+	transparentProxy[0]["dialed_directly"] = sd.TransparentProxy.DialedDirectly
 	sw.set("transparent_proxy", transparentProxy)
 
-	sw.set("mutual_tls_mode", sp.MutualTLSMode)
+	sw.set("mutual_tls_mode", sd.MutualTLSMode)
 
 	getEnvoyExtension := func(elem consulapi.EnvoyExtension) map[string]interface{} {
 		envoyExtension := make(map[string]interface{})
@@ -670,35 +670,35 @@ func (s *serviceDefaults) Write(ce consulapi.ConfigEntry, sw *stateWriter) error
 	}
 
 	var envoyExtensions []map[string]interface{}
-	for _, elem := range sp.EnvoyExtensions {
+	for _, elem := range sd.EnvoyExtensions {
 		envoyExtensions = append(envoyExtensions, getEnvoyExtension(elem))
 	}
 	sw.set("envoy_extensions", envoyExtensions)
 
 	destination := make([]map[string]interface{}, 1)
-	if sp.Destination != nil {
+	if sd.Destination != nil {
 		destination[0] = make(map[string]interface{})
-		destination[0]["port"] = sp.Destination.Port
-		destination[0]["addresses"] = sp.Destination.Addresses
+		destination[0]["port"] = sd.Destination.Port
+		destination[0]["addresses"] = sd.Destination.Addresses
 		sw.set("destination", destination)
 	}
 
-	sw.set("local_connect_timeout_ms", sp.LocalConnectTimeoutMs)
-	sw.set("max_inbound_connections", sp.MaxInboundConnections)
-	sw.set("local_request_timeout_ms", sp.LocalRequestTimeoutMs)
+	sw.set("local_connect_timeout_ms", sd.LocalConnectTimeoutMs)
+	sw.set("max_inbound_connections", sd.MaxInboundConnections)
+	sw.set("local_request_timeout_ms", sd.LocalRequestTimeoutMs)
 
 	meshGateway := make([]map[string]interface{}, 1)
 	meshGateway[0] = make(map[string]interface{})
-	meshGateway[0]["mode"] = sp.MeshGateway.Mode
+	meshGateway[0]["mode"] = sd.MeshGateway.Mode
 	sw.set("mesh_gateway", meshGateway)
 
-	sw.set("external_sni", sp.ExternalSNI)
+	sw.set("external_sni", sd.ExternalSNI)
 
 	expose := make([]map[string]interface{}, 1)
 	expose[0] = make(map[string]interface{})
-	expose[0]["checks"] = sp.Expose.Checks
+	expose[0]["checks"] = sd.Expose.Checks
 	var paths []map[string]interface{}
-	for _, elem := range sp.Expose.Paths {
+	for _, elem := range sd.Expose.Paths {
 		path := make(map[string]interface{})
 		path["path"] = elem.Path
 		path["local_path_port"] = elem.LocalPathPort
