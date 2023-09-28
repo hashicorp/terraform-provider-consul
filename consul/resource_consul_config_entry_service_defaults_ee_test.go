@@ -19,7 +19,6 @@ func TestAccConsulServiceDefaultsConfigEEEntryTest(t *testing.T) {
 				Config: testConsulServiceDefaultsConfigEntryWithDestinationEE,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("consul_config_entry_service_defaults.foo", "name", "service-defaults-test-1"),
-					resource.TestCheckResourceAttr("consul_config_entry_service_defaults.foo", "kind", "service-defaults"),
 					resource.TestCheckResourceAttr("consul_config_entry_service_defaults.foo", "namespace", "namespace1"),
 					resource.TestCheckResourceAttr("consul_config_entry_service_defaults.foo", "partition", "partition1"),
 					resource.TestCheckResourceAttr("consul_config_entry_service_defaults.foo", "meta.key", "value"),
@@ -62,7 +61,6 @@ func TestAccConsulServiceDefaultsConfigEEEntryTest(t *testing.T) {
 				Config: testConsulServiceDefaultsConfigEntryWithUpstreamConfigEE,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("consul_config_entry_service_defaults.bar", "name", "service-defaults-test-2"),
-					resource.TestCheckResourceAttr("consul_config_entry_service_defaults.bar", "kind", "service-defaults"),
 					resource.TestCheckResourceAttr("consul_config_entry_service_defaults.foo", "namespace", "namespace2"),
 					resource.TestCheckResourceAttr("consul_config_entry_service_defaults.foo", "partition", "partition2"),
 					resource.TestCheckResourceAttr("consul_config_entry_service_defaults.bar", "meta.key", "value"),

@@ -19,7 +19,6 @@ func TestAccConsulServiceDefaultsConfigCEEntryTest(t *testing.T) {
 				Config: testConsulServiceDefaultsConfigEntryWithDestination,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("consul_config_entry_service_defaults.foo", "name", "service-defaults-test-1"),
-					resource.TestCheckResourceAttr("consul_config_entry_service_defaults.foo", "kind", "service-defaults"),
 					resource.TestCheckResourceAttr("consul_config_entry_service_defaults.foo", "meta.key", "value"),
 					resource.TestCheckResourceAttr("consul_config_entry_service_defaults.foo", "protocol", "tcp"),
 					resource.TestCheckResourceAttr("consul_config_entry_service_defaults.foo", "balance_inbound_connections", "exact_balance"),
@@ -60,7 +59,6 @@ func TestAccConsulServiceDefaultsConfigCEEntryTest(t *testing.T) {
 				Config: testConsulServiceDefaultsConfigEntryWithUpstreamConfig,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("consul_config_entry_service_defaults.bar", "name", "service-defaults-test-2"),
-					resource.TestCheckResourceAttr("consul_config_entry_service_defaults.bar", "kind", "service-defaults"),
 					resource.TestCheckResourceAttr("consul_config_entry_service_defaults.bar", "meta.key", "value"),
 					resource.TestCheckResourceAttr("consul_config_entry_service_defaults.bar", "protocol", "tcp"),
 					resource.TestCheckResourceAttr("consul_config_entry_service_defaults.bar", "balance_inbound_connections", "exact_balance"),

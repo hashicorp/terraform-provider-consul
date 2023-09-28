@@ -449,10 +449,17 @@ func (s *serviceDefaults) Decode(d *schema.ResourceData) (consulapi.ConfigEntry,
 	}
 
 	getDestination := func(destinationMap map[string]interface{}) *consulapi.DestinationConfig {
-		var destination consulapi.DestinationConfig
-		destination.Port = destinationMap["port"].(int)
-		destination.Addresses = destinationMap["addresses"].([]string)
-		return &destination
+		if destinationMap != nil {
+			var destination consulapi.DestinationConfig
+			destination.Port = destinationMap["port"].(int)
+			addresess := make([]string, len(destinationMap["addresses"].([]interface{})))
+			for indx, address := range destinationMap["addresses"].([]interface{}) {
+				addresess[indx] = address.(string)
+			}
+			destination.Addresses = addresess
+			return &destination
+		}
+		return nil
 	}
 
 	getExposePath := func(exposePathMap map[string]interface{}) *consulapi.ExposePath {
@@ -475,10 +482,9 @@ func (s *serviceDefaults) Decode(d *schema.ResourceData) (consulapi.ConfigEntry,
 		return exposeConfig
 	}
 
-	configEntry.UpstreamConfig = &consulapi.UpstreamConfiguration{}
-
 	upstreamConfigList := d.Get("upstream_config").(*schema.Set).List()
 	if len(upstreamConfigList) > 1 {
+		configEntry.UpstreamConfig = &consulapi.UpstreamConfiguration{}
 		upstreamConfigMap := upstreamConfigList[0].(map[string]interface{})
 		defaultsUpstreamConfigMapList := upstreamConfigMap["defaults"].(*schema.Set).List()
 		if len(defaultsUpstreamConfigMapList) > 0 {
@@ -592,19 +598,21 @@ func (s *serviceDefaults) Write(ce consulapi.ConfigEntry, sw *stateWriter) error
 		return upstreamConfig
 	}
 
-	var overrides []interface{}
-	for _, elem := range sp.UpstreamConfig.Overrides {
-		overrides = append(overrides, getUpstreamConfig(elem))
-	}
+	if sp.UpstreamConfig != nil {
+		var overrides []interface{}
+		for _, elem := range sp.UpstreamConfig.Overrides {
+			overrides = append(overrides, getUpstreamConfig(elem))
+		}
 
-	upstreamConfig := make(map[string]interface{})
-	upstreamConfig["overrides"] = overrides
-	defaultsSlice := make([]map[string]interface{}, 1)
-	defaultsSlice[0] = getUpstreamConfig(sp.UpstreamConfig.Defaults)
-	upstreamConfig["defaults"] = defaultsSlice
-	upstreamConfigSlice := make([]map[string]interface{}, 1)
-	upstreamConfigSlice[0] = upstreamConfig
-	sw.set("upstream_config", upstreamConfigSlice)
+		upstreamConfig := make(map[string]interface{})
+		upstreamConfig["overrides"] = overrides
+		defaultsSlice := make([]map[string]interface{}, 1)
+		defaultsSlice[0] = getUpstreamConfig(sp.UpstreamConfig.Defaults)
+		upstreamConfig["defaults"] = defaultsSlice
+		upstreamConfigSlice := make([]map[string]interface{}, 1)
+		upstreamConfigSlice[0] = upstreamConfig
+		sw.set("upstream_config", upstreamConfigSlice)
+	}
 
 	transparentProxy := make([]map[string]interface{}, 1)
 	transparentProxy[0] = make(map[string]interface{})
