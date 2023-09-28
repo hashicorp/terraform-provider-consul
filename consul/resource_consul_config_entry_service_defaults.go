@@ -477,26 +477,29 @@ func (s *serviceDefaults) Decode(d *schema.ResourceData) (consulapi.ConfigEntry,
 
 	configEntry.UpstreamConfig = &consulapi.UpstreamConfiguration{}
 
-	upstreamConfigMap := d.Get("upstream_config").(*schema.Set).List()[0].(map[string]interface{})
-	defaultsUpstreamConfigMapList := upstreamConfigMap["defaults"].(*schema.Set).List()
-	if len(defaultsUpstreamConfigMapList) > 0 {
-		defaultsUpstreamConfig, err := getUpstreamConfig(defaultsUpstreamConfigMapList[0].(map[string]interface{}))
-		if err != nil {
-			return nil, err
+	upstreamConfigList := d.Get("upstream_config").(*schema.Set).List()
+	if len(upstreamConfigList) > 1 {
+		upstreamConfigMap := upstreamConfigList[0].(map[string]interface{})
+		defaultsUpstreamConfigMapList := upstreamConfigMap["defaults"].(*schema.Set).List()
+		if len(defaultsUpstreamConfigMapList) > 0 {
+			defaultsUpstreamConfig, err := getUpstreamConfig(defaultsUpstreamConfigMapList[0].(map[string]interface{}))
+			if err != nil {
+				return nil, err
+			}
+			configEntry.UpstreamConfig.Defaults = defaultsUpstreamConfig
 		}
-		configEntry.UpstreamConfig.Defaults = defaultsUpstreamConfig
-	}
 
-	overrideUpstreamConfigList := upstreamConfigMap["overrides"].([]interface{})
-	var overrideUpstreamConfig []*consulapi.UpstreamConfig
-	for _, elem := range overrideUpstreamConfigList {
-		overrideUpstreamConfigElem, err := getUpstreamConfig(elem.(map[string]interface{}))
-		if err != nil {
-			return nil, err
+		overrideUpstreamConfigList := upstreamConfigMap["overrides"].([]interface{})
+		var overrideUpstreamConfig []*consulapi.UpstreamConfig
+		for _, elem := range overrideUpstreamConfigList {
+			overrideUpstreamConfigElem, err := getUpstreamConfig(elem.(map[string]interface{}))
+			if err != nil {
+				return nil, err
+			}
+			overrideUpstreamConfig = append(overrideUpstreamConfig, overrideUpstreamConfigElem)
 		}
-		overrideUpstreamConfig = append(overrideUpstreamConfig, overrideUpstreamConfigElem)
+		configEntry.UpstreamConfig.Overrides = overrideUpstreamConfig
 	}
-	configEntry.UpstreamConfig.Overrides = overrideUpstreamConfig
 
 	transparentProxyList := d.Get("transparent_proxy").(*schema.Set).List()
 	if len(transparentProxyList) > 0 {
