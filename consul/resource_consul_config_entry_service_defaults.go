@@ -32,12 +32,14 @@ func (s *serviceDefaults) GetSchema() map[string]*schema.Schema {
 				Optional: true,
 			},
 			"namespace": {
-				Type:     schema.TypeString,
-				Optional: true,
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "Specifies the namespace containing the upstream service that the configuration applies to.",
 			},
 			"peer": {
-				Type:     schema.TypeString,
-				Optional: true,
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "Specifies the peer name of the upstream service that the configuration applies to.",
 			},
 			"envoy_listener_json": {
 				Type:     schema.TypeString,
@@ -122,75 +124,79 @@ func (s *serviceDefaults) GetSchema() map[string]*schema.Schema {
 		},
 	}
 	return map[string]*schema.Schema{
-		"kind": {
-			Type:     schema.TypeString,
-			Required: false,
-			ForceNew: true,
-			Computed: true,
-		},
 
 		"name": {
-			Type:     schema.TypeString,
-			Required: true,
-			ForceNew: true,
+			Type:        schema.TypeString,
+			Required:    true,
+			ForceNew:    true,
+			Description: "Specifies the name of the service you are setting the defaults for.",
 		},
 
 		"namespace": {
-			Type:     schema.TypeString,
-			Optional: true,
-			ForceNew: true,
+			Type:        schema.TypeString,
+			Optional:    true,
+			ForceNew:    true,
+			Description: "Specifies the Consul namespace that the configuration entry applies to.",
 		},
 
 		"partition": {
 			Type:        schema.TypeString,
 			Optional:    true,
 			ForceNew:    true,
-			Description: "The partition the config entry is associated with.",
+			Description: "Specifies the name of the name of the Consul admin partition that the configuration entry applies to. Refer to Admin Partitions for additional information.",
 		},
 
 		"meta": {
-			Type:     schema.TypeMap,
-			Optional: true,
-			Elem:     &schema.Schema{Type: schema.TypeString},
+			Type:        schema.TypeMap,
+			Optional:    true,
+			Elem:        &schema.Schema{Type: schema.TypeString},
+			Description: "Specifies a set of custom key-value pairs to add to the Consul KV store.",
 		},
 
 		"protocol": {
-			Type:     schema.TypeString,
-			Required: true,
+			Type:        schema.TypeString,
+			Required:    true,
+			Description: "Specifies the default protocol for the service.",
 		},
 
 		"balance_inbound_connections": {
-			Type:     schema.TypeString,
-			Optional: true,
+			Type:        schema.TypeString,
+			Optional:    true,
+			Description: "Specifies the strategy for allocating inbound connections to the service across Envoy proxy threads.",
 		},
 
 		"mode": {
-			Type:     schema.TypeString,
-			Optional: true,
+			Type:        schema.TypeString,
+			Optional:    true,
+			Description: "Specifies a mode for how the service directs inbound and outbound traffic.",
 		},
 
 		"upstream_config": {
-			Type:     schema.TypeSet,
-			Optional: true,
+			Type:        schema.TypeSet,
+			Optional:    true,
+			Description: "Controls default upstream connection settings and custom overrides for individual upstream services.",
 			Elem: &schema.Resource{
 				Schema: map[string]*schema.Schema{
 					"overrides": {
-						Type:     schema.TypeList,
-						Optional: true,
-						Elem:     upstreamConfigSchema,
+						Type:        schema.TypeList,
+						Optional:    true,
+						Elem:        upstreamConfigSchema,
+						Description: "Specifies options that override the default upstream configurations for individual upstreams.",
 					},
 					"defaults": {
-						Type:     schema.TypeSet,
-						Optional: true,
-						Elem:     upstreamConfigSchema,
+						Type:        schema.TypeSet,
+						Optional:    true,
+						Elem:        upstreamConfigSchema,
+						Description: "Specifies configurations that set default upstream settings. For information about overriding the default configurations for in for individual upstreams, refer to UpstreamConfig.Overrides.",
 					},
 				},
 			},
 		},
 
 		"transparent_proxy": {
-			Type:     schema.TypeSet,
-			Optional: true,
+			Type:        schema.TypeSet,
+			Optional:    true,
+			Description: "Controls configurations specific to proxies in transparent mode. Refer to Transparent Proxy Mode for additional information.",
 			Elem: &schema.Resource{
 				Schema: map[string]*schema.Schema{
 					"outbound_listener_port": {
@@ -206,13 +212,15 @@ func (s *serviceDefaults) GetSchema() map[string]*schema.Schema {
 		},
 
 		"mutual_tls_mode": {
-			Type:     schema.TypeString,
-			Optional: true,
+			Type:        schema.TypeString,
+			Optional:    true,
+			Description: "Controls whether mutual TLS is required for incoming connections to this service. This setting is only supported for services with transparent proxy enabled.",
 		},
 
 		"envoy_extensions": {
-			Type:     schema.TypeList,
-			Optional: true,
+			Type:        schema.TypeList,
+			Optional:    true,
+			Description: "List of extensions to modify Envoy proxy configuration.",
 			Elem: &schema.Resource{
 				Schema: map[string]*schema.Schema{
 					"name": {
@@ -241,8 +249,9 @@ func (s *serviceDefaults) GetSchema() map[string]*schema.Schema {
 		},
 
 		"destination": {
-			Type:     schema.TypeSet,
-			Optional: true,
+			Type:        schema.TypeSet,
+			Optional:    true,
+			Description: "Configures the destination for service traffic through terminating gateways.",
 			Elem: &schema.Resource{
 				Schema: map[string]*schema.Schema{
 					"port": {
@@ -259,23 +268,27 @@ func (s *serviceDefaults) GetSchema() map[string]*schema.Schema {
 		},
 
 		"local_connect_timeout_ms": {
-			Type:     schema.TypeInt,
-			Optional: true,
+			Type:        schema.TypeInt,
+			Optional:    true,
+			Description: "Specifies the number of milliseconds allowed for establishing connections to the local application instance before timing out.",
 		},
 
 		"max_inbound_connections": {
-			Type:     schema.TypeInt,
-			Optional: true,
+			Type:        schema.TypeInt,
+			Optional:    true,
+			Description: "Specifies the maximum number of concurrent inbound connections to each service instance.",
 		},
 
 		"local_request_timeout_ms": {
-			Type:     schema.TypeInt,
-			Optional: true,
+			Type:        schema.TypeInt,
+			Optional:    true,
+			Description: "Specifies the timeout for HTTP requests to the local application instance.",
 		},
 
 		"mesh_gateway": {
-			Type:     schema.TypeSet,
-			Optional: true,
+			Type:        schema.TypeSet,
+			Optional:    true,
+			Description: "Specifies the default mesh gateway mode field for the service.",
 			Elem: &schema.Resource{
 				Schema: map[string]*schema.Schema{
 					"mode": {
@@ -287,13 +300,15 @@ func (s *serviceDefaults) GetSchema() map[string]*schema.Schema {
 		},
 
 		"external_sni": {
-			Type:     schema.TypeString,
-			Optional: true,
+			Type:        schema.TypeString,
+			Optional:    true,
+			Description: "Specifies the TLS server name indication (SNI) when federating with an external system.",
 		},
 
 		"expose": {
-			Type:     schema.TypeSet,
-			Required: true,
+			Type:        schema.TypeSet,
+			Required:    true,
+			Description: "Specifies default configurations for exposing HTTP paths through Envoy.",
 			Elem: &schema.Resource{
 				Schema: map[string]*schema.Schema{
 					"checks": {
