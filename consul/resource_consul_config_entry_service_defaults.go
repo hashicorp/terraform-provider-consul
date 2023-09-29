@@ -585,7 +585,7 @@ func (s *serviceDefaults) Write(ce consulapi.ConfigEntry, sw *stateWriter) error
 
 	sw.set("name", sd.Name)
 	sw.set("partition", sd.Partition)
-	sw.set("namespace", sd.Partition)
+	sw.set("namespace", sd.Namespace)
 
 	meta := make(map[string]interface{})
 	for k, v := range sd.Meta {
