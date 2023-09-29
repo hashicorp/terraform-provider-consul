@@ -513,7 +513,7 @@ func (s *serviceDefaults) Decode(d *schema.ResourceData) (consulapi.ConfigEntry,
 	}
 
 	upstreamConfigList := d.Get("upstream_config").(*schema.Set).List()
-	if len(upstreamConfigList) > 1 {
+	if len(upstreamConfigList) > 0 {
 		configEntry.UpstreamConfig = &consulapi.UpstreamConfiguration{}
 		upstreamConfigMap := upstreamConfigList[0].(map[string]interface{})
 		defaultsUpstreamConfigMapList := upstreamConfigMap["defaults"].(*schema.Set).List()
