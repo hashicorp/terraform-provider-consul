@@ -81,6 +81,43 @@ func resourceConsulACLRole() *schema.Resource {
 					},
 				},
 			},
+			"templated_policies": {
+				Type:        schema.TypeList,
+				Optional:    true,
+				Description: "The list of templated policies that should be applied to the token.",
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"template_name": {
+							Type:        schema.TypeString,
+							Required:    true,
+							Description: "The name of the templated policies.",
+						},
+						"template_variables": {
+							Type:        schema.TypeList,
+							MaxItems:    1,
+							Description: "The templated policy variables.",
+							Optional:    true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"name": {
+										Type:        schema.TypeString,
+										Optional:    true,
+										Description: "The name of node, workload identity or service.",
+									},
+								},
+							},
+						},
+						"datacenters": {
+							Type:        schema.TypeList,
+							Optional:    true,
+							Description: "Specifies the datacenters the effective policy is valid within.",
+							Elem: &schema.Schema{
+								Type: schema.TypeString,
+							},
+						},
+					},
+				},
+			},
 			"namespace": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -145,6 +182,15 @@ func resourceConsulACLRoleRead(d *schema.ResourceData, meta interface{}) error {
 		}
 	}
 
+	templatedPolicies := make([]interface{}, len(role.TemplatedPolicies))
+	for i, tp := range role.TemplatedPolicies {
+		templatedPolicies[i] = map[string]interface{}{
+			"template_name":      tp.TemplateName,
+			"datacenters":        tp.Datacenters,
+			"template_variables": getTemplateVariables(tp),
+		}
+	}
+
 	sw := newStateWriter(d)
 
 	sw.set("name", role.Name)
@@ -152,6 +198,7 @@ func resourceConsulACLRoleRead(d *schema.ResourceData, meta interface{}) error {
 	sw.set("policies", policies)
 	sw.set("service_identities", serviceIdentities)
 	sw.set("node_identities", nodeIdentities)
+	sw.set("templated_policies", templatedPolicies)
 	sw.set("namespace", role.Namespace)
 	sw.set("partition", role.Partition)
 
@@ -223,6 +270,32 @@ func getRole(d *schema.ResourceData, meta interface{}) *consulapi.ACLRole {
 			Datacenter: n["datacenter"].(string),
 		})
 	}
+
+	templatedPolicies := []*consulapi.ACLTemplatedPolicy{}
+	for key, tp := range d.Get("templated_policies").([]interface{}) {
+		t := tp.(map[string]interface{})
+
+		datacenters := []string{}
+		for _, d := range t["datacenters"].([]interface{}) {
+			datacenters = append(datacenters, d.(string))
+		}
+
+		templatedPolicy := &consulapi.ACLTemplatedPolicy{
+			Datacenters:  datacenters,
+			TemplateName: t["template_name"].(string),
+		}
+
+		if templatedVariables, ok := d.GetOk(fmt.Sprint("templated_policies.", key, ".template_variables.0")); ok {
+			tv := templatedVariables.(map[string]interface{})
+			templatedPolicy.TemplateVariables = &consulapi.ACLTemplatedPolicyVariables{}
+
+			if tv["name"] != nil {
+				templatedPolicy.TemplateVariables.Name = tv["name"].(string)
+			}
+		}
+		templatedPolicies = append(templatedPolicies, templatedPolicy)
+	}
+	role.TemplatedPolicies = templatedPolicies
 
 	return role
 }

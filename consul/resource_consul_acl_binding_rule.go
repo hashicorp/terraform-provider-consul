@@ -40,6 +40,7 @@ func resourceConsulACLBindingRule() *schema.Resource {
 			"bind_type": {
 				Type:        schema.TypeString,
 				Required:    true,
+				ForceNew:    true,
 				Description: "Specifies the way the binding rule affects a token created at login.",
 			},
 
@@ -47,6 +48,23 @@ func resourceConsulACLBindingRule() *schema.Resource {
 				Type:        schema.TypeString,
 				Required:    true,
 				Description: "The name to bind to a token at login-time.",
+			},
+
+			"bind_vars": {
+				Type:        schema.TypeList,
+				MaxItems:    1,
+				Computed:    true,
+				Description: "BindVars is a the variables used when binding rule type is `templated-policy`. Can be lightly templated using HIL ${foo} syntax from available field names.",
+				Optional:    true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"name": {
+							Type:        schema.TypeString,
+							Optional:    true,
+							Description: "The name of node, workload identity or service.",
+						},
+					},
+				},
 			},
 
 			"namespace": {
@@ -102,6 +120,13 @@ func resourceConsulACLBindingRuleRead(d *schema.ResourceData, meta interface{}) 
 	sw.set("namespace", rule.Namespace)
 	sw.set("partition", rule.Partition)
 
+	if rule.BindVars != nil {
+		bindVars := []map[string]interface{}{
+			{"name": rule.BindVars.Name},
+		}
+		sw.set("bind_vars", bindVars)
+	}
+
 	return sw.error()
 }
 
@@ -134,7 +159,7 @@ func resourceConsulACLBindingRuleDelete(d *schema.ResourceData, meta interface{}
 
 func getBindingRule(d *schema.ResourceData, meta interface{}) *consulapi.ACLBindingRule {
 	_, _, wOpts := getClient(d, meta)
-	return &consulapi.ACLBindingRule{
+	bindingRule := &consulapi.ACLBindingRule{
 		ID:          d.Id(),
 		Description: d.Get("description").(string),
 		AuthMethod:  d.Get("auth_method").(string),
@@ -143,4 +168,17 @@ func getBindingRule(d *schema.ResourceData, meta interface{}) *consulapi.ACLBind
 		BindType:    consulapi.BindingRuleBindType(d.Get("bind_type").(string)),
 		Namespace:   wOpts.Namespace,
 	}
+
+	if bindVars, ok := d.GetOk("bind_vars.0"); ok {
+		tv := bindVars.(map[string]interface{})
+
+		processedVars := &consulapi.ACLTemplatedPolicyVariables{}
+		if tv["name"] != nil {
+			processedVars.Name = tv["name"].(string)
+		}
+
+		bindingRule.BindVars = processedVars
+	}
+
+	return bindingRule
 }

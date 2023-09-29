@@ -44,5 +44,6 @@ The following attributes are exported:
 * `roles` - The list of roles attached to the token.
 * `service_identities` - The list of service identities attached to the token. Each entry has a `service_name` and a `datacenters` attribute.
 * `node_identities` - The list of node identities attached to the token. Each entry has a `node_name` and a `datacenter` attributes.
+* `templated_policies` - The list of templated policies attached to the token. Each entry has a `template_name`, `template_variables` and a `datacenters` attribute.
 * `local` - Whether the ACL token is local to the datacenter it was created within.
 * `expiration_time` - If set this represents the point after which a token should be considered revoked and is eligible for destruction.

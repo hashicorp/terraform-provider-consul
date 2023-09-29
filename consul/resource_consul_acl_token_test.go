@@ -45,6 +45,7 @@ func TestAccConsulACLToken_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("consul_acl_token.test", "node_identities.#", "0"),
 					resource.TestCheckResourceAttrSet("consul_acl_token.test", "policies.#"),
 					resource.TestCheckResourceAttr("consul_acl_token.test", "service_identities.#", "0"),
+					resource.TestCheckResourceAttr("consul_acl_token.test", "templated_policies.#", "0"),
 				),
 			},
 			{
@@ -64,6 +65,14 @@ func TestAccConsulACLToken_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("consul_acl_token.test", "service_identities.0.datacenters.#", "1"),
 					resource.TestCheckResourceAttr("consul_acl_token.test", "service_identities.0.datacenters.0", "world"),
 					resource.TestCheckResourceAttr("consul_acl_token.test", "service_identities.0.service_name", "hello"),
+					resource.TestCheckResourceAttr("consul_acl_token.test", "templated_policies.#", "2"),
+					resource.TestCheckResourceAttr("consul_acl_token.test", "templated_policies.0.datacenters.#", "1"),
+					resource.TestCheckResourceAttr("consul_acl_token.test", "templated_policies.0.datacenters.0", "world"),
+					resource.TestCheckResourceAttr("consul_acl_token.test", "templated_policies.0.template_variables.#", "1"),
+					resource.TestCheckResourceAttr("consul_acl_token.test", "templated_policies.0.template_variables.0.name", "web"),
+					resource.TestCheckResourceAttr("consul_acl_token.test", "templated_policies.0.template_name", "builtin/service"),
+					resource.TestCheckResourceAttr("consul_acl_token.test", "templated_policies.1.template_variables.#", "0"),
+					resource.TestCheckResourceAttr("consul_acl_token.test", "templated_policies.1.template_name", "builtin/dns"),
 				),
 			},
 			{
@@ -82,6 +91,7 @@ func TestAccConsulACLToken_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("consul_acl_token.test", "roles.#", "1"),
 					resource.TestCheckResourceAttr("consul_acl_token.test", "roles.1785148924", "test"),
 					resource.TestCheckResourceAttr("consul_acl_token.test", "service_identities.#", "0"),
+					resource.TestCheckResourceAttr("consul_acl_token.test", "templated_policies.#", "0"),
 				),
 			},
 		},
@@ -188,6 +198,19 @@ resource "consul_acl_token" "test" {
 	node_identities {
 		node_name = "foo"
 		datacenter = "bar"
+	}
+
+	templated_policies {
+		template_name = "builtin/service"
+		datacenters = ["world"]
+		template_variables {
+			name = "web"
+		}
+	}
+
+	templated_policies {
+		template_name = "builtin/dns"
+		datacenters = ["world"]
 	}
 }`
 

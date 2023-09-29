@@ -108,6 +108,44 @@ func dataSourceConsulACLToken() *schema.Resource {
 					},
 				},
 			},
+			"templated_policies": {
+				Type:        schema.TypeList,
+				Optional:    true,
+				Computed:    true,
+				Description: "The list of templated policies that should be applied to the token.",
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"template_name": {
+							Type:        schema.TypeString,
+							Required:    true,
+							Description: "The name of the templated policies.",
+						},
+						"template_variables": {
+							Type:        schema.TypeList,
+							MaxItems:    1,
+							Description: "The templated policy variables.",
+							Optional:    true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"name": {
+										Type:        schema.TypeString,
+										Optional:    true,
+										Description: "The name of node, workload identity or service.",
+									},
+								},
+							},
+						},
+						"datacenters": {
+							Type:        schema.TypeList,
+							Optional:    true,
+							Description: "Specifies the datacenters the effective policy is valid within.",
+							Elem: &schema.Schema{
+								Type: schema.TypeString,
+							},
+						},
+					},
+				},
+			},
 			"local": {
 				Type:     schema.TypeBool,
 				Computed: true,
@@ -162,6 +200,15 @@ func dataSourceConsulACLTokenRead(d *schema.ResourceData, meta interface{}) erro
 		}
 	}
 
+	templatedPolicies := make([]map[string]interface{}, len(aclToken.TemplatedPolicies))
+	for i, tp := range aclToken.TemplatedPolicies {
+		templatedPolicies[i] = map[string]interface{}{
+			"template_name":      tp.TemplateName,
+			"datacenters":        tp.Datacenters,
+			"template_variables": getTemplateVariables(tp),
+		}
+	}
+
 	var expirationTime string
 	if aclToken.ExpirationTime != nil {
 		expirationTime = aclToken.ExpirationTime.Format(time.RFC3339)
@@ -176,6 +223,7 @@ func dataSourceConsulACLTokenRead(d *schema.ResourceData, meta interface{}) erro
 	sw.set("roles", roles)
 	sw.set("service_identities", serviceIdentities)
 	sw.set("node_identities", nodeIdentities)
+	sw.set("templated_policies", templatedPolicies)
 	sw.set("expiration_time", expirationTime)
 
 	return sw.error()

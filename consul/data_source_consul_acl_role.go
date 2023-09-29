@@ -83,6 +83,44 @@ func dataSourceConsulACLRole() *schema.Resource {
 					},
 				},
 			},
+			"templated_policies": {
+				Type:        schema.TypeList,
+				Optional:    true,
+				Computed:    true,
+				Description: "The list of templated policies that should be applied to the token.",
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"template_name": {
+							Type:        schema.TypeString,
+							Required:    true,
+							Description: "The name of the templated policies.",
+						},
+						"template_variables": {
+							Type:        schema.TypeList,
+							MaxItems:    1,
+							Description: "The templated policy variables.",
+							Optional:    true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"name": {
+										Type:        schema.TypeString,
+										Optional:    true,
+										Description: "The name of node, workload identity or service.",
+									},
+								},
+							},
+						},
+						"datacenters": {
+							Type:        schema.TypeList,
+							Optional:    true,
+							Description: "Specifies the datacenters the effective policy is valid within.",
+							Elem: &schema.Schema{
+								Type: schema.TypeString,
+							},
+						},
+					},
+				},
+			},
 		},
 	}
 }
@@ -123,6 +161,15 @@ func datasourceConsulACLRoleRead(d *schema.ResourceData, meta interface{}) error
 		}
 	}
 
+	templatedPolicies := make([]map[string]interface{}, len(role.TemplatedPolicies))
+	for i, tp := range role.TemplatedPolicies {
+		templatedPolicies[i] = map[string]interface{}{
+			"template_name":      tp.TemplateName,
+			"datacenters":        tp.Datacenters,
+			"template_variables": getTemplateVariables(tp),
+		}
+	}
+
 	d.SetId(role.ID)
 
 	sw := newStateWriter(d)
@@ -130,6 +177,7 @@ func datasourceConsulACLRoleRead(d *schema.ResourceData, meta interface{}) error
 	sw.set("policies", policies)
 	sw.set("service_identities", identities)
 	sw.set("node_identities", nodeIdentities)
+	sw.set("templated_policies", templatedPolicies)
 
 	return sw.error()
 }

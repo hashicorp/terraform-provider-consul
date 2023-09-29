@@ -24,8 +24,8 @@ jobs:
       run: make test
     - name: Run OSS acceptance tests
       run: |
-        curl -LO https://releases.hashicorp.com/consul/1.16.2/consul_1.16.2_linux_amd64.zip
-        sudo unzip consul_1.16.2_linux_amd64.zip consul -d /usr/local/bin
+        curl -LO https://releases.hashicorp.com/consul/1.17.0-rc1/consul_1.17.0-rc1_linux_amd64.zip
+        sudo unzip consul_1.17.0-rc1_linux_amd64.zip consul -d /usr/local/bin
         SKIP_REMOTE_DATACENTER_TESTS=1 make testacc TESTARGS="-count=1"
     - name: Run go vet
       run: make vet

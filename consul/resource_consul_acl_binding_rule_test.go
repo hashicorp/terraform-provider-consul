@@ -51,6 +51,26 @@ func TestAccConsulACLBindingRule_basic(t *testing.T) {
 				),
 			},
 			{
+				Config: testResourceACLBindingRuleConfig_templatedPolicyWithNoVariables,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("consul_acl_binding_rule.test", "auth_method", "minikube2"),
+					resource.TestCheckResourceAttr("consul_acl_binding_rule.test", "description", ""),
+					resource.TestCheckResourceAttr("consul_acl_binding_rule.test", "selector", "serviceaccount.namespace==default2"),
+					resource.TestCheckResourceAttr("consul_acl_binding_rule.test", "bind_type", "templated-policy"),
+					resource.TestCheckResourceAttr("consul_acl_binding_rule.test", "bind_name", "builtin/dns"),
+				),
+			},
+			{
+				Config: testResourceACLBindingRuleConfig_templatedPolicyWithVariables,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("consul_acl_binding_rule.test", "auth_method", "minikube2"),
+					resource.TestCheckResourceAttr("consul_acl_binding_rule.test", "description", ""),
+					resource.TestCheckResourceAttr("consul_acl_binding_rule.test", "selector", "serviceaccount.namespace==default2"),
+					resource.TestCheckResourceAttr("consul_acl_binding_rule.test", "bind_type", "templated-policy"),
+					resource.TestCheckResourceAttr("consul_acl_binding_rule.test", "bind_name", "builtin/service"),
+				),
+			},
+			{
 				Config:      testResourceACLBindingRuleConfig_wrongType,
 				ExpectError: regexp.MustCompile(`Invalid Binding Rule: unknown BindType "foobar"`),
 			},
@@ -223,6 +243,53 @@ resource "consul_acl_binding_rule" "test" {
 	selector    = "serviceaccount.namespace==default2"
 	bind_type   = "node"
 	bind_name   = "minikube2"
+}`
+
+const testResourceACLBindingRuleConfig_templatedPolicyWithNoVariables = `
+resource "consul_acl_auth_method" "test" {
+	name        = "minikube2"
+    type        = "kubernetes"
+    description = "dev minikube cluster"
+
+	config = {
+        Host = "https://192.0.2.42:8443"
+		CACert = <<-EOF
+` + testCert + `
+		EOF
+        ServiceAccountJWT = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c"
+    }
+}
+
+resource "consul_acl_binding_rule" "test" {
+	auth_method = "${consul_acl_auth_method.test.name}"
+	selector    = "serviceaccount.namespace==default2"
+	bind_type   = "templated-policy"
+	bind_name   = "builtin/dns"
+}`
+
+const testResourceACLBindingRuleConfig_templatedPolicyWithVariables = `
+resource "consul_acl_auth_method" "test" {
+	name        = "minikube2"
+    type        = "kubernetes"
+    description = "dev minikube cluster"
+
+	config = {
+        Host = "https://192.0.2.42:8443"
+		CACert = <<-EOF
+` + testCert + `
+		EOF
+        ServiceAccountJWT = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c"
+    }
+}
+
+resource "consul_acl_binding_rule" "test" {
+	auth_method = "${consul_acl_auth_method.test.name}"
+	selector    = "serviceaccount.namespace==default2"
+	bind_type   = "templated-policy"
+	bind_name   = "builtin/service"
+	bind_vars {
+		name = "api"
+	}
 }`
 
 const testResourceACLBindingRuleConfig_wrongType = `

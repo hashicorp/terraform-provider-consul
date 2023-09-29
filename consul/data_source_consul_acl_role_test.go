@@ -35,6 +35,14 @@ func TestAccDataACLRole_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("data.consul_acl_role.test", "service_identities.#", "1"),
 					resource.TestCheckResourceAttr("data.consul_acl_role.test", "service_identities.0.datacenters.#", "0"),
 					resource.TestCheckResourceAttr("data.consul_acl_role.test", "service_identities.0.service_name", "foo"),
+					resource.TestCheckResourceAttr("data.consul_acl_role.test", "templated_policies.#", "2"),
+					resource.TestCheckResourceAttr("data.consul_acl_role.test", "templated_policies.0.datacenters.#", "1"),
+					resource.TestCheckResourceAttr("data.consul_acl_role.test", "templated_policies.0.datacenters.0", "world"),
+					resource.TestCheckResourceAttr("data.consul_acl_role.test", "templated_policies.0.template_variables.#", "1"),
+					resource.TestCheckResourceAttr("data.consul_acl_role.test", "templated_policies.0.template_variables.0.name", "web"),
+					resource.TestCheckResourceAttr("data.consul_acl_role.test", "templated_policies.0.template_name", "builtin/service"),
+					resource.TestCheckResourceAttr("data.consul_acl_role.test", "templated_policies.1.template_variables.#", "0"),
+					resource.TestCheckResourceAttr("data.consul_acl_role.test", "templated_policies.1.template_name", "builtin/dns"),
 				),
 			},
 		},
@@ -98,6 +106,19 @@ resource "consul_acl_role" "test" {
 	node_identities {
 		node_name = "hello"
 		datacenter = "world"
+	}
+
+	templated_policies {
+		template_name = "builtin/service"
+		datacenters = ["world"]
+		template_variables {
+			name = "web"
+		}
+	}
+
+	templated_policies {
+		template_name = "builtin/dns"
+		datacenters = ["world"]
 	}
 }
 
