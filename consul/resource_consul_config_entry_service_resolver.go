@@ -329,7 +329,7 @@ func (s *serviceResolver) Decode(d *schema.ResourceData) (consulapi.ConfigEntry,
 	}
 	configEntry.ConnectTimeout = connectTimeout
 
-	requestTimeout, err := time.ParseDuration(d.Get("connect_timeout").(string))
+	requestTimeout, err := time.ParseDuration(d.Get("request_timeout").(string))
 	if err != nil {
 		return nil, err
 	}
@@ -368,20 +368,43 @@ func (s *serviceResolver) Decode(d *schema.ResourceData) (consulapi.ConfigEntry,
 	for _, failoverElem := range failoverList {
 		failoverMap := failoverElem.(map[string]interface{})
 		var serviceResolverFailover consulapi.ServiceResolverFailover
-		serviceResolverFailover.Service = failoverMap["service"].(string)
-		serviceResolverFailover.ServiceSubset = failoverMap["service_subset"].(string)
-		serviceResolverFailover.Namespace = failoverMap["namespace"].(string)
-		serviceResolverFailover.SamenessGroup = failoverMap["sameness_group"].(string)
-		serviceResolverFailover.Datacenters = failoverMap["datacenter"].([]string)
+		if value, ok := failoverMap["service"]; ok {
+			serviceResolverFailover.Service = value.(string)
+		}
+		if value, ok := failoverMap["service_subset"]; ok {
+			serviceResolverFailover.ServiceSubset = value.(string)
+		}
+		if value, ok := failoverMap["namespace"]; ok {
+			serviceResolverFailover.Namespace = value.(string)
+		}
+		if value, ok := failoverMap["sameness_group"]; ok {
+			serviceResolverFailover.SamenessGroup = value.(string)
+		}
+		if value, ok := failoverMap["datacenter"]; ok {
+			serviceResolverFailover.Datacenters = value.([]string)
+		}
 		serviceResolverFailoverTargets := make([]consulapi.ServiceResolverFailoverTarget, len(failoverMap["targets"].([]interface{})))
-		for indx, targetElem := range failoverMap["targets"].([]map[string]interface{}) {
+		for indx, target := range failoverMap["targets"].([]interface{}) {
+			targetElem := target.(map[string]interface{})
 			var serviceResolverFailoverTarget consulapi.ServiceResolverFailoverTarget
-			serviceResolverFailoverTarget.Service = targetElem["service"].(string)
-			serviceResolverFailoverTarget.ServiceSubset = targetElem["service_subset"].(string)
-			serviceResolverFailoverTarget.Namespace = targetElem["namespace"].(string)
-			serviceResolverFailoverTarget.Partition = targetElem["partition"].(string)
-			serviceResolverFailoverTarget.Datacenter = targetElem["datacenter"].(string)
-			serviceResolverFailoverTarget.Peer = targetElem["peer"].(string)
+			if value, ok := targetElem["service"]; ok {
+				serviceResolverFailoverTarget.Service = value.(string)
+			}
+			if value, ok := targetElem["service_subset"]; ok {
+				serviceResolverFailoverTarget.ServiceSubset = value.(string)
+			}
+			if value, ok := targetElem["namespace"]; ok {
+				serviceResolverFailoverTarget.Namespace = value.(string)
+			}
+			if value, ok := targetElem["partition"]; ok {
+				serviceResolverFailoverTarget.Partition = value.(string)
+			}
+			if value, ok := targetElem["datacenter"]; ok {
+				serviceResolverFailoverTarget.Datacenter = value.(string)
+			}
+			if value, ok := targetElem["peer"]; ok {
+				serviceResolverFailoverTarget.Peer = value.(string)
+			}
 			serviceResolverFailoverTargets[indx] = serviceResolverFailoverTarget
 		}
 		serviceResolverFailover.Targets = serviceResolverFailoverTargets
@@ -408,7 +431,7 @@ func (s *serviceResolver) Decode(d *schema.ResourceData) (consulapi.ConfigEntry,
 			ceLoadBalancer.RingHashConfig = rhConfig
 		}
 		if hp := loadBalancer["hash_policies"].([]interface{}); len(hp) > 0 {
-			var hashPolicyList []consulapi.HashPolicy
+			hashPolicyList := make([]consulapi.HashPolicy, len(hp))
 			for indx, hashPolicy := range hp {
 				hashPolicyMap := hashPolicy.(map[string]interface{})
 				hashPolicyList[indx].Field = hashPolicyMap["field"].(string)
@@ -452,8 +475,8 @@ func (s *serviceResolver) Write(ce consulapi.ConfigEntry, sw *stateWriter) error
 		meta[k] = v
 	}
 	sw.set("meta", meta)
-	sw.set("connect_timeout", sr.ConnectTimeout)
-	sw.set("request_timeout", sr.RequestTimeout)
+	sw.set("connect_timeout", sr.ConnectTimeout.String())
+	sw.set("request_timeout", sr.RequestTimeout.String())
 
 	subsets := make([]map[string]interface{}, len(sr.Subsets))
 	indx := 0
@@ -534,19 +557,21 @@ func (s *serviceResolver) Write(ce consulapi.ConfigEntry, sw *stateWriter) error
 
 		if sr.LoadBalancer.HashPolicies != nil {
 			hashPolicyList := make([]map[string]interface{}, len(sr.LoadBalancer.HashPolicies))
-			for indx, hashPolicy := range sr.LoadBalancer.HashPolicies {
+			for index, hashPolicy := range sr.LoadBalancer.HashPolicies {
 				hashPolicyMap := make(map[string]interface{})
 				hashPolicyMap["field"] = hashPolicy.Field
 				hashPolicyMap["field_value"] = hashPolicy.FieldValue
-				cookieConfigSet := make([]map[string]interface{}, 1)
-				cookieConfigSet[0] = make(map[string]interface{})
-				cookieConfigSet[0]["session"] = hashPolicy.CookieConfig.Session
-				cookieConfigSet[0]["ttl"] = hashPolicy.CookieConfig.TTL
-				cookieConfigSet[0]["path"] = hashPolicy.CookieConfig.TTL
-				hashPolicyMap["cookie_config"] = cookieConfigSet
+				if hashPolicy.CookieConfig != nil {
+					cookieConfigSet := make([]map[string]interface{}, 1)
+					cookieConfigSet[0] = make(map[string]interface{})
+					cookieConfigSet[0]["session"] = hashPolicy.CookieConfig.Session
+					cookieConfigSet[0]["ttl"] = hashPolicy.CookieConfig.TTL
+					cookieConfigSet[0]["path"] = hashPolicy.CookieConfig.TTL
+					hashPolicyMap["cookie_config"] = cookieConfigSet
+				}
 				hashPolicyMap["source_ip"] = hashPolicy.SourceIP
 				hashPolicyMap["terminal"] = hashPolicy.Terminal
-				hashPolicyList[indx] = hashPolicyMap
+				hashPolicyList[index] = hashPolicyMap
 			}
 			loadBalancer[0]["hash_policies"] = hashPolicyList
 		}
