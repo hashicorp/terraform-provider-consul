@@ -5,9 +5,10 @@ package consul
 
 import (
 	"fmt"
+	"time"
+
 	consulapi "github.com/hashicorp/consul/api"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
-	"time"
 )
 
 type serviceDefaults struct{}
@@ -138,54 +139,47 @@ func (s *serviceDefaults) GetSchema() map[string]*schema.Schema {
 			},
 		},
 	}
-	return map[string]*schema.Schema{
 
+	return map[string]*schema.Schema{
 		"name": {
 			Type:        schema.TypeString,
 			Required:    true,
 			ForceNew:    true,
 			Description: "Specifies the name of the service you are setting the defaults for.",
 		},
-
 		"namespace": {
 			Type:        schema.TypeString,
 			Optional:    true,
 			ForceNew:    true,
 			Description: "Specifies the Consul namespace that the configuration entry applies to.",
 		},
-
 		"partition": {
 			Type:        schema.TypeString,
 			Optional:    true,
 			ForceNew:    true,
 			Description: "Specifies the name of the name of the Consul admin partition that the configuration entry applies to. Refer to Admin Partitions for additional information.",
 		},
-
 		"meta": {
 			Type:        schema.TypeMap,
 			Optional:    true,
 			Elem:        &schema.Schema{Type: schema.TypeString},
 			Description: "Specifies a set of custom key-value pairs to add to the Consul KV store.",
 		},
-
 		"protocol": {
 			Type:        schema.TypeString,
 			Required:    true,
 			Description: "Specifies the default protocol for the service.",
 		},
-
 		"balance_inbound_connections": {
 			Type:        schema.TypeString,
 			Optional:    true,
 			Description: "Specifies the strategy for allocating inbound connections to the service across Envoy proxy threads.",
 		},
-
 		"mode": {
 			Type:        schema.TypeString,
 			Optional:    true,
 			Description: "Specifies a mode for how the service directs inbound and outbound traffic.",
 		},
-
 		"upstream_config": {
 			Type:        schema.TypeSet,
 			Optional:    true,
@@ -207,7 +201,6 @@ func (s *serviceDefaults) GetSchema() map[string]*schema.Schema {
 				},
 			},
 		},
-
 		"transparent_proxy": {
 			Type:        schema.TypeSet,
 			Optional:    true,
@@ -225,13 +218,11 @@ func (s *serviceDefaults) GetSchema() map[string]*schema.Schema {
 				},
 			},
 		},
-
 		"mutual_tls_mode": {
 			Type:        schema.TypeString,
 			Optional:    true,
 			Description: "Controls whether mutual TLS is required for incoming connections to this service. This setting is only supported for services with transparent proxy enabled.",
 		},
-
 		"envoy_extensions": {
 			Type:        schema.TypeList,
 			Optional:    true,
@@ -262,7 +253,6 @@ func (s *serviceDefaults) GetSchema() map[string]*schema.Schema {
 				},
 			},
 		},
-
 		"destination": {
 			Type:        schema.TypeSet,
 			Optional:    true,
@@ -281,25 +271,21 @@ func (s *serviceDefaults) GetSchema() map[string]*schema.Schema {
 				},
 			},
 		},
-
 		"local_connect_timeout_ms": {
 			Type:        schema.TypeInt,
 			Optional:    true,
 			Description: "Specifies the number of milliseconds allowed for establishing connections to the local application instance before timing out.",
 		},
-
 		"max_inbound_connections": {
 			Type:        schema.TypeInt,
 			Optional:    true,
 			Description: "Specifies the maximum number of concurrent inbound connections to each service instance.",
 		},
-
 		"local_request_timeout_ms": {
 			Type:        schema.TypeInt,
 			Optional:    true,
 			Description: "Specifies the timeout for HTTP requests to the local application instance.",
 		},
-
 		"mesh_gateway": {
 			Type:        schema.TypeSet,
 			Optional:    true,
@@ -313,13 +299,11 @@ func (s *serviceDefaults) GetSchema() map[string]*schema.Schema {
 				},
 			},
 		},
-
 		"external_sni": {
 			Type:        schema.TypeString,
 			Optional:    true,
 			Description: "Specifies the TLS server name indication (SNI) when federating with an external system.",
 		},
-
 		"expose": {
 			Type:        schema.TypeSet,
 			Required:    true,
@@ -364,63 +348,63 @@ func (s *serviceDefaults) GetSchema() map[string]*schema.Schema {
 
 func (s *serviceDefaults) Decode(d *schema.ResourceData) (consulapi.ConfigEntry, error) {
 	configEntry := &consulapi.ServiceConfigEntry{
-		Kind:      consulapi.ServiceDefaults,
-		Name:      d.Get("name").(string),
-		Partition: d.Get("partition").(string),
-		Namespace: d.Get("namespace").(string),
-		Meta:      map[string]string{},
+		Kind:                      consulapi.ServiceDefaults,
+		Name:                      d.Get("name").(string),
+		Partition:                 d.Get("partition").(string),
+		Namespace:                 d.Get("namespace").(string),
+		Protocol:                  d.Get("protocol").(string),
+		BalanceInboundConnections: d.Get("balance_inbound_connections").(string),
+		LocalConnectTimeoutMs:     d.Get("local_connect_timeout_ms").(int),
+		MaxInboundConnections:     d.Get("max_inbound_connections").(int),
+		LocalRequestTimeoutMs:     d.Get("local_request_timeout_ms").(int),
+		ExternalSNI:               d.Get("external_sni").(string),
+		Mode:                      consulapi.ProxyMode(d.Get("mode").(string)),
+		MutualTLSMode:             consulapi.MutualTLSMode(d.Get("mutual_tls_mode").(string)),
+		Meta:                      map[string]string{},
 	}
 
 	for k, v := range d.Get("meta").(map[string]interface{}) {
 		configEntry.Meta[k] = v.(string)
 	}
 
-	configEntry.Protocol = d.Get("protocol").(string)
-	configEntry.BalanceInboundConnections = d.Get("balance_inbound_connections").(string)
-
-	proxyMode := consulapi.ProxyMode(d.Get("mode").(string))
-	configEntry.Mode = proxyMode
-
 	getLimits := func(limitsMap map[string]interface{}) *consulapi.UpstreamLimits {
-		upstreamLimit := &consulapi.UpstreamLimits{}
-		var maxPendingRequests *int
-		maxPendingRequests = new(int)
-		*maxPendingRequests = limitsMap["max_pending_requests"].(int)
-		upstreamLimit.MaxPendingRequests = maxPendingRequests
-		var maxConnections *int
-		maxConnections = new(int)
-		*maxConnections = limitsMap["max_connections"].(int)
-		upstreamLimit.MaxConnections = maxConnections
-		var maxConcurrentRequests *int
-		maxConcurrentRequests = new(int)
-		*maxConcurrentRequests = limitsMap["max_concurrent_requests"].(int)
-		upstreamLimit.MaxConcurrentRequests = maxConcurrentRequests
-		return upstreamLimit
+		intPtr := func(i int) *int {
+			if i == 0 {
+				return nil
+			}
+			return &i
+		}
+		return &consulapi.UpstreamLimits{
+			MaxPendingRequests:    intPtr(limitsMap["max_pending_requests"].(int)),
+			MaxConnections:        intPtr(limitsMap["max_connections"].(int)),
+			MaxConcurrentRequests: intPtr(limitsMap["max_concurrent_requests"].(int)),
+		}
 	}
 
 	getPassiveHealthCheck := func(passiveHealthCheckSet interface{}) (*consulapi.PassiveHealthCheck, error) {
 		passiveHealthCheck := passiveHealthCheckSet.(*schema.Set).List()
 		if len(passiveHealthCheck) > 0 {
 			passiveHealthCheckMap := passiveHealthCheck[0].(map[string]interface{})
-			passiveHealthCheck := &consulapi.PassiveHealthCheck{}
+			uint32Ptr := func(i int) *uint32 {
+				if i == 0 {
+					return nil
+				}
+				ui := uint32(i)
+				return &ui
+			}
+			passiveHealthCheck := &consulapi.PassiveHealthCheck{
+				MaxFailures:             uint32(passiveHealthCheckMap["max_failures"].(int)),
+				EnforcingConsecutive5xx: uint32Ptr(passiveHealthCheckMap["enforcing_consecutive_5xx"].(int)),
+				MaxEjectionPercent:      uint32Ptr(passiveHealthCheckMap["max_ejection_percent"].(int)),
+			}
 			duration, err := time.ParseDuration(passiveHealthCheckMap["interval"].(string))
 			if err != nil {
-				return nil, err
+				return nil, fmt.Errorf("failed to parse interval: %w", err)
 			}
 			passiveHealthCheck.Interval = duration
-			passiveHealthCheck.MaxFailures = uint32(passiveHealthCheckMap["max_failures"].(int))
-			var enforcingConsecutive5xx *uint32
-			enforcingConsecutive5xx = new(uint32)
-			*enforcingConsecutive5xx = uint32(passiveHealthCheckMap["enforcing_consecutive_5xx"].(int))
-			passiveHealthCheck.EnforcingConsecutive5xx = enforcingConsecutive5xx
-			var maxEjectionPercentage *uint32
-			maxEjectionPercentage = new(uint32)
-			*maxEjectionPercentage = uint32(passiveHealthCheckMap["max_ejection_percent"].(int))
-			passiveHealthCheck.EnforcingConsecutive5xx = enforcingConsecutive5xx
-			passiveHealthCheck.MaxEjectionPercent = maxEjectionPercentage
 			baseEjectionTime, err := time.ParseDuration(passiveHealthCheckMap["base_ejection_time"].(string))
 			if err != nil {
-				return nil, err
+				return nil, fmt.Errorf("failed to parse base_ejection_time: %w", err)
 			}
 			passiveHealthCheck.BaseEjectionTime = &baseEjectionTime
 			return passiveHealthCheck, nil
@@ -432,25 +416,25 @@ func (s *serviceDefaults) Decode(d *schema.ResourceData) (consulapi.ConfigEntry,
 		meshGatewayList := meshGateway.(*schema.Set).List()
 		if len(meshGatewayList) > 0 {
 			meshGatewayData := meshGatewayList[0].(map[string]interface{})
-			meshGatewayMode := consulapi.MeshGatewayMode(meshGatewayData["mode"].(string))
-			meshGateway := &consulapi.MeshGatewayConfig{}
-			meshGateway.Mode = meshGatewayMode
-			return meshGateway
+			return &consulapi.MeshGatewayConfig{
+				Mode: consulapi.MeshGatewayMode(meshGatewayData["mode"].(string)),
+			}
 		}
 		return nil
 	}
 
 	getUpstreamConfig := func(upstreamConfigMap map[string]interface{}) (*consulapi.UpstreamConfig, error) {
-		upstreamConfig := &consulapi.UpstreamConfig{}
-		upstreamConfig.Name = upstreamConfigMap["name"].(string)
-		upstreamConfig.Partition = upstreamConfigMap["partition"].(string)
-		upstreamConfig.Namespace = upstreamConfigMap["namespace"].(string)
-		upstreamConfig.Peer = upstreamConfigMap["peer"].(string)
-		upstreamConfig.EnvoyListenerJSON = upstreamConfigMap["envoy_listener_json"].(string)
-		upstreamConfig.EnvoyClusterJSON = upstreamConfigMap["envoy_cluster_json"].(string)
-		upstreamConfig.Protocol = upstreamConfigMap["protocol"].(string)
-		upstreamConfig.ConnectTimeoutMs = upstreamConfigMap["connect_timeout_ms"].(int)
-		upstreamConfig.Limits = getLimits(upstreamConfigMap["limits"].(*schema.Set).List()[0].(map[string]interface{}))
+		upstreamConfig := &consulapi.UpstreamConfig{
+			Name:              upstreamConfigMap["name"].(string),
+			Partition:         upstreamConfigMap["partition"].(string),
+			Namespace:         upstreamConfigMap["namespace"].(string),
+			Peer:              upstreamConfigMap["peer"].(string),
+			EnvoyListenerJSON: upstreamConfigMap["envoy_listener_json"].(string),
+			EnvoyClusterJSON:  upstreamConfigMap["envoy_cluster_json"].(string),
+			Protocol:          upstreamConfigMap["protocol"].(string),
+			ConnectTimeoutMs:  upstreamConfigMap["connect_timeout_ms"].(int),
+			Limits:            getLimits(upstreamConfigMap["limits"].(*schema.Set).List()[0].(map[string]interface{})),
+		}
 		passiveHealthCheck, err := getPassiveHealthCheck(upstreamConfigMap["passive_health_check"])
 		if err != nil {
 			return nil, err
@@ -462,53 +446,51 @@ func (s *serviceDefaults) Decode(d *schema.ResourceData) (consulapi.ConfigEntry,
 	}
 
 	getTransparentProxy := func(transparentProxy map[string]interface{}) *consulapi.TransparentProxyConfig {
-		tProxy := &consulapi.TransparentProxyConfig{}
-		tProxy.OutboundListenerPort = transparentProxy["outbound_listener_port"].(int)
-		tProxy.DialedDirectly = transparentProxy["dialed_directly"].(bool)
-		return tProxy
+		return &consulapi.TransparentProxyConfig{
+			OutboundListenerPort: transparentProxy["outbound_listener_port"].(int),
+			DialedDirectly:       transparentProxy["dialed_directly"].(bool),
+		}
 	}
 
 	getEnvoyExtension := func(envoyExtensionMap map[string]interface{}) *consulapi.EnvoyExtension {
-		envoyExtension := &consulapi.EnvoyExtension{}
-		envoyExtension.Name = envoyExtensionMap["name"].(string)
-		envoyExtension.Required = envoyExtensionMap["required"].(bool)
-		envoyExtension.Arguments = envoyExtensionMap["arguments"].(map[string]interface{})
-		envoyExtension.ConsulVersion = envoyExtensionMap["consul_version"].(string)
-		envoyExtension.EnvoyVersion = envoyExtensionMap["envoy_version"].(string)
-		return envoyExtension
+		return &consulapi.EnvoyExtension{
+			Name:          envoyExtensionMap["name"].(string),
+			Required:      envoyExtensionMap["required"].(bool),
+			Arguments:     envoyExtensionMap["arguments"].(map[string]interface{}),
+			ConsulVersion: envoyExtensionMap["consul_version"].(string),
+			EnvoyVersion:  envoyExtensionMap["envoy_version"].(string),
+		}
 	}
 
 	getDestination := func(destinationMap map[string]interface{}) *consulapi.DestinationConfig {
 		if destinationMap != nil {
-			var destination consulapi.DestinationConfig
-			destination.Port = destinationMap["port"].(int)
-			addresess := make([]string, len(destinationMap["addresses"].([]interface{})))
-			for indx, address := range destinationMap["addresses"].([]interface{}) {
-				addresess[indx] = address.(string)
+			destination := &consulapi.DestinationConfig{
+				Port: destinationMap["port"].(int),
 			}
-			destination.Addresses = addresess
-			return &destination
+			for _, addr := range destinationMap["addresses"].([]interface{}) {
+				destination.Addresses = append(destination.Addresses, addr.(string))
+			}
+			return destination
 		}
 		return nil
 	}
 
 	getExposePath := func(exposePathMap map[string]interface{}) *consulapi.ExposePath {
-		exposePath := &consulapi.ExposePath{}
-		exposePath.Path = exposePathMap["path"].(string)
-		exposePath.LocalPathPort = exposePathMap["local_path_port"].(int)
-		exposePath.ListenerPort = exposePathMap["listener_port"].(int)
-		exposePath.Protocol = exposePathMap["protocol"].(string)
-		return exposePath
+		return &consulapi.ExposePath{
+			Path:          exposePathMap["path"].(string),
+			LocalPathPort: exposePathMap["local_path_port"].(int),
+			ListenerPort:  exposePathMap["listener_port"].(int),
+			Protocol:      exposePathMap["protocol"].(string),
+		}
 	}
 
 	getExpose := func(exposeMap map[string]interface{}) consulapi.ExposeConfig {
-		var exposeConfig consulapi.ExposeConfig
-		exposeConfig.Checks = exposeMap["checks"].(bool)
-		var paths []consulapi.ExposePath
-		for _, elem := range exposeMap["paths"].([]interface{}) {
-			paths = append(paths, *getExposePath(elem.(map[string]interface{})))
+		exposeConfig := consulapi.ExposeConfig{
+			Checks: exposeMap["checks"].(bool),
 		}
-		exposeConfig.Paths = paths
+		for _, elem := range exposeMap["paths"].([]interface{}) {
+			exposeConfig.Paths = append(exposeConfig.Paths, *getExposePath(elem.(map[string]interface{})))
+		}
 		return exposeConfig
 	}
 
@@ -543,31 +525,19 @@ func (s *serviceDefaults) Decode(d *schema.ResourceData) (consulapi.ConfigEntry,
 		configEntry.TransparentProxy = getTransparentProxy(transparentProxy)
 	}
 
-	mutualTLSmode := consulapi.MutualTLSMode(d.Get("mutual_tls_mode").(string))
-	configEntry.MutualTLSMode = mutualTLSmode
-
-	var envoyExtensions []consulapi.EnvoyExtension
-
 	for _, elem := range d.Get("envoy_extensions").([]interface{}) {
 		envoyExtensionMap := elem.(map[string]interface{})
-		envoyExtensions = append(envoyExtensions, *getEnvoyExtension(envoyExtensionMap))
+		configEntry.EnvoyExtensions = append(configEntry.EnvoyExtensions, *getEnvoyExtension(envoyExtensionMap))
 	}
-	configEntry.EnvoyExtensions = envoyExtensions
 
 	destinationList := d.Get("destination").(*schema.Set).List()
 	if len(destinationList) > 0 {
 		configEntry.Destination = getDestination(destinationList[0].(map[string]interface{}))
 	}
 
-	configEntry.LocalConnectTimeoutMs = d.Get("local_connect_timeout_ms").(int)
-	configEntry.MaxInboundConnections = d.Get("max_inbound_connections").(int)
-	configEntry.LocalRequestTimeoutMs = d.Get("local_request_timeout_ms").(int)
-
 	if v := getMeshGateway(d.Get("mesh_gateway")); v != nil {
 		configEntry.MeshGateway = *v
 	}
-
-	configEntry.ExternalSNI = d.Get("external_sni").(string)
 
 	exposeList := d.Get("expose").(*schema.Set).List()
 	if len(exposeList) > 0 {
