@@ -4,10 +4,8 @@
 package consul
 
 import (
-
 	consulapi "github.com/hashicorp/consul/api"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
-	"golang.org/x/net/route"
 )
 
 type serviceRouter struct{}
@@ -17,7 +15,7 @@ func (s *serviceRouter) GetKind() string {
 }
 
 func (s *serviceRouter) GetDescription() string {
-	return "The `consul_config_entry_service_router` resource configures a [service router](https://developer.hashicorp.com/consul/docs/connect/config-entries/service-router) to redirect a traffic request for a service to one or more specific service instances.",
+	return "The `consul_config_entry_service_router` resource configures a [service router](https://developer.hashicorp.com/consul/docs/connect/config-entries/service-router) to redirect a traffic request for a service to one or more specific service instances."
 }
 
 func (s *serviceRouter) GetSchema() map[string]*schema.Schema {
@@ -47,30 +45,30 @@ func (s *serviceRouter) GetSchema() map[string]*schema.Schema {
 			Elem:        &schema.Schema{Type: schema.TypeString},
 		},
 		"routes": {
-			Type: schema.TypeList,
+			Type:        schema.TypeList,
 			Description: "",
 			Elem: &schema.Resource{
 				Schema: map[string]*schema.Schema{
 					"match": {
-						Type: schema.TypeSet,
+						Type:        schema.TypeSet,
 						Description: "",
 						Elem: &schema.Resource{
 							Schema: map[string]*schema.Schema{
 								"http": {
-									Type: schema.TypeSet,
+									Type:        schema.TypeSet,
 									Description: "",
 									Elem: &schema.Resource{
 										Schema: map[string]*schema.Schema{
 											"path_exact": {
-												Type: schema.TypeString,
+												Type:        schema.TypeString,
 												Description: "",
 											},
 											"path_prefix": {
-												Type: schema.TypeString,
+												Type:        schema.TypeString,
 												Description: "",
 											},
 											"path_regex": {
-												Type: schema.TypeString,
+												Type:        schema.TypeString,
 												Description: "",
 											},
 											"methods": {
@@ -250,13 +248,13 @@ func (s *serviceRouter) Decode(d *schema.ResourceData) (consulapi.ConfigEntry, e
 			for index, h := range matchHeaders {
 				header := h.(map[string]interface{})
 				matchHeader := &consulapi.ServiceRouteHTTPMatchHeader{
-					Name: header["name"].(string),
+					Name:    header["name"].(string),
 					Present: header["present"].(bool),
-					Exact: header["exact"].(string),
-					Prefix: header["prefix"].(string),
-					Suffix: header["suffix"].(string),
-					Regex: header["regex"].(string),
-					Invert: header["present"].(bool),
+					Exact:   header["exact"].(string),
+					Prefix:  header["prefix"].(string),
+					Suffix:  header["suffix"].(string),
+					Regex:   header["regex"].(string),
+					Invert:  header["present"].(bool),
 				}
 				headers[index] = *matchHeader
 			}
@@ -275,11 +273,11 @@ func (s *serviceRouter) Decode(d *schema.ResourceData) (consulapi.ConfigEntry, e
 			serviceRoutesList[indx].Match = matchRoute
 			//serviceRoutesList[indx].Destination = destination
 		}
-	    configEntry.Routes = serviceRoutesList
+		configEntry.Routes = serviceRoutesList
 	}
-
+	return configEntry, nil
 }
 
 func (s *serviceRouter) Write(ce consulapi.ConfigEntry, sw *stateWriter) error {
-
+	return nil
 }
