@@ -436,23 +436,43 @@ func (s *serviceDefaults) GetSchema() map[string]*schema.Schema {
 
 func (s *serviceDefaults) Decode(d *schema.ResourceData) (consulapi.ConfigEntry, error) {
 	configEntry := &consulapi.ServiceConfigEntry{
-		Kind:                      consulapi.ServiceDefaults,
-		Name:                      d.Get("name").(string),
-		Partition:                 d.Get("partition").(string),
-		Namespace:                 d.Get("namespace").(string),
-		Protocol:                  d.Get("protocol").(string),
-		BalanceInboundConnections: d.Get("balance_inbound_connections").(string),
-		LocalConnectTimeoutMs:     d.Get("local_connect_timeout_ms").(int),
-		MaxInboundConnections:     d.Get("max_inbound_connections").(int),
-		LocalRequestTimeoutMs:     d.Get("local_request_timeout_ms").(int),
-		ExternalSNI:               d.Get("external_sni").(string),
-		Mode:                      consulapi.ProxyMode(d.Get("mode").(string)),
-		MutualTLSMode:             consulapi.MutualTLSMode(d.Get("mutual_tls_mode").(string)),
-		Meta:                      map[string]string{},
+		Kind:      consulapi.ServiceDefaults,
+		Name:      d.Get("name").(string),
+		Partition: d.Get("partition").(string),
 	}
+	if d.Get("namespace") != nil {
+		configEntry.Namespace = d.Get("namespace").(string)
+	}
+	if d.Get("protocol") != nil {
+		configEntry.Protocol = d.Get("protocol").(string)
+	}
+	if d.Get("balance_inbound_connections") != nil {
+		configEntry.BalanceInboundConnections = d.Get("balance_inbound_connections").(string)
+	}
+	if d.Get("local_connect_timeout_ms") != nil {
+		configEntry.LocalConnectTimeoutMs = d.Get("local_connect_timeout_ms").(int)
+	}
+	if d.Get("max_inbound_connections") != nil {
+		configEntry.MaxInboundConnections = d.Get("max_inbound_connections").(int)
+	}
+	if d.Get("local_request_timeout_ms") != nil {
+		configEntry.LocalRequestTimeoutMs = d.Get("local_request_timeout_ms").(int)
+	}
+	if d.Get("external_sni") != nil {
+		configEntry.ExternalSNI = d.Get("external_sni").(string)
+	}
+	if d.Get("mode") != nil {
+		configEntry.Mode = consulapi.ProxyMode(d.Get("mode").(string))
+	}
+	if d.Get("mutual_tls_mode") != nil {
+		configEntry.MutualTLSMode = consulapi.MutualTLSMode(d.Get("mutual_tls_mode").(string))
+	}
+	configEntry.Meta = map[string]string{}
 
-	for k, v := range d.Get("meta").(map[string]interface{}) {
-		configEntry.Meta[k] = v.(string)
+	if d.Get("meta") != nil {
+		for k, v := range d.Get("meta").(map[string]interface{}) {
+			configEntry.Meta[k] = v.(string)
+		}
 	}
 
 	getLimits := func(limitsMap map[string]interface{}) *consulapi.UpstreamLimits {
@@ -521,40 +541,63 @@ func (s *serviceDefaults) Decode(d *schema.ResourceData) (consulapi.ConfigEntry,
 			ConnectTimeoutMs: upstreamConfigMap["connect_timeout_ms"].(int),
 			Limits:           getLimits(upstreamConfigMap["limits"].(*schema.Set).List()[0].(map[string]interface{})),
 		}
-		passiveHealthCheck, err := getPassiveHealthCheck(upstreamConfigMap["passive_health_check"])
-		if err != nil {
-			return nil, err
+		if upstreamConfigMap["passive_health_check"] != nil {
+			passiveHealthCheck, err := getPassiveHealthCheck(upstreamConfigMap["passive_health_check"])
+			if err != nil {
+				return nil, err
+			}
+			upstreamConfig.PassiveHealthCheck = passiveHealthCheck
 		}
-		upstreamConfig.PassiveHealthCheck = passiveHealthCheck
-		upstreamConfig.MeshGateway = *getMeshGateway(upstreamConfigMap["mesh_gateway"])
-		upstreamConfig.BalanceOutboundConnections = upstreamConfigMap["balance_outbound_connections"].(string)
+		if upstreamConfigMap["mesh_gateway"] != nil {
+			upstreamConfig.MeshGateway = *getMeshGateway(upstreamConfigMap["mesh_gateway"])
+		}
+		if upstreamConfigMap["balance_outbound_connections"] != nil {
+			upstreamConfig.BalanceOutboundConnections = upstreamConfigMap["balance_outbound_connections"].(string)
+		}
 		return upstreamConfig, nil
 	}
 
 	getTransparentProxy := func(transparentProxy map[string]interface{}) *consulapi.TransparentProxyConfig {
-		return &consulapi.TransparentProxyConfig{
-			OutboundListenerPort: transparentProxy["outbound_listener_port"].(int),
-			DialedDirectly:       transparentProxy["dialed_directly"].(bool),
+		transparentProxyConfig := &consulapi.TransparentProxyConfig{}
+		if transparentProxy["outbound_listener_port"] != nil {
+			transparentProxyConfig.OutboundListenerPort = transparentProxy["outbound_listener_port"].(int)
 		}
+		if transparentProxy["dialed_directly"] != nil {
+			transparentProxyConfig.DialedDirectly = transparentProxy["dialed_directly"].(bool)
+		}
+		return transparentProxyConfig
 	}
 
 	getEnvoyExtension := func(envoyExtensionMap map[string]interface{}) consulapi.EnvoyExtension {
-		return consulapi.EnvoyExtension{
-			Name:          envoyExtensionMap["name"].(string),
-			Required:      envoyExtensionMap["required"].(bool),
-			Arguments:     envoyExtensionMap["arguments"].(map[string]interface{}),
-			ConsulVersion: envoyExtensionMap["consul_version"].(string),
-			EnvoyVersion:  envoyExtensionMap["envoy_version"].(string),
+		envoyExtension := consulapi.EnvoyExtension{}
+		if envoyExtensionMap["name"] != nil {
+			envoyExtension.Name = envoyExtensionMap["name"].(string)
 		}
+		if envoyExtensionMap["required"] != nil {
+			envoyExtension.Required = envoyExtensionMap["required"].(bool)
+		}
+		if envoyExtensionMap["arguments"] != nil {
+			envoyExtension.Arguments = envoyExtensionMap["arguments"].(map[string]interface{})
+		}
+		if envoyExtensionMap["consul_version"] != nil {
+			envoyExtension.ConsulVersion = envoyExtensionMap["consul_version"].(string)
+		}
+		if envoyExtensionMap["envoy_version"] != nil {
+			envoyExtension.EnvoyVersion = envoyExtensionMap["envoy_version"].(string)
+		}
+		return envoyExtension
 	}
 
 	getDestination := func(destinationMap map[string]interface{}) *consulapi.DestinationConfig {
 		if destinationMap != nil {
-			destination := &consulapi.DestinationConfig{
-				Port: destinationMap["port"].(int),
+			destination := &consulapi.DestinationConfig{}
+			if destinationMap["port"] != nil {
+				destination.Port = destinationMap["port"].(int)
 			}
-			for _, addr := range destinationMap["addresses"].([]interface{}) {
-				destination.Addresses = append(destination.Addresses, addr.(string))
+			if destinationMap["addresses"] != nil {
+				for _, addr := range destinationMap["addresses"].([]interface{}) {
+					destination.Addresses = append(destination.Addresses, addr.(string))
+				}
 			}
 			return destination
 		}
@@ -562,20 +605,31 @@ func (s *serviceDefaults) Decode(d *schema.ResourceData) (consulapi.ConfigEntry,
 	}
 
 	getExposePath := func(exposePathMap map[string]interface{}) *consulapi.ExposePath {
-		return &consulapi.ExposePath{
-			Path:          exposePathMap["path"].(string),
-			LocalPathPort: exposePathMap["local_path_port"].(int),
-			ListenerPort:  exposePathMap["listener_port"].(int),
-			Protocol:      exposePathMap["protocol"].(string),
+		exposePath := &consulapi.ExposePath{}
+		if exposePathMap["path"] != nil {
+			exposePath.Path = exposePathMap["path"].(string)
 		}
+		if exposePathMap["local_path_port"] != nil {
+			exposePath.LocalPathPort = exposePathMap["local_path_port"].(int)
+		}
+		if exposePathMap["listener_port"] != nil {
+			exposePath.ListenerPort = exposePathMap["listener_port"].(int)
+		}
+		if exposePathMap["protocol"] != nil {
+			exposePath.Protocol = exposePathMap["protocol"].(string)
+		}
+		return exposePath
 	}
 
 	getExpose := func(exposeMap map[string]interface{}) consulapi.ExposeConfig {
-		exposeConfig := consulapi.ExposeConfig{
-			Checks: exposeMap["checks"].(bool),
+		exposeConfig := consulapi.ExposeConfig{}
+		if exposeMap["checks"] != nil {
+			exposeConfig.Checks = exposeMap["checks"].(bool)
 		}
-		for _, elem := range exposeMap["paths"].([]interface{}) {
-			exposeConfig.Paths = append(exposeConfig.Paths, *getExposePath(elem.(map[string]interface{})))
+		if exposeMap["paths"] != nil {
+			for _, elem := range exposeMap["paths"].([]interface{}) {
+				exposeConfig.Paths = append(exposeConfig.Paths, *getExposePath(elem.(map[string]interface{})))
+			}
 		}
 		return exposeConfig
 	}
@@ -584,50 +638,64 @@ func (s *serviceDefaults) Decode(d *schema.ResourceData) (consulapi.ConfigEntry,
 	if len(upstreamConfigList) > 0 {
 		configEntry.UpstreamConfig = &consulapi.UpstreamConfiguration{}
 		upstreamConfigMap := upstreamConfigList[0].(map[string]interface{})
-		defaultsUpstreamConfigMapList := upstreamConfigMap["defaults"].(*schema.Set).List()
-		if len(defaultsUpstreamConfigMapList) > 0 {
-			defaultsUpstreamConfig, err := getUpstreamConfig(defaultsUpstreamConfigMapList[0].(map[string]interface{}))
-			if err != nil {
-				return nil, err
+		if upstreamConfigMap["defaults"] != nil {
+			defaultsUpstreamConfigMapList := upstreamConfigMap["defaults"].(*schema.Set).List()
+			if len(defaultsUpstreamConfigMapList) > 0 {
+				defaultsUpstreamConfig, err := getUpstreamConfig(defaultsUpstreamConfigMapList[0].(map[string]interface{}))
+				if err != nil {
+					return nil, err
+				}
+				configEntry.UpstreamConfig.Defaults = defaultsUpstreamConfig
 			}
-			configEntry.UpstreamConfig.Defaults = defaultsUpstreamConfig
 		}
 
-		overrideUpstreamConfigList := upstreamConfigMap["overrides"].([]interface{})
-		var overrideUpstreamConfig []*consulapi.UpstreamConfig
-		for _, elem := range overrideUpstreamConfigList {
-			overrideUpstreamConfigElem, err := getUpstreamConfig(elem.(map[string]interface{}))
-			if err != nil {
-				return nil, err
+		if upstreamConfigMap["overrides"] != nil {
+			overrideUpstreamConfigList := upstreamConfigMap["overrides"].([]interface{})
+			var overrideUpstreamConfig []*consulapi.UpstreamConfig
+			for _, elem := range overrideUpstreamConfigList {
+				overrideUpstreamConfigElem, err := getUpstreamConfig(elem.(map[string]interface{}))
+				if err != nil {
+					return nil, err
+				}
+				overrideUpstreamConfig = append(overrideUpstreamConfig, overrideUpstreamConfigElem)
 			}
-			overrideUpstreamConfig = append(overrideUpstreamConfig, overrideUpstreamConfigElem)
+			configEntry.UpstreamConfig.Overrides = overrideUpstreamConfig
 		}
-		configEntry.UpstreamConfig.Overrides = overrideUpstreamConfig
 	}
 
-	transparentProxyList := d.Get("transparent_proxy").(*schema.Set).List()
-	if len(transparentProxyList) > 0 {
-		transparentProxy := transparentProxyList[0].(map[string]interface{})
-		configEntry.TransparentProxy = getTransparentProxy(transparentProxy)
+	if d.Get("transparent_proxy") != nil {
+		transparentProxyList := d.Get("transparent_proxy").(*schema.Set).List()
+		if len(transparentProxyList) > 0 {
+			transparentProxy := transparentProxyList[0].(map[string]interface{})
+			configEntry.TransparentProxy = getTransparentProxy(transparentProxy)
+		}
 	}
 
-	for _, elem := range d.Get("envoy_extensions").([]interface{}) {
-		envoyExtensionMap := elem.(map[string]interface{})
-		configEntry.EnvoyExtensions = append(configEntry.EnvoyExtensions, getEnvoyExtension(envoyExtensionMap))
+	if d.Get("envoy_extensions") != nil {
+		for _, elem := range d.Get("envoy_extensions").([]interface{}) {
+			envoyExtensionMap := elem.(map[string]interface{})
+			configEntry.EnvoyExtensions = append(configEntry.EnvoyExtensions, getEnvoyExtension(envoyExtensionMap))
+		}
 	}
 
-	destinationList := d.Get("destination").(*schema.Set).List()
-	if len(destinationList) > 0 {
-		configEntry.Destination = getDestination(destinationList[0].(map[string]interface{}))
+	if d.Get("destination") != nil {
+		destinationList := d.Get("destination").(*schema.Set).List()
+		if len(destinationList) > 0 {
+			configEntry.Destination = getDestination(destinationList[0].(map[string]interface{}))
+		}
 	}
 
-	if v := getMeshGateway(d.Get("mesh_gateway")); v != nil {
-		configEntry.MeshGateway = *v
+	if d.Get("mesh_gateway") != nil {
+		if v := getMeshGateway(d.Get("mesh_gateway")); v != nil {
+			configEntry.MeshGateway = *v
+		}
 	}
 
-	exposeList := d.Get("expose").(*schema.Set).List()
-	if len(exposeList) > 0 {
-		configEntry.Expose = getExpose(exposeList[0].(map[string]interface{}))
+	if d.Get("expose") != nil {
+		exposeList := d.Get("expose").(*schema.Set).List()
+		if len(exposeList) > 0 {
+			configEntry.Expose = getExpose(exposeList[0].(map[string]interface{}))
+		}
 	}
 
 	return configEntry, nil
