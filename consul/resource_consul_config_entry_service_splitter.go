@@ -248,7 +248,7 @@ func (s *serviceSplitter) Write(ce consulapi.ConfigEntry, sw *stateWriter) error
 			}
 			headers["set"] = set
 
-			remove := []interface{}{}
+			var remove []interface{}
 			for _, v := range modifier.Remove {
 				remove = append(remove, v)
 			}
