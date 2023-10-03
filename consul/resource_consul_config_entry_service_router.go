@@ -461,4 +461,6 @@ func (s *serviceRouter) Write(ce consulapi.ConfigEntry, sw *stateWriter) error {
 	}
 
 	sw.set("routes", routes)
+
+	return nil
 }
