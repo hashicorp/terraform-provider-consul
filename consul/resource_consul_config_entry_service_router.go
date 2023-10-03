@@ -6,6 +6,7 @@ package consul
 import (
 	consulapi "github.com/hashicorp/consul/api"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"time"
 )
 
 type serviceRouter struct{}
@@ -148,10 +149,10 @@ func (s *serviceRouter) GetSchema() map[string]*schema.Schema {
 									Type: schema.TypeString,
 								},
 								"request_timeout": {
-									Type: schema.TypeInt,
+									Type: schema.TypeString,
 								},
 								"idle_timeout": {
-									Type: schema.TypeInt,
+									Type: schema.TypeString,
 								},
 								"num_retries": {
 									Type: schema.TypeInt,
@@ -271,7 +272,28 @@ func (s *serviceRouter) Decode(d *schema.ResourceData) (consulapi.ConfigEntry, e
 			serviceRouteHTTPMatch.QueryParam = queryParamList
 			matchRoute.HTTP = serviceRouteHTTPMatch
 			serviceRoutesList[indx].Match = matchRoute
-			//serviceRoutesList[indx].Destination = destination
+			var destination *consulapi.ServiceRouteDestination
+			destination = new(consulapi.ServiceRouteDestination)
+			destinationList := (routListMap["destination"].(*schema.Set)).List()
+			if len(destinationList) > 0 {
+				destinationMap := destinationList[0].(map[string]interface{})
+				destination.Service = destinationMap["service"].(string)
+				destination.ServiceSubset = destinationMap["service_subset"].(string)
+				destination.Namespace = destinationMap["namespace"].(string)
+				destination.Partition = destinationMap["partition"].(string)
+				destination.PrefixRewrite = destinationMap["prefix_rewrite"].(string)
+				requestTimeout, err := time.ParseDuration(destinationMap["request_timeout"].(string))
+				if err != nil {
+					return nil, err
+				}
+				destination.RequestTimeout = requestTimeout
+				idleTimeout, err := time.ParseDuration(destinationMap["idle_timeout"].(string))
+				if err != nil {
+					return nil, err
+				}
+				destination.IdleTimeout = idleTimeout
+			}
+			serviceRoutesList[indx].Destination = destination
 		}
 		configEntry.Routes = serviceRoutesList
 	}
