@@ -5,10 +5,9 @@ package consul
 
 import (
 	"fmt"
-	"time"
-
 	consulapi "github.com/hashicorp/consul/api"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"time"
 )
 
 type serviceDefaults struct{}
@@ -137,10 +136,6 @@ func (s *serviceDefaults) GetSchema() map[string]*schema.Schema {
 	}
 	upstreamConfigSchemaDefaults := &schema.Resource{
 		Schema: map[string]*schema.Schema{
-			"envoy_listener_json": {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
 			"protocol": {
 				Type:        schema.TypeString,
 				Optional:    true,
@@ -531,15 +526,55 @@ func (s *serviceDefaults) Decode(d *schema.ResourceData) (consulapi.ConfigEntry,
 		return nil
 	}
 
-	getUpstreamConfig := func(upstreamConfigMap map[string]interface{}) (*consulapi.UpstreamConfig, error) {
-		upstreamConfig := &consulapi.UpstreamConfig{
-			Name:             upstreamConfigMap["name"].(string),
-			Partition:        upstreamConfigMap["partition"].(string),
-			Namespace:        upstreamConfigMap["namespace"].(string),
-			Peer:             upstreamConfigMap["peer"].(string),
-			Protocol:         upstreamConfigMap["protocol"].(string),
-			ConnectTimeoutMs: upstreamConfigMap["connect_timeout_ms"].(int),
-			Limits:           getLimits(upstreamConfigMap["limits"].(*schema.Set).List()[0].(map[string]interface{})),
+	getUpstreamConfigOverrides := func(upstreamConfigMap map[string]interface{}) (*consulapi.UpstreamConfig, error) {
+		upstreamConfig := &consulapi.UpstreamConfig{}
+		if upstreamConfigMap["name"] != nil {
+			upstreamConfig.Name = upstreamConfigMap["name"].(string)
+		}
+		if upstreamConfigMap["partition"] != nil {
+			upstreamConfig.Partition = upstreamConfigMap["partition"].(string)
+		}
+		if upstreamConfigMap["namespace"] != nil {
+			upstreamConfig.Namespace = upstreamConfigMap["namespace"].(string)
+		}
+		if upstreamConfigMap["peer"] != nil {
+			upstreamConfig.Peer = upstreamConfigMap["peer"].(string)
+		}
+		if upstreamConfigMap["protocol"] != nil {
+			upstreamConfig.Protocol = upstreamConfigMap["protocol"].(string)
+		}
+		if upstreamConfigMap["connect_timeout_ms"] != nil {
+			upstreamConfig.ConnectTimeoutMs = upstreamConfigMap["connect_timeout_ms"].(int)
+		}
+		if upstreamConfigMap["limits"] != nil && len(upstreamConfigMap["limits"].(*schema.Set).List()) > 0 {
+			upstreamConfig.Limits = getLimits(upstreamConfigMap["limits"].(*schema.Set).List()[0].(map[string]interface{}))
+		}
+		if upstreamConfigMap["passive_health_check"] != nil {
+			passiveHealthCheck, err := getPassiveHealthCheck(upstreamConfigMap["passive_health_check"])
+			if err != nil {
+				return nil, err
+			}
+			upstreamConfig.PassiveHealthCheck = passiveHealthCheck
+		}
+		if upstreamConfigMap["mesh_gateway"] != nil {
+			upstreamConfig.MeshGateway = *getMeshGateway(upstreamConfigMap["mesh_gateway"])
+		}
+		if upstreamConfigMap["balance_outbound_connections"] != nil {
+			upstreamConfig.BalanceOutboundConnections = upstreamConfigMap["balance_outbound_connections"].(string)
+		}
+		return upstreamConfig, nil
+	}
+
+	getUpstreamConfigDefaults := func(upstreamConfigMap map[string]interface{}) (*consulapi.UpstreamConfig, error) {
+		upstreamConfig := &consulapi.UpstreamConfig{}
+		if upstreamConfigMap["protocol"] != nil {
+			upstreamConfig.Protocol = upstreamConfigMap["protocol"].(string)
+		}
+		if upstreamConfigMap["connect_timeout_ms"] != nil {
+			upstreamConfig.ConnectTimeoutMs = upstreamConfigMap["connect_timeout_ms"].(int)
+		}
+		if upstreamConfigMap["limits"] != nil && len(upstreamConfigMap["limits"].(*schema.Set).List()) > 0 {
+			upstreamConfig.Limits = getLimits(upstreamConfigMap["limits"].(*schema.Set).List()[0].(map[string]interface{}))
 		}
 		if upstreamConfigMap["passive_health_check"] != nil {
 			passiveHealthCheck, err := getPassiveHealthCheck(upstreamConfigMap["passive_health_check"])
@@ -641,7 +676,7 @@ func (s *serviceDefaults) Decode(d *schema.ResourceData) (consulapi.ConfigEntry,
 		if upstreamConfigMap["defaults"] != nil {
 			defaultsUpstreamConfigMapList := upstreamConfigMap["defaults"].(*schema.Set).List()
 			if len(defaultsUpstreamConfigMapList) > 0 {
-				defaultsUpstreamConfig, err := getUpstreamConfig(defaultsUpstreamConfigMapList[0].(map[string]interface{}))
+				defaultsUpstreamConfig, err := getUpstreamConfigDefaults(defaultsUpstreamConfigMapList[0].(map[string]interface{}))
 				if err != nil {
 					return nil, err
 				}
@@ -653,7 +688,7 @@ func (s *serviceDefaults) Decode(d *schema.ResourceData) (consulapi.ConfigEntry,
 			overrideUpstreamConfigList := upstreamConfigMap["overrides"].([]interface{})
 			var overrideUpstreamConfig []*consulapi.UpstreamConfig
 			for _, elem := range overrideUpstreamConfigList {
-				overrideUpstreamConfigElem, err := getUpstreamConfig(elem.(map[string]interface{}))
+				overrideUpstreamConfigElem, err := getUpstreamConfigOverrides(elem.(map[string]interface{}))
 				if err != nil {
 					return nil, err
 				}
@@ -721,7 +756,7 @@ func (s *serviceDefaults) Write(ce consulapi.ConfigEntry, sw *stateWriter) error
 	sw.set("balance_inbound_connections", sd.BalanceInboundConnections)
 	sw.set("mode", sd.Mode)
 
-	getUpstreamConfig := func(elem *consulapi.UpstreamConfig) map[string]interface{} {
+	getUpstreamConfigOverrides := func(elem *consulapi.UpstreamConfig) map[string]interface{} {
 		upstreamConfig := make(map[string]interface{})
 		upstreamConfig["name"] = elem.Name
 		upstreamConfig["partition"] = elem.Partition
@@ -753,16 +788,44 @@ func (s *serviceDefaults) Write(ce consulapi.ConfigEntry, sw *stateWriter) error
 		return upstreamConfig
 	}
 
+	getUpstreamConfigDefaults := func(elem *consulapi.UpstreamConfig) map[string]interface{} {
+		upstreamConfig := make(map[string]interface{})
+		upstreamConfig["protocol"] = elem.Protocol
+		upstreamConfig["connect_timeout_ms"] = elem.ConnectTimeoutMs
+		limits := make([]map[string]interface{}, 1)
+		limits[0] = make(map[string]interface{})
+		limits[0]["max_connections"] = elem.Limits.MaxConnections
+		limits[0]["max_pending_requests"] = elem.Limits.MaxPendingRequests
+		limits[0]["max_concurrent_requests"] = elem.Limits.MaxConcurrentRequests
+		upstreamConfig["limits"] = limits
+		passiveHealthCheck := make([]map[string]interface{}, 1)
+		passiveHealthCheck[0] = make(map[string]interface{})
+		passiveHealthCheck[0]["interval"] = elem.PassiveHealthCheck.Interval.String()
+		passiveHealthCheck[0]["max_failures"] = elem.PassiveHealthCheck.MaxFailures
+		passiveHealthCheck[0]["enforcing_consecutive_5xx"] = elem.PassiveHealthCheck.EnforcingConsecutive5xx
+		passiveHealthCheck[0]["max_ejection_percent"] = elem.PassiveHealthCheck.MaxEjectionPercent
+		passiveHealthCheck[0]["base_ejection_time"] = elem.PassiveHealthCheck.BaseEjectionTime.String()
+		upstreamConfig["passive_health_check"] = passiveHealthCheck
+
+		meshGateway := make([]map[string]interface{}, 1)
+		meshGateway[0] = make(map[string]interface{})
+		meshGateway[0]["mode"] = elem.MeshGateway.Mode
+		upstreamConfig["mesh_gateway"] = meshGateway
+
+		upstreamConfig["balance_outbound_connections"] = elem.BalanceOutboundConnections
+		return upstreamConfig
+	}
+
 	if sd.UpstreamConfig != nil {
 		var overrides []interface{}
 		for _, elem := range sd.UpstreamConfig.Overrides {
-			overrides = append(overrides, getUpstreamConfig(elem))
+			overrides = append(overrides, getUpstreamConfigOverrides(elem))
 		}
 
 		upstreamConfig := make(map[string]interface{})
 		upstreamConfig["overrides"] = overrides
 		defaultsSlice := make([]map[string]interface{}, 1)
-		defaultsSlice[0] = getUpstreamConfig(sd.UpstreamConfig.Defaults)
+		defaultsSlice[0] = getUpstreamConfigDefaults(sd.UpstreamConfig.Defaults)
 		upstreamConfig["defaults"] = defaultsSlice
 		upstreamConfigSlice := make([]map[string]interface{}, 1)
 		upstreamConfigSlice[0] = upstreamConfig
