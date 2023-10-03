@@ -48,10 +48,6 @@ func (s *serviceDefaults) GetSchema() map[string]*schema.Schema {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-			"envoy_cluster_json": {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
 			"protocol": {
 				Type:        schema.TypeString,
 				Optional:    true,
@@ -141,26 +137,7 @@ func (s *serviceDefaults) GetSchema() map[string]*schema.Schema {
 	}
 	upstreamConfigSchemaDefaults := &schema.Resource{
 		Schema: map[string]*schema.Schema{
-			"partition": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				Description: "Specifies the name of the name of the Consul admin partition that the configuration entry applies to.",
-			},
-			"namespace": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				Description: "Specifies the namespace containing the upstream service that the configuration applies to.",
-			},
-			"peer": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				Description: "Specifies the peer name of the upstream service that the configuration applies to.",
-			},
 			"envoy_listener_json": {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			"envoy_cluster_json": {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
@@ -536,15 +513,13 @@ func (s *serviceDefaults) Decode(d *schema.ResourceData) (consulapi.ConfigEntry,
 
 	getUpstreamConfig := func(upstreamConfigMap map[string]interface{}) (*consulapi.UpstreamConfig, error) {
 		upstreamConfig := &consulapi.UpstreamConfig{
-			Name:              upstreamConfigMap["name"].(string),
-			Partition:         upstreamConfigMap["partition"].(string),
-			Namespace:         upstreamConfigMap["namespace"].(string),
-			Peer:              upstreamConfigMap["peer"].(string),
-			EnvoyListenerJSON: upstreamConfigMap["envoy_listener_json"].(string),
-			EnvoyClusterJSON:  upstreamConfigMap["envoy_cluster_json"].(string),
-			Protocol:          upstreamConfigMap["protocol"].(string),
-			ConnectTimeoutMs:  upstreamConfigMap["connect_timeout_ms"].(int),
-			Limits:            getLimits(upstreamConfigMap["limits"].(*schema.Set).List()[0].(map[string]interface{})),
+			Name:             upstreamConfigMap["name"].(string),
+			Partition:        upstreamConfigMap["partition"].(string),
+			Namespace:        upstreamConfigMap["namespace"].(string),
+			Peer:             upstreamConfigMap["peer"].(string),
+			Protocol:         upstreamConfigMap["protocol"].(string),
+			ConnectTimeoutMs: upstreamConfigMap["connect_timeout_ms"].(int),
+			Limits:           getLimits(upstreamConfigMap["limits"].(*schema.Set).List()[0].(map[string]interface{})),
 		}
 		passiveHealthCheck, err := getPassiveHealthCheck(upstreamConfigMap["passive_health_check"])
 		if err != nil {
@@ -684,8 +659,6 @@ func (s *serviceDefaults) Write(ce consulapi.ConfigEntry, sw *stateWriter) error
 		upstreamConfig["partition"] = elem.Partition
 		upstreamConfig["namespace"] = elem.Namespace
 		upstreamConfig["peer"] = elem.Peer
-		upstreamConfig["envoy_listener_json"] = elem.EnvoyListenerJSON
-		upstreamConfig["envoy_cluster_json"] = elem.EnvoyClusterJSON
 		upstreamConfig["protocol"] = elem.Protocol
 		upstreamConfig["connect_timeout_ms"] = elem.ConnectTimeoutMs
 		limits := make([]map[string]interface{}, 1)
