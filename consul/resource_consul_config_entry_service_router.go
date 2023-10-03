@@ -48,77 +48,97 @@ func (s *serviceRouter) GetSchema() map[string]*schema.Schema {
 		"routes": {
 			Type:        schema.TypeList,
 			Description: "",
+			Optional:    true,
 			Elem: &schema.Resource{
 				Schema: map[string]*schema.Schema{
 					"match": {
 						Type:        schema.TypeSet,
 						Description: "",
+						Optional:    true,
 						Elem: &schema.Resource{
 							Schema: map[string]*schema.Schema{
 								"http": {
 									Type:        schema.TypeSet,
 									Description: "",
+									Optional:    true,
 									Elem: &schema.Resource{
 										Schema: map[string]*schema.Schema{
 											"path_exact": {
 												Type:        schema.TypeString,
+												Optional:    true,
 												Description: "",
 											},
 											"path_prefix": {
 												Type:        schema.TypeString,
+												Optional:    true,
 												Description: "",
 											},
 											"path_regex": {
 												Type:        schema.TypeString,
+												Optional:    true,
 												Description: "",
 											},
 											"methods": {
-												Type: schema.TypeList,
-												Elem: schema.TypeString,
+												Type:     schema.TypeList,
+												Elem:     &schema.Schema{Type: schema.TypeString},
+												Optional: true,
 											},
 											"header": {
-												Type: schema.TypeList,
+												Type:     schema.TypeList,
+												Optional: true,
 												Elem: &schema.Resource{
 													Schema: map[string]*schema.Schema{
 														"name": {
-															Type: schema.TypeString,
+															Type:     schema.TypeString,
+															Optional: true,
 														},
 														"present": {
-															Type: schema.TypeBool,
+															Type:     schema.TypeBool,
+															Optional: true,
 														},
 														"exact": {
-															Type: schema.TypeString,
+															Type:     schema.TypeString,
+															Optional: true,
 														},
 														"prefix": {
-															Type: schema.TypeString,
+															Type:     schema.TypeString,
+															Optional: true,
 														},
 														"suffix": {
-															Type: schema.TypeString,
+															Type:     schema.TypeString,
+															Optional: true,
 														},
 														"regex": {
-															Type: schema.TypeString,
+															Type:     schema.TypeString,
+															Optional: true,
 														},
 														"invert": {
-															Type: schema.TypeBool,
+															Type:     schema.TypeBool,
+															Optional: true,
 														},
 													},
 												},
 											},
 											"query_param": {
-												Type: schema.TypeList,
+												Type:     schema.TypeList,
+												Optional: true,
 												Elem: &schema.Resource{
 													Schema: map[string]*schema.Schema{
 														"name": {
-															Type: schema.TypeString,
+															Type:     schema.TypeString,
+															Optional: true,
 														},
 														"present": {
-															Type: schema.TypeBool,
+															Type:     schema.TypeBool,
+															Optional: true,
 														},
 														"exact": {
-															Type: schema.TypeString,
+															Type:     schema.TypeString,
+															Optional: true,
 														},
 														"regex": {
-															Type: schema.TypeString,
+															Type:     schema.TypeString,
+															Optional: true,
 														},
 													},
 												},
@@ -130,78 +150,98 @@ func (s *serviceRouter) GetSchema() map[string]*schema.Schema {
 						},
 					},
 					"destination": {
-						Type: schema.TypeSet,
+						Type:     schema.TypeSet,
+						Optional: true,
 						Elem: &schema.Resource{
 							Schema: map[string]*schema.Schema{
 								"service": {
-									Type: schema.TypeString,
+									Type:     schema.TypeString,
+									Optional: true,
 								},
 								"service_subset": {
-									Type: schema.TypeString,
+									Type:     schema.TypeString,
+									Optional: true,
 								},
 								"namespace": {
-									Type: schema.TypeString,
+									Type:     schema.TypeString,
+									Optional: true,
 								},
 								"partition": {
-									Type: schema.TypeString,
+									Type:     schema.TypeString,
+									Optional: true,
 								},
 								"prefix_rewrite": {
-									Type: schema.TypeString,
+									Type:     schema.TypeString,
+									Optional: true,
 								},
 								"request_timeout": {
-									Type: schema.TypeString,
+									Type:     schema.TypeString,
+									Optional: true,
 								},
 								"idle_timeout": {
-									Type: schema.TypeString,
+									Type:     schema.TypeString,
+									Optional: true,
 								},
 								"num_retries": {
-									Type: schema.TypeInt,
+									Type:     schema.TypeInt,
+									Optional: true,
 								},
 								"retry_on_connect_failure": {
-									Type: schema.TypeBool,
+									Type:     schema.TypeBool,
+									Optional: true,
 								},
 								"retry_on": {
-									Type: schema.TypeList,
-									Elem: schema.TypeString,
+									Type:     schema.TypeList,
+									Elem:     &schema.Schema{Type: schema.TypeString},
+									Optional: true,
 								},
-								"retry_on_status_code": {
-									Type: schema.TypeList,
-									Elem: schema.TypeInt,
+								"retry_on_status_codes": {
+									Type:     schema.TypeList,
+									Elem:     &schema.Schema{Type: schema.TypeInt},
+									Optional: true,
 								},
 								"request_headers": {
-									Type: schema.TypeSet,
+									Type:     schema.TypeSet,
+									Optional: true,
 									Elem: &schema.Resource{
 										Schema: map[string]*schema.Schema{
 											"add": {
-												Type: schema.TypeMap,
-												Elem: schema.TypeString,
+												Type:     schema.TypeMap,
+												Optional: true,
+												Elem:     &schema.Schema{Type: schema.TypeString},
 											},
 											"set": {
-												Type: schema.TypeMap,
-												Elem: schema.TypeString,
+												Type:     schema.TypeMap,
+												Optional: true,
+												Elem:     &schema.Schema{Type: schema.TypeString},
 											},
 											"remote": {
-												Type: schema.TypeMap,
-												Elem: schema.TypeString,
+												Type:     schema.TypeMap,
+												Optional: true,
+												Elem:     &schema.Schema{Type: schema.TypeString},
 											},
 										},
 									},
 								},
 								"response_headers": {
-									Type: schema.TypeMap,
+									Type:     schema.TypeSet,
+									Optional: true,
 									Elem: &schema.Resource{
 										Schema: map[string]*schema.Schema{
 											"add": {
-												Type: schema.TypeMap,
-												Elem: schema.TypeString,
+												Type:     schema.TypeMap,
+												Optional: true,
+												Elem:     &schema.Schema{Type: schema.TypeString},
 											},
 											"set": {
-												Type: schema.TypeMap,
-												Elem: schema.TypeString,
+												Type:     schema.TypeMap,
+												Optional: true,
+												Elem:     &schema.Schema{Type: schema.TypeString},
 											},
 											"remote": {
-												Type: schema.TypeMap,
-												Elem: schema.TypeString,
+												Type:     schema.TypeMap,
+												Optional: true,
+												Elem:     &schema.Schema{Type: schema.TypeString},
 											},
 										},
 									},
@@ -234,66 +274,75 @@ func (s *serviceRouter) Decode(d *schema.ResourceData) (consulapi.ConfigEntry, e
 		serviceRoutesList := make([]consulapi.ServiceRoute, len(routeList))
 		for indx, r := range routeList {
 			routListMap := r.(map[string]interface{})
-			matchMap := routListMap["match"].(map[string]interface{})
-			matchHTTP := matchMap["HTTP"].(map[string]interface{})
-			var matchRoute *consulapi.ServiceRouteMatch
-			matchRoute = new(consulapi.ServiceRouteMatch)
-			var serviceRouteHTTPMatch *consulapi.ServiceRouteHTTPMatch
-			serviceRouteHTTPMatch = new(consulapi.ServiceRouteHTTPMatch)
-			serviceRouteHTTPMatch.PathExact = matchHTTP["path_exact"].(string)
-			serviceRouteHTTPMatch.PathPrefix = matchHTTP["path_prefix"].(string)
-			serviceRouteHTTPMatch.PathRegex = matchHTTP["path_regex"].(string)
-			serviceRouteHTTPMatch.Methods = matchHTTP["methods"].([]string)
-			var headers []consulapi.ServiceRouteHTTPMatchHeader
-			matchHeaders := matchHTTP["header"].([]interface{})
-			for index, h := range matchHeaders {
-				header := h.(map[string]interface{})
-				matchHeader := &consulapi.ServiceRouteHTTPMatchHeader{
-					Name:    header["name"].(string),
-					Present: header["present"].(bool),
-					Exact:   header["exact"].(string),
-					Prefix:  header["prefix"].(string),
-					Suffix:  header["suffix"].(string),
-					Regex:   header["regex"].(string),
-					Invert:  header["present"].(bool),
+			matchList := routListMap["match"].(*schema.Set).List()
+			if len(matchList) > 0 {
+				matchMap := matchList[0].(map[string]interface{})
+				matchHTTPMap := matchMap["http"].(*schema.Set).List()
+				if len(matchHTTPMap) > 0 {
+					matchHTTP := matchHTTPMap[0].(map[string]interface{})
+					var matchRoute *consulapi.ServiceRouteMatch
+					matchRoute = new(consulapi.ServiceRouteMatch)
+					var serviceRouteHTTPMatch *consulapi.ServiceRouteHTTPMatch
+					serviceRouteHTTPMatch = new(consulapi.ServiceRouteHTTPMatch)
+					serviceRouteHTTPMatch.PathExact = matchHTTP["path_exact"].(string)
+					serviceRouteHTTPMatch.PathPrefix = matchHTTP["path_prefix"].(string)
+					serviceRouteHTTPMatch.PathRegex = matchHTTP["path_regex"].(string)
+					methods := make([]string, 0)
+					for _, v := range matchHTTP["methods"].([]interface{}) {
+						methods = append(methods, v.(string))
+					}
+					serviceRouteHTTPMatch.Methods = methods
+					headers := make([]consulapi.ServiceRouteHTTPMatchHeader, 0)
+					matchHeaders := matchHTTP["header"].([]interface{})
+					for _, h := range matchHeaders {
+						header := h.(map[string]interface{})
+						matchHeader := &consulapi.ServiceRouteHTTPMatchHeader{
+							Name:    header["name"].(string),
+							Present: header["present"].(bool),
+							Exact:   header["exact"].(string),
+							Prefix:  header["prefix"].(string),
+							Suffix:  header["suffix"].(string),
+							Regex:   header["regex"].(string),
+							Invert:  header["present"].(bool),
+						}
+						headers = append(headers, *matchHeader)
+					}
+					serviceRouteHTTPMatch.Header = headers
+					queryParam := matchHTTP["query_param"].([]interface{})
+					queryParamList := make([]consulapi.ServiceRouteHTTPMatchQueryParam, len(queryParam))
+					for index, q := range queryParam {
+						queryParamMap := q.(map[string]interface{})
+						queryParamList[index].Name = queryParamMap["name"].(string)
+						queryParamList[index].Regex = queryParamMap["regex"].(string)
+						queryParamList[index].Present = queryParamMap["present"].(bool)
+						queryParamList[index].Exact = queryParamMap["exact"].(string)
+					}
+					serviceRouteHTTPMatch.QueryParam = queryParamList
+					matchRoute.HTTP = serviceRouteHTTPMatch
+					serviceRoutesList[indx].Match = matchRoute
 				}
-				headers[index] = *matchHeader
-			}
-			serviceRouteHTTPMatch.Header = headers
-			queryParam := matchHTTP["query_param"].([]interface{})
-			queryParamList := make([]consulapi.ServiceRouteHTTPMatchQueryParam, len(queryParam))
-			for index, q := range queryParam {
-				queryParamMap := q.(map[string]interface{})
-				queryParamList[index].Name = queryParamMap["name"].(string)
-				queryParamList[index].Regex = queryParamMap["regex"].(string)
-				queryParamList[index].Present = queryParamMap["present"].(bool)
-				queryParamList[index].Exact = queryParamMap["exact"].(string)
-			}
-			serviceRouteHTTPMatch.QueryParam = queryParamList
-			matchRoute.HTTP = serviceRouteHTTPMatch
-			serviceRoutesList[indx].Match = matchRoute
-			var destination *consulapi.ServiceRouteDestination
-			destination = new(consulapi.ServiceRouteDestination)
-			destinationList := (routListMap["destination"].(*schema.Set)).List()
-			if len(destinationList) > 0 {
-				destinationMap := destinationList[0].(map[string]interface{})
-				destination.Service = destinationMap["service"].(string)
-				destination.ServiceSubset = destinationMap["service_subset"].(string)
-				destination.Namespace = destinationMap["namespace"].(string)
-				destination.Partition = destinationMap["partition"].(string)
-				destination.PrefixRewrite = destinationMap["prefix_rewrite"].(string)
-				requestTimeout, err := time.ParseDuration(destinationMap["request_timeout"].(string))
-				if err != nil {
-					return nil, err
+				var destination *consulapi.ServiceRouteDestination
+				destination = new(consulapi.ServiceRouteDestination)
+				destinationList := (routListMap["destination"].(*schema.Set)).List()
+				if len(destinationList) > 0 {
+					destinationMap := destinationList[0].(map[string]interface{})
+					destination.Service = destinationMap["service"].(string)
+					destination.ServiceSubset = destinationMap["service_subset"].(string)
+					destination.Namespace = destinationMap["namespace"].(string)
+					destination.Partition = destinationMap["partition"].(string)
+					destination.PrefixRewrite = destinationMap["prefix_rewrite"].(string)
+					requestTimeout, err := time.ParseDuration(destinationMap["request_timeout"].(string))
+					if err != nil {
+						return nil, err
+					}
+					destination.RequestTimeout = requestTimeout
+					idleTimeout, err := time.ParseDuration(destinationMap["idle_timeout"].(string))
+					if err != nil {
+						return nil, err
+					}
+					destination.IdleTimeout = idleTimeout
 				}
-				destination.RequestTimeout = requestTimeout
-				idleTimeout, err := time.ParseDuration(destinationMap["idle_timeout"].(string))
-				if err != nil {
-					return nil, err
-				}
-				destination.IdleTimeout = idleTimeout
 			}
-			serviceRoutesList[indx].Destination = destination
 		}
 		configEntry.Routes = serviceRoutesList
 	}
