@@ -4,9 +4,14 @@
 package consul
 
 import (
+	"bytes"
 	"fmt"
 	consulapi "github.com/hashicorp/consul/api"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/hashcode"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"reflect"
+	"sort"
+	"strings"
 	"time"
 )
 
@@ -57,7 +62,7 @@ func (s *serviceResolver) GetSchema() map[string]*schema.Schema {
 			Description: "Specifies the timeout duration for receiving an HTTP response from this service.",
 		},
 		"subsets": {
-			Type:        schema.TypeList,
+			Type:        schema.TypeSet,
 			Optional:    true,
 			Description: "Specifies names for custom service subsets and the conditions under which service instances belong to each subset.",
 			Elem: &schema.Resource{
@@ -65,7 +70,7 @@ func (s *serviceResolver) GetSchema() map[string]*schema.Schema {
 					"name": {
 						Type:        schema.TypeString,
 						Required:    true,
-						Description: "Name of subset",
+						Description: "Name of subset.",
 					},
 					"filter": {
 						Type:        schema.TypeString,
@@ -130,7 +135,7 @@ func (s *serviceResolver) GetSchema() map[string]*schema.Schema {
 			},
 		},
 		"failover": {
-			Type:        schema.TypeList,
+			Type:        schema.TypeSet,
 			Optional:    true,
 			Description: "Specifies controls for rerouting traffic to an alternate pool of service instances if the target service fails.",
 			Elem: &schema.Resource{
@@ -138,7 +143,7 @@ func (s *serviceResolver) GetSchema() map[string]*schema.Schema {
 					"subset_name": {
 						Type:        schema.TypeString,
 						Required:    true,
-						Description: "Name of subset",
+						Description: "Name of subset.",
 					},
 					"service": {
 						Type:        schema.TypeString,
@@ -161,9 +166,11 @@ func (s *serviceResolver) GetSchema() map[string]*schema.Schema {
 						Description: "Specifies the sameness group at the failover location where the failover services are deployed.",
 					},
 					"datacenters": {
-						Type:        schema.TypeList,
-						Optional:    true,
-						Elem:        &schema.Schema{Type: schema.TypeString},
+						Type:     schema.TypeList,
+						Optional: true,
+						Elem: &schema.Schema{
+							Type: schema.TypeString,
+						},
 						Description: "Specifies an ordered list of datacenters at the failover location to attempt connections to during a failover scenario. When Consul cannot establish a connection with the first datacenter in the list, it proceeds sequentially until establishing a connection with another datacenter.",
 					},
 					"targets": {
@@ -207,6 +214,7 @@ func (s *serviceResolver) GetSchema() map[string]*schema.Schema {
 					},
 				},
 			},
+			Set: resourceConsulConfigEntryServiceResolverFailoverSetHash,
 		},
 		"load_balancer": {
 			Type:        schema.TypeSet,
@@ -310,6 +318,56 @@ func (s *serviceResolver) GetSchema() map[string]*schema.Schema {
 	}
 }
 
+func resourceConsulConfigEntryServiceResolverFailoverSetHash(v interface{}) int {
+	var buf bytes.Buffer
+	m := v.(map[string]interface{})
+	if m["subset_name"] != nil {
+		buf.WriteString(fmt.Sprintf("%s-", m["subset_name"].(string)))
+	}
+	if m["service"] != nil {
+		buf.WriteString(fmt.Sprintf("%s-", m["service"].(string)))
+	}
+	if m["service_subset"] != nil {
+		buf.WriteString(fmt.Sprintf("%s-", m["service_subset"].(string)))
+	}
+	if m["namespace"] != nil {
+		buf.WriteString(fmt.Sprintf("%s-", m["namespace"].(string)))
+	}
+	if m["sameness_group"] != nil {
+		buf.WriteString(fmt.Sprintf("%s-", m["sameness_group"].(string)))
+	}
+	if m["datacenters"] != nil {
+		datacenters := make([]string, 0)
+		if strings.HasPrefix(reflect.ValueOf(m["datacenters"]).String(), "<[]interface") {
+			for _, v := range m["datacenters"].([]interface{}) {
+				datacenters = append(datacenters, v.(string))
+			}
+		} else {
+			for _, v := range m["datacenters"].([]string) {
+				datacenters = append(datacenters, v)
+			}
+		}
+		sort.Strings(datacenters)
+		for _, v := range datacenters {
+			buf.WriteString(fmt.Sprintf("%s-", v))
+		}
+	}
+	if m["targets"] != nil {
+		for _, target := range m["targets"].([]interface{}) {
+			var keys []string
+			targetMap := target.(map[string]interface{})
+			for k, _ := range targetMap {
+				keys = append(keys, k)
+			}
+			sort.Strings(keys)
+			for _, k := range keys {
+				buf.WriteString(fmt.Sprintf("%s:%s-", k, targetMap[k].(string)))
+			}
+		}
+	}
+	return hashcode.String(buf.String())
+}
+
 func (s *serviceResolver) Decode(d *schema.ResourceData) (consulapi.ConfigEntry, error) {
 	configEntry := &consulapi.ServiceResolverConfigEntry{
 		Kind:      consulapi.ServiceResolver,
@@ -337,7 +395,7 @@ func (s *serviceResolver) Decode(d *schema.ResourceData) (consulapi.ConfigEntry,
 
 	subsets := make(map[string]consulapi.ServiceResolverSubset)
 
-	subsetsList := d.Get("subsets").([]interface{})
+	subsetsList := d.Get("subsets").(*schema.Set).List()
 	for _, subset := range subsetsList {
 		subsetMap := subset.(map[string]interface{})
 		var serviceResolverSubset consulapi.ServiceResolverSubset
@@ -363,7 +421,7 @@ func (s *serviceResolver) Decode(d *schema.ResourceData) (consulapi.ConfigEntry,
 		configEntry.Redirect = serviceResolverRedirect
 	}
 
-	failoverList := d.Get("failover").([]interface{})
+	failoverList := d.Get("failover").(*schema.Set).List()
 	failover := make(map[string]consulapi.ServiceResolverFailover)
 	for _, failoverElem := range failoverList {
 		failoverMap := failoverElem.(map[string]interface{})
@@ -380,34 +438,40 @@ func (s *serviceResolver) Decode(d *schema.ResourceData) (consulapi.ConfigEntry,
 		if value, ok := failoverMap["sameness_group"]; ok {
 			serviceResolverFailover.SamenessGroup = value.(string)
 		}
-		if value, ok := failoverMap["datacenter"]; ok {
-			serviceResolverFailover.Datacenters = value.([]string)
+		if value, ok := failoverMap["datacenters"]; ok {
+			datacenters := make([]string, 0)
+			for _, v := range value.([]interface{}) {
+				datacenters = append(datacenters, v.(string))
+			}
+			serviceResolverFailover.Datacenters = datacenters
 		}
-		serviceResolverFailoverTargets := make([]consulapi.ServiceResolverFailoverTarget, len(failoverMap["targets"].([]interface{})))
-		for indx, target := range failoverMap["targets"].([]interface{}) {
-			targetElem := target.(map[string]interface{})
-			var serviceResolverFailoverTarget consulapi.ServiceResolverFailoverTarget
-			if value, ok := targetElem["service"]; ok {
-				serviceResolverFailoverTarget.Service = value.(string)
+		if (failoverMap["targets"] != nil) && len(failoverMap["targets"].([]interface{})) > 0 {
+			serviceResolverFailoverTargets := make([]consulapi.ServiceResolverFailoverTarget, len(failoverMap["targets"].([]interface{})))
+			for indx, target := range failoverMap["targets"].([]interface{}) {
+				targetElem := target.(map[string]interface{})
+				var serviceResolverFailoverTarget consulapi.ServiceResolverFailoverTarget
+				if value, ok := targetElem["service"]; ok {
+					serviceResolverFailoverTarget.Service = value.(string)
+				}
+				if value, ok := targetElem["service_subset"]; ok {
+					serviceResolverFailoverTarget.ServiceSubset = value.(string)
+				}
+				if value, ok := targetElem["namespace"]; ok {
+					serviceResolverFailoverTarget.Namespace = value.(string)
+				}
+				if value, ok := targetElem["partition"]; ok {
+					serviceResolverFailoverTarget.Partition = value.(string)
+				}
+				if value, ok := targetElem["datacenter"]; ok {
+					serviceResolverFailoverTarget.Datacenter = value.(string)
+				}
+				if value, ok := targetElem["peer"]; ok {
+					serviceResolverFailoverTarget.Peer = value.(string)
+				}
+				serviceResolverFailoverTargets[indx] = serviceResolverFailoverTarget
 			}
-			if value, ok := targetElem["service_subset"]; ok {
-				serviceResolverFailoverTarget.ServiceSubset = value.(string)
-			}
-			if value, ok := targetElem["namespace"]; ok {
-				serviceResolverFailoverTarget.Namespace = value.(string)
-			}
-			if value, ok := targetElem["partition"]; ok {
-				serviceResolverFailoverTarget.Partition = value.(string)
-			}
-			if value, ok := targetElem["datacenter"]; ok {
-				serviceResolverFailoverTarget.Datacenter = value.(string)
-			}
-			if value, ok := targetElem["peer"]; ok {
-				serviceResolverFailoverTarget.Peer = value.(string)
-			}
-			serviceResolverFailoverTargets[indx] = serviceResolverFailoverTarget
+			serviceResolverFailover.Targets = serviceResolverFailoverTargets
 		}
-		serviceResolverFailover.Targets = serviceResolverFailoverTargets
 		failover[failoverMap["subset_name"].(string)] = serviceResolverFailover
 	}
 	configEntry.Failover = failover
@@ -506,22 +570,25 @@ func (s *serviceResolver) Write(ce consulapi.ConfigEntry, sw *stateWriter) error
 		sw.set("redirect", redirect)
 	}
 
-	failover := make([]map[string]interface{}, len(sr.Failover))
-	iter := 0
-	for name, _ := range sr.Failover {
+	var failover *schema.Set
+	failover = new(schema.Set)
+	failover.F = resourceConsulConfigEntryServiceResolverFailoverSetHash
+	for name, failoverValue := range sr.Failover {
 		failoverMap := make(map[string]interface{})
 		failoverMap["subset_name"] = name
-		failoverMap["service"] = sr.Failover[name].Service
-		failoverMap["service_subset"] = sr.Failover[name].ServiceSubset
-		failoverMap["namespace"] = sr.Failover[name].Namespace
-		failoverMap["sameness_group"] = sr.Failover[name].SamenessGroup
-		failoverDatacenters := make([]string, len(sr.Failover[name].Datacenters))
-		for indx, fd := range sr.Failover[name].Datacenters {
-			failoverDatacenters[indx] = fd
+		failoverMap["service"] = failoverValue.Service
+		failoverMap["service_subset"] = failoverValue.ServiceSubset
+		failoverMap["namespace"] = failoverValue.Namespace
+		failoverMap["sameness_group"] = failoverValue.SamenessGroup
+		if len(failoverValue.Datacenters) > 0 {
+			failoverDatacenters := make([]string, len(failoverValue.Datacenters))
+			for index, fd := range failoverValue.Datacenters {
+				failoverDatacenters[index] = fd
+			}
+			failoverMap["datacenters"] = failoverDatacenters
 		}
-		failoverMap["datacenters"] = failoverDatacenters
-		failoverTargets := make([]map[string]interface{}, len(sr.Failover[name].Targets))
-		for indx, ft := range sr.Failover[name].Targets {
+		failoverTargets := make([]interface{}, len(sr.Failover[name].Targets))
+		for index, ft := range sr.Failover[name].Targets {
 			failoverTargetMap := make(map[string]interface{})
 			failoverTargetMap["service"] = ft.Service
 			failoverTargetMap["service_subset"] = ft.ServiceSubset
@@ -529,11 +596,10 @@ func (s *serviceResolver) Write(ce consulapi.ConfigEntry, sw *stateWriter) error
 			failoverTargetMap["partition"] = ft.Partition
 			failoverTargetMap["datacenter"] = ft.Datacenter
 			failoverTargetMap["peer"] = ft.Peer
-			failoverTargets[indx] = failoverTargetMap
+			failoverTargets[index] = failoverTargetMap
 		}
 		failoverMap["targets"] = failoverTargets
-		failover[iter] = failoverMap
-		iter++
+		failover.Add(failoverMap)
 	}
 	sw.set("failover", failover)
 
