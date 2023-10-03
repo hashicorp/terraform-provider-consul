@@ -4,6 +4,7 @@
 package consul
 
 import (
+	"fmt"
 	consulapi "github.com/hashicorp/consul/api"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 	"time"
@@ -215,8 +216,8 @@ func (s *serviceRouter) GetSchema() map[string]*schema.Schema {
 												Optional: true,
 												Elem:     &schema.Schema{Type: schema.TypeString},
 											},
-											"remote": {
-												Type:     schema.TypeMap,
+											"remove": {
+												Type:     schema.TypeList,
 												Optional: true,
 												Elem:     &schema.Schema{Type: schema.TypeString},
 											},
@@ -238,7 +239,7 @@ func (s *serviceRouter) GetSchema() map[string]*schema.Schema {
 												Optional: true,
 												Elem:     &schema.Schema{Type: schema.TypeString},
 											},
-											"remote": {
+											"remove": {
 												Type:     schema.TypeMap,
 												Optional: true,
 												Elem:     &schema.Schema{Type: schema.TypeString},
@@ -350,5 +351,114 @@ func (s *serviceRouter) Decode(d *schema.ResourceData) (consulapi.ConfigEntry, e
 }
 
 func (s *serviceRouter) Write(ce consulapi.ConfigEntry, sw *stateWriter) error {
-	return nil
+	sr, ok := ce.(*consulapi.ServiceRouterConfigEntry)
+	if !ok {
+		return fmt.Errorf("expected '%s' but got '%s'", consulapi.ServiceDefaults, ce.GetKind())
+	}
+
+	sw.set("name", sr.Name)
+	sw.set("partition", sr.Partition)
+	sw.set("namespace", sr.Namespace)
+
+	meta := make(map[string]interface{})
+	for k, v := range sr.Meta {
+		meta[k] = v
+	}
+	sw.set("meta", meta)
+
+	routes := make([]interface{}, 0)
+	if len(sr.Routes) > 0 {
+		route := make(map[string]interface{})
+		for _, routesValue := range sr.Routes {
+			match := make([]map[string]interface{}, 1)
+			match[0] = make(map[string]interface{})
+			matchHTTP := make(map[string]interface{})
+			matchHTTP["path_exact"] = routesValue.Match.HTTP.PathExact
+			matchHTTP["path_prefix"] = routesValue.Match.HTTP.PathPrefix
+			matchHTTP["path_regex"] = routesValue.Match.HTTP.PathRegex
+			matchHTTP["methods"] = routesValue.Match.HTTP.Methods
+			headerList := make([]map[string]interface{}, 0)
+			for _, headerValue := range routesValue.Match.HTTP.Header {
+				headerMap := make(map[string]interface{})
+				headerMap["name"] = headerValue.Name
+				headerMap["present"] = headerValue.Present
+				headerMap["exact"] = headerValue.Exact
+				headerMap["prefix"] = headerValue.Prefix
+				headerMap["suffix"] = headerValue.Suffix
+				headerMap["regex"] = headerValue.Regex
+				headerMap["invert"] = headerValue.Invert
+				headerList = append(headerList, headerMap)
+			}
+			queryParamList := make([]map[string]interface{}, 0)
+			for _, queryParamValue := range routesValue.Match.HTTP.QueryParam {
+				queryParamMap := make(map[string]interface{})
+				queryParamMap["name"] = queryParamValue.Name
+				queryParamMap["present"] = queryParamValue.Present
+				queryParamMap["exact"] = queryParamValue.Exact
+				queryParamMap["regex"] = queryParamValue.Regex
+				queryParamList = append(queryParamList, queryParamMap)
+			}
+			matchHTTP["header"] = headerList
+			matchHTTP["query_param"] = queryParamList
+			match[0]["http"] = matchHTTP
+			destination := make([]map[string]interface{}, 1)
+			destination[0] = make(map[string]interface{})
+			destination[0]["service"] = routesValue.Destination.Service
+			destination[0]["service_subset"] = routesValue.Destination.ServiceSubset
+			destination[0]["namespace"] = routesValue.Destination.Namespace
+			destination[0]["partition"] = routesValue.Destination.Partition
+			destination[0]["prefix_rewrite"] = routesValue.Destination.PrefixRewrite
+			destination[0]["request_timeout"] = routesValue.Destination.RequestTimeout
+			destination[0]["idle_timeout"] = routesValue.Destination.IdleTimeout
+			destination[0]["num_retries"] = routesValue.Destination.NumRetries
+			destination[0]["retry_on_connect_failure"] = routesValue.Destination.RetryOnConnectFailure
+			destination[0]["retry_on"] = routesValue.Destination.RetryOn
+			destination[0]["retry_on_status_codes"] = routesValue.Destination.RetryOnStatusCodes
+			requestHeaders := make(map[string]interface{})
+			requestHeaders["add"] = make(map[string]interface{})
+			addMap := make(map[string]interface{})
+			for k, v := range routesValue.Destination.RequestHeaders.Add {
+				addMap[k] = v
+			}
+			requestHeaders["add"] = addMap
+			setMap := make(map[string]interface{})
+			requestHeaders["set"] = make(map[string]interface{})
+			for k, v := range routesValue.Destination.RequestHeaders.Set {
+				setMap[k] = v
+			}
+			requestHeaders["set"] = setMap
+			requestHeaders["remove"] = make([]string, 0)
+			removeList := make([]string, 0)
+			for _, v := range routesValue.Destination.RequestHeaders.Remove {
+				removeList = append(removeList, v)
+			}
+			requestHeaders["remove"] = removeList
+			destination[0]["request_headers"] = requestHeaders
+			responseHeaders := make(map[string]interface{})
+			responseHeaders["add"] = make(map[string]interface{})
+			addMap = make(map[string]interface{})
+			for k, v := range routesValue.Destination.ResponseHeaders.Add {
+				addMap[k] = v
+			}
+			responseHeaders["add"] = addMap
+			setMap = make(map[string]interface{})
+			requestHeaders["set"] = make(map[string]interface{})
+			for k, v := range routesValue.Destination.ResponseHeaders.Set {
+				setMap[k] = v
+			}
+			responseHeaders["set"] = setMap
+			responseHeaders["remove"] = make([]string, 0)
+			removeList = make([]string, 0)
+			for _, v := range routesValue.Destination.ResponseHeaders.Remove {
+				removeList = append(removeList, v)
+			}
+			responseHeaders["remove"] = removeList
+			destination[0]["response_headers"] = responseHeaders
+			route["match"] = match
+			route["destination"] = destination
+		}
+		routes = append(routes, route)
+	}
+
+	sw.set("routes", routes)
 }
