@@ -539,7 +539,7 @@ func (s *serviceDefaults) Decode(d *schema.ResourceData) (consulapi.ConfigEntry,
 	}
 
 	getEnvoyExtension := func(envoyExtensionMap map[string]interface{}) consulapi.EnvoyExtension {
-		return &consulapi.EnvoyExtension{
+		return consulapi.EnvoyExtension{
 			Name:          envoyExtensionMap["name"].(string),
 			Required:      envoyExtensionMap["required"].(bool),
 			Arguments:     envoyExtensionMap["arguments"].(map[string]interface{}),
@@ -613,7 +613,7 @@ func (s *serviceDefaults) Decode(d *schema.ResourceData) (consulapi.ConfigEntry,
 
 	for _, elem := range d.Get("envoy_extensions").([]interface{}) {
 		envoyExtensionMap := elem.(map[string]interface{})
-		configEntry.EnvoyExtensions = append(configEntry.EnvoyExtensions, *getEnvoyExtension(envoyExtensionMap))
+		configEntry.EnvoyExtensions = append(configEntry.EnvoyExtensions, getEnvoyExtension(envoyExtensionMap))
 	}
 
 	destinationList := d.Get("destination").(*schema.Set).List()
