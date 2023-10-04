@@ -72,7 +72,7 @@ func (s *serviceIntentions) GetSchema() map[string]*schema.Schema {
 												Type:        schema.TypeList,
 												Optional:    true,
 												Description: "Specifies the path to the claim in the JSON web token.",
-												Elem:        schema.Schema{Type: schema.TypeString},
+												Elem:        &schema.Schema{Type: schema.TypeString},
 											},
 											"value": {
 												Type:        schema.TypeString,
@@ -160,11 +160,12 @@ func (s *serviceIntentions) GetSchema() map[string]*schema.Schema {
 												Type:        schema.TypeList,
 												Description: "Specifies a list of HTTP methods.",
 												Optional:    true,
-												Elem:        schema.Schema{Type: schema.TypeString},
+												Elem:        &schema.Schema{Type: schema.TypeString},
 											},
 											"headers": {
 												Type:        schema.TypeList,
 												Description: "Specifies a header name and matching criteria for HTTP request headers.",
+												Optional:    true,
 												Elem: &schema.Resource{
 													Schema: map[string]*schema.Schema{
 														"name": {
@@ -221,6 +222,7 @@ func (s *serviceIntentions) GetSchema() map[string]*schema.Schema {
 						Type:        schema.TypeString,
 						Default:     "consul",
 						Description: "Specifies the type of destination service that the configuration entry applies to.",
+						Optional:    true,
 					},
 					"description": {
 						Type:        schema.TypeString,
@@ -236,7 +238,7 @@ func (s *serviceIntentions) GetSchema() map[string]*schema.Schema {
 						Type:        schema.TypeMap,
 						Optional:    true,
 						Description: "Read-only set of arbitrary key-value pairs to attach to the intention.",
-						Elem:        schema.Schema{Type: schema.TypeString},
+						Elem:        &schema.Schema{Type: schema.TypeString},
 					},
 					"legacy_create_time": {
 						Type:        schema.TypeString,
