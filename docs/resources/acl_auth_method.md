@@ -46,6 +46,32 @@ resource "consul_acl_auth_method" "minikube" {
 }
 ```
 
+Deine an `OIDC` auth method:
+```hcl
+resource "consul_acl_auth_method" "oidc" {
+  name        = "auth0"
+  type        = "oidc"
+  max_token_ttl = "5m"
+  config_json = jsonencode({
+  "OIDCDiscoveryURL": "https://<AUTH0_DOMAIN>/",
+  "OIDCClientID": "<AUTH0_CLIENT_ID>",
+  "OIDCClientSecret": "<AUTH0_CLIENT_SECRET>",
+  "BoundAudiences": ["<AUTH0_CLIENT_ID>"],
+  "AllowedRedirectURIs": [
+    "http://localhost:8550/oidc/callback",
+    "http://localhost:8500/ui/oidc/callback"
+  ],
+  "ClaimMappings": {
+    "http://consul.internal/first_name": "first_name",
+    "http://consul.internal/last_name": "last_name"
+  },
+  "ListClaimMappings": {
+    "http://consul.internal/groups": "groups"
+  }
+})
+}
+```
+
 ## Argument Reference
 
 The following arguments are supported:
@@ -54,8 +80,8 @@ The following arguments are supported:
 * `type` - (Required) The type of the ACL auth method.
 * `display_name` - (Optional) An optional name to use instead of the name
   attribute when displaying information about this auth method.
-* `max_token_ttl` - (Optional) The maximum life of any token created by this
-  auth method.
+* `max_token_ttl` - The maximum life of any token created by this
+  auth method. (Required) for OIDC auth method
 * `token_locality` - (Optional) The kind of token that this auth method
   produces. This can be either 'local' or 'global'.
 * `description` - (Optional) A free form human readable description of the auth method.
