@@ -178,18 +178,22 @@ func (s *serviceRouter) GetSchema() map[string]*schema.Schema {
 								"request_timeout": {
 									Type:     schema.TypeString,
 									Optional: true,
+									Default:  "0s",
 								},
 								"idle_timeout": {
 									Type:     schema.TypeString,
 									Optional: true,
+									Default:  "0s",
 								},
 								"num_retries": {
 									Type:     schema.TypeInt,
 									Optional: true,
+									Default:  0,
 								},
 								"retry_on_connect_failure": {
 									Type:     schema.TypeBool,
 									Optional: true,
+									Default:  false,
 								},
 								"retry_on": {
 									Type:     schema.TypeList,
@@ -240,7 +244,7 @@ func (s *serviceRouter) GetSchema() map[string]*schema.Schema {
 												Elem:     &schema.Schema{Type: schema.TypeString},
 											},
 											"remove": {
-												Type:     schema.TypeMap,
+												Type:     schema.TypeList,
 												Optional: true,
 												Elem:     &schema.Schema{Type: schema.TypeString},
 											},
@@ -332,16 +336,121 @@ func (s *serviceRouter) Decode(d *schema.ResourceData) (consulapi.ConfigEntry, e
 					destination.Namespace = destinationMap["namespace"].(string)
 					destination.Partition = destinationMap["partition"].(string)
 					destination.PrefixRewrite = destinationMap["prefix_rewrite"].(string)
-					requestTimeout, err := time.ParseDuration(destinationMap["request_timeout"].(string))
-					if err != nil {
-						return nil, err
+					if destinationMap["request_timeout"] != "" {
+						requestTimeout, err := time.ParseDuration(destinationMap["request_timeout"].(string))
+						if err != nil {
+							return nil, err
+						}
+						destination.RequestTimeout = requestTimeout
 					}
-					destination.RequestTimeout = requestTimeout
-					idleTimeout, err := time.ParseDuration(destinationMap["idle_timeout"].(string))
-					if err != nil {
-						return nil, err
+					if destinationMap["idle_timeout"] != "" {
+						idleTimeout, err := time.ParseDuration(destinationMap["idle_timeout"].(string))
+						if err != nil {
+							return nil, err
+						}
+						destination.IdleTimeout = idleTimeout
 					}
-					destination.IdleTimeout = idleTimeout
+					destination.NumRetries = uint32(destinationMap["num_retries"].(int))
+					destination.RetryOnConnectFailure = destinationMap["retry_on_connect_failure"].(bool)
+					retryOnList := make([]string, 0)
+					for _, v := range destinationMap["retry_on"].([]interface{}) {
+						retryOnList = append(retryOnList, v.(string))
+					}
+					destination.RetryOn = retryOnList
+					retryOnCodes := make([]uint32, 0)
+					for _, v := range destinationMap["retry_on_status_codes"].([]interface{}) {
+						retryOnCodes = append(retryOnCodes, v.(uint32))
+					}
+					destination.RetryOnStatusCodes = retryOnCodes
+					var requestMap *consulapi.HTTPHeaderModifiers
+					requestMap = new(consulapi.HTTPHeaderModifiers)
+					addMap := make(map[string]string)
+					setMap := make(map[string]string)
+					if destinationMap["request_headers"] != nil {
+						reqHeadersList := destinationMap["request_headers"].(*schema.Set).List()
+						if len(reqHeadersList) > 0 {
+							destinationAddMap := reqHeadersList[0].(map[string]interface{})["add"]
+							if destinationAddMap != nil {
+								for k, v := range destinationAddMap.(map[string]string) {
+									addMap[k] = v
+								}
+								requestMap.Add = addMap
+							}
+						}
+					}
+					if destinationMap["request_headers"] != nil {
+						reqHeadersList := destinationMap["request_headers"].(*schema.Set).List()
+						if len(reqHeadersList) > 0 {
+							destinationSetMap := reqHeadersList[0].(map[string]interface{})["set"]
+							if destinationSetMap != nil {
+								for k, v := range destinationSetMap.(map[string]string) {
+									setMap[k] = v
+								}
+								requestMap.Set = setMap
+							}
+						}
+					}
+					removeList := make([]string, 0)
+					if destinationMap["request_headers"] != nil {
+						reqHeadersList := destinationMap["request_headers"].(*schema.Set).List()
+						if len(reqHeadersList) > 0 {
+							destinationRemoveList := reqHeadersList[0].(map[string]interface{})["remove"]
+							if destinationRemoveList != nil && len(destinationRemoveList.([]string)) > 0 {
+								for _, v := range destinationRemoveList.([]string) {
+									removeList = append(removeList, v)
+								}
+							}
+						}
+					}
+					if len(removeList) > 0 {
+						requestMap.Remove = removeList
+					}
+					destination.RequestHeaders = requestMap
+					var responseMap *consulapi.HTTPHeaderModifiers
+					responseMap = new(consulapi.HTTPHeaderModifiers)
+					addMap = make(map[string]string)
+					setMap = make(map[string]string)
+					if destinationMap["response_headers"] != nil {
+						resHeadersList := destinationMap["response_headers"].(*schema.Set).List()
+						if len(resHeadersList) > 0 {
+							destinationAddMap := resHeadersList[0].(map[string]interface{})["add"]
+							if destinationAddMap != nil {
+								for k, v := range destinationAddMap.(map[string]string) {
+									addMap[k] = v
+								}
+								responseMap.Add = addMap
+							}
+						}
+					}
+					if destinationMap["response_headers"] != nil {
+						resHeadersList := destinationMap["response_headers"].(*schema.Set).List()
+						if len(resHeadersList) > 0 {
+							destinationSetMap := resHeadersList[0].(map[string]interface{})["set"]
+							if destinationSetMap != nil {
+								for k, v := range destinationSetMap.(map[string]string) {
+									setMap[k] = v
+								}
+								responseMap.Set = setMap
+							}
+						}
+					}
+					removeList = make([]string, 0)
+					if destinationMap["response_headers"] != nil {
+						resHeadersList := destinationMap["response_headers"].(*schema.Set).List()
+						if len(resHeadersList) > 0 {
+							destinationRemoveList := resHeadersList[0].(map[string]interface{})["remove"]
+							if destinationRemoveList != nil && len(destinationRemoveList.([]string)) > 0 {
+								for _, v := range destinationRemoveList.([]string) {
+									removeList = append(removeList, v)
+								}
+							}
+						}
+					}
+					if len(removeList) > 0 {
+						responseMap.Remove = removeList
+					}
+					destination.ResponseHeaders = responseMap
+					serviceRoutesList[indx].Destination = destination
 				}
 			}
 		}
@@ -366,17 +475,18 @@ func (s *serviceRouter) Write(ce consulapi.ConfigEntry, sw *stateWriter) error {
 	}
 	sw.set("meta", meta)
 
-	routes := make([]interface{}, 0)
+	routes := make([]map[string]interface{}, 0)
 	if len(sr.Routes) > 0 {
 		route := make(map[string]interface{})
 		for _, routesValue := range sr.Routes {
 			match := make([]map[string]interface{}, 1)
 			match[0] = make(map[string]interface{})
-			matchHTTP := make(map[string]interface{})
-			matchHTTP["path_exact"] = routesValue.Match.HTTP.PathExact
-			matchHTTP["path_prefix"] = routesValue.Match.HTTP.PathPrefix
-			matchHTTP["path_regex"] = routesValue.Match.HTTP.PathRegex
-			matchHTTP["methods"] = routesValue.Match.HTTP.Methods
+			matchHTTP := make([]map[string]interface{}, 1)
+			matchHTTP[0] = make(map[string]interface{})
+			matchHTTP[0]["path_exact"] = routesValue.Match.HTTP.PathExact
+			matchHTTP[0]["path_prefix"] = routesValue.Match.HTTP.PathPrefix
+			matchHTTP[0]["path_regex"] = routesValue.Match.HTTP.PathRegex
+			matchHTTP[0]["methods"] = routesValue.Match.HTTP.Methods
 			headerList := make([]map[string]interface{}, 0)
 			for _, headerValue := range routesValue.Match.HTTP.Header {
 				headerMap := make(map[string]interface{})
@@ -398,62 +508,77 @@ func (s *serviceRouter) Write(ce consulapi.ConfigEntry, sw *stateWriter) error {
 				queryParamMap["regex"] = queryParamValue.Regex
 				queryParamList = append(queryParamList, queryParamMap)
 			}
-			matchHTTP["header"] = headerList
-			matchHTTP["query_param"] = queryParamList
+			matchHTTP[0]["header"] = headerList
+			matchHTTP[0]["query_param"] = queryParamList
 			match[0]["http"] = matchHTTP
 			destination := make([]map[string]interface{}, 1)
 			destination[0] = make(map[string]interface{})
-			destination[0]["service"] = routesValue.Destination.Service
-			destination[0]["service_subset"] = routesValue.Destination.ServiceSubset
-			destination[0]["namespace"] = routesValue.Destination.Namespace
-			destination[0]["partition"] = routesValue.Destination.Partition
-			destination[0]["prefix_rewrite"] = routesValue.Destination.PrefixRewrite
-			destination[0]["request_timeout"] = routesValue.Destination.RequestTimeout
-			destination[0]["idle_timeout"] = routesValue.Destination.IdleTimeout
-			destination[0]["num_retries"] = routesValue.Destination.NumRetries
-			destination[0]["retry_on_connect_failure"] = routesValue.Destination.RetryOnConnectFailure
-			destination[0]["retry_on"] = routesValue.Destination.RetryOn
-			destination[0]["retry_on_status_codes"] = routesValue.Destination.RetryOnStatusCodes
-			requestHeaders := make(map[string]interface{})
-			requestHeaders["add"] = make(map[string]interface{})
-			addMap := make(map[string]interface{})
-			for k, v := range routesValue.Destination.RequestHeaders.Add {
-				addMap[k] = v
+			if routesValue.Destination != nil {
+				destination[0]["service"] = routesValue.Destination.Service
+				destination[0]["service_subset"] = routesValue.Destination.ServiceSubset
+				destination[0]["namespace"] = routesValue.Destination.Namespace
+				destination[0]["partition"] = routesValue.Destination.Partition
+				destination[0]["prefix_rewrite"] = routesValue.Destination.PrefixRewrite
+				destination[0]["request_timeout"] = routesValue.Destination.RequestTimeout.String()
+				destination[0]["idle_timeout"] = routesValue.Destination.IdleTimeout.String()
+				destination[0]["num_retries"] = routesValue.Destination.NumRetries
+				destination[0]["retry_on_connect_failure"] = routesValue.Destination.RetryOnConnectFailure
+				destination[0]["retry_on"] = routesValue.Destination.RetryOn
+				destination[0]["retry_on_status_codes"] = routesValue.Destination.RetryOnStatusCodes
+				requestHeaders := make([]map[string]interface{}, 1)
+				requestHeaders[0] = make(map[string]interface{})
+				addMap := make(map[string]interface{})
+				if routesValue.Destination.RequestHeaders != nil && routesValue.Destination.RequestHeaders.Add != nil {
+					for k, v := range routesValue.Destination.RequestHeaders.Add {
+						addMap[k] = v
+					}
+				}
+				requestHeaders[0]["add"] = addMap
+				setMap := make(map[string]interface{})
+				if routesValue.Destination.RequestHeaders != nil && routesValue.Destination.RequestHeaders.Set != nil {
+					for k, v := range routesValue.Destination.RequestHeaders.Set {
+						setMap[k] = v
+					}
+				}
+				requestHeaders[0]["set"] = setMap
+				removeList := make([]string, 0)
+				if routesValue.Destination.RequestHeaders != nil && routesValue.Destination.RequestHeaders.Remove != nil {
+					for _, v := range routesValue.Destination.RequestHeaders.Remove {
+						removeList = append(removeList, v)
+					}
+				}
+				if len(removeList) > 0 {
+					requestHeaders[0]["remove"] = removeList
+				}
+				destination[0]["request_headers"] = requestHeaders
+				responseHeaders := make([]map[string]interface{}, 1)
+				responseHeaders[0] = make(map[string]interface{})
+				responseHeaders[0]["add"] = make(map[string]interface{})
+				addMap = make(map[string]interface{})
+				if routesValue.Destination.ResponseHeaders != nil && routesValue.Destination.ResponseHeaders.Add != nil {
+					for k, v := range routesValue.Destination.ResponseHeaders.Add {
+						addMap[k] = v
+					}
+				}
+				responseHeaders[0]["add"] = addMap
+				setMap = make(map[string]interface{})
+				if routesValue.Destination.ResponseHeaders != nil && routesValue.Destination.ResponseHeaders.Set != nil {
+					for k, v := range routesValue.Destination.ResponseHeaders.Set {
+						setMap[k] = v
+					}
+				}
+				responseHeaders[0]["set"] = setMap
+				removeList = make([]string, 0)
+				if routesValue.Destination.ResponseHeaders != nil && routesValue.Destination.ResponseHeaders.Remove != nil {
+					for _, v := range routesValue.Destination.ResponseHeaders.Remove {
+						removeList = append(removeList, v)
+					}
+				}
+				if len(removeList) > 0 {
+					responseHeaders[0]["remove"] = removeList
+				}
+				destination[0]["response_headers"] = responseHeaders
 			}
-			requestHeaders["add"] = addMap
-			setMap := make(map[string]interface{})
-			requestHeaders["set"] = make(map[string]interface{})
-			for k, v := range routesValue.Destination.RequestHeaders.Set {
-				setMap[k] = v
-			}
-			requestHeaders["set"] = setMap
-			requestHeaders["remove"] = make([]string, 0)
-			removeList := make([]string, 0)
-			for _, v := range routesValue.Destination.RequestHeaders.Remove {
-				removeList = append(removeList, v)
-			}
-			requestHeaders["remove"] = removeList
-			destination[0]["request_headers"] = requestHeaders
-			responseHeaders := make(map[string]interface{})
-			responseHeaders["add"] = make(map[string]interface{})
-			addMap = make(map[string]interface{})
-			for k, v := range routesValue.Destination.ResponseHeaders.Add {
-				addMap[k] = v
-			}
-			responseHeaders["add"] = addMap
-			setMap = make(map[string]interface{})
-			requestHeaders["set"] = make(map[string]interface{})
-			for k, v := range routesValue.Destination.ResponseHeaders.Set {
-				setMap[k] = v
-			}
-			responseHeaders["set"] = setMap
-			responseHeaders["remove"] = make([]string, 0)
-			removeList = make([]string, 0)
-			for _, v := range routesValue.Destination.ResponseHeaders.Remove {
-				removeList = append(removeList, v)
-			}
-			responseHeaders["remove"] = removeList
-			destination[0]["response_headers"] = responseHeaders
 			route["match"] = match
 			route["destination"] = destination
 		}
