@@ -346,8 +346,6 @@ func (s *serviceIntentions) Decode(d *schema.ResourceData) (consulapi.ConfigEntr
 					sourceIntention.Action = consulapi.IntentionActionAllow
 				} else if sourceMap["action"].(string) == "deny" {
 					sourceIntention.Action = consulapi.IntentionActionDeny
-				} else {
-					return nil, fmt.Errorf("action is invalid. it should either be allow or deny")
 				}
 			}
 			if sourceMap["permissions"] != nil {
@@ -367,51 +365,54 @@ func (s *serviceIntentions) Decode(d *schema.ResourceData) (consulapi.ConfigEntr
 					if permissionMap["http"] != nil {
 						var intentionPermissionHTTP *consulapi.IntentionHTTPPermission
 						intentionPermissionHTTP = new(consulapi.IntentionHTTPPermission)
-						httpMap := permissionMap["http"].(map[string]interface{})
-						if httpMap["path_exact"] != nil {
-							intentionPermissionHTTP.PathExact = httpMap["path_exact"].(string)
-						}
-						if httpMap["path_prefix"] != nil {
-							intentionPermissionHTTP.PathPrefix = httpMap["path_prefix"].(string)
-						}
-						if httpMap["path_regex"] != nil {
-							intentionPermissionHTTP.PathPrefix = httpMap["path_regex"].(string)
-						}
-						if httpMap["methods"] != nil {
-							httpMethods := make([]string, 0)
-							for _, v := range httpMap["methods"].([]interface{}) {
-								httpMethods = append(httpMethods, v.(string))
+						httpMap := permissionMap["http"].(*schema.Set).List()
+						if len(httpMap) > 0 {
+							httpMapFirst := httpMap[0].(map[string]interface{})
+							if httpMapFirst["path_exact"] != nil {
+								intentionPermissionHTTP.PathExact = httpMapFirst["path_exact"].(string)
 							}
-							intentionPermissionHTTP.Methods = httpMethods
-						}
-						intentionPermission.HTTP = intentionPermissionHTTP
-						if httpMap["headers"] != nil {
-							httpHeaderPermissions := make([]consulapi.IntentionHTTPHeaderPermission, 0)
-							for _, v := range httpMap["headers"].([]interface{}) {
-								var httpHeaderPermission consulapi.IntentionHTTPHeaderPermission
-								headerPermissionMap := v.(map[string]interface{})
-								if headerPermissionMap["name"] != nil {
-									httpHeaderPermission.Name = headerPermissionMap["name"].(string)
+							if httpMapFirst["path_prefix"] != nil {
+								intentionPermissionHTTP.PathPrefix = httpMapFirst["path_prefix"].(string)
+							}
+							if httpMapFirst["path_regex"] != nil {
+								intentionPermissionHTTP.PathPrefix = httpMapFirst["path_regex"].(string)
+							}
+							if httpMapFirst["methods"] != nil {
+								httpMethods := make([]string, 0)
+								for _, v := range httpMapFirst["methods"].([]interface{}) {
+									httpMethods = append(httpMethods, v.(string))
 								}
-								if headerPermissionMap["present"] != nil {
-									httpHeaderPermission.Present = headerPermissionMap["present"].(bool)
+								intentionPermissionHTTP.Methods = httpMethods
+							}
+							intentionPermission.HTTP = intentionPermissionHTTP
+							if httpMapFirst["headers"] != nil {
+								httpHeaderPermissions := make([]consulapi.IntentionHTTPHeaderPermission, 0)
+								for _, v := range httpMapFirst["headers"].([]interface{}) {
+									var httpHeaderPermission consulapi.IntentionHTTPHeaderPermission
+									headerPermissionMap := v.(map[string]interface{})
+									if headerPermissionMap["name"] != nil {
+										httpHeaderPermission.Name = headerPermissionMap["name"].(string)
+									}
+									if headerPermissionMap["present"] != nil {
+										httpHeaderPermission.Present = headerPermissionMap["present"].(bool)
+									}
+									if headerPermissionMap["exact"] != nil {
+										httpHeaderPermission.Exact = headerPermissionMap["exact"].(string)
+									}
+									if headerPermissionMap["prefix"] != nil {
+										httpHeaderPermission.Prefix = headerPermissionMap["prefix"].(string)
+									}
+									if headerPermissionMap["suffix"] != nil {
+										httpHeaderPermission.Suffix = headerPermissionMap["suffix"].(string)
+									}
+									if headerPermissionMap["regex"] != nil {
+										httpHeaderPermission.Regex = headerPermissionMap["regex"].(string)
+									}
+									if headerPermissionMap["invert"] != nil {
+										httpHeaderPermission.Invert = headerPermissionMap["invert"].(bool)
+									}
+									httpHeaderPermissions = append(httpHeaderPermissions, httpHeaderPermission)
 								}
-								if headerPermissionMap["exact"] != nil {
-									httpHeaderPermission.Exact = headerPermissionMap["exact"].(string)
-								}
-								if headerPermissionMap["prefix"] != nil {
-									httpHeaderPermission.Prefix = headerPermissionMap["prefix"].(string)
-								}
-								if headerPermissionMap["suffix"] != nil {
-									httpHeaderPermission.Suffix = headerPermissionMap["suffix"].(string)
-								}
-								if headerPermissionMap["regex"] != nil {
-									httpHeaderPermission.Regex = headerPermissionMap["regex"].(string)
-								}
-								if headerPermissionMap["invert"] != nil {
-									httpHeaderPermission.Invert = headerPermissionMap["invert"].(bool)
-								}
-								httpHeaderPermissions = append(httpHeaderPermissions, httpHeaderPermission)
 							}
 						}
 					}
@@ -514,7 +515,7 @@ func (s *serviceIntentions) Write(ce consulapi.ConfigEntry, sw *stateWriter) err
 		for _, permission := range source.Permissions {
 			permissionMap := make(map[string]interface{})
 			permissionMap["action"] = permission.Action
-			permissionHttp := make([]map[string]interface{}, 0)
+			permissionHttp := make([]map[string]interface{}, 1)
 			permissionHttp[0] = make(map[string]interface{})
 			permissionHttp[0]["path_exact"] = permission.HTTP.PathExact
 			permissionHttp[0]["path_prefix"] = permission.HTTP.PathPrefix

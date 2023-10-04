@@ -25,5 +25,34 @@ func TestAccConsulConfigEntryServiceIntentionsCETest(t *testing.T) {
 }
 
 const testConsulConfigEntryServiceIntentionsCE = `
-	resource 
+
+	name = "service-intention-3"
+	meta = {
+		key = "value"
+	}
+	jwt {
+		providers {
+			name = consul_config_entry.jwt_provider.name
+			verify_claims {
+				path = ["/", "path1"]
+				value = ""
+			}
+			verify_claims {
+				path = ["/path"]
+				value = "value"
+			}
+		}
+	}
+	sources {
+		action     = "allow"
+		name       = "frontend-webapp"
+		precedence = 9
+		type       = "consul"
+	}
+	sources {
+		action     = "allow"
+		name       = "nightly-cronjob"
+		precedence = 9
+		type       = "consul"
+	}
 `
