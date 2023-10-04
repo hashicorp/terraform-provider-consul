@@ -25,5 +25,5 @@ func TestAccConsulConfigEntryServiceIntentionsCETest(t *testing.T) {
 }
 
 const testConsulConfigEntryServiceIntentionsCE = `
-
+	resource 
 `

@@ -309,8 +309,9 @@ func (s *serviceIntentions) Decode(d *schema.ResourceData) (consulapi.ConfigEntr
 					}
 					verifyClaims = append(verifyClaims, verifyClaim)
 				}
+				provider.VerifyClaims = verifyClaims
 			}
-			providerList = append(providerList, provider)
+			providers = append(providers, provider)
 		}
 		jwtReq.Providers = providers
 		configEntry.JWT = jwtReq
@@ -323,6 +324,7 @@ func (s *serviceIntentions) Decode(d *schema.ResourceData) (consulapi.ConfigEntr
 		sourcesIntentions := make([]*consulapi.SourceIntention, 0)
 		for _, sr := range sourcesList {
 			var sourceIntention *consulapi.SourceIntention
+			sourceIntention = new(consulapi.SourceIntention)
 			sourceMap := sr.(map[string]interface{})
 			if sourceMap["name"] != nil {
 				sourceIntention.Name = sourceMap["name"].(string)
@@ -432,8 +434,8 @@ func (s *serviceIntentions) Decode(d *schema.ResourceData) (consulapi.ConfigEntr
 			}
 			if sourceMap["legacy_meta"] != nil {
 				legacyMeta := make(map[string]string)
-				for k, v := range sourceMap["legacy_meta"].(map[string]string) {
-					legacyMeta[k] = v
+				for k, v := range sourceMap["legacy_meta"].(map[string]interface{}) {
+					legacyMeta[k] = v.(string)
 				}
 				sourceIntention.LegacyMeta = legacyMeta
 			}
