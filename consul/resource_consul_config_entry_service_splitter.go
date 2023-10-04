@@ -141,58 +141,68 @@ func (s *serviceSplitter) GetSchema() map[string]*schema.Schema {
 
 func (s *serviceSplitter) Decode(d *schema.ResourceData) (consulapi.ConfigEntry, error) {
 	configEntry := &consulapi.ServiceSplitterConfigEntry{
-		Kind:      consulapi.ServiceSplitter,
-		Name:      d.Get("name").(string),
-		Partition: d.Get("partition").(string),
-		Namespace: d.Get("namespace").(string),
-		Meta:      map[string]string{},
+		Kind: consulapi.ServiceSplitter,
+		Name: d.Get("name").(string),
+		Meta: map[string]string{},
 	}
 
-	for k, v := range d.Get("meta").(map[string]interface{}) {
-		configEntry.Meta[k] = v.(string)
+	if d.Get("namespace") != nil {
+		configEntry.Namespace = d.Get("namespace").(string)
 	}
 
-	for _, raw := range d.Get("splits").([]interface{}) {
-		s := raw.(map[string]interface{})
-		split := consulapi.ServiceSplit{
-			Weight:        float32(s["weight"].(float64)),
-			Service:       s["service"].(string),
-			ServiceSubset: s["service_subset"].(string),
-			Namespace:     s["namespace"].(string),
-			Partition:     s["partition"].(string),
-			RequestHeaders: &consulapi.HTTPHeaderModifiers{
-				Add:    map[string]string{},
-				Set:    map[string]string{},
-				Remove: []string{},
-			},
-			ResponseHeaders: &consulapi.HTTPHeaderModifiers{
-				Add:    map[string]string{},
-				Set:    map[string]string{},
-				Remove: []string{},
-			},
+	if d.Get("partition") != nil {
+		configEntry.Partition = d.Get("partition").(string)
+	}
+
+	if d.Get("meta") != nil {
+		for k, v := range d.Get("meta").(map[string]interface{}) {
+			configEntry.Meta[k] = v.(string)
 		}
+	}
 
-		addHeaders := func(modifier *consulapi.HTTPHeaderModifiers, path string) {
-			elems := s[path].([]interface{})
-			if len(elems) == 0 {
-				return
+	if d.Get("splits") != nil {
+		for _, raw := range d.Get("splits").([]interface{}) {
+			s := raw.(map[string]interface{})
+			split := consulapi.ServiceSplit{
+				Weight:        float32(s["weight"].(float64)),
+				Service:       s["service"].(string),
+				ServiceSubset: s["service_subset"].(string),
+				Namespace:     s["namespace"].(string),
+				Partition:     s["partition"].(string),
+				RequestHeaders: &consulapi.HTTPHeaderModifiers{
+					Add:    map[string]string{},
+					Set:    map[string]string{},
+					Remove: []string{},
+				},
+				ResponseHeaders: &consulapi.HTTPHeaderModifiers{
+					Add:    map[string]string{},
+					Set:    map[string]string{},
+					Remove: []string{},
+				},
 			}
 
-			headers := elems[0].(map[string]interface{})
-			for k, v := range headers["add"].(map[string]interface{}) {
-				modifier.Add[k] = v.(string)
+			addHeaders := func(modifier *consulapi.HTTPHeaderModifiers, path string) {
+				elems := s[path].([]interface{})
+				if len(elems) == 0 {
+					return
+				}
+
+				headers := elems[0].(map[string]interface{})
+				for k, v := range headers["add"].(map[string]interface{}) {
+					modifier.Add[k] = v.(string)
+				}
+				for k, v := range headers["set"].(map[string]interface{}) {
+					modifier.Set[k] = v.(string)
+				}
+				for _, v := range headers["remove"].([]interface{}) {
+					modifier.Remove = append(modifier.Remove, v.(string))
+				}
 			}
-			for k, v := range headers["set"].(map[string]interface{}) {
-				modifier.Set[k] = v.(string)
-			}
-			for _, v := range headers["remove"].([]interface{}) {
-				modifier.Remove = append(modifier.Remove, v.(string))
-			}
+			addHeaders(split.RequestHeaders, "request_headers")
+			addHeaders(split.ResponseHeaders, "response_headers")
+
+			configEntry.Splits = append(configEntry.Splits, split)
 		}
-		addHeaders(split.RequestHeaders, "request_headers")
-		addHeaders(split.ResponseHeaders, "response_headers")
-
-		configEntry.Splits = append(configEntry.Splits, split)
 	}
 
 	return configEntry, nil
@@ -238,7 +248,7 @@ func (s *serviceSplitter) Write(ce consulapi.ConfigEntry, sw *stateWriter) error
 			}
 			headers["set"] = set
 
-			remove := []interface{}{}
+			var remove []interface{}
 			for _, v := range modifier.Remove {
 				remove = append(remove, v)
 			}
