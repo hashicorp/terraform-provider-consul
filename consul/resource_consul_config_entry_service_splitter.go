@@ -224,7 +224,7 @@ func (s *serviceSplitter) Write(ce consulapi.ConfigEntry, sw *stateWriter) error
 	}
 	sw.set("meta", meta)
 
-	splits := []interface{}{}
+	splits := make([]interface{}, 0)
 	for _, s := range sp.Splits {
 		split := map[string]interface{}{
 			"weight":         s.Weight,
