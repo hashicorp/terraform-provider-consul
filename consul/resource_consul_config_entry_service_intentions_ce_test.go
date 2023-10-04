@@ -18,15 +18,31 @@ func TestAccConsulConfigEntryServiceIntentionsCETest(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testConsulConfigEntryServiceIntentionsCE,
-				Check:  resource.ComposeTestCheckFunc(),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("consul_config_entry_service_intentions.foo", "name", "service-intention"),
+				),
 			},
 		},
 	})
 }
 
 const testConsulConfigEntryServiceIntentionsCE = `
+resource "consul_config_entry" "jwt_provider" {
+	name = "okta"
+	kind = "jwt-provider"
 
-	name = "service-intention-3"
+	config_json = jsonencode({
+		Issuer = "test-issuer"
+		JSONWebKeySet = {
+			Remote = {
+				URI = "https://127.0.0.1:9091"
+				FetchAsynchronously = true
+			}
+		}
+	})
+}
+resource "consul_config_entry_service_intentions" "foo" {
+	name = "service-intention"
 	meta = {
 		key = "value"
 	}
@@ -50,9 +66,10 @@ const testConsulConfigEntryServiceIntentionsCE = `
 		type       = "consul"
 	}
 	sources {
-		action     = "allow"
 		name       = "nightly-cronjob"
 		precedence = 9
 		type       = "consul"
+		action = "deny"
 	}
+}
 `
