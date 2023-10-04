@@ -364,6 +364,8 @@ func waitForService(t *testing.T, address string) (terraform.ResourceProvider, *
 			logger("got wrong number of services: %d", len(services))
 		} else if len(services[0].Node.Meta) == 0 {
 			logger("got empty metadata")
+		} else if len(services[0].Node.Meta) < 2 {
+			logger("missing metadata")
 		} else {
 			return Provider(), client
 		}

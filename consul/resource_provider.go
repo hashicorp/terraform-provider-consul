@@ -240,6 +240,7 @@ func Provider() terraform.ResourceProvider {
 			"consul_config_entry_service_splitter": resourceFromConfigEntryImplementation(&serviceSplitter{}),
 			"consul_config_entry_service_defaults": resourceFromConfigEntryImplementation(&serviceDefaults{}),
 			"consul_config_entry_service_router":   resourceFromConfigEntryImplementation(&serviceRouter{}),
+			"consul_config_entry_service_resolver": resourceFromConfigEntryImplementation(&serviceResolver{}),
 			"consul_config_entry":                  resourceConsulConfigEntry(),
 			"consul_intention":                     resourceConsulIntention(),
 			"consul_key_prefix":                    resourceConsulKeyPrefix(),

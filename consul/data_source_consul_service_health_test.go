@@ -33,8 +33,9 @@ func TestAccDataConsulServiceHealth(t *testing.T) {
 					testAccCheckDataSourceValue("data.consul_service_health.consul", "results.0.node.0.address", "<any>"),
 					testAccCheckDataSourceValue("data.consul_service_health.consul", "results.0.node.0.datacenter", "dc1"),
 					testAccCheckDataSourceValue("data.consul_service_health.consul", "results.0.node.0.tagged_addresses.%", "4"),
-					testAccCheckDataSourceValue("data.consul_service_health.consul", "results.0.node.0.meta.%", "1"),
+					testAccCheckDataSourceValue("data.consul_service_health.consul", "results.0.node.0.meta.%", "2"),
 					testAccCheckDataSourceValue("data.consul_service_health.consul", "results.0.node.0.meta.consul-network-segment", ""),
+					testAccCheckDataSourceValue("data.consul_service_health.consul", "results.0.node.0.meta.consul-version", "<any>"),
 
 					testAccCheckDataSourceValue("data.consul_service_health.consul", "results.0.service.0.id", "consul"),
 					testAccCheckDataSourceValue("data.consul_service_health.consul", "results.0.service.0.name", "consul"),
