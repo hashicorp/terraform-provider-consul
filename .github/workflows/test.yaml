@@ -43,6 +43,7 @@ jobs:
       run: |
         curl -LO https://github.com/hashicorp/terraform-plugin-docs/releases/download/v0.16.0/tfplugindocs_0.16.0_linux_amd64.zip
         sudo unzip tfplugindocs_0.16.0_linux_amd64.zip tfplugindocs -d /usr/local/bin
+        rm -f tfplugindocs_0.16.0_linux_amd64.zip
     - name: Generate the documentation
       run: tfplugindocs generate --ignore-deprecated true
     - name: Fail if repository has changes
