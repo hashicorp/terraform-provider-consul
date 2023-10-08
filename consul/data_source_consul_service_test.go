@@ -28,7 +28,7 @@ func TestAccDataConsulService_basic(t *testing.T) {
 					testAccCheckDataSourceValue("data.consul_service.read", "service.0.name", "<any>"),
 					testAccCheckDataSourceValue("data.consul_service.read", "service.0.node_address", "<any>"),
 					testAccCheckDataSourceValue("data.consul_service.read", "service.0.node_id", "<any>"),
-					testAccCheckDataSourceValue("data.consul_service.read", "service.0.node_meta.%", "1"),
+					testAccCheckDataSourceValue("data.consul_service.read", "service.0.node_meta.%", "2"),
 					testAccCheckDataSourceValue("data.consul_service.read", "service.0.node_meta.consul-network-segment", ""),
 					testAccCheckDataSourceValue("data.consul_service.read", "service.0.node_name", "<any>"),
 					testAccCheckDataSourceValue("data.consul_service.read", "service.0.port", "<any>"),
