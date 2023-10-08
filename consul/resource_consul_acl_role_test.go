@@ -5,7 +5,6 @@ package consul
 
 import (
 	"fmt"
-	"regexp"
 	"testing"
 
 	consulapi "github.com/hashicorp/consul/api"
@@ -51,14 +50,23 @@ func TestAccConsulACLRole_basic(t *testing.T) {
 				),
 			},
 			{
-				Config:      testResourceACLRoleConfigPolicyName,
-				ExpectError: regexp.MustCompile(`expected "policies.0" to be a valid UUID`),
-			},
-			{
 				Config:            testResourceACLRoleConfigUpdate,
 				ResourceName:      "consul_acl_role.test",
 				ImportState:       true,
 				ImportStateVerify: true,
+			},
+			{
+				Config: testResourceACLRoleConfigPolicyName,
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr("consul_acl_role.test", "description", ""),
+					resource.TestCheckResourceAttrSet("consul_acl_role.test", "id"),
+					resource.TestCheckResourceAttr("consul_acl_role.test", "name", "baz"),
+					resource.TestCheckResourceAttr("consul_acl_role.test", "namespace", ""),
+					resource.TestCheckResourceAttr("consul_acl_role.test", "node_identities.#", "0"),
+					resource.TestCheckResourceAttr("consul_acl_role.test", "policies.#", "1"),
+					resource.TestCheckResourceAttr("consul_acl_role.test", "policies.2198728100", "test-role"),
+					resource.TestCheckResourceAttr("consul_acl_role.test", "service_identities.#", "0"),
+				),
 			},
 		},
 	})
@@ -146,9 +154,15 @@ resource "consul_acl_role" "test" {
 }`
 
 const testResourceACLRoleConfigPolicyName = `
+resource "consul_acl_policy" "test-read" {
+	name        = "test-role"
+	rules       = "node \"\" { policy = \"read\" }"
+	datacenters = [ "dc1" ]
+}
+
 resource "consul_acl_role" "test" {
 	name    = "baz"
-	policies = ["test"]
+	policies = [consul_acl_policy.test-read.name]
 }`
 
 const testResourceACLRoleNamespaceCE = `

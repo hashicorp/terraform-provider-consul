@@ -8,7 +8,6 @@ import (
 
 	consulapi "github.com/hashicorp/consul/api"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
 )
 
 func resourceConsulACLRole() *schema.Resource {
@@ -20,6 +19,8 @@ func resourceConsulACLRole() *schema.Resource {
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
+
+		Description: "The `consul_acl_role` can be used to manage [Consul ACL roles](https://developer.hashicorp.com/consul/docs/security/acl/acl-roles).",
 
 		Schema: map[string]*schema.Schema{
 			"name": {
@@ -36,10 +37,9 @@ func resourceConsulACLRole() *schema.Resource {
 				Type:     schema.TypeSet,
 				Optional: true,
 				Elem: &schema.Schema{
-					ValidateFunc: validation.IsUUID,
-					Type:         schema.TypeString,
+					Type: schema.TypeString,
 				},
-				Description: "The list of policies that should be applied to the role.",
+				Description: "The list of policies that should be applied to the role. Both the policy ID or its name can be used.",
 			},
 			"service_identities": {
 				Type:     schema.TypeSet,
@@ -82,9 +82,10 @@ func resourceConsulACLRole() *schema.Resource {
 				},
 			},
 			"namespace": {
-				Type:     schema.TypeString,
-				Optional: true,
-				ForceNew: true,
+				Type:        schema.TypeString,
+				Optional:    true,
+				ForceNew:    true,
+				Description: "The namespace to create the role within.",
 			},
 			"partition": {
 				Type:        schema.TypeString,
@@ -97,12 +98,15 @@ func resourceConsulACLRole() *schema.Resource {
 }
 
 func resourceConsulACLRoleCreate(d *schema.ResourceData, meta interface{}) error {
-	client, _, wOpts := getClient(d, meta)
+	client, qOpts, wOpts := getClient(d, meta)
 	ACL := client.ACL()
-	role := getRole(d, meta)
+	role, err := getRole(d, client, qOpts)
+	if err != nil {
+		return err
+	}
 
 	name := role.Name
-	role, _, err := ACL.RoleCreate(role, wOpts)
+	role, _, err = ACL.RoleCreate(role, wOpts)
 	if err != nil {
 		return fmt.Errorf("failed to create role '%s': %s", name, err)
 	}
@@ -125,8 +129,21 @@ func resourceConsulACLRoleRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	policies := make([]string, len(role.Policies))
+	// byName indicates which policies where set using their name by the user
+	byName := map[string]struct{}{}
+	for _, raw := range d.Get("policies").(*schema.Set).List() {
+		identifier := raw.(string)
+		policy, isID, _ := getPolicyByIdOrName(identifier, client, qOpts)
+		if policy != nil && !isID {
+			byName[identifier] = struct{}{}
+		}
+	}
 	for i, policy := range role.Policies {
-		policies[i] = policy.ID
+		if _, found := byName[policy.Name]; found {
+			policies[i] = policy.Name
+		} else {
+			policies[i] = policy.ID
+		}
 	}
 
 	serviceIdentities := make([]map[string]interface{}, len(role.ServiceIdentities))
@@ -159,13 +176,16 @@ func resourceConsulACLRoleRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceConsulACLRoleUpdate(d *schema.ResourceData, meta interface{}) error {
-	client, _, wOpts := getClient(d, meta)
+	client, qOpts, wOpts := getClient(d, meta)
 	ACL := client.ACL()
-	role := getRole(d, meta)
+	role, err := getRole(d, client, qOpts)
+	if err != nil {
+		return err
+	}
 
 	role.ID = d.Id()
 
-	role, _, err := ACL.RoleUpdate(role, wOpts)
+	role, _, err = ACL.RoleUpdate(role, wOpts)
 	if err != nil {
 		return fmt.Errorf("failed to update role '%s': %s", d.Id(), err)
 	}
@@ -186,21 +206,26 @@ func resourceConsulACLRoleDelete(d *schema.ResourceData, meta interface{}) error
 	return nil
 }
 
-func getRole(d *schema.ResourceData, meta interface{}) *consulapi.ACLRole {
-	_, qOpts, _ := getClient(d, meta)
+func getRole(d *schema.ResourceData, client *consulapi.Client, qOpts *consulapi.QueryOptions) (*consulapi.ACLRole, error) {
 	roleName := d.Get("name").(string)
 	role := &consulapi.ACLRole{
 		Name:        roleName,
 		Description: d.Get("description").(string),
 		Namespace:   qOpts.Namespace,
 	}
-	policies := make([]*consulapi.ACLRolePolicyLink, 0)
+
 	for _, raw := range d.Get("policies").(*schema.Set).List() {
-		policies = append(policies, &consulapi.ACLRolePolicyLink{
-			ID: raw.(string),
-		})
+		identifier := raw.(string)
+		link, err := getACLRolePolicyLink(identifier, client, qOpts)
+		if err != nil {
+			return nil, err
+		}
+		if link == nil {
+			return nil, fmt.Errorf("failed to find policy %q", identifier)
+		}
+
+		role.Policies = append(role.Policies, link)
 	}
-	role.Policies = policies
 
 	for _, raw := range d.Get("service_identities").(*schema.Set).List() {
 		s := raw.(map[string]interface{})
@@ -224,5 +249,38 @@ func getRole(d *schema.ResourceData, meta interface{}) *consulapi.ACLRole {
 		})
 	}
 
-	return role
+	return role, nil
+}
+
+// getPolicyByIdOrName looks for a policy in Consul first by ID, then by name if
+// it found nothing. It also returns a boolean indicating whether the identifier
+// given is the ID or the name
+func getPolicyByIdOrName(identifier string, client *consulapi.Client, qOpts *consulapi.QueryOptions) (*consulapi.ACLPolicy, bool, error) {
+	policy, _, initialErr := client.ACL().PolicyRead(identifier, qOpts)
+	if policy != nil && initialErr == nil {
+		return policy, true, nil
+	}
+
+	policy, _, err := client.ACL().PolicyReadByName(identifier, qOpts)
+	if initialErr != nil && err != nil {
+		return nil, false, fmt.Errorf("failed to read policy %q:\n - %w - %w", identifier, initialErr, err)
+	} else if policy == nil && initialErr != nil {
+		return nil, false, fmt.Errorf("failed to read policy %q: %w", identifier, initialErr)
+	} else if err != nil {
+		return nil, false, fmt.Errorf("failed to read policy %q: %w", identifier, err)
+	}
+
+	return policy, false, nil
+}
+
+func getACLRolePolicyLink(identifier string, client *consulapi.Client, qOpts *consulapi.QueryOptions) (*consulapi.ACLRolePolicyLink, error) {
+	policy, isID, err := getPolicyByIdOrName(identifier, client, qOpts)
+	if policy == nil || err != nil {
+		return nil, err
+	}
+
+	if isID {
+		return &consulapi.ACLLink{ID: identifier}, nil
+	}
+	return &consulapi.ACLLink{Name: identifier}, nil
 }
