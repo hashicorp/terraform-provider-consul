@@ -29,5 +29,3 @@ description: |-
 
 - `config_json` (String) The configuration of the config entry.
 - `id` (String) The ID of this resource.
-
-
