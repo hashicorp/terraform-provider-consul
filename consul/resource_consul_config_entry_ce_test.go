@@ -133,6 +133,9 @@ func TestAccConsulConfigEntryCE_basic(t *testing.T) {
 				ResourceName:  "consul_config_entry.service_intentions",
 				ImportStateId: "default/default/service-defaults/api",
 			},
+			{
+				Config: testAccConsulConfigEntryCE_HTTPRoute,
+			},
 		},
 	})
 }
@@ -838,6 +841,23 @@ resource "consul_config_entry" "jwt_provider" {
         JWKS = "eyJrZXlzIjogW3sKICAiY3J2IjogIlAtMjU2IiwKICAia2V5X29wcyI6IFsKICAgICJ2ZXJpZnkiCiAgXSwKICAia3R5IjogIkVDIiwKICAieCI6ICJXYzl1WnVQYUI3S2gyRk1jOXd0SmpSZThYRDR5VDJBWU5BQWtyWWJWanV3IiwKICAieSI6ICI2OGhSVEppSk5Pd3RyaDRFb1BYZVZuUnVIN2hpU0RKX2xtYmJqZkRmV3EwIiwKICAiYWxnIjogIkVTMjU2IiwKICAidXNlIjogInNpZyIsCiAgImtpZCI6ICJhYzFlOGY5MGVkZGY2MWM0MjljNjFjYTA1YjRmMmUwNyIKfV19"
     	}
 		}
+	})
+}
+`
+
+const testAccConsulConfigEntryCE_HTTPRoute = `
+resource "consul_config_entry" "http_route" {
+	kind = "http-route"
+	name = "test"
+
+	config_json = jsonencode({
+	  Hostnames = null
+	  Rules     = null
+
+	  Parents = [{
+		  Kind = "api-gateway"
+		  Name = "test"
+    }]
 	})
 }
 `
