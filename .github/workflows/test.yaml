@@ -46,4 +46,6 @@ jobs:
     - name: Generate the documentation
       run: tfplugindocs generate --ignore-deprecated true
     - name: Fail if repository has changes
-      run: git diff-files --quiet || (echo "The docs/ folder is not up-to-date, please use 'tfplugindocs generate --ignore-deprecated true' to update it" && false)
+      run: |
+        git status --short
+        [[ -z $(git status --porcelain) ]] || (echo "The docs/ folder is not up-to-date, please use 'tfplugindocs generate --ignore-deprecated true' to update it" && false)
