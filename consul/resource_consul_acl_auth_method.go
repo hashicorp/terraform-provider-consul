@@ -19,6 +19,8 @@ func resourceConsulACLAuthMethod() *schema.Resource {
 		Update: resourceConsulACLAuthMethodUpdate,
 		Delete: resourceConsulACLAuthMethodDelete,
 
+		Description: "Starting with Consul 1.5.0, the `consul_acl_auth_method` resource can be used to managed [Consul ACL auth methods](https://www.consul.io/docs/acl/auth-methods).",
+
 		Schema: map[string]*schema.Schema{
 			"name": {
 				Type:        schema.TypeString,
@@ -44,7 +46,7 @@ func resourceConsulACLAuthMethod() *schema.Resource {
 				Type:        schema.TypeString,
 				Optional:    true,
 				Default:     "0s",
-				Description: "The maximum life of any token created by this auth method.",
+				Description: "The maximum life of any token created by this auth method. **This attribute is required and must be set to a nonzero for the OIDC auth method.**",
 				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
 					o, err := time.ParseDuration(old)
 					if err != nil {
@@ -74,7 +76,7 @@ func resourceConsulACLAuthMethod() *schema.Resource {
 				Type:        schema.TypeMap,
 				Optional:    true,
 				Description: "The raw configuration for this ACL auth method.",
-				Deprecated:  "The config attribute is deprecated, please use config_json instead.",
+				Deprecated:  "The config attribute is deprecated, please use `config_json` instead.",
 				Elem: &schema.Schema{
 					Type: schema.TypeString,
 				},
@@ -95,26 +97,30 @@ func resourceConsulACLAuthMethod() *schema.Resource {
 			},
 
 			"namespace_rule": {
-				Type:     schema.TypeList,
-				Optional: true,
+				Type:        schema.TypeList,
+				Description: "A set of rules that control which namespace tokens created via this auth method will be created within.",
+				Optional:    true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"selector": {
-							Type:     schema.TypeString,
-							Optional: true,
+							Type:        schema.TypeString,
+							Description: "Specifies the expression used to match this namespace rule against valid identities returned from an auth method validation.",
+							Optional:    true,
 						},
 						"bind_namespace": {
-							Type:     schema.TypeString,
-							Required: true,
+							Type:        schema.TypeString,
+							Description: "If the namespace rule's `selector` matches then this is used to control the namespace where the token is created.",
+							Required:    true,
 						},
 					},
 				},
 			},
 
 			"namespace": {
-				Type:     schema.TypeString,
-				Optional: true,
-				ForceNew: true,
+				Type:        schema.TypeString,
+				Description: "The namespace in which to create the auth method.",
+				Optional:    true,
+				ForceNew:    true,
 			},
 
 			"partition": {

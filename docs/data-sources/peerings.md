@@ -43,5 +43,3 @@ Read-Only:
 - `peer_server_addresses` (List of String)
 - `peer_server_name` (String)
 - `state` (String)
-
-

@@ -73,5 +73,3 @@ resource "consul_peering" "eu-us" {
 - `peer_server_addresses` (List of String)
 - `peer_server_name` (String)
 - `state` (String)
-
-

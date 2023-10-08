@@ -43,5 +43,3 @@ resource "consul_peering_token" "token" {
 
 - `id` (String) The ID of this resource.
 - `peering_token` (String, Sensitive) The generated peering token
-
-
