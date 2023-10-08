@@ -45,4 +45,4 @@ jobs:
         sudo unzip tfplugindocs_0.16.0_linux_amd64.zip tfplugindocs -d /usr/local/bin
         tfplugindocs generate --ignore-deprecated true
         # Fail if repository has changes
-        git diff-files --quiet
+        git diff-files --quiet || (echo "The docs/ folder is not up-to-date, please use `tfplugindocs generate --ignore-deprecated true` to update it" && false)
