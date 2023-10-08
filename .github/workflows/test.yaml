@@ -39,10 +39,14 @@ jobs:
         go-version: 1.20.x
     - name: Checkout code
       uses: actions/checkout@8f4b7f84864484a7bf31766abe9204da3cbe65b3 # v3.5.0
-    - name: Run OSS acceptance tests
+    - name: Install tfplugindocs
       run: |
         curl -LO https://github.com/hashicorp/terraform-plugin-docs/releases/download/v0.16.0/tfplugindocs_0.16.0_linux_amd64.zip
         sudo unzip tfplugindocs_0.16.0_linux_amd64.zip tfplugindocs -d /usr/local/bin
-        tfplugindocs generate --ignore-deprecated true
-    - name: Fail if repo has changes
-      uses: UnicornGlobal/has-changes-action@ea00e6f831a9e785271645729fa251907b314707 # v1.0.12
+        rm -f tfplugindocs_0.16.0_linux_amd64.zip
+    - name: Generate the documentation
+      run: tfplugindocs generate --ignore-deprecated true
+    - name: Fail if repository has changes
+      run: |
+        git status --short
+        [[ -z $(git status --porcelain) ]] || (echo "The docs/ folder is not up-to-date, please use 'tfplugindocs generate --ignore-deprecated true' to update it" && false)
