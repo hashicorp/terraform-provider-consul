@@ -1,0 +1,73 @@
+---
+page_title: "{{.Name}} {{.Type}} - {{.ProviderName}}"
+subcategory: ""
+description: |-
+{{ .Description | plainmarkdown | trimspace | prefixlines "  " }}
+---
+
+# {{.Name}} ({{.Type}})
+
+{{ .Description | trimspace }}
+
+
+## Example Usage
+
+Creating a new node with the service:
+
+```hcl
+resource "consul_service" "google" {
+  name    = "google"
+  node    = "${consul_node.compute.name}"
+  port    = 80
+  tags    = ["tag0"]
+}
+
+resource "consul_node" "compute" {
+  name    = "compute-google"
+  address = "www.google.com"
+}
+```
+
+Utilizing an existing known node:
+
+```hcl
+resource "consul_service" "google" {
+  name    = "google"
+  node    = "google"
+  port    = 443
+}
+```
+
+Register a health-check:
+
+```hcl
+resource "consul_service" "redis" {
+  name = "redis"
+  node = "redis"
+  port = 6379
+
+  check {
+    check_id                          = "service:redis1"
+    name                              = "Redis health check"
+    status                            = "passing"
+    http                              = "https://www.hashicorptest.com"
+    tls_skip_verify                   = false
+    method                            = "PUT"
+    interval                          = "5s"
+    timeout                           = "1s"
+    deregister_critical_service_after = "30s"
+
+    header {
+      name  = "foo"
+      value = ["test"]
+    }
+
+    header {
+      name  = "bar"
+      value = ["test"]
+    }
+  }
+}
+```
+
+{{ .SchemaMarkdown | trimspace }}

@@ -350,10 +350,23 @@ func waitForService(t *testing.T, address string) (terraform.ResourceProvider, *
 		t.Fatalf("failed to instantiate client: %v", err)
 	}
 
+	logger := func(format string, args ...any) {}
+	if os.Getenv("TF_ACC_CONSUL_LOG") != "" {
+		logger = t.Logf
+	}
+
 	var services []*consulapi.ServiceEntry
 	for i := 0; i < 20; i++ {
 		services, _, err = client.Health().Service("consul", "", true, nil)
-		if err == nil && len(services) == 1 && len(services[0].Node.Meta) == 1 {
+		if err != nil {
+			logger("got error while waiting for server to start: %v", err)
+		} else if len(services) != 1 {
+			logger("got wrong number of services: %d", len(services))
+		} else if len(services[0].Node.Meta) == 0 {
+			logger("got empty metadata")
+		} else if len(services[0].Node.Meta) < 2 {
+			logger("missing metadata")
+		} else {
 			return Provider(), client
 		}
 
