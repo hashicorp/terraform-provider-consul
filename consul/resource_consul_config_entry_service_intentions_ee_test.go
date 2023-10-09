@@ -8,19 +8,19 @@ import (
 	"testing"
 )
 
-func TestAccConsulConfigEntryServiceIntentionsCETest(t *testing.T) {
+func TestAccConsulConfigEntryServiceIntentionsEETest(t *testing.T) {
 	providers, _ := startTestServer(t)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:  func() { skipTestOnConsulEnterpriseEdition(t) },
+		PreCheck:  func() { skipTestOnConsulCommunityEdition(t) },
 		Providers: providers,
 		Steps: []resource.TestStep{
 			{
-				Config: testConsulConfigEntryServiceIntentionsCE,
+				Config: testConsulConfigEntryServiceIntentionsEE,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("consul_config_entry_service_intentions.foo", "name", "service-intention"),
-					resource.TestCheckResourceAttr("consul_config_entry_service_intentions.foo", "namespace", ""),
-					resource.TestCheckResourceAttr("consul_config_entry_service_intentions.foo", "partition", ""),
+					resource.TestCheckResourceAttr("consul_config_entry_service_intentions.foo", "namespace", "ns1"),
+					resource.TestCheckResourceAttr("consul_config_entry_service_intentions.foo", "partition", "pr1"),
 					resource.TestCheckResourceAttr("consul_config_entry_service_intentions.foo", "meta.key", "value"),
 					resource.TestCheckResourceAttr("consul_config_entry_service_intentions.foo", "sources.0.name", "frontend-webapp"),
 					resource.TestCheckResourceAttr("consul_config_entry_service_intentions.foo", "sources.0.type", "consul"),
@@ -40,7 +40,7 @@ func TestAccConsulConfigEntryServiceIntentionsCETest(t *testing.T) {
 	})
 }
 
-const testConsulConfigEntryServiceIntentionsCE = `
+const testConsulConfigEntryServiceIntentionsEE = `
 resource "consul_config_entry" "jwt_provider" {
 	name = "okta"
 	kind = "jwt-provider"
@@ -58,6 +58,8 @@ resource "consul_config_entry" "jwt_provider" {
 }
 resource "consul_config_entry_service_intentions" "foo" {
 	name = "service-intention"
+    namespace = "ns1"
+    partition = "pr1"
 	meta = {
 		key = "value"
 	}
