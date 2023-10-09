@@ -539,6 +539,7 @@ func (s *serviceIntentions) Write(ce consulapi.ConfigEntry, d *schema.ResourceDa
 			permissions = append(permissions, permissionMap)
 		}
 		sourceMap["permissions"] = permissions
+		sources = append(sources, sourceMap)
 	}
 
 	sw.set("sources", sources)
