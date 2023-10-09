@@ -24,18 +24,20 @@ func resourceConsulACLToken() *schema.Resource {
 			State: schema.ImportStatePassthrough,
 		},
 
+		Description: "The `consul_acl_token` resource writes an ACL token into Consul.\n\n~> **NOTE:** The `consul_acl_token` resource does not save the secret ID of the generated token to the Terraform state to avoid leaking it when it is not needed. If you need to get the secret ID after creating the ACL token you can use the [`consul_acl_token_secret_id`](/docs/providers/consul/r/acl_token.html) datasource.",
+
 		Schema: map[string]*schema.Schema{
 			"accessor_id": {
 				Type:        schema.TypeString,
 				ForceNew:    true,
 				Computed:    true,
 				Optional:    true,
-				Description: "The token id.",
+				Description: "The uuid of the token. If omitted, Consul will generate a random uuid.",
 			},
 			"description": {
 				Type:        schema.TypeString,
 				Optional:    true,
-				Description: "The token description.",
+				Description: "The description of the token.",
 			},
 			"policies": {
 				Type:     schema.TypeSet,
@@ -43,7 +45,7 @@ func resourceConsulACLToken() *schema.Resource {
 				Elem: &schema.Schema{
 					Type: schema.TypeString,
 				},
-				Description: "List of policies.",
+				Description: "The list of policies attached to the token.",
 			},
 			"roles": {
 				Type:     schema.TypeSet,
@@ -51,7 +53,7 @@ func resourceConsulACLToken() *schema.Resource {
 				Elem: &schema.Schema{
 					Type: schema.TypeString,
 				},
-				Description: "List of roles",
+				Description: "The list of roles attached to the token.",
 			},
 			"service_identities": {
 				Type:        schema.TypeList,
@@ -65,9 +67,9 @@ func resourceConsulACLToken() *schema.Resource {
 							Description: "The name of the service.",
 						},
 						"datacenters": {
-							Type:        schema.TypeList,
-							Optional:    true,
-							Description: "Specifies the datacenters the effective policy is valid within.",
+							Type:     schema.TypeList,
+							Optional: true,
+							// Description: "The list of datacenters the policy is valid within.",
 							Elem: &schema.Schema{
 								Type: schema.TypeString,
 							},
@@ -89,7 +91,7 @@ func resourceConsulACLToken() *schema.Resource {
 						"datacenter": {
 							Type:        schema.TypeString,
 							Required:    true,
-							Description: "Specifies the node's datacenter.",
+							Description: "The datacenter of the node.",
 						},
 					},
 				},
@@ -98,19 +100,20 @@ func resourceConsulACLToken() *schema.Resource {
 				Type:        schema.TypeBool,
 				ForceNew:    true,
 				Optional:    true,
-				Description: "Flag to set the token local to the current datacenter.",
+				Description: "The flag to set the token local to the current datacenter.",
 			},
 			"expiration_time": {
 				Type:         schema.TypeString,
 				ForceNew:     true,
 				Optional:     true,
-				ValidateFunc: validation.ValidateRFC3339TimeString,
+				ValidateFunc: validation.IsRFC3339Time,
 				Description:  "If set this represents the point after which a token should be considered revoked and is eligible for destruction.",
 			},
 			"namespace": {
-				Type:     schema.TypeString,
-				Optional: true,
-				ForceNew: true,
+				Type:        schema.TypeString,
+				Optional:    true,
+				ForceNew:    true,
+				Description: "The namespace to create the token within.",
 			},
 			"partition": {
 				Type:        schema.TypeString,
