@@ -8,11 +8,11 @@ import (
 	"testing"
 )
 
-func TestAccConsulServiceDefaultsConfiEEEntryTest(t *testing.T) {
+func TestAccConsulServiceDefaultsConfigEEEntryTest(t *testing.T) {
 	providers, _ := startTestServer(t)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:  func() { skipTestOnConsulEnterpriseEdition(t) },
+		PreCheck:  func() { skipTestOnConsulCommunityEdition(t) },
 		Providers: providers,
 		Steps: []resource.TestStep{
 			{
