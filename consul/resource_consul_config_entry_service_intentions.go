@@ -478,7 +478,6 @@ func (s *serviceIntentions) Write(ce consulapi.ConfigEntry, d *schema.ResourceDa
 	for _, jwtProvider := range si.JWT.Providers {
 		jwtProviderMap := make(map[string]interface{})
 		jwtProviderMap["name"] = jwtProvider.Name
-		jwtProviderMap["verify_claims"] = make([]map[string]interface{}, 0)
 		verifyClaims := make([]map[string]interface{}, 0)
 		for _, vc := range jwtProvider.VerifyClaims {
 			vcMap := make(map[string]interface{})
@@ -490,6 +489,7 @@ func (s *serviceIntentions) Write(ce consulapi.ConfigEntry, d *schema.ResourceDa
 			vcMap["value"] = vc.Value
 			verifyClaims = append(verifyClaims, vcMap)
 		}
+		jwtProviderMap["verify_claims"] = verifyClaims
 		jwtProviders = append(jwtProviders, jwtProviderMap)
 	}
 	jwt[0]["providers"] = jwtProviders

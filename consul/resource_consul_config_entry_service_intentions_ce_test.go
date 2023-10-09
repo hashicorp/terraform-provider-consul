@@ -32,6 +32,7 @@ resource "consul_config_entry" "jwt_provider" {
 	kind = "jwt-provider"
 
 	config_json = jsonencode({
+		ClockSkewSeconds = 30
 		Issuer = "test-issuer"
 		JSONWebKeySet = {
 			Remote = {
