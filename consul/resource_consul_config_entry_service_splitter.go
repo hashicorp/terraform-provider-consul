@@ -208,7 +208,7 @@ func (s *serviceSplitter) Decode(d *schema.ResourceData) (consulapi.ConfigEntry,
 	return configEntry, nil
 }
 
-func (s *serviceSplitter) Write(ce consulapi.ConfigEntry, sw *stateWriter) error {
+func (s *serviceSplitter) Write(ce consulapi.ConfigEntry, d *schema.ResourceData, sw *stateWriter) error {
 	sp, ok := ce.(*consulapi.ServiceSplitterConfigEntry)
 	if !ok {
 		return fmt.Errorf("expected '%s' but got '%s'", consulapi.ServiceSplitter, ce.GetKind())
@@ -262,5 +262,5 @@ func (s *serviceSplitter) Write(ce consulapi.ConfigEntry, sw *stateWriter) error
 	}
 	sw.set("splits", splits)
 
-	return nil
+	return sw.error()
 }

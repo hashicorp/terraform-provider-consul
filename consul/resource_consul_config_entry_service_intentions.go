@@ -5,6 +5,7 @@ package consul
 
 import (
 	"fmt"
+
 	consulapi "github.com/hashicorp/consul/api"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 )
@@ -454,7 +455,7 @@ func (s *serviceIntentions) Decode(d *schema.ResourceData) (consulapi.ConfigEntr
 	return configEntry, nil
 }
 
-func (s *serviceIntentions) Write(ce consulapi.ConfigEntry, sw *stateWriter) error {
+func (s *serviceIntentions) Write(ce consulapi.ConfigEntry, d *schema.ResourceData, sw *stateWriter) error {
 	si, ok := ce.(*consulapi.ServiceIntentionsConfigEntry)
 	if !ok {
 		return fmt.Errorf("expected '%s' but got '%s'", consulapi.ServiceRouter, ce.GetKind())

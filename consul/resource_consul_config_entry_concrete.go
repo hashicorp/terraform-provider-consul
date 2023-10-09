@@ -18,7 +18,7 @@ type ConfigEntryImplementation interface {
 	GetDescription() string
 	GetSchema() map[string]*schema.Schema
 	Decode(d *schema.ResourceData) (consulapi.ConfigEntry, error)
-	Write(ce consulapi.ConfigEntry, sw *stateWriter) error
+	Write(ce consulapi.ConfigEntry, d *schema.ResourceData, sw *stateWriter) error
 }
 
 func resourceFromConfigEntryImplementation(c ConfigEntryImplementation) *schema.Resource {
@@ -108,7 +108,7 @@ func configEntryImplementationRead(impl ConfigEntryImplementation) func(d *schem
 		}
 
 		sw := newStateWriter(d)
-		if err := impl.Write(ce, sw); err != nil {
+		if err := impl.Write(ce, d, sw); err != nil {
 			return err
 		}
 		return sw.error()

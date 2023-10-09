@@ -5,9 +5,10 @@ package consul
 
 import (
 	"fmt"
+	"time"
+
 	consulapi "github.com/hashicorp/consul/api"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
-	"time"
 )
 
 type serviceDefaults struct{}
@@ -736,7 +737,7 @@ func (s *serviceDefaults) Decode(d *schema.ResourceData) (consulapi.ConfigEntry,
 	return configEntry, nil
 }
 
-func (s *serviceDefaults) Write(ce consulapi.ConfigEntry, sw *stateWriter) error {
+func (s *serviceDefaults) Write(ce consulapi.ConfigEntry, d *schema.ResourceData, sw *stateWriter) error {
 	sd, ok := ce.(*consulapi.ServiceConfigEntry)
 	if !ok {
 		return fmt.Errorf("expected '%s' but got '%s'", consulapi.ServiceDefaults, ce.GetKind())

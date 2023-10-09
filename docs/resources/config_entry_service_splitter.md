@@ -64,5 +64,3 @@ Optional:
 - `add` (Map of String) Map of one or more key-value pairs. Defines a set of key-value pairs to add to the header. Use header names as the keys. Header names are not case-sensitive. If header values with the same name already exist, the value is appended and Consul applies both headers.
 - `remove` (List of String) Defines an list of headers to remove. Consul removes only headers containing exact matches. Header names are not case-sensitive.
 - `set` (Map of String) Map of one or more key-value pairs. Defines a set of key-value pairs to add to the request header or to replace existing header values with. Use header names as the keys. Header names are not case-sensitive. If header values with the same names already exist, Consul replaces the header values.
-
-

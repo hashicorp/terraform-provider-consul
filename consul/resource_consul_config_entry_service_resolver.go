@@ -6,13 +6,14 @@ package consul
 import (
 	"bytes"
 	"fmt"
-	consulapi "github.com/hashicorp/consul/api"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/hashcode"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 	"reflect"
 	"sort"
 	"strings"
 	"time"
+
+	consulapi "github.com/hashicorp/consul/api"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/hashcode"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 )
 
 type serviceResolver struct{}
@@ -524,7 +525,7 @@ func (s *serviceResolver) Decode(d *schema.ResourceData) (consulapi.ConfigEntry,
 	return configEntry, nil
 }
 
-func (s *serviceResolver) Write(ce consulapi.ConfigEntry, sw *stateWriter) error {
+func (s *serviceResolver) Write(ce consulapi.ConfigEntry, d *schema.ResourceData, sw *stateWriter) error {
 	sr, ok := ce.(*consulapi.ServiceResolverConfigEntry)
 	if !ok {
 		return fmt.Errorf("expected '%s' but got '%s'", consulapi.ServiceResolver, ce.GetKind())

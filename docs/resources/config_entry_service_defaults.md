@@ -116,15 +116,9 @@ Optional:
 
 - `balance_outbound_connections` (String) Sets the strategy for allocating outbound connections from upstreams across Envoy proxy threads.
 - `connect_timeout_ms` (Number)
-- `envoy_cluster_json` (String)
-- `envoy_listener_json` (String)
 - `limits` (Block Set) Map that specifies a set of limits to apply to when connecting upstream services. (see [below for nested schema](#nestedblock--upstream_config--defaults--limits))
 - `mesh_gateway` (Block Set) Specifies the default mesh gateway mode field for all upstreams. (see [below for nested schema](#nestedblock--upstream_config--defaults--mesh_gateway))
-- `name` (String) Specifies the name of the service you are setting the defaults for.
-- `namespace` (String) Specifies the namespace containing the upstream service that the configuration applies to.
-- `partition` (String) Specifies the name of the name of the Consul admin partition that the configuration entry applies to.
 - `passive_health_check` (Block Set) Map that specifies a set of rules that enable Consul to remove hosts from the upstream cluster that are unreachable or that return errors. (see [below for nested schema](#nestedblock--upstream_config--defaults--passive_health_check))
-- `peer` (String) Specifies the peer name of the upstream service that the configuration applies to.
 - `protocol` (String) Specifies the default protocol for the service.
 
 <a id="nestedblock--upstream_config--defaults--limits"></a>
@@ -165,7 +159,6 @@ Optional:
 
 - `balance_outbound_connections` (String) Sets the strategy for allocating outbound connections from upstreams across Envoy proxy threads.
 - `connect_timeout_ms` (Number)
-- `envoy_cluster_json` (String)
 - `envoy_listener_json` (String)
 - `limits` (Block Set) Map that specifies a set of limits to apply to when connecting upstream services. (see [below for nested schema](#nestedblock--upstream_config--overrides--limits))
 - `mesh_gateway` (Block Set) Specifies the default mesh gateway mode field for all upstreams. (see [below for nested schema](#nestedblock--upstream_config--overrides--mesh_gateway))
@@ -204,5 +197,3 @@ Optional:
 - `interval` (String) Specifies the time between checks.
 - `max_ejection_percent` (Number) Specifies the maximum percentage of an upstream cluster that Consul ejects when the proxy reports an outlier.
 - `max_failures` (Number) Specifies the number of consecutive failures allowed per check interval. If exceeded, Consul removes the host from the load balancer.
-
-
