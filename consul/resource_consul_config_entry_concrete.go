@@ -22,9 +22,11 @@ type ConfigEntryImplementation interface {
 }
 
 func resourceFromConfigEntryImplementation(c ConfigEntryImplementation) *schema.Resource {
+	s := c.GetSchema()
+
 	return &schema.Resource{
 		Description: c.GetDescription(),
-		Schema:      c.GetSchema(),
+		Schema:      s,
 		Create:      configEntryImplementationWrite(c),
 		Update:      configEntryImplementationWrite(c),
 		Read:        configEntryImplementationRead(c),
@@ -33,22 +35,38 @@ func resourceFromConfigEntryImplementation(c ConfigEntryImplementation) *schema.
 			State: func(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
 				parts := strings.Split(d.Id(), "/")
 				var name, partition, namespace string
-				switch len(parts) {
-				case 1:
-					name = parts[0]
-				case 3:
-					partition = parts[0]
-					namespace = parts[1]
-					name = parts[2]
-				default:
-					return nil, fmt.Errorf(`expected path of the form "<name>" or "<partition>/<namespace>/<name>"`)
+
+				if _, found := s["namespace"]; found {
+					switch len(parts) {
+					case 1:
+						name = parts[0]
+					case 3:
+						partition = parts[0]
+						namespace = parts[1]
+						name = parts[2]
+					default:
+						return nil, fmt.Errorf(`expected path of the form "<name>" or "<partition>/<namespace>/<name>"`)
+					}
+				} else {
+					switch len(parts) {
+					case 1:
+						name = parts[0]
+					case 2:
+						partition = parts[0]
+						name = parts[1]
+					default:
+						return nil, fmt.Errorf(`expected path of the form "<name>" or "<partition>/<name>"`)
+					}
 				}
 
 				d.SetId(name)
 				sw := newStateWriter(d)
 				sw.set("name", name)
 				sw.set("partition", partition)
-				sw.set("namespace", namespace)
+
+				if namespace != "" {
+					sw.set("namespace", namespace)
+				}
 
 				err := sw.error()
 				if err != nil {

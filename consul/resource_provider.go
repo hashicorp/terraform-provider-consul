@@ -237,6 +237,7 @@ func Provider() terraform.ResourceProvider {
 			"consul_autopilot_config":              resourceConsulAutopilotConfig(),
 			"consul_catalog_entry":                 resourceConsulCatalogEntry(),
 			"consul_certificate_authority":         resourceConsulCertificateAuthority(),
+			"consul_config_entry_sameness_group":   resourceFromConfigEntryImplementation(&samenessGroup{}),
 			"consul_config_entry_service_splitter": resourceFromConfigEntryImplementation(&serviceSplitter{}),
 			"consul_config_entry":                  resourceConsulConfigEntry(),
 			"consul_intention":                     resourceConsulIntention(),
