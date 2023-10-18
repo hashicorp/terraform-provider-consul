@@ -39,6 +39,8 @@ jobs:
         go-version: 1.20.x
     - name: Checkout code
       uses: actions/checkout@8f4b7f84864484a7bf31766abe9204da3cbe65b3 # v3.5.0
+      with:
+        ref: ${{ github.event.pull_request.head.sha }}
     - name: Install tfplugindocs
       run: |
         curl -LO https://github.com/hashicorp/terraform-plugin-docs/releases/download/v0.16.0/tfplugindocs_0.16.0_linux_amd64.zip

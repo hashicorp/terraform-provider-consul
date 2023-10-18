@@ -1,0 +1,1 @@
+terraform import consul_config_entry_service_splitter.foo web
