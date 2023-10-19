@@ -230,27 +230,6 @@ func (s *serviceIntentions) GetSchema() map[string]*schema.Schema {
 						Description: "Specifies a description of the intention.",
 						Optional:    true,
 					},
-					"legacy_id": {
-						Type:        schema.TypeString,
-						Description: "Read-only unique user ID (UUID) for the intention in the system.",
-						Optional:    true,
-					},
-					"legacy_meta": {
-						Type:        schema.TypeMap,
-						Optional:    true,
-						Description: "Read-only set of arbitrary key-value pairs to attach to the intention.",
-						Elem:        &schema.Schema{Type: schema.TypeString},
-					},
-					"legacy_create_time": {
-						Type:        schema.TypeString,
-						Description: "Read-only timestamp for the intention creation.",
-						Optional:    true,
-					},
-					"legacy_update_time": {
-						Type:        schema.TypeString,
-						Description: "Read-only timestamp marking the most recent intention update.",
-						Optional:    true,
-					},
 				},
 			},
 		},
@@ -431,22 +410,6 @@ func (s *serviceIntentions) Decode(d *schema.ResourceData) (consulapi.ConfigEntr
 			if sourceMap["description"] != nil {
 				sourceIntention.Description = sourceMap["description"].(string)
 			}
-			if sourceMap["legacy_id"] != nil {
-				sourceIntention.LegacyID = sourceMap["legacy_id"].(string)
-			}
-			if sourceMap["legacy_meta"] != nil {
-				legacyMeta := make(map[string]string)
-				for k, v := range sourceMap["legacy_meta"].(map[string]interface{}) {
-					legacyMeta[k] = v.(string)
-				}
-				sourceIntention.LegacyMeta = legacyMeta
-			}
-			if sourceMap["legacy_create_time"] != nil {
-				sourceIntention.LegacyID = sourceMap["legacy_create_time"].(string)
-			}
-			if sourceMap["legacy_update_time"] != nil {
-				sourceIntention.LegacyID = sourceMap["legacy_update_time"].(string)
-			}
 			sourcesIntentions = append(sourcesIntentions, sourceIntention)
 		}
 		configEntry.Sources = sourcesIntentions
@@ -508,10 +471,6 @@ func (s *serviceIntentions) Write(ce consulapi.ConfigEntry, d *schema.ResourceDa
 		sourceMap["precedence"] = source.Precedence
 		sourceMap["type"] = source.Type
 		sourceMap["description"] = source.Description
-		sourceMap["legacy_id"] = source.LegacyID
-		sourceMap["legacy_meta"] = source.LegacyMeta
-		sourceMap["legacy_create_time"] = source.LegacyCreateTime
-		sourceMap["legacy_update_time"] = source.LegacyUpdateTime
 		permissions := make([]map[string]interface{}, 0)
 		for _, permission := range source.Permissions {
 			permissionMap := make(map[string]interface{})
