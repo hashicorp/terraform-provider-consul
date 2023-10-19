@@ -18,7 +18,7 @@ func (s *serviceDefaults) GetKind() string {
 }
 
 func (s *serviceDefaults) GetDescription() string {
-	return "The `consul_config_entry_service_defaults` resource configures a [service defaults](https://developer.hashicorp.com/consul/docs/connect/config-entries/service-defaults) that contains common configuration settings for service mesh services, such as upstreams and gateways."
+	return "The `consul_config_entry_service_defaults` resource configures a [service defaults](https://developer.hashicorp.com/consul/docs/connect/config-entries/service-defaults) config entry that contains common configuration settings for service mesh services, such as upstreams and gateways."
 }
 
 func (s *serviceDefaults) GetSchema() map[string]*schema.Schema {
