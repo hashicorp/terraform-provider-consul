@@ -31,10 +31,6 @@ resource "consul_acl_role" "read" {
 	service_identities {
 		service_name = "foo"
 	}
-
-	templated_policies {
-		template_name = "builtin/dns"
-	}
 }
 ```
 
@@ -47,7 +43,6 @@ The following arguments are supported:
 * `policies` - (Optional) The list of policies that should be applied to the role.
 * `service_identities` - (Optional) The list of service identities that should be applied to the role.
 * `node_identities` - (Optional) The list of node identities that should be applied to the role.
-* `templated_policies` - (Optional) The list of templated policies that should be applied to the token.
 * `namespace` - (Optional, Enterprise Only) The namespace to create the role within.
 * `partition` - (Optional, Enterprise Only) The partition the ACL role is associated with.
 
@@ -61,11 +56,6 @@ The `node_identities` block supports:
 * `node_name` - (Required) The name of the node.
 * `datacenter` - (Required) The datacenter of the node.
 
-The `templated_policies` block supports the following arguments:
-
-* `template_name` - (Optional) The name of the templated policy.
-* `template_variables` - (Optional) The list of the templated policy variables.
-
 ## Attributes Reference
 
 The following attributes are exported:
@@ -76,7 +66,6 @@ The following attributes are exported:
 * `policies` - The list of policies that should be applied to the role.
 * `service_identities` - The list of service identities that should be applied to the role.
 * `node_identities` - The list of node identities that should be applied to the role.
-* `templated_policies` - The list of templated policies that should be applied to the token.
 * `namespace` - The namespace to create the role within.
 
 
