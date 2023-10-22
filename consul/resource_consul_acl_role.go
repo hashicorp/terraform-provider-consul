@@ -271,7 +271,6 @@ func getRole(d *schema.ResourceData, meta interface{}) *consulapi.ACLRole {
 		})
 	}
 
-	templatedPolicies := []*consulapi.ACLTemplatedPolicy{}
 	for key, tp := range d.Get("templated_policies").([]interface{}) {
 		t := tp.(map[string]interface{})
 
@@ -293,9 +292,8 @@ func getRole(d *schema.ResourceData, meta interface{}) *consulapi.ACLRole {
 				templatedPolicy.TemplateVariables.Name = tv["name"].(string)
 			}
 		}
-		templatedPolicies = append(templatedPolicies, templatedPolicy)
+		role.TemplatedPolicies = append(role.TemplatedPolicies, templatedPolicy)
 	}
-	role.TemplatedPolicies = templatedPolicies
 
 	return role
 }

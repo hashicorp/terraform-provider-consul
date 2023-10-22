@@ -10,22 +10,22 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        go-version: [1.20.x, 1.21.x]
+        consul-version: [1.16.2, 1.17.0-rc1]
         os: [ubuntu-latest]
     runs-on: ${{ matrix.os }}
     steps:
     - name: Install Go
       uses: actions/setup-go@4d34df0c2316fe8122ab82dc22947d607c0c91f9 # v4.0.0
       with:
-        go-version: ${{ matrix.go-version }}
+        go-version: 1.21.x
     - name: Checkout code
       uses: actions/checkout@8f4b7f84864484a7bf31766abe9204da3cbe65b3 # v3.5.0
     - name: Run go tests
       run: make test
     - name: Run OSS acceptance tests
       run: |
-        curl -LO https://releases.hashicorp.com/consul/1.17.0-rc1/consul_1.17.0-rc1_linux_amd64.zip
-        sudo unzip consul_1.17.0-rc1_linux_amd64.zip consul -d /usr/local/bin
+        curl -LO https://releases.hashicorp.com/consul/${{ matrix.consul-version }}/consul_${{ matrix.consul-version }}_linux_amd64.zip
+        sudo unzip consul_${{ matrix.consul-version }}_linux_amd64.zip consul -d /usr/local/bin
         SKIP_REMOTE_DATACENTER_TESTS=1 make testacc TESTARGS="-count=1"
     - name: Run go vet
       run: make vet
@@ -36,7 +36,7 @@ jobs:
     - name: Install Go
       uses: actions/setup-go@4d34df0c2316fe8122ab82dc22947d607c0c91f9 # v4.0.0
       with:
-        go-version: 1.20.x
+        go-version: 1.21.x
     - name: Checkout code
       uses: actions/checkout@8f4b7f84864484a7bf31766abe9204da3cbe65b3 # v3.5.0
     - name: Install tfplugindocs

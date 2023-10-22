@@ -11,7 +11,7 @@ import (
 )
 
 func TestAccDataACLRole_basic(t *testing.T) {
-	providers, _ := startTestServer(t)
+	providers, client := startTestServer(t)
 
 	resource.Test(t, resource.TestCase{
 		Providers: providers,
@@ -35,6 +35,12 @@ func TestAccDataACLRole_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("data.consul_acl_role.test", "service_identities.#", "1"),
 					resource.TestCheckResourceAttr("data.consul_acl_role.test", "service_identities.0.datacenters.#", "0"),
 					resource.TestCheckResourceAttr("data.consul_acl_role.test", "service_identities.0.service_name", "foo"),
+				),
+			},
+			{
+				Config:   testAccDataSourceACLRoleConfigBasicTemplatedPolicies,
+				SkipFunc: skipIfConsulVersionLT(client, "1.17.0"),
+				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr("data.consul_acl_role.test", "templated_policies.#", "2"),
 					resource.TestCheckResourceAttr("data.consul_acl_role.test", "templated_policies.0.datacenters.#", "1"),
 					resource.TestCheckResourceAttr("data.consul_acl_role.test", "templated_policies.0.datacenters.0", "world"),
@@ -78,13 +84,44 @@ func TestAccDataACLRole_namespaceEE(t *testing.T) {
 	})
 }
 
-const testAccDataSourceACLRoleConfigNotFound = `
+const (
+	testAccDataSourceACLRoleConfigNotFound = `
 data "consul_acl_role" "test" {
 	name = "not-found"
 }
 `
 
-const testAccDataSourceACLRoleConfigBasic = `
+	testAccDataSourceACLRoleConfigBasic = `
+resource "consul_acl_policy" "test-read" {
+	name = "test-role"
+	rules = "node \"\" { policy = \"read\" }"
+	datacenters = [ "dc1" ]
+}
+
+resource "consul_acl_role" "test" {
+	name      = "foo"
+	description = "bar"
+
+	policies = [
+		consul_acl_policy.test-read.id
+	]
+
+	service_identities {
+		service_name = "foo"
+	}
+
+	node_identities {
+		node_name = "hello"
+		datacenter = "world"
+	}
+}
+
+data "consul_acl_role" "test" {
+	name = consul_acl_role.test.name
+}
+`
+
+	testAccDataSourceACLRoleConfigBasicTemplatedPolicies = `
 resource "consul_acl_policy" "test-read" {
 	name = "test-role"
 	rules = "node \"\" { policy = \"read\" }"
@@ -126,14 +163,14 @@ data "consul_acl_role" "test" {
 	name = consul_acl_role.test.name
 }
 `
-const testAccDataSourceACLRoleConfigNamespaceCE = `
+	testAccDataSourceACLRoleConfigNamespaceCE = `
 data "consul_acl_role" "test" {
   name      = "test"
   namespace = "test-data-role"
 }
 `
 
-const testAccDataSourceACLRoleConfigNamespaceEE = `
+	testAccDataSourceACLRoleConfigNamespaceEE = `
 resource "consul_namespace" "test" {
   name = "test-data-role"
 }
@@ -163,3 +200,4 @@ data "consul_acl_role" "test" {
   namespace = consul_namespace.test.name
 }
 `
+)

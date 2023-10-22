@@ -346,7 +346,6 @@ func getToken(d *schema.ResourceData) *consulapi.ACLToken {
 	}
 	aclToken.NodeIdentities = nodeIdentities
 
-	templatedPolicies := []*consulapi.ACLTemplatedPolicy{}
 	for key, tp := range d.Get("templated_policies").([]interface{}) {
 		t := tp.(map[string]interface{})
 
@@ -369,9 +368,8 @@ func getToken(d *schema.ResourceData) *consulapi.ACLToken {
 				templatedPolicy.TemplateVariables.Name = tv["name"].(string)
 			}
 		}
-		templatedPolicies = append(templatedPolicies, templatedPolicy)
+		aclToken.TemplatedPolicies = append(aclToken.TemplatedPolicies, templatedPolicy)
 	}
-	aclToken.TemplatedPolicies = templatedPolicies
 
 	expirationTime := d.Get("expiration_time").(string)
 	if expirationTime != "" {

@@ -110,7 +110,6 @@ func dataSourceConsulACLToken() *schema.Resource {
 			},
 			"templated_policies": {
 				Type:        schema.TypeList,
-				Optional:    true,
 				Computed:    true,
 				Description: "The list of templated policies that should be applied to the token.",
 				Elem: &schema.Resource{
