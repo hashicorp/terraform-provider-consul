@@ -53,8 +53,7 @@ func resourceConsulACLBindingRule() *schema.Resource {
 			"bind_vars": {
 				Type:        schema.TypeList,
 				MaxItems:    1,
-				Computed:    true,
-				Description: "BindVars is a the variables used when binding rule type is `templated-policy`. Can be lightly templated using HIL ${foo} syntax from available field names.",
+				Description: "The variables used when binding rule type is `templated-policy`. Can be lightly templated using HIL `${foo}` syntax from available field names.",
 				Optional:    true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{

@@ -85,26 +85,24 @@ func dataSourceConsulACLRole() *schema.Resource {
 			},
 			"templated_policies": {
 				Type:        schema.TypeList,
-				Optional:    true,
 				Computed:    true,
 				Description: "The list of templated policies that should be applied to the token.",
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"template_name": {
 							Type:        schema.TypeString,
-							Required:    true,
+							Computed:    true,
 							Description: "The name of the templated policies.",
 						},
 						"template_variables": {
 							Type:        schema.TypeList,
-							MaxItems:    1,
 							Description: "The templated policy variables.",
-							Optional:    true,
+							Computed:    true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"name": {
 										Type:        schema.TypeString,
-										Optional:    true,
+										Computed:    true,
 										Description: "The name of node, workload identity or service.",
 									},
 								},
@@ -112,7 +110,7 @@ func dataSourceConsulACLRole() *schema.Resource {
 						},
 						"datacenters": {
 							Type:        schema.TypeList,
-							Optional:    true,
+							Computed:    true,
 							Description: "Specifies the datacenters the effective policy is valid within.",
 							Elem: &schema.Schema{
 								Type: schema.TypeString,
