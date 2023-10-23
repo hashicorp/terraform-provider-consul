@@ -24,18 +24,20 @@ func resourceConsulACLToken() *schema.Resource {
 			State: schema.ImportStatePassthrough,
 		},
 
+		Description: "The `consul_acl_token` resource writes an ACL token into Consul.",
+
 		Schema: map[string]*schema.Schema{
 			"accessor_id": {
 				Type:        schema.TypeString,
 				ForceNew:    true,
 				Computed:    true,
 				Optional:    true,
-				Description: "The token id.",
+				Description: "The uuid of the token. If omitted, Consul will generate a random uuid.",
 			},
 			"description": {
 				Type:        schema.TypeString,
 				Optional:    true,
-				Description: "The token description.",
+				Description: "The description of the token.",
 			},
 			"policies": {
 				Type:     schema.TypeSet,
@@ -43,7 +45,7 @@ func resourceConsulACLToken() *schema.Resource {
 				Elem: &schema.Schema{
 					Type: schema.TypeString,
 				},
-				Description: "List of policies.",
+				Description: "The list of policies attached to the token.",
 			},
 			"roles": {
 				Type:     schema.TypeSet,
@@ -51,7 +53,7 @@ func resourceConsulACLToken() *schema.Resource {
 				Elem: &schema.Schema{
 					Type: schema.TypeString,
 				},
-				Description: "List of roles",
+				Description: "The list of roles attached to the token.",
 			},
 			"service_identities": {
 				Type:        schema.TypeList,
@@ -141,13 +143,14 @@ func resourceConsulACLToken() *schema.Resource {
 				Type:         schema.TypeString,
 				ForceNew:     true,
 				Optional:     true,
-				ValidateFunc: validation.ValidateRFC3339TimeString,
+				ValidateFunc: validation.IsRFC3339Time,
 				Description:  "If set this represents the point after which a token should be considered revoked and is eligible for destruction.",
 			},
 			"namespace": {
-				Type:     schema.TypeString,
-				Optional: true,
-				ForceNew: true,
+				Type:        schema.TypeString,
+				Description: "The namespace to create the token within.",
+				Optional:    true,
+				ForceNew:    true,
 			},
 			"partition": {
 				Type:        schema.TypeString,

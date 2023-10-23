@@ -17,6 +17,8 @@ func resourceConsulACLBindingRule() *schema.Resource {
 		Update: resourceConsulACLBindingRuleUpdate,
 		Delete: resourceConsulACLBindingRuleDelete,
 
+		Description: "Starting with Consul 1.5.0, the consul_acl_binding_rule resource can be used to managed Consul ACL binding rules.",
+
 		Schema: map[string]*schema.Schema{
 			"auth_method": {
 				Type:        schema.TypeString,
@@ -34,7 +36,7 @@ func resourceConsulACLBindingRule() *schema.Resource {
 			"selector": {
 				Type:        schema.TypeString,
 				Optional:    true,
-				Description: "The expression used to math this rule against valid identities returned from an auth method validation.",
+				Description: "The expression used to match this rule against valid identities returned from an auth method validation.",
 			},
 
 			"bind_type": {
@@ -67,9 +69,10 @@ func resourceConsulACLBindingRule() *schema.Resource {
 			},
 
 			"namespace": {
-				Type:     schema.TypeString,
-				Optional: true,
-				ForceNew: true,
+				Type:        schema.TypeString,
+				Description: "The namespace to create the binding rule within.",
+				Optional:    true,
+				ForceNew:    true,
 			},
 
 			"partition": {

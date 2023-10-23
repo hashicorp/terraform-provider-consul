@@ -13,30 +13,37 @@ func dataSourceConsulACLToken() *schema.Resource {
 	return &schema.Resource{
 		Read: dataSourceConsulACLTokenRead,
 
+		Description: "The `consul_acl_token` data source returns the information related to the `consul_acl_token` resource with the exception of its secret ID.\n\nIf you want to get the secret ID associated with a token, use the [`consul_acl_token_secret_id` data source](/docs/providers/consul/d/acl_token_secret_id.html).",
+
 		Schema: map[string]*schema.Schema{
 
 			// Filters
 			"accessor_id": {
-				Required: true,
-				Type:     schema.TypeString,
+				Required:    true,
+				Description: "The accessor ID of the ACL token.",
+				Type:        schema.TypeString,
 			},
 			"namespace": {
-				Type:     schema.TypeString,
-				Optional: true,
+				Type:        schema.TypeString,
+				Description: "The namespace to lookup the ACL token.",
+				Optional:    true,
 			},
 			"partition": {
-				Type:     schema.TypeString,
-				Optional: true,
+				Type:        schema.TypeString,
+				Description: "The partition to lookup the ACL token.",
+				Optional:    true,
 			},
 
 			// Out parameters
 			"description": {
-				Type:     schema.TypeString,
-				Computed: true,
+				Type:        schema.TypeString,
+				Description: "The description of the ACL token.",
+				Computed:    true,
 			},
 			"policies": {
-				Type:     schema.TypeList,
-				Computed: true,
+				Type:        schema.TypeList,
+				Description: "A list of policies associated with the ACL token.",
+				Computed:    true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"name": {
@@ -51,8 +58,9 @@ func dataSourceConsulACLToken() *schema.Resource {
 				},
 			},
 			"roles": {
-				Type:     schema.TypeList,
-				Computed: true,
+				Type:        schema.TypeList,
+				Description: "List of roles linked to the token",
+				Computed:    true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"id": {
@@ -65,12 +73,11 @@ func dataSourceConsulACLToken() *schema.Resource {
 						},
 					},
 				},
-				Description: "List of roles.",
 			},
 			"service_identities": {
 				Type:        schema.TypeList,
 				Computed:    true,
-				Description: "The list of service identities that should be applied to the token.",
+				Description: "The list of service identities attached to the token.",
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"service_name": {
@@ -92,7 +99,7 @@ func dataSourceConsulACLToken() *schema.Resource {
 			"node_identities": {
 				Type:        schema.TypeList,
 				Computed:    true,
-				Description: "The list of node identities that should be applied to the token.",
+				Description: "The list of node identities attached to the token.",
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"node_name": {
@@ -145,8 +152,9 @@ func dataSourceConsulACLToken() *schema.Resource {
 				},
 			},
 			"local": {
-				Type:     schema.TypeBool,
-				Computed: true,
+				Type:        schema.TypeBool,
+				Description: "Whether the ACL token is local to the datacenter it was created within.",
+				Computed:    true,
 			},
 			"expiration_time": {
 				Type:        schema.TypeString,

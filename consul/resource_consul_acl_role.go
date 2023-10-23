@@ -21,6 +21,8 @@ func resourceConsulACLRole() *schema.Resource {
 			State: schema.ImportStatePassthrough,
 		},
 
+		Description: "Starting with Consul 1.5.0, the `consul_acl_role` can be used to managed Consul ACL roles.",
+
 		Schema: map[string]*schema.Schema{
 			"name": {
 				Type:        schema.TypeString,
@@ -119,9 +121,10 @@ func resourceConsulACLRole() *schema.Resource {
 				},
 			},
 			"namespace": {
-				Type:     schema.TypeString,
-				Optional: true,
-				ForceNew: true,
+				Type:        schema.TypeString,
+				Description: "The namespace to create the role within.",
+				Optional:    true,
+				ForceNew:    true,
 			},
 			"partition": {
 				Type:        schema.TypeString,
