@@ -5,6 +5,7 @@ package consul
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"os"
 	"os/exec"
@@ -13,8 +14,10 @@ import (
 	"testing"
 	"time"
 
+	"github.com/hashicorp/consul/api"
 	consulapi "github.com/hashicorp/consul/api"
 	"github.com/hashicorp/consul/sdk/testutil/retry"
+	"github.com/hashicorp/go-version"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/terraform"
@@ -500,6 +503,31 @@ func skipTestOnConsulCommunityEdition(t *testing.T) {
 func skipTestOnConsulEnterpriseEdition(t *testing.T) {
 	if !serverIsConsulCommunityEdition(t) {
 		t.Skip("Test skipped on Consul Enterprise Edition. Use a Consul Community server to run this test.")
+	}
+}
+
+func skipIfConsulVersionLT(client *api.Client, expected string) func() (bool, error) {
+	return func() (bool, error) {
+		expected, err := version.NewVersion(expected)
+		if err != nil {
+			return false, fmt.Errorf("failed to parse version: %v", err)
+		}
+
+		data, err := client.Agent().Version()
+		if err != nil {
+			return false, err
+		}
+		v, ok := data["HumanVersion"].(string)
+		if !ok {
+			return false, fmt.Errorf("failed to find version in %#v", data)
+		}
+
+		current, err := version.NewVersion(v)
+		if err != nil {
+			return false, fmt.Errorf("failed to parse version: %v", err)
+		}
+
+		return current.LessThan(expected), nil
 	}
 }
 
