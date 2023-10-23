@@ -1,3 +1,5 @@
+# Basic usage
+
 resource "consul_acl_policy" "agent" {
   name  = "agent"
   rules = <<-RULE
@@ -13,7 +15,7 @@ resource "consul_acl_token" "test" {
   local       = true
 }
 
-# or explicitly set the `accessor_id`
+# Explicitly set the `accessor_id`
 
 resource "random_uuid" "test" {}
 

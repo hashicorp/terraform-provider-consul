@@ -4,15 +4,20 @@ page_title: "consul_acl_token Resource - terraform-provider-consul"
 subcategory: ""
 description: |-
   The consul_acl_token resource writes an ACL token into Consul.
+  ~> NOTE: The consul_acl_token resource does not save the secret ID of the generated token to the Terraform state to avoid leaking it when it is not needed. If you need to get the secret ID after creating the ACL token you can use the consul_acl_token_secret_id datasource.
 ---
 
 # consul_acl_token (Resource)
 
 The `consul_acl_token` resource writes an ACL token into Consul.
 
+~> **NOTE:** The `consul_acl_token` resource does not save the secret ID of the generated token to the Terraform state to avoid leaking it when it is not needed. If you need to get the secret ID after creating the ACL token you can use the [`consul_acl_token_secret_id`](/docs/providers/consul/r/acl_token.html) datasource.
+
 ## Example Usage
 
 ```terraform
+# Basic usage
+
 resource "consul_acl_policy" "agent" {
   name  = "agent"
   rules = <<-RULE
@@ -28,7 +33,7 @@ resource "consul_acl_token" "test" {
   local       = true
 }
 
-# or explicitly set the `accessor_id`
+# Explicitly set the `accessor_id`
 
 resource "random_uuid" "test" {}
 
@@ -48,7 +53,7 @@ resource "consul_acl_token" "test_predefined_id" {
 - `accessor_id` (String) The uuid of the token. If omitted, Consul will generate a random uuid.
 - `description` (String) The description of the token.
 - `expiration_time` (String) If set this represents the point after which a token should be considered revoked and is eligible for destruction.
-- `local` (Boolean) Flag to set the token local to the current datacenter.
+- `local` (Boolean) The flag to set the token local to the current datacenter.
 - `namespace` (String) The namespace to create the token within.
 - `node_identities` (Block List) The list of node identities that should be applied to the token. (see [below for nested schema](#nestedblock--node_identities))
 - `partition` (String) The partition the ACL token is associated with.
@@ -66,7 +71,7 @@ resource "consul_acl_token" "test_predefined_id" {
 
 Required:
 
-- `datacenter` (String) Specifies the node's datacenter.
+- `datacenter` (String) The datacenter of the node.
 - `node_name` (String) The name of the node.
 
 
@@ -100,3 +105,12 @@ Optional:
 Optional:
 
 - `name` (String) The name of node, workload identity or service.
+
+## Import
+
+Import is supported using the following syntax:
+
+```shell
+terraform import consul_acl_token.anonymous 00000000-0000-0000-0000-000000000002
+terraform import consul_acl_token.master-token 624d94ca-bc5c-f960-4e83-0a609cf588be
+```
