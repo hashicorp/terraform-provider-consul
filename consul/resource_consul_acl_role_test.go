@@ -51,6 +51,21 @@ func TestAccConsulACLRole_basic(t *testing.T) {
 				),
 			},
 			{
+				Config:   testResourceACLRoleConfigUpdateTemplatedPolicies,
+				SkipFunc: skipIfConsulVersionLT(client, "1.17.0"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr("consul_acl_role.test", "templated_policies.#", "2"),
+					resource.TestCheckResourceAttr("consul_acl_role.test", "templated_policies.0.datacenters.#", "1"),
+					resource.TestCheckResourceAttr("consul_acl_role.test", "templated_policies.0.datacenters.0", "wide"),
+					resource.TestCheckResourceAttr("consul_acl_role.test", "templated_policies.0.template_variables.#", "1"),
+					resource.TestCheckResourceAttr("consul_acl_role.test", "templated_policies.0.template_variables.0.name", "api"),
+					resource.TestCheckResourceAttr("consul_acl_role.test", "templated_policies.0.template_name", "builtin/service"),
+					resource.TestCheckResourceAttr("consul_acl_role.test", "templated_policies.1.template_variables.#", "0"),
+					resource.TestCheckResourceAttr("consul_acl_role.test", "templated_policies.1.template_name", "builtin/dns"),
+					resource.TestCheckResourceAttr("consul_acl_role.test", "templated_policies.1.template_variables.#", "0"),
+				),
+			},
+			{
 				Config:      testResourceACLRoleConfigPolicyName,
 				ExpectError: regexp.MustCompile(`expected "policies.0" to be a valid UUID`),
 			},
@@ -111,7 +126,8 @@ func testRoleDestroy(client *consulapi.Client) func(s *terraform.State) error {
 	}
 }
 
-const testResourceACLRoleConfigBasic = `
+const (
+	testResourceACLRoleConfigBasic = `
 resource "consul_acl_policy" "test-read" {
 	name        = "test-role"
 	rules       = "node \"\" { policy = \"read\" }"
@@ -131,7 +147,7 @@ resource "consul_acl_role" "test" {
 	}
 }`
 
-const testResourceACLRoleConfigUpdate = `
+	testResourceACLRoleConfigUpdate = `
 resource "consul_acl_role" "test" {
 	name      = "baz"
 
@@ -145,20 +161,47 @@ resource "consul_acl_role" "test" {
 	}
 }`
 
-const testResourceACLRoleConfigPolicyName = `
+	testResourceACLRoleConfigUpdateTemplatedPolicies = `
+resource "consul_acl_role" "test" {
+	name      = "baz"
+
+	service_identities {
+		service_name = "bar"
+	}
+
+	node_identities {
+		node_name = "hello"
+		datacenter = "world"
+	}
+
+	templated_policies {
+		template_name = "builtin/service"
+		datacenters = ["wide"]
+		template_variables {
+			name = "api"
+		}
+	}
+
+	templated_policies {
+		template_name = "builtin/dns"
+		datacenters = ["wide"]
+	}
+}`
+
+	testResourceACLRoleConfigPolicyName = `
 resource "consul_acl_role" "test" {
 	name    = "baz"
 	policies = ["test"]
 }`
 
-const testResourceACLRoleNamespaceCE = `
+	testResourceACLRoleNamespaceCE = `
 resource "consul_acl_role" "test" {
   name      = "test"
   namespace = "test-role"
 }
 `
 
-const testResourceACLRoleNamespaceEE = `
+	testResourceACLRoleNamespaceEE = `
 resource "consul_namespace" "test" {
   name = "test-role"
 }
@@ -168,3 +211,4 @@ resource "consul_acl_role" "test" {
   namespace = consul_namespace.test.name
 }
 `
+)
