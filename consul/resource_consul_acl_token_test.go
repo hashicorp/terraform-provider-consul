@@ -45,6 +45,7 @@ func TestAccConsulACLToken_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("consul_acl_token.test", "node_identities.#", "0"),
 					resource.TestCheckResourceAttrSet("consul_acl_token.test", "policies.#"),
 					resource.TestCheckResourceAttr("consul_acl_token.test", "service_identities.#", "0"),
+					resource.TestCheckResourceAttr("consul_acl_token.test", "templated_policies.#", "0"),
 				),
 			},
 			{
@@ -70,6 +71,20 @@ func TestAccConsulACLToken_basic(t *testing.T) {
 				Config: testResourceACLTokenConfigUpdate,
 			},
 			{
+				Config:   testResourceACLTokenConfigUpdateTemplatedPolicies,
+				SkipFunc: skipIfConsulVersionLT(client, "1.17.0"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr("consul_acl_token.test", "templated_policies.#", "2"),
+					resource.TestCheckResourceAttr("consul_acl_token.test", "templated_policies.0.datacenters.#", "1"),
+					resource.TestCheckResourceAttr("consul_acl_token.test", "templated_policies.0.datacenters.0", "world"),
+					resource.TestCheckResourceAttr("consul_acl_token.test", "templated_policies.0.template_variables.#", "1"),
+					resource.TestCheckResourceAttr("consul_acl_token.test", "templated_policies.0.template_variables.0.name", "web"),
+					resource.TestCheckResourceAttr("consul_acl_token.test", "templated_policies.0.template_name", "builtin/service"),
+					resource.TestCheckResourceAttr("consul_acl_token.test", "templated_policies.1.template_variables.#", "0"),
+					resource.TestCheckResourceAttr("consul_acl_token.test", "templated_policies.1.template_name", "builtin/dns"),
+				),
+			},
+			{
 				Config: testResourceACLTokenConfigRole,
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrSet("consul_acl_token.test", "accessor_id"),
@@ -82,6 +97,7 @@ func TestAccConsulACLToken_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("consul_acl_token.test", "roles.#", "1"),
 					resource.TestCheckResourceAttr("consul_acl_token.test", "roles.1785148924", "test"),
 					resource.TestCheckResourceAttr("consul_acl_token.test", "service_identities.#", "0"),
+					resource.TestCheckResourceAttr("consul_acl_token.test", "templated_policies.#", "0"),
 				),
 			},
 		},
@@ -155,7 +171,8 @@ func TestAccConsulACLToken_namespaceEE(t *testing.T) {
 	})
 }
 
-const testResourceACLTokenConfigBasic = `
+const (
+	testResourceACLTokenConfigBasic = `
 resource "consul_acl_policy" "test" {
 	name = "test-token-basic"
 	rules = "node \"\" { policy = \"read\" }"
@@ -168,7 +185,7 @@ resource "consul_acl_token" "test" {
 	local = true
 }`
 
-const testResourceACLTokenConfigUpdate = `
+	testResourceACLTokenConfigUpdate = `
 // Using another resource to force the update of consul_acl_token
 resource "consul_acl_policy" "test2" {
 	name = "test2"
@@ -191,7 +208,43 @@ resource "consul_acl_token" "test" {
 	}
 }`
 
-const testResourceACLTokenConfigRole = `
+	testResourceACLTokenConfigUpdateTemplatedPolicies = `
+// Using another resource to force the update of consul_acl_token
+resource "consul_acl_policy" "test2" {
+	name = "test2"
+	rules = "node \"\" { policy = \"read\" }"
+	datacenters = [ "dc1" ]
+}
+
+resource "consul_acl_token" "test" {
+	description = "test"
+	policies = ["${consul_acl_policy.test2.name}"]
+
+	service_identities {
+		service_name = "hello"
+		datacenters = ["world"]
+	}
+
+	node_identities {
+		node_name = "foo"
+		datacenter = "bar"
+	}
+
+	templated_policies {
+		template_name = "builtin/service"
+		datacenters = ["world"]
+		template_variables {
+			name = "web"
+		}
+	}
+
+	templated_policies {
+		template_name = "builtin/dns"
+		datacenters = ["world"]
+	}
+}`
+
+	testResourceACLTokenConfigRole = `
 resource "consul_acl_role" "test" {
     name      = "test"
 }
@@ -201,13 +254,13 @@ resource "consul_acl_token" "test" {
 	roles = [consul_acl_role.test.name]
 }`
 
-const testResourceACLTokenConfigNamespaceCE = `
+	testResourceACLTokenConfigNamespaceCE = `
 resource "consul_acl_token" "test" {
   description = "test"
   namespace   = "test"
 }`
 
-const testResourceACLTokenConfigNamespaceEE = `
+	testResourceACLTokenConfigNamespaceEE = `
 resource "consul_namespace" "test" {
   name = "test-token"
 }
@@ -215,3 +268,4 @@ resource "consul_acl_token" "test" {
   description = "test"
   namespace   = consul_namespace.test.name
 }`
+)

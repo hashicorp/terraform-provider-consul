@@ -13,30 +13,37 @@ func dataSourceConsulACLToken() *schema.Resource {
 	return &schema.Resource{
 		Read: dataSourceConsulACLTokenRead,
 
+		Description: "The `consul_acl_token` data source returns the information related to the `consul_acl_token` resource with the exception of its secret ID.\n\nIf you want to get the secret ID associated with a token, use the [`consul_acl_token_secret_id` data source](/docs/providers/consul/d/acl_token_secret_id.html).",
+
 		Schema: map[string]*schema.Schema{
 
 			// Filters
 			"accessor_id": {
-				Required: true,
-				Type:     schema.TypeString,
+				Required:    true,
+				Description: "The accessor ID of the ACL token.",
+				Type:        schema.TypeString,
 			},
 			"namespace": {
-				Type:     schema.TypeString,
-				Optional: true,
+				Type:        schema.TypeString,
+				Description: "The namespace to lookup the ACL token.",
+				Optional:    true,
 			},
 			"partition": {
-				Type:     schema.TypeString,
-				Optional: true,
+				Type:        schema.TypeString,
+				Description: "The partition to lookup the ACL token.",
+				Optional:    true,
 			},
 
 			// Out parameters
 			"description": {
-				Type:     schema.TypeString,
-				Computed: true,
+				Type:        schema.TypeString,
+				Description: "The description of the ACL token.",
+				Computed:    true,
 			},
 			"policies": {
-				Type:     schema.TypeList,
-				Computed: true,
+				Type:        schema.TypeList,
+				Description: "A list of policies associated with the ACL token.",
+				Computed:    true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"name": {
@@ -51,8 +58,9 @@ func dataSourceConsulACLToken() *schema.Resource {
 				},
 			},
 			"roles": {
-				Type:     schema.TypeList,
-				Computed: true,
+				Type:        schema.TypeList,
+				Description: "List of roles linked to the token",
+				Computed:    true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"id": {
@@ -65,12 +73,11 @@ func dataSourceConsulACLToken() *schema.Resource {
 						},
 					},
 				},
-				Description: "List of roles.",
 			},
 			"service_identities": {
 				Type:        schema.TypeList,
 				Computed:    true,
-				Description: "The list of service identities that should be applied to the token.",
+				Description: "The list of service identities attached to the token.",
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"service_name": {
@@ -92,7 +99,7 @@ func dataSourceConsulACLToken() *schema.Resource {
 			"node_identities": {
 				Type:        schema.TypeList,
 				Computed:    true,
-				Description: "The list of node identities that should be applied to the token.",
+				Description: "The list of node identities attached to the token.",
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"node_name": {
@@ -108,9 +115,46 @@ func dataSourceConsulACLToken() *schema.Resource {
 					},
 				},
 			},
+			"templated_policies": {
+				Type:        schema.TypeList,
+				Computed:    true,
+				Description: "The list of templated policies that should be applied to the token.",
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"template_name": {
+							Type:        schema.TypeString,
+							Computed:    true,
+							Description: "The name of the templated policies.",
+						},
+						"template_variables": {
+							Type:        schema.TypeList,
+							Description: "The templated policy variables.",
+							Computed:    true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"name": {
+										Type:        schema.TypeString,
+										Computed:    true,
+										Description: "The name of node, workload identity or service.",
+									},
+								},
+							},
+						},
+						"datacenters": {
+							Type:        schema.TypeList,
+							Computed:    true,
+							Description: "Specifies the datacenters the effective policy is valid within.",
+							Elem: &schema.Schema{
+								Type: schema.TypeString,
+							},
+						},
+					},
+				},
+			},
 			"local": {
-				Type:     schema.TypeBool,
-				Computed: true,
+				Type:        schema.TypeBool,
+				Description: "Whether the ACL token is local to the datacenter it was created within.",
+				Computed:    true,
 			},
 			"expiration_time": {
 				Type:        schema.TypeString,
@@ -162,6 +206,15 @@ func dataSourceConsulACLTokenRead(d *schema.ResourceData, meta interface{}) erro
 		}
 	}
 
+	templatedPolicies := make([]map[string]interface{}, len(aclToken.TemplatedPolicies))
+	for i, tp := range aclToken.TemplatedPolicies {
+		templatedPolicies[i] = map[string]interface{}{
+			"template_name":      tp.TemplateName,
+			"datacenters":        tp.Datacenters,
+			"template_variables": getTemplateVariables(tp),
+		}
+	}
+
 	var expirationTime string
 	if aclToken.ExpirationTime != nil {
 		expirationTime = aclToken.ExpirationTime.Format(time.RFC3339)
@@ -176,6 +229,7 @@ func dataSourceConsulACLTokenRead(d *schema.ResourceData, meta interface{}) erro
 	sw.set("roles", roles)
 	sw.set("service_identities", serviceIdentities)
 	sw.set("node_identities", nodeIdentities)
+	sw.set("templated_policies", templatedPolicies)
 	sw.set("expiration_time", expirationTime)
 
 	return sw.error()

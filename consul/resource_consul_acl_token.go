@@ -24,18 +24,20 @@ func resourceConsulACLToken() *schema.Resource {
 			State: schema.ImportStatePassthrough,
 		},
 
+		Description: "The `consul_acl_token` resource writes an ACL token into Consul.",
+
 		Schema: map[string]*schema.Schema{
 			"accessor_id": {
 				Type:        schema.TypeString,
 				ForceNew:    true,
 				Computed:    true,
 				Optional:    true,
-				Description: "The token id.",
+				Description: "The uuid of the token. If omitted, Consul will generate a random uuid.",
 			},
 			"description": {
 				Type:        schema.TypeString,
 				Optional:    true,
-				Description: "The token description.",
+				Description: "The description of the token.",
 			},
 			"policies": {
 				Type:     schema.TypeSet,
@@ -43,7 +45,7 @@ func resourceConsulACLToken() *schema.Resource {
 				Elem: &schema.Schema{
 					Type: schema.TypeString,
 				},
-				Description: "List of policies.",
+				Description: "The list of policies attached to the token.",
 			},
 			"roles": {
 				Type:     schema.TypeSet,
@@ -51,7 +53,7 @@ func resourceConsulACLToken() *schema.Resource {
 				Elem: &schema.Schema{
 					Type: schema.TypeString,
 				},
-				Description: "List of roles",
+				Description: "The list of roles attached to the token.",
 			},
 			"service_identities": {
 				Type:        schema.TypeList,
@@ -94,6 +96,43 @@ func resourceConsulACLToken() *schema.Resource {
 					},
 				},
 			},
+			"templated_policies": {
+				Type:        schema.TypeList,
+				Optional:    true,
+				Description: "The list of templated policies that should be applied to the token.",
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"template_name": {
+							Type:        schema.TypeString,
+							Required:    true,
+							Description: "The name of the templated policies.",
+						},
+						"template_variables": {
+							Type:        schema.TypeList,
+							MaxItems:    1,
+							Description: "The templated policy variables.",
+							Optional:    true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"name": {
+										Type:        schema.TypeString,
+										Optional:    true,
+										Description: "The name of node, workload identity or service.",
+									},
+								},
+							},
+						},
+						"datacenters": {
+							Type:        schema.TypeList,
+							Optional:    true,
+							Description: "Specifies the datacenters the effective policy is valid within.",
+							Elem: &schema.Schema{
+								Type: schema.TypeString,
+							},
+						},
+					},
+				},
+			},
 			"local": {
 				Type:        schema.TypeBool,
 				ForceNew:    true,
@@ -104,13 +143,14 @@ func resourceConsulACLToken() *schema.Resource {
 				Type:         schema.TypeString,
 				ForceNew:     true,
 				Optional:     true,
-				ValidateFunc: validation.ValidateRFC3339TimeString,
+				ValidateFunc: validation.IsRFC3339Time,
 				Description:  "If set this represents the point after which a token should be considered revoked and is eligible for destruction.",
 			},
 			"namespace": {
-				Type:     schema.TypeString,
-				Optional: true,
-				ForceNew: true,
+				Type:        schema.TypeString,
+				Description: "The namespace to create the token within.",
+				Optional:    true,
+				ForceNew:    true,
 			},
 			"partition": {
 				Type:        schema.TypeString,
@@ -189,6 +229,15 @@ func resourceConsulACLTokenRead(d *schema.ResourceData, meta interface{}) error 
 		}
 	}
 
+	templatedPolicies := make([]interface{}, len(aclToken.TemplatedPolicies))
+	for i, tp := range aclToken.TemplatedPolicies {
+		templatedPolicies[i] = map[string]interface{}{
+			"template_name":      tp.TemplateName,
+			"datacenters":        tp.Datacenters,
+			"template_variables": getTemplateVariables(tp),
+		}
+	}
+
 	sw := newStateWriter(d)
 	sw.set("accessor_id", aclToken.AccessorID)
 	sw.set("description", aclToken.Description)
@@ -196,12 +245,23 @@ func resourceConsulACLTokenRead(d *schema.ResourceData, meta interface{}) error 
 	sw.set("roles", roles)
 	sw.set("service_identities", serviceIdentities)
 	sw.set("node_identities", nodeIdentities)
+	sw.set("templated_policies", templatedPolicies)
 	sw.set("local", aclToken.Local)
 	sw.set("expiration_time", expirationTime)
 	sw.set("namespace", aclToken.Namespace)
 	sw.set("partition", aclToken.Partition)
 
 	return sw.error()
+}
+
+func getTemplateVariables(templatedPolicy *consulapi.ACLTemplatedPolicy) []map[string]interface{} {
+	if templatedPolicy == nil || templatedPolicy.TemplateVariables == nil {
+		return nil
+	}
+
+	return []map[string]interface{}{
+		{"name": templatedPolicy.TemplateVariables.Name},
+	}
 }
 
 func resourceConsulACLTokenUpdate(d *schema.ResourceData, meta interface{}) error {
@@ -288,6 +348,31 @@ func getToken(d *schema.ResourceData) *consulapi.ACLToken {
 		})
 	}
 	aclToken.NodeIdentities = nodeIdentities
+
+	for key, tp := range d.Get("templated_policies").([]interface{}) {
+		t := tp.(map[string]interface{})
+
+		datacenters := []string{}
+		for _, d := range t["datacenters"].([]interface{}) {
+			datacenters = append(datacenters, d.(string))
+		}
+
+		templatedPolicy := &consulapi.ACLTemplatedPolicy{
+			Datacenters:  datacenters,
+			TemplateName: t["template_name"].(string),
+		}
+
+		if templatedVariables, ok := d.GetOk(fmt.Sprint("templated_policies.", key, ".template_variables.0")); ok {
+			tv := templatedVariables.(map[string]interface{})
+
+			templatedPolicy.TemplateVariables = &consulapi.ACLTemplatedPolicyVariables{}
+
+			if tv["name"] != nil {
+				templatedPolicy.TemplateVariables.Name = tv["name"].(string)
+			}
+		}
+		aclToken.TemplatedPolicies = append(aclToken.TemplatedPolicies, templatedPolicy)
+	}
 
 	expirationTime := d.Get("expiration_time").(string)
 	if expirationTime != "" {
