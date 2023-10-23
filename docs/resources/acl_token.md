@@ -17,6 +17,7 @@ The `consul_acl_token` resource writes an ACL token into Consul.
 
 ```terraform
 # Basic usage
+
 resource "consul_acl_policy" "agent" {
   name  = "agent"
   rules = <<-RULE
@@ -33,12 +34,13 @@ resource "consul_acl_token" "test" {
 }
 
 # Explicitly set the `accessor_id`
+
 resource "random_uuid" "test" {}
 
 resource "consul_acl_token" "test_predefined_id" {
   accessor_id = random_uuid.test_uuid.result
   description = "my test uuid token"
-  policies    = ["${consul_acl_policy.agent.name}"]
+  policies    = [consul_acl_policy.agent.name]
   local       = true
 }
 ```
@@ -58,6 +60,7 @@ resource "consul_acl_token" "test_predefined_id" {
 - `policies` (Set of String) The list of policies attached to the token.
 - `roles` (Set of String) The list of roles attached to the token.
 - `service_identities` (Block List) The list of service identities that should be applied to the token. (see [below for nested schema](#nestedblock--service_identities))
+- `templated_policies` (Block List) The list of templated policies that should be applied to the token. (see [below for nested schema](#nestedblock--templated_policies))
 
 ### Read-Only
 
@@ -82,6 +85,26 @@ Required:
 Optional:
 
 - `datacenters` (List of String) Specifies the datacenters the effective policy is valid within.
+
+
+<a id="nestedblock--templated_policies"></a>
+### Nested Schema for `templated_policies`
+
+Required:
+
+- `template_name` (String) The name of the templated policies.
+
+Optional:
+
+- `datacenters` (List of String) Specifies the datacenters the effective policy is valid within.
+- `template_variables` (Block List, Max: 1) The templated policy variables. (see [below for nested schema](#nestedblock--templated_policies--template_variables))
+
+<a id="nestedblock--templated_policies--template_variables"></a>
+### Nested Schema for `templated_policies.template_variables`
+
+Optional:
+
+- `name` (String) The name of node, workload identity or service.
 
 ## Import
 
