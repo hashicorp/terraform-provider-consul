@@ -48,6 +48,7 @@ resource "consul_acl_role" "read" {
 - `partition` (String) The partition the ACL role is associated with.
 - `policies` (Set of String) The list of policies that should be applied to the role. Both the policy ID or its name can be used.
 - `service_identities` (Block Set) The list of service identities that should be applied to the role. (see [below for nested schema](#nestedblock--service_identities))
+- `templated_policies` (Block List) The list of templated policies that should be applied to the token. (see [below for nested schema](#nestedblock--templated_policies))
 
 ### Read-Only
 
@@ -72,6 +73,26 @@ Required:
 Optional:
 
 - `datacenters` (Set of String) The datacenters the effective policy is valid within. When no datacenters are provided the effective policy is valid in all datacenters including those which do not yet exist but may in the future.
+
+
+<a id="nestedblock--templated_policies"></a>
+### Nested Schema for `templated_policies`
+
+Required:
+
+- `template_name` (String) The name of the templated policies.
+
+Optional:
+
+- `datacenters` (List of String) Specifies the datacenters the effective policy is valid within.
+- `template_variables` (Block List, Max: 1) The templated policy variables. (see [below for nested schema](#nestedblock--templated_policies--template_variables))
+
+<a id="nestedblock--templated_policies--template_variables"></a>
+### Nested Schema for `templated_policies.template_variables`
+
+Optional:
+
+- `name` (String) The name of node, workload identity or service.
 
 ## Import
 
