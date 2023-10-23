@@ -67,9 +67,9 @@ func resourceConsulACLToken() *schema.Resource {
 							Description: "The name of the service.",
 						},
 						"datacenters": {
-							Type:     schema.TypeList,
-							Optional: true,
-							// Description: "The list of datacenters the policy is valid within.",
+							Type:        schema.TypeList,
+							Optional:    true,
+							Description: "Specifies the datacenters the effective policy is valid within.",
 							Elem: &schema.Schema{
 								Type: schema.TypeString,
 							},

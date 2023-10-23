@@ -81,7 +81,7 @@ Required:
 
 Optional:
 
-- `datacenters` (List of String)
+- `datacenters` (List of String) Specifies the datacenters the effective policy is valid within.
 
 ## Import
 
