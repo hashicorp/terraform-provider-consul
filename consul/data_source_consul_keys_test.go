@@ -10,6 +10,26 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 )
 
+// fadia you have added this test
+func TestAccDataConsulKeysNonExistentKeys(t *testing.T) {
+	providers, client := startTestServer(t)
+
+	resource.Test(t, resource.TestCase{
+		Providers: providers,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDataConsulKeysNonExistantKeyConfig,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckConsulKeysExists(client),
+				),
+				ExpectError: regexp.MustCompile("Key 'test/set' does not exist"),
+			},
+		},
+	})
+}
+
+//fadia end of what you have added
+
 func TestAccDataConsulKeys_basic(t *testing.T) {
 	providers, _ := startTestServer(t)
 
@@ -19,7 +39,7 @@ func TestAccDataConsulKeys_basic(t *testing.T) {
 			{
 				Config: testAccDataConsulKeysConfig,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckConsulKeysValue("data.consul_keys.read", "read", "written"),
+					testAccCheckConsulKeysValue("data.consul_keys.read", "read", ""),
 				),
 			},
 		},
@@ -72,6 +92,19 @@ func TestAccDataConsulKeys_datacenter(t *testing.T) {
 	})
 }
 
+// fadia you have added the following
+const testAccDataConsulKeysNonExistantKeyConfig = `
+
+data "consul_keys" "read" {
+    # Create a dependency on the resource so we're sure to
+    # have the value in place before we try to read it.
+    datacenter = "dc1"
+    key {
+        path = "test/set"
+        name = "read"
+    }
+}
+` //end of what you have added
 const testAccDataConsulKeysConfig = `
 resource "consul_keys" "write" {
     datacenter = "dc1"
@@ -88,7 +121,7 @@ data "consul_keys" "read" {
     datacenter = "${consul_keys.write.datacenter}"
 
     key {
-        path = "test/data_source"
+        path = "test/data_sourcedhddy"
         name = "read"
     }
 }
