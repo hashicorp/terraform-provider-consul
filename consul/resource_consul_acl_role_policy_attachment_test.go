@@ -38,9 +38,9 @@ func testAccCheckConsulACLRolePolicyAttachmentDestroy(client *consulapi.Client) 
 
 func testAccCheckRolePolicyID(client *consulapi.Client) func(s *terraform.State) error {
 	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources["consul_acl_role.test"]
+		rs, ok := s.RootModule().Resources["consul_acl_role.test_role"]
 		if !ok {
-			return fmt.Errorf("Not Found: consul_acl_role.test")
+			return fmt.Errorf("Not Found: consul_acl_role.test_role")
 		}
 
 		roleID := rs.Primary.Attributes["id"]
@@ -107,13 +107,13 @@ func TestAccConsulACLRolePolicyAttachment_basic(t *testing.T) {
 }
 
 const testResourceACLRolePolicyAttachmentConfigBasic = `
-resource "consul_acl_policy" "test" {
+resource "consul_acl_policy" "test_policy" {
 	name = "test-attachment"
 	rules = "node \"\" { policy = \"read\" }"
 	datacenters = [ "dc1" ]
 }
 
-resource "consul_acl_role" "test" {
+resource "consul_acl_role" "test_role" {
     name = "test"
 
     lifecycle {
@@ -122,8 +122,8 @@ resource "consul_acl_role" "test" {
 }
 
 resource "consul_acl_role_policy_attachment" "test" {
-    role_id = consul_acl_role.test.id
-    policy  = consul_acl_policy.test.name
+    role_id = consul_acl_role.test_role.id
+    policy  = consul_acl_policy.test_policy.name
 }
 `
 
@@ -135,7 +135,7 @@ resource "consul_acl_policy" "test2" {
 	datacenters = [ "dc1" ]
 }
 
-resource "consul_acl_role" "test" {
+resource "consul_acl_role" "test_role" {
     name = "test"
 
     lifecycle {
@@ -144,6 +144,6 @@ resource "consul_acl_role" "test" {
 }
 
 resource "consul_acl_role_policy_attachment" "test" {
-    role_id = consul_acl_role.test.id
+    role_id = consul_acl_role.test_role.id
     policy  = consul_acl_policy.test2.name
 }`
