@@ -11,18 +11,49 @@ import (
 )
 
 // fadia you have added this test
+// here we are testing for no exitant key and no default value so we are expecting an error.
 func TestAccDataConsulKeysNonExistentKeys(t *testing.T) {
-	providers, client := startTestServer(t)
+	providers, _ := startTestServer(t)
 
 	resource.Test(t, resource.TestCase{
 		Providers: providers,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDataConsulKeysNonExistantKeyConfig,
+				Config:      testAccDataConsulKeysNonExistantKeyConfig,
+				ExpectError: regexp.MustCompile("Key '.*' does not exist"),
+			},
+		},
+	})
+}
+
+// here they key doesn't exist but we have a default value so we are checking if we get the default value correctly.
+func TestAccDataConsulKeysNonExistentKeyWithDefault(t *testing.T) {
+	providers, _ := startTestServer(t)
+
+	resource.Test(t, resource.TestCase{
+		Providers: providers,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDataConsulKeysNonExistantKeyWithDefaultConfig,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckConsulKeysExists(client),
+					testAccCheckConsulKeysValue("data.consul_keys.read", "read", "myvalue"),
 				),
-				ExpectError: regexp.MustCompile("Key 'test/set' does not exist"),
+			},
+		},
+	})
+}
+
+func TestAccDataConsulKeysExistentKeyWithEmptyValueAndDefault(t *testing.T) {
+	providers, _ := startTestServer(t)
+
+	resource.Test(t, resource.TestCase{
+		Providers: providers,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDataConsulKeysExistantKeyWithDefaultAndEmptyValueConfig,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckConsulKeysValue("data.consul_keys.read", "read", "myvalue"),
+				),
 			},
 		},
 	})
@@ -39,7 +70,7 @@ func TestAccDataConsulKeys_basic(t *testing.T) {
 			{
 				Config: testAccDataConsulKeysConfig,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckConsulKeysValue("data.consul_keys.read", "read", ""),
+					testAccCheckConsulKeysValue("data.consul_keys.read", "read", "written"),
 				),
 			},
 		},
@@ -54,7 +85,8 @@ func TestAccDataConsulKeys_namespaceCE(t *testing.T) {
 		PreCheck:  func() { skipTestOnConsulEnterpriseEdition(t) },
 		Steps: []resource.TestStep{
 			{
-				Config:      testAccDataConsulKeysConfigNamespaceCE,
+				Config: testAccDataConsulKeysConfigNamespaceCE,
+
 				ExpectError: regexp.MustCompile("Unexpected response code: 400"),
 			},
 		},
@@ -84,16 +116,32 @@ func TestAccDataConsulKeys_datacenter(t *testing.T) {
 			{
 				Config: testAccDataConsulKeysConfigDatacenter,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckConsulKeysValue("data.consul_keys.dc1", "read", ""),
+					//testAccCheckConsulKeysValue("data.consul_keys.dc1", "read", ""),
+					// I removed the previous line since now we have a correct behaviour of launching an error when they key doesn't exist
 					testAccCheckConsulKeysValue("data.consul_keys.dc2", "read", "dc2"),
 				),
+				ExpectError: regexp.MustCompile("Key '.*' does not exist"), // added here becuase test/set doesn't exist in dc1.
 			},
 		},
 	})
 }
 
 // fadia you have added the following
+// A non existent key with with no default value, error expected in this config.
 const testAccDataConsulKeysNonExistantKeyConfig = `
+
+data "consul_keys" "read" {
+    datacenter = "dc1"
+    key {
+        path = "test/set"
+        name = "read"
+		
+    }
+}
+`
+
+// A non existent key with a default value, no error expected here.
+const testAccDataConsulKeysNonExistantKeyWithDefaultConfig = `
 
 data "consul_keys" "read" {
     # Create a dependency on the resource so we're sure to
@@ -102,9 +150,36 @@ data "consul_keys" "read" {
     key {
         path = "test/set"
         name = "read"
+		default = "myvalue"
     }
 }
-` //end of what you have added
+
+`
+
+// exitant key with empty value and default value
+const testAccDataConsulKeysExistantKeyWithDefaultAndEmptyValueConfig = `
+resource "consul_keys" "write" {
+    datacenter = "dc1"
+
+    key {
+        path = "test/set"
+        value = ""
+		delete = true
+    }
+}
+data "consul_keys" "read" {
+    # Create a dependency on the resource so we're sure to
+    # have the value in place before we try to read it.
+    datacenter = "dc1"
+    key {
+        path = "test/set"
+        name = "read"
+		default = "myvalue"
+    }
+}
+`
+
+// end of what you have added
 const testAccDataConsulKeysConfig = `
 resource "consul_keys" "write" {
     datacenter = "dc1"
@@ -121,7 +196,7 @@ data "consul_keys" "read" {
     datacenter = "${consul_keys.write.datacenter}"
 
     key {
-        path = "test/data_sourcedhddy"
+        path = "test/data_source"
         name = "read"
     }
 }

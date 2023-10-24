@@ -4,6 +4,8 @@
 package consul
 
 import (
+	"fmt"
+
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 )
 
@@ -81,12 +83,16 @@ func dataSourceConsulKeysRead(d *schema.ResourceData, meta interface{}) error {
 			return err
 		}
 
-		value, _, err := keyClient.Get(path)
+		exist, value, _, err := keyClient.Get(path)
 		if err != nil {
 			return err
 		}
+		value = attributeValue(sub, value) //this return the value if it exists or the default value if it exists and has no value or an empty string if it doesn't exist.
+		if !exist && value == "" {         //they key doesn't exist and we have no default value.
+			return fmt.Errorf("Key '%s' does not exist", path)
 
-		value = attributeValue(sub, value)
+		}
+
 		vars[key] = value
 	}
 
