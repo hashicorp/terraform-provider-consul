@@ -851,13 +851,13 @@ resource "consul_config_entry" "http_route" {
 	name = "test"
 
 	config_json = jsonencode({
-	  Hostnames = null
-	  Rules     = null
+	  	Hostnames = null
+	  	Rules     = null
 
-	  Parents = [{
-		  Kind = "api-gateway"
-		  Name = "test"
-    }]
+		Parents = [{
+			Kind = "api-gateway"
+			Name = "test"
+    	}]
 	})
 }
 `
