@@ -10,26 +10,23 @@ resource "consul_config_entry" "web" {
   })
 }
 
-resource "consul_config_entry" "service_resolver" {
-  kind = "service-resolver"
-  name = consul_config_entry.web.name
+resource "consul_config_entry_service_resolver" "service_resolver" {
+  name            = "service-resolver"
+  default_subset  = "v1"
 
-  config_json = jsonencode({
-    DefaultSubset = "v1"
+  subsets {
+    name   = "v1"
+    filter = "Service.Meta.version == v1"
+  }
 
-    Subsets = {
-      "v1" = {
-        Filter = "Service.Meta.version == v1"
-      }
-      "v2" = {
-        Filter = "Service.Meta.version == v2"
-      }
-    }
-  })
+  subsets {
+    name   = "v2"
+    Filter = "Service.Meta.version == v2"
+  }
 }
 
 resource "consul_config_entry_service_splitter" "foo" {
-  name = consul_config_entry.service_resolver.name
+  name = consul_config_entry_service_resolver.service_resolver.name
 
   meta = {
     key = "value"
