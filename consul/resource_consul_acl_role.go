@@ -7,6 +7,7 @@ import (
 	"fmt"
 
 	consulapi "github.com/hashicorp/consul/api"
+	"github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 )
 
@@ -327,27 +328,31 @@ func getRole(d *schema.ResourceData, client *consulapi.Client, qOpts *consulapi.
 // it found nothing. It also returns a boolean indicating whether the identifier
 // given is the ID or the name
 func getPolicyByIdOrName(identifier string, client *consulapi.Client, qOpts *consulapi.QueryOptions) (*consulapi.ACLPolicy, bool, error) {
-	policy, _, initialErr := client.ACL().PolicyRead(identifier, qOpts)
-	if policy != nil && initialErr == nil {
-		return policy, true, nil
+	var errResult *multierror.Error
+
+	policy, _, err := client.ACL().PolicyRead(identifier, qOpts)
+	errResult = multierror.Append(errResult, err)
+	if policy != nil {
+		return policy, true, errResult.ErrorOrNil()
 	}
 
-	policy, _, err := client.ACL().PolicyReadByName(identifier, qOpts)
-	if initialErr != nil && err != nil {
-		return nil, false, fmt.Errorf("failed to read policy %q:\n - %w - %w", identifier, initialErr, err)
-	} else if policy == nil && initialErr != nil {
-		return nil, false, fmt.Errorf("failed to read policy %q: %w", identifier, initialErr)
-	} else if err != nil {
-		return nil, false, fmt.Errorf("failed to read policy %q: %w", identifier, err)
+	policy, _, err = client.ACL().PolicyReadByName(identifier, qOpts)
+	if policy != nil && err == nil {
+		// we ignore the initial error that might have happened in client.ACL().PolicyRead()
+		return policy, false, nil
 	}
 
-	return policy, false, nil
+	errResult = multierror.Append(errResult, err)
+	return policy, false, errResult.ErrorOrNil()
 }
 
 func getACLRolePolicyLink(identifier string, client *consulapi.Client, qOpts *consulapi.QueryOptions) (*consulapi.ACLRolePolicyLink, error) {
 	policy, isID, err := getPolicyByIdOrName(identifier, client, qOpts)
-	if policy == nil || err != nil {
-		return nil, err
+	if err != nil {
+		return nil, fmt.Errorf("failed to read policy %q: %w", identifier, err)
+	}
+	if policy == nil {
+		return nil, nil
 	}
 
 	if isID {
