@@ -11,8 +11,8 @@ resource "consul_config_entry" "web" {
 }
 
 resource "consul_config_entry_service_resolver" "service_resolver" {
-  name            = "service-resolver"
-  default_subset  = "v1"
+  name           = "service-resolver"
+  default_subset = "v1"
 
   subsets {
     name   = "v1"
