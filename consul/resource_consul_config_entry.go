@@ -177,6 +177,14 @@ func makeConfigEntry(kind, name, config, namespace, partition string) (consulapi
 		return nil, fmt.Errorf("failed to unmarshal configMap: %v", err)
 	}
 
+	switch kind {
+	case consulapi.HTTPRoute, consulapi.TCPRoute, consulapi.APIGateway:
+		// The Status attribute is read-only so we don't need to send it to the
+		// server in resourceConsulConfigEntryUpdate() and must ignore it when
+		// suppressing the diff in diffConfigJSON()
+		delete(configMap, "Status")
+	}
+
 	configMap["kind"] = kind
 	configMap["name"] = name
 	configMap["Namespace"] = namespace

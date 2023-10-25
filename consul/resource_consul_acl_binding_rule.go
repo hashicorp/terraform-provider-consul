@@ -17,6 +17,8 @@ func resourceConsulACLBindingRule() *schema.Resource {
 		Update: resourceConsulACLBindingRuleUpdate,
 		Delete: resourceConsulACLBindingRuleDelete,
 
+		Description: "Starting with Consul 1.5.0, the consul_acl_binding_rule resource can be used to managed Consul ACL binding rules.",
+
 		Schema: map[string]*schema.Schema{
 			"auth_method": {
 				Type:        schema.TypeString,
@@ -34,12 +36,13 @@ func resourceConsulACLBindingRule() *schema.Resource {
 			"selector": {
 				Type:        schema.TypeString,
 				Optional:    true,
-				Description: "The expression used to math this rule against valid identities returned from an auth method validation.",
+				Description: "The expression used to match this rule against valid identities returned from an auth method validation.",
 			},
 
 			"bind_type": {
 				Type:        schema.TypeString,
 				Required:    true,
+				ForceNew:    true,
 				Description: "Specifies the way the binding rule affects a token created at login.",
 			},
 
@@ -49,10 +52,27 @@ func resourceConsulACLBindingRule() *schema.Resource {
 				Description: "The name to bind to a token at login-time.",
 			},
 
+			"bind_vars": {
+				Type:        schema.TypeList,
+				MaxItems:    1,
+				Description: "The variables used when binding rule type is `templated-policy`. Can be lightly templated using HIL `${foo}` syntax from available field names.",
+				Optional:    true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"name": {
+							Type:        schema.TypeString,
+							Optional:    true,
+							Description: "The name of node, workload identity or service.",
+						},
+					},
+				},
+			},
+
 			"namespace": {
-				Type:     schema.TypeString,
-				Optional: true,
-				ForceNew: true,
+				Type:        schema.TypeString,
+				Description: "The namespace to create the binding rule within.",
+				Optional:    true,
+				ForceNew:    true,
 			},
 
 			"partition": {
@@ -102,6 +122,13 @@ func resourceConsulACLBindingRuleRead(d *schema.ResourceData, meta interface{}) 
 	sw.set("namespace", rule.Namespace)
 	sw.set("partition", rule.Partition)
 
+	if rule.BindVars != nil {
+		bindVars := []map[string]interface{}{
+			{"name": rule.BindVars.Name},
+		}
+		sw.set("bind_vars", bindVars)
+	}
+
 	return sw.error()
 }
 
@@ -134,7 +161,7 @@ func resourceConsulACLBindingRuleDelete(d *schema.ResourceData, meta interface{}
 
 func getBindingRule(d *schema.ResourceData, meta interface{}) *consulapi.ACLBindingRule {
 	_, _, wOpts := getClient(d, meta)
-	return &consulapi.ACLBindingRule{
+	bindingRule := &consulapi.ACLBindingRule{
 		ID:          d.Id(),
 		Description: d.Get("description").(string),
 		AuthMethod:  d.Get("auth_method").(string),
@@ -143,4 +170,17 @@ func getBindingRule(d *schema.ResourceData, meta interface{}) *consulapi.ACLBind
 		BindType:    consulapi.BindingRuleBindType(d.Get("bind_type").(string)),
 		Namespace:   wOpts.Namespace,
 	}
+
+	if bindVars, ok := d.GetOk("bind_vars.0"); ok {
+		tv := bindVars.(map[string]interface{})
+
+		processedVars := &consulapi.ACLTemplatedPolicyVariables{}
+		if tv["name"] != nil {
+			processedVars.Name = tv["name"].(string)
+		}
+
+		bindingRule.BindVars = processedVars
+	}
+
+	return bindingRule
 }

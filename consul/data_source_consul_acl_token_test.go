@@ -10,7 +10,7 @@ import (
 )
 
 func TestAccDataACLToken_basic(t *testing.T) {
-	providers, _ := startTestServer(t)
+	providers, client := startTestServer(t)
 
 	resource.Test(t, resource.TestCase{
 		Providers: providers,
@@ -34,6 +34,20 @@ func TestAccDataACLToken_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("data.consul_acl_token.read", "service_identities.0.datacenters.#", "1"),
 					resource.TestCheckResourceAttr("data.consul_acl_token.read", "service_identities.0.datacenters.0", "world"),
 					resource.TestCheckResourceAttr("data.consul_acl_token.read", "service_identities.0.service_name", "hello"),
+				),
+			},
+			{
+				Config:   testAccDataACLTokenConfigTemplatedPolicies,
+				SkipFunc: skipIfConsulVersionLT(client, "1.17.0"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr("data.consul_acl_token.read", "templated_policies.#", "2"),
+					resource.TestCheckResourceAttr("data.consul_acl_token.read", "templated_policies.0.datacenters.#", "1"),
+					resource.TestCheckResourceAttr("data.consul_acl_token.read", "templated_policies.0.datacenters.0", "world"),
+					resource.TestCheckResourceAttr("data.consul_acl_token.read", "templated_policies.0.template_variables.#", "1"),
+					resource.TestCheckResourceAttr("data.consul_acl_token.read", "templated_policies.0.template_variables.0.name", "web"),
+					resource.TestCheckResourceAttr("data.consul_acl_token.read", "templated_policies.0.template_name", "builtin/service"),
+					resource.TestCheckResourceAttr("data.consul_acl_token.read", "templated_policies.1.template_variables.#", "0"),
+					resource.TestCheckResourceAttr("data.consul_acl_token.read", "templated_policies.1.template_name", "builtin/dns"),
 				),
 			},
 		},
@@ -69,7 +83,8 @@ func TestAccDataACLToken_namespaceEE(t *testing.T) {
 	})
 }
 
-const testAccDataACLTokenConfig = `
+const (
+	testAccDataACLTokenConfig = `
 resource "consul_acl_policy" "test" {
 	name = "test-token"
 	rules = "node \"\" { policy = \"read\" }"
@@ -97,14 +112,55 @@ data "consul_acl_token" "read" {
 }
 `
 
-const testAccDataACLTokenConfigNamespaceCE = `
+	testAccDataACLTokenConfigTemplatedPolicies = `
+resource "consul_acl_policy" "test" {
+	name = "test-token"
+	rules = "node \"\" { policy = \"read\" }"
+	datacenters = [ "dc1" ]
+}
+
+resource "consul_acl_token" "test" {
+	description = "test"
+	policies = ["${consul_acl_policy.test.name}"]
+	local = false
+
+	service_identities {
+		service_name = "hello"
+		datacenters = ["world"]
+	}
+
+	node_identities {
+		node_name = "foo"
+		datacenter = "bar"
+	}
+
+	templated_policies {
+		template_name = "builtin/service"
+		datacenters = ["world"]
+		template_variables {
+			name = "web"
+		}
+	}
+
+	templated_policies {
+		template_name = "builtin/dns"
+		datacenters = ["world"]
+	}
+}
+
+data "consul_acl_token" "read" {
+    accessor_id = "${consul_acl_token.test.id}"
+}
+`
+
+	testAccDataACLTokenConfigNamespaceCE = `
 data "consul_acl_token" "read" {
   accessor_id = "foo"
   namespace   = "test-data-token"
 }
 `
 
-const testAccDataACLTokenConfigNamespaceEE = `
+	testAccDataACLTokenConfigNamespaceEE = `
 resource "consul_namespace" "test" {
   name = "test-data-token"
 }
@@ -128,3 +184,4 @@ data "consul_acl_token" "read" {
   namespace   = consul_namespace.test.name
 }
 `
+)

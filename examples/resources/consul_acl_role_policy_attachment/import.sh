@@ -1,0 +1,1 @@
+terraform import consul_acl_role_policy_attachment.my_role_read_policy 624d94ca-bc5c-f960-4e83-0a609cf588be:policy_name
