@@ -3,12 +3,12 @@
 page_title: "consul_acl_role Resource - terraform-provider-consul"
 subcategory: ""
 description: |-
-  Starting with Consul 1.5.0, the consul_acl_role can be used to managed Consul ACL roles.
+  The consul_acl_role can be used to manage Consul ACL roles https://developer.hashicorp.com/consul/docs/security/acl/acl-roles.
 ---
 
 # consul_acl_role (Resource)
 
-Starting with Consul 1.5.0, the `consul_acl_role` can be used to managed Consul ACL roles.
+The `consul_acl_role` can be used to manage [Consul ACL roles](https://developer.hashicorp.com/consul/docs/security/acl/acl-roles).
 
 ## Example Usage
 
@@ -46,7 +46,7 @@ resource "consul_acl_role" "read" {
 - `namespace` (String) The namespace to create the role within.
 - `node_identities` (Block List) The list of node identities that should be applied to the role. (see [below for nested schema](#nestedblock--node_identities))
 - `partition` (String) The partition the ACL role is associated with.
-- `policies` (Set of String) The list of policies that should be applied to the role.
+- `policies` (Set of String) The list of policies that should be applied to the role. Both the policy ID or its name can be used.
 - `service_identities` (Block Set) The list of service identities that should be applied to the role. (see [below for nested schema](#nestedblock--service_identities))
 - `templated_policies` (Block List) The list of templated policies that should be applied to the token. (see [below for nested schema](#nestedblock--templated_policies))
 
@@ -93,3 +93,11 @@ Optional:
 Optional:
 
 - `name` (String) The name of node, workload identity or service.
+
+## Import
+
+Import is supported using the following syntax:
+
+```shell
+terraform import consul_acl_role.read 816a195f-6cb1-2e8d-92af-3011ae706318
+```
