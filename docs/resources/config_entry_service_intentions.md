@@ -3,12 +3,12 @@
 page_title: "consul_config_entry_service_intentions Resource - terraform-provider-consul"
 subcategory: ""
 description: |-
-  The consul_service_intentions_config_entry resource configures a service intentions https://developer.hashicorp.com/consul/docs/connect/config-entries/service-intentions that are configurations for controlling access between services in the service mesh. A single service intentions configuration entry specifies one destination service and one or more L4 traffic sources, L7 traffic sources, or combination of traffic sources.
+  The consul_service_intentions_config_entry resource configures service intentions https://developer.hashicorp.com/consul/docs/connect/config-entries/service-intentions that are configurations for controlling access between services in the service mesh. A single service intentions configuration entry specifies one destination service and one or more L4 traffic sources, L7 traffic sources, or combination of traffic sources.
 ---
 
 # consul_config_entry_service_intentions (Resource)
 
-The `consul_service_intentions_config_entry` resource configures a [service intentions](https://developer.hashicorp.com/consul/docs/connect/config-entries/service-intentions) that are configurations for controlling access between services in the service mesh. A single service intentions configuration entry specifies one destination service and one or more L4 traffic sources, L7 traffic sources, or combination of traffic sources.
+The `consul_service_intentions_config_entry` resource configures [service intentions](https://developer.hashicorp.com/consul/docs/connect/config-entries/service-intentions) that are configurations for controlling access between services in the service mesh. A single service intentions configuration entry specifies one destination service and one or more L4 traffic sources, L7 traffic sources, or combination of traffic sources.
 
 
 
@@ -64,10 +64,6 @@ Optional:
 
 - `action` (String) Specifies the action to take when the source sends traffic to the destination service.
 - `description` (String) Specifies a description of the intention.
-- `legacy_create_time` (String) Read-only timestamp for the intention creation.
-- `legacy_id` (String) Read-only unique user ID (UUID) for the intention in the system.
-- `legacy_meta` (Map of String) Read-only set of arbitrary key-value pairs to attach to the intention.
-- `legacy_update_time` (String) Read-only timestamp marking the most recent intention update.
 - `name` (String) Specifies the name of the source that the intention allows or denies traffic from.
 - `namespace` (String) Specifies the traffic source namespace that the intention allows or denies traffic from.
 - `partition` (String) Specifies the name of an admin partition that the intention allows or denies traffic from.
