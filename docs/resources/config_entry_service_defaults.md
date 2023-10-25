@@ -3,12 +3,12 @@
 page_title: "consul_config_entry_service_defaults Resource - terraform-provider-consul"
 subcategory: ""
 description: |-
-  The consul_config_entry_service_defaults resource configures a service defaults https://developer.hashicorp.com/consul/docs/connect/config-entries/service-defaults that contains common configuration settings for service mesh services, such as upstreams and gateways.
+  The consul_config_entry_service_defaults resource configures a service defaults https://developer.hashicorp.com/consul/docs/connect/config-entries/service-defaults config entry that contains common configuration settings for service mesh services, such as upstreams and gateways.
 ---
 
 # consul_config_entry_service_defaults (Resource)
 
-The `consul_config_entry_service_defaults` resource configures a [service defaults](https://developer.hashicorp.com/consul/docs/connect/config-entries/service-defaults) that contains common configuration settings for service mesh services, such as upstreams and gateways.
+The `consul_config_entry_service_defaults` resource configures a [service defaults](https://developer.hashicorp.com/consul/docs/connect/config-entries/service-defaults) config entry that contains common configuration settings for service mesh services, such as upstreams and gateways.
 
 
 
