@@ -44,7 +44,7 @@ resource "consul_config_entry" "service_resolver" {
 }
 
 resource "consul_config_entry_service_splitter" "foo" {
-  name      = consul_config_entry.service_resolver.name
+  name = consul_config_entry.service_resolver.name
 
   meta = {
     key = "value"
