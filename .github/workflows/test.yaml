@@ -45,7 +45,9 @@ jobs:
         sudo unzip tfplugindocs_0.16.0_linux_amd64.zip tfplugindocs -d /usr/local/bin
         rm -f tfplugindocs_0.16.0_linux_amd64.zip
     - name: Generate the documentation
-      run: tfplugindocs generate --ignore-deprecated true
+      run: |
+        terraform fmt -recursive .
+        tfplugindocs generate --ignore-deprecated true
     - name: Fail if repository has changes
       run: |
         git status --short
