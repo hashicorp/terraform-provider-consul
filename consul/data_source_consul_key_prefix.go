@@ -97,7 +97,7 @@ func dataSourceConsulKeyPrefixRead(d *schema.ResourceData, meta interface{}) err
 		}
 
 		fullPath := pathPrefix + path
-		value, _, err := keyClient.Get(fullPath)
+		_, value, _, err := keyClient.Get(fullPath) //fadia you have made changes here by adding _
 		if err != nil {
 			return err
 		}
