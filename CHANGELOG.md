@@ -2,14 +2,14 @@
 
 NEW FEATURES
 
-* The `consul_config_entry_service_router` resource can now be used to manage a Service Router config entry ([#369](https://github.com/hashicorp/terraform-provider-consul/issues/369))
-* The `consul_config_entry_service_resolver` resource can now be used to manage a Service Resolver config entry ([#368](https://github.com/hashicorp/terraform-provider-consul/issues/368))
-* The `consul_config_entry_service_intentions` resource can now be used to manage a Service Intention config entry ([#367](https://github.com/hashicorp/terraform-provider-consul/issues/367))
-* The `consul_config_entry_service_defaults` resource can now be used to manage a Service Defaults config entry ([#366](https://github.com/hashicorp/terraform-provider-consul/issues/366))
-* The `consul_config_entry_service_splitter` resource can now be used to manage a Service Splitter config entry ([#364](https://github.com/hashicorp/terraform-provider-consul/issues/364))
-* The `consul_acl_role_policy_attachment` resource can be used to attach a policy to a role created outside the Terraform configuration ([#362](https://github.com/hashicorp/terraform-provider-consul/issues/362))
-* The `consul_acl_role` resource now supports templated policies ([#358](https://github.com/hashicorp/terraform-provider-consul/issues/358))
-* The `policies` argument of the `consul_acl_role` resource now accept both a policy ID and a policy name ([#363](https://github.com/hashicorp/terraform-provider-consul/issues/363))
+* The `consul_config_entry_service_router` resource can now be used to manage a Service Router config entry ([#369](https://github.com/hashicorp/terraform-provider-consul/issues/369)).
+* The `consul_config_entry_service_resolver` resource can now be used to manage a Service Resolver config entry ([#368](https://github.com/hashicorp/terraform-provider-consul/issues/368)).
+* The `consul_config_entry_service_intentions` resource can now be used to manage a Service Intention config entry ([#367](https://github.com/hashicorp/terraform-provider-consul/issues/367)).
+* The `consul_config_entry_service_defaults` resource can now be used to manage a Service Defaults config entry ([#366](https://github.com/hashicorp/terraform-provider-consul/issues/366)).
+* The `consul_config_entry_service_splitter` resource can now be used to manage a Service Splitter config entry ([#364](https://github.com/hashicorp/terraform-provider-consul/issues/364)).
+* The `consul_acl_role_policy_attachment` resource can be used to attach a policy to a role created outside the Terraform configuration ([#362](https://github.com/hashicorp/terraform-provider-consul/issues/362)).
+* The `consul_acl_token` and `consul_acl_role` resource now supports templated policies ([#358](https://github.com/hashicorp/terraform-provider-consul/issues/358)).
+* The `policies` argument of the `consul_acl_role` resource now accept both a policy ID and a policy name ([#363](https://github.com/hashicorp/terraform-provider-consul/issues/363)).
 
 
 CHANGES:
