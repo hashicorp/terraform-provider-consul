@@ -121,8 +121,7 @@ func TestAccDataConsulKeys_datacenter(t *testing.T) {
 			{
 				Config: testAccDataConsulKeysConfigDatacenter,
 				Check: resource.ComposeTestCheckFunc(
-					//testAccCheckConsulKeysValue("data.consul_keys.dc1", "read", ""),
-					// I removed the previous line since now we have a correct behaviour of launching an error when they key doesn't exist
+					testAccCheckConsulKeysValue("data.consul_keys.dc1", "read", ""),
 					testAccCheckConsulKeysValue("data.consul_keys.dc2", "read", "dc2"),
 				),
 			},
