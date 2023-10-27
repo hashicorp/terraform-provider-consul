@@ -12,6 +12,22 @@ import (
 
 // fadia you have added this test
 // here we are testing for no exitant key and no default value so we are expecting an error.
+func TestAccDataConsulKeysNonExistentKeysDefaultBehaviour(t *testing.T) {
+	providers, _ := startTestServer(t)
+
+	resource.Test(t, resource.TestCase{
+		Providers: providers,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDataConsulKeysNonExistantKeyDefaultBehaviourConfig,
+				//ExpectError: regexp.MustCompile("Key '.*' does not exist"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckConsulKeysValue("data.consul_keys.read", "read", ""),
+				),
+			},
+		},
+	})
+}
 func TestAccDataConsulKeysNonExistentKeys(t *testing.T) {
 	providers, _ := startTestServer(t)
 
@@ -128,8 +144,21 @@ func TestAccDataConsulKeys_datacenter(t *testing.T) {
 
 // fadia you have added the following
 // A non existent key with with no default value, error expected in this config.
-const testAccDataConsulKeysNonExistantKeyConfig = `
+const testAccDataConsulKeysNonExistantKeyDefaultBehaviourConfig = `
 
+data "consul_keys" "read" {
+    datacenter = "dc1"
+    key {
+        path = "test/set"
+        name = "read"
+		
+    }
+}
+`
+const testAccDataConsulKeysNonExistantKeyConfig = `
+provider "consul" {
+    new_behaviour = true
+}
 data "consul_keys" "read" {
     datacenter = "dc1"
     key {
@@ -158,6 +187,7 @@ data "consul_keys" "read" {
 
 // exitant key with empty value and default value
 const testAccDataConsulKeysExistantKeyWithDefaultAndEmptyValueConfig = `
+
 resource "consul_keys" "write" {
     datacenter = "dc1"
 
