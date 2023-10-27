@@ -10,24 +10,9 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 )
 
-// fadia you have added this test
-// here we are testing for no exitant key and no default value so we are expecting an error.
-func TestAccDataConsulKeysNonExistentKeysDefaultBehaviour(t *testing.T) {
-	providers, _ := startTestServer(t)
 
-	resource.Test(t, resource.TestCase{
-		Providers: providers,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccDataConsulKeysNonExistantKeyDefaultBehaviourConfig,
-				//ExpectError: regexp.MustCompile("Key '.*' does not exist"),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckConsulKeysValue("data.consul_keys.read", "read", ""),
-				),
-			},
-		},
-	})
-}
+
+
 func TestAccDataConsulKeysNonExistentKeys(t *testing.T) {
 	providers, _ := startTestServer(t)
 
@@ -38,11 +23,16 @@ func TestAccDataConsulKeysNonExistentKeys(t *testing.T) {
 				Config:      testAccDataConsulKeysNonExistantKeyConfig,
 				ExpectError: regexp.MustCompile("Key '.*' does not exist"),
 			},
+			{
+				Config: testAccDataConsulKeysNonExistantKeyDefaultBehaviourConfig,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckConsulKeysValue("data.consul_keys.read", "read", ""),
+				),
+			},
 		},
 	})
 }
 
-// here they key doesn't exist but we have a default value so we are checking if we get the default value correctly.
 func TestAccDataConsulKeysNonExistentKeyWithDefault(t *testing.T) {
 	providers, _ := startTestServer(t)
 
@@ -75,7 +65,6 @@ func TestAccDataConsulKeysExistentKeyWithEmptyValueAndDefault(t *testing.T) {
 	})
 }
 
-//fadia end of what you have added
 
 func TestAccDataConsulKeys_basic(t *testing.T) {
 	providers, _ := startTestServer(t)
@@ -136,14 +125,13 @@ func TestAccDataConsulKeys_datacenter(t *testing.T) {
 					// I removed the previous line since now we have a correct behaviour of launching an error when they key doesn't exist
 					testAccCheckConsulKeysValue("data.consul_keys.dc2", "read", "dc2"),
 				),
-				ExpectError: regexp.MustCompile("Key '.*' does not exist"), // added here becuase test/set doesn't exist in dc1.
 			},
 		},
 	})
 }
 
-// fadia you have added the following
-// A non existent key with with no default value, error expected in this config.
+
+
 const testAccDataConsulKeysNonExistantKeyDefaultBehaviourConfig = `
 
 data "consul_keys" "read" {
@@ -157,7 +145,7 @@ data "consul_keys" "read" {
 `
 const testAccDataConsulKeysNonExistantKeyConfig = `
 provider "consul" {
-    new_behaviour = true
+    error_on_missing_key = true
 }
 data "consul_keys" "read" {
     datacenter = "dc1"
@@ -169,7 +157,7 @@ data "consul_keys" "read" {
 }
 `
 
-// A non existent key with a default value, no error expected here.
+
 const testAccDataConsulKeysNonExistantKeyWithDefaultConfig = `
 
 data "consul_keys" "read" {
@@ -185,7 +173,6 @@ data "consul_keys" "read" {
 
 `
 
-// exitant key with empty value and default value
 const testAccDataConsulKeysExistantKeyWithDefaultAndEmptyValueConfig = `
 
 resource "consul_keys" "write" {
@@ -209,7 +196,6 @@ data "consul_keys" "read" {
 }
 `
 
-// end of what you have added
 const testAccDataConsulKeysConfig = `
 resource "consul_keys" "write" {
     datacenter = "dc1"

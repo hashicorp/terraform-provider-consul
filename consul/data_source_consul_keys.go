@@ -72,8 +72,7 @@ func dataSourceConsulKeys() *schema.Resource {
 }
 
 func dataSourceConsulKeysRead(d *schema.ResourceData, meta interface{}) error {
-	var newbehaviour bool
-	//fadia you have added this
+	var errorOnMissingKey bool
 	config := meta.(*Config)
 	keyClient := newKeyClient(d, meta)
 
@@ -91,21 +90,9 @@ func dataSourceConsulKeysRead(d *schema.ResourceData, meta interface{}) error {
 			return err
 		}
 		value = attributeValue(sub, value) //this return the value if it exists or the default value if it exists and has no value or an empty string if it doesn't exist.
-		/*if v, ok := d.GetOk("new_behaviour"); ok {
+		errorOnMissingKey = config.ErrorOnMissingKey
 
-			newbehaviour = v.(bool)
-			fmt.Printf("the value of new behaviour is %v", newbehaviour)
-		}*/
-		newbehaviour = config.NewBehaviour
-		/*_, ok := d.GetOk("new_behaviour")
-		if !ok {
-			return fmt.Errorf("the value wasn't set fadia")
-		}*/
-		//newbehaviour = meta.(*consul.Config).NewBehaviour
-		//newbehaviour = meta.(Config).NewBehaviour
-		//fmt.Printf("the value of new behaviour is %v", newbehaviour)
-
-		if !exist && value == "" && newbehaviour { //they key doesn't exist and we have no default value.
+		if !exist && value == "" && errorOnMissingKey { //the key doesn't exist and we have no default value and errorOnMissingKey set to true.
 			return fmt.Errorf("Key '%s' does not exist", path)
 
 		}

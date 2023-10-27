@@ -46,12 +46,12 @@ func Provider() terraform.ResourceProvider {
 				}, "localhost:8500"),
 				Description: `The HTTP(S) API address of the agent to use. Defaults to "127.0.0.1:8500".`,
 			},
-			//fadia you have added this
-			"new_behaviour": {
+
+			"error_on_missing_key": {
 				Type:        schema.TypeBool,
 				Optional:    true,
 				Default:     false,
-				Description: "activates the new behaviour of sending error when reading non existant data consul keys instead of returning an empty string ,by default, set to false to keep the old beahaviour.",
+				Description: "activates the new behaviour of sending error when reading non existant data consul keys instead of returning an empty string ,by default, set to false.",
 			},
 			"scheme": {
 				Type:     schema.TypeString,
@@ -270,7 +270,7 @@ func providerConfigure(d *schema.ResourceData) (interface{}, error) {
 		return nil, err
 	}
 	log.Printf("[INFO] Initializing Consul client")
-	client, err := config.Client() //fadia i think this one needs to know we have added an atribute
+	client, err := config.Client()
 	if err != nil {
 		return nil, err
 	}
@@ -311,7 +311,7 @@ func providerConfigure(d *schema.ResourceData) (interface{}, error) {
 		for k, v := range authConfig["meta"].(map[string]interface{}) {
 			meta[k] = v.(string)
 		}
-		//fadia you modified this
+
 		_, wOpts := getOptions(d, config)
 		token, _, err := client.ACL().Login(&consulapi.ACLLoginParams{
 			AuthMethod:  authMethod,
@@ -323,16 +323,15 @@ func providerConfigure(d *schema.ResourceData) (interface{}, error) {
 		}
 		config.Token = token.SecretID
 	}
-	//fadia you have added this line
-	config.NewBehaviour = d.Get("new_behaviour").(bool) // fadia you have added this line
+
+	config.ErrorOnMissingKey = d.Get("error_on_missing_key").(bool)
 	return config, nil
 }
 
-// fadia you modified this
 func getClient(d *schema.ResourceData, meta interface{}) (*consulapi.Client, *consulapi.QueryOptions, *consulapi.WriteOptions) {
 	config := meta.(*Config)
 	client := config.client
-	//fadia you modified this earlier by adding the new behaviour as return and deleted it.
+
 	qOpts, wOpts := getOptions(d, config)
 	return client, qOpts, wOpts
 }
@@ -378,7 +377,7 @@ func getOptions(d *schema.ResourceData, meta interface{}) (*consulapi.QueryOptio
 		Partition:  partition,
 		Token:      token,
 	}
-	//fadia you have added this return newBehaviour
+
 	return qOpts, wOpts
 }
 

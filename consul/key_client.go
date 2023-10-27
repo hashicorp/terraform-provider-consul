@@ -39,10 +39,11 @@ func (c *keyClient) Get(path string) (bool, string, int, error) {
 		return false, "", 0, fmt.Errorf("failed to read Consul key '%s': %s", path, err)
 	}
 	value := ""
-	if pair == nil { // fadia you have added this test the case for no existant key
+	if pair == nil { 
 		return false, "", 0, nil
-	}
-	if pair != nil { //fadia you have modified this test  the case for existant key
+	} 
+
+	if pair != nil { 
 		value = string(pair.Value)
 
 	}
