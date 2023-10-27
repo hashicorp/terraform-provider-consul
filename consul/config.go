@@ -28,10 +28,14 @@ type Config struct {
 	CAPath        string `mapstructure:"ca_path"`
 	InsecureHttps bool   `mapstructure:"insecure_https"`
 	Namespace     string `mapstructure:"namespace"`
-	client        *consulapi.Client
+	//fadia u have added this attribut
+	NewBehaviour bool `mapstructure:"new_behaviour"`
+
+	client *consulapi.Client
 }
 
 // Client returns a new client for accessing consul.
+
 func (c *Config) Client() (*consulapi.Client, error) {
 	config := consulapi.DefaultConfig()
 	if c.Datacenter != "" {
