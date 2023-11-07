@@ -24,7 +24,7 @@ func resourceConsulACLToken() *schema.Resource {
 			State: schema.ImportStatePassthrough,
 		},
 
-		Description: "The `consul_acl_token` resource writes an ACL token into Consul.\n\n~> **NOTE:** The `consul_acl_token` resource does not save the secret ID of the generated token to the Terraform state to avoid leaking it when it is not needed. If you need to get the secret ID after creating the ACL token you can use the [`consul_acl_token_secret_id`](/docs/providers/consul/r/acl_token.html) datasource.",
+		Description: "The `consul_acl_token` resource writes an ACL token into Consul.\n\n~> **NOTE:** The `consul_acl_token` resource does not save the secret ID of the generated token to the Terraform state to avoid leaking it when it is not needed. If you need to get the secret ID after creating the ACL token you can use the [`consul_acl_token_secret_id`](/docs/providers/consul/d/consul_acl_token_secret_id.html) datasource.",
 
 		Schema: map[string]*schema.Schema{
 			"accessor_id": {
