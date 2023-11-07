@@ -10,9 +10,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 )
 
-
-
-
 func TestAccDataConsulKeysNonExistentKeys(t *testing.T) {
 	providers, _ := startTestServer(t)
 
@@ -64,7 +61,6 @@ func TestAccDataConsulKeysExistentKeyWithEmptyValueAndDefault(t *testing.T) {
 		},
 	})
 }
-
 
 func TestAccDataConsulKeys_basic(t *testing.T) {
 	providers, _ := startTestServer(t)
@@ -129,8 +125,6 @@ func TestAccDataConsulKeys_datacenter(t *testing.T) {
 	})
 }
 
-
-
 const testAccDataConsulKeysNonExistantKeyDefaultBehaviourConfig = `
 
 data "consul_keys" "read" {
@@ -155,7 +149,6 @@ data "consul_keys" "read" {
     }
 }
 `
-
 
 const testAccDataConsulKeysNonExistantKeyWithDefaultConfig = `
 
