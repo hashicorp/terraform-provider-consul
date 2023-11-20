@@ -135,7 +135,6 @@ func testAuthMethodCACert(client *consulapi.Client, name, v string) func(s *terr
 		if err != nil {
 			return err
 		}
-
 		if authMethod == nil {
 			return fmt.Errorf("Auth method %q does not exists", name)
 		}

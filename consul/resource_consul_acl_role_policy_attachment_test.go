@@ -5,6 +5,7 @@ package consul
 
 import (
 	"fmt"
+	"regexp"
 	"testing"
 
 	consulapi "github.com/hashicorp/consul/api"
@@ -102,11 +103,16 @@ func TestAccConsulACLRolePolicyAttachment_basic(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
+			{
+				Config:      testResourceACLRolePolicyAttachmentConfigMissingRole,
+				ExpectError: regexp.MustCompile(`role "80ab84e7-eb3a-4dfe-8122-a7b680619100" not found`),
+			},
 		},
 	})
 }
 
-const testResourceACLRolePolicyAttachmentConfigBasic = `
+const (
+	testResourceACLRolePolicyAttachmentConfigBasic = `
 resource "consul_acl_policy" "test_policy" {
 	name = "test-attachment"
 	rules = "node \"\" { policy = \"read\" }"
@@ -127,7 +133,7 @@ resource "consul_acl_role_policy_attachment" "test" {
 }
 `
 
-const testResourceACLRolePolicyAttachmentConfigUpdate = `
+	testResourceACLRolePolicyAttachmentConfigUpdate = `
 // Using another resource to force the update of consul_acl_role
 resource "consul_acl_policy" "test2" {
 	name = "test2"
@@ -147,3 +153,24 @@ resource "consul_acl_role_policy_attachment" "test" {
     role_id = consul_acl_role.test_role.id
     policy  = consul_acl_policy.test2.name
 }`
+
+	testResourceACLRolePolicyAttachmentConfigMissingRole = `
+resource "consul_acl_policy" "test2" {
+	name = "test2"
+	rules = "node \"\" { policy = \"read\" }"
+	datacenters = [ "dc1" ]
+}
+
+resource "consul_acl_role" "test_role" {
+    name = "test"
+
+    lifecycle {
+		ignore_changes = ["policies"]
+	}
+}
+
+resource "consul_acl_role_policy_attachment" "test" {
+    role_id = "80ab84e7-eb3a-4dfe-8122-a7b680619100"
+    policy  = consul_acl_policy.test2.name
+}`
+)

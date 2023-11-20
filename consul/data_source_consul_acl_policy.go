@@ -6,7 +6,6 @@ package consul
 import (
 	"fmt"
 
-	consulapi "github.com/hashicorp/consul/api"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 )
 
@@ -53,24 +52,12 @@ func dataSourceConsulACLPolicyRead(d *schema.ResourceData, meta interface{}) err
 	client, qOpts, _ := getClient(d, meta)
 	name := d.Get("name").(string)
 
-	var policyEntry *consulapi.ACLPolicyListEntry
-	policyEntries, _, err := client.ACL().PolicyList(qOpts)
-	if err != nil {
-		return fmt.Errorf("could not list policies: %v", err)
-	}
-	for _, pe := range policyEntries {
-		if pe.Name == name {
-			policyEntry = pe
-			break
-		}
-	}
-	if policyEntry == nil {
-		return fmt.Errorf("could not find policy '%s'", name)
-	}
-
-	policy, _, err := client.ACL().PolicyRead(policyEntry.ID, qOpts)
+	policy, _, err := client.ACL().PolicyReadByName(name, qOpts)
 	if err != nil {
 		return fmt.Errorf("could not read policy '%s': %v", name, err)
+	}
+	if policy == nil {
+		return fmt.Errorf("could not find policy %q", name)
 	}
 
 	d.SetId(policy.ID)

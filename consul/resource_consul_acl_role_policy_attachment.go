@@ -5,7 +5,6 @@ package consul
 
 import (
 	"fmt"
-	"strings"
 
 	consulapi "github.com/hashicorp/consul/api"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
@@ -46,7 +45,10 @@ func resourceConsulACLRolePolicyAttachmentCreate(d *schema.ResourceData, meta in
 
 	role, _, err := client.ACL().RoleRead(roleID, qOpts)
 	if err != nil {
-		return fmt.Errorf("role '%s' not found", roleID)
+		return fmt.Errorf("failed to find role %q: %w", roleID, err)
+	}
+	if role == nil {
+		return fmt.Errorf("role %q not found", roleID)
 	}
 
 	newPolicyName := d.Get("policy").(string)
@@ -84,11 +86,11 @@ func resourceConsulACLRolePolicyAttachmentRead(d *schema.ResourceData, meta inte
 
 	role, _, err := client.ACL().RoleRead(roleID, qOpts)
 	if err != nil {
-		if strings.Contains(err.Error(), "role not found") {
-			d.SetId("")
-			return nil
-		}
 		return fmt.Errorf("failed to read token '%s': %v", id, err)
+	}
+	if role == nil {
+		d.SetId("")
+		return nil
 	}
 
 	policyFound := false
@@ -123,6 +125,10 @@ func resourceConsulACLRolePolicyAttachmentDelete(d *schema.ResourceData, meta in
 	role, _, err := client.ACL().RoleRead(roleID, qOpts)
 	if err != nil {
 		return fmt.Errorf("role '%s' not found", roleID)
+	}
+	if role == nil {
+		// If the role does not exist there is no policy attachment to remove
+		return nil
 	}
 
 	for i, iPolicy := range role.Policies {
