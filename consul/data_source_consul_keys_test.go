@@ -56,8 +56,7 @@ func TestAccDataConsulKeys_namespaceCE(t *testing.T) {
 		PreCheck:  func() { skipTestOnConsulEnterpriseEdition(t) },
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDataConsulKeysConfigNamespaceCE,
-
+				Config:      testAccDataConsulKeysConfigNamespaceCE,
 				ExpectError: regexp.MustCompile("Unexpected response code: 400"),
 			},
 		},
@@ -97,9 +96,7 @@ func TestAccDataConsulKeys_datacenter(t *testing.T) {
 
 const (
 	testAccDataConsulKeysNonExistantKeyDefaultBehaviourConfig = `
-
 data "consul_keys" "read" {
-    datacenter = "dc1"
     key {
         path = "test/set"
         name = "read"
@@ -112,7 +109,6 @@ provider "consul" {
 }
 
 data "consul_keys" "read" {
-    datacenter = "dc1"
     key {
         path = "test/set"
         name = "read"
@@ -136,11 +132,12 @@ resource "consul_keys" "write" {
     datacenter = "dc1"
 
     key {
-        path = "test/set"
-        value = ""
+        path   = "test/set"
+        value  = ""
 		delete = true
     }
 }
+
 data "consul_keys" "read" {
     # Create a dependency on the resource so we're sure to
     # have the value in place before we try to read it.
@@ -167,7 +164,7 @@ resource "consul_keys" "write" {
 data "consul_keys" "read" {
     # Create a dependency on the resource so we're sure to
     # have the value in place before we try to read it.
-    datacenter = "${consul_keys.write.datacenter}"
+    datacenter = consul_keys.write.datacenter
 
     key {
         path = "test/data_source"
@@ -191,7 +188,7 @@ resource "consul_keys" "write" {
   datacenter = "dc1"
 
   key {
-    path = "test/data_source"
+    path  = "test/data_source"
     value = "written"
   }
 }
@@ -201,7 +198,7 @@ resource "consul_namespace" "test" {
 }
 
 data "consul_keys" "read" {
-  namespace = consul_namespace.test.name
+  namespace  = consul_namespace.test.name
   datacenter = consul_keys.write.datacenter
 
   key {

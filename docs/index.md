@@ -77,7 +77,6 @@ The known compatibility between this provider and Consul is:
 - `cert_file` (String) A path to a PEM-encoded certificate provided to the remote agent; requires use of `key_file` or `key_pem`.
 - `cert_pem` (String) PEM-encoded certificate provided to the remote agent; requires use of `key_file` or `key_pem`.
 - `datacenter` (String) The datacenter to use. Defaults to that of the agent.
-- `error_on_missing_key` (Boolean) activates the new behaviour of sending error when reading non existant data consul keys instead of returning an empty string ,by default, set to false.
 - `header` (Block List) A configuration block, described below, that provides additional headers to be sent along with all requests to the Consul server. This block can be specified multiple times. (see [below for nested schema](#nestedblock--header))
 - `http_auth` (String) HTTP Basic Authentication credentials to be used when communicating with Consul, in the format of either `user` or `user:pass`. This may also be specified using the `CONSUL_HTTP_AUTH` environment variable.
 - `insecure_https` (Boolean) Boolean value to disable SSL certificate verification; setting this value to true is not recommended for production use. Only use this with scheme set to "https".

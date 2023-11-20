@@ -14,21 +14,20 @@ import (
 
 // Config is configuration defined in the provider block
 type Config struct {
-	Datacenter        string `mapstructure:"datacenter"`
-	Address           string `mapstructure:"address"`
-	Scheme            string `mapstructure:"scheme"`
-	HttpAuth          string `mapstructure:"http_auth"`
-	Token             string `mapstructure:"token"`
-	CAFile            string `mapstructure:"ca_file"`
-	CAPem             string `mapstructure:"ca_pem"`
-	CertFile          string `mapstructure:"cert_file"`
-	CertPEM           string `mapstructure:"cert_pem"`
-	KeyFile           string `mapstructure:"key_file"`
-	KeyPEM            string `mapstructure:"key_pem"`
-	CAPath            string `mapstructure:"ca_path"`
-	InsecureHttps     bool   `mapstructure:"insecure_https"`
-	Namespace         string `mapstructure:"namespace"`
-	ErrorOnMissingKey bool   `mapstructure:"error_on_missing_key"`
+	Datacenter    string `mapstructure:"datacenter"`
+	Address       string `mapstructure:"address"`
+	Scheme        string `mapstructure:"scheme"`
+	HttpAuth      string `mapstructure:"http_auth"`
+	Token         string `mapstructure:"token"`
+	CAFile        string `mapstructure:"ca_file"`
+	CAPem         string `mapstructure:"ca_pem"`
+	CertFile      string `mapstructure:"cert_file"`
+	CertPEM       string `mapstructure:"cert_pem"`
+	KeyFile       string `mapstructure:"key_file"`
+	KeyPEM        string `mapstructure:"key_pem"`
+	CAPath        string `mapstructure:"ca_path"`
+	InsecureHttps bool   `mapstructure:"insecure_https"`
+	Namespace     string `mapstructure:"namespace"`
 
 	client *consulapi.Client
 }

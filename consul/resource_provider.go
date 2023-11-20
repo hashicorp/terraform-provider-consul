@@ -47,12 +47,6 @@ func Provider() terraform.ResourceProvider {
 				Description: `The HTTP(S) API address of the agent to use. Defaults to "127.0.0.1:8500".`,
 			},
 
-			"error_on_missing_key": {
-				Type:        schema.TypeBool,
-				Optional:    true,
-				Default:     false,
-				Description: "activates the new behaviour of sending error when reading non existant data consul keys instead of returning an empty string ,by default, set to false.",
-			},
 			"scheme": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -330,7 +324,6 @@ func providerConfigure(d *schema.ResourceData) (interface{}, error) {
 		config.Token = token.SecretID
 	}
 
-	config.ErrorOnMissingKey = d.Get("error_on_missing_key").(bool)
 	return config, nil
 }
 
