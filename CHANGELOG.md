@@ -1,3 +1,13 @@
+## 2.20.0 (November 20, 2023)
+
+BUG FIXES:
+
+* The `consul_acl_role_policy_attachment` resource no longer panic when given the UUID of a role that does not exist ([#370](https://github.com/hashicorp/terraform-provider-consul/pull/379) and [#378](https://github.com/hashicorp/terraform-provider-consul/issues/378)).
+
+NEW FEATURES:
+
+* The `consul_keys` datasource now has a `error_on_missing_keys` argument that makes it possible to get an error when a key is absent from the KV store ([#14](https://github.com/hashicorp/terraform-provider-consul/issues/14) and [#375](https://github.com/hashicorp/terraform-provider-consul/pull/375)).
+
 ## 2.19.0 (October 25, 2023)
 
 NEW FEATURES
@@ -45,7 +55,7 @@ NEW FEATURES:
 IMPROVEMENTS:
 
 * The `consul_node` resource can now be imported ([[#323](https://github.com/hashicorp/terraform-provider-consul/issues/323)]).
-* The `consul_config_entry` resource can now be imported ([Gh-319] and [[#316](https://github.com/hashicorp/terraform-provider-consul/issues/316)]).
+* The `consul_config_entry` resource can now be imported ([#319] and [[#316](https://github.com/hashicorp/terraform-provider-consul/issues/316)]).
 * The `consul_peering` resource has been updated to support the changes in Consul 1.14 ([[#328](https://github.com/hashicorp/terraform-provider-consul/issues/328)]).
 * The `consul_peering`, `consul_peerings` datasources have been updated to support the changes in Consul 1.14 ([[#328](https://github.com/hashicorp/terraform-provider-consul/issues/328)]).
 * The `consul_config_entry` resource now support the new peer parameters introduced in Consul 1.14 ([[#328](https://github.com/hashicorp/terraform-provider-consul/issues/328)]).
