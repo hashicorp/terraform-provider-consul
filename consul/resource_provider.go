@@ -311,6 +311,7 @@ func providerConfigure(d *schema.ResourceData) (interface{}, error) {
 		for k, v := range authConfig["meta"].(map[string]interface{}) {
 			meta[k] = v.(string)
 		}
+
 		_, wOpts := getOptions(d, config)
 		token, _, err := client.ACL().Login(&consulapi.ACLLoginParams{
 			AuthMethod:  authMethod,
@@ -329,6 +330,7 @@ func providerConfigure(d *schema.ResourceData) (interface{}, error) {
 func getClient(d *schema.ResourceData, meta interface{}) (*consulapi.Client, *consulapi.QueryOptions, *consulapi.WriteOptions) {
 	config := meta.(*Config)
 	client := config.client
+
 	qOpts, wOpts := getOptions(d, config)
 	return client, qOpts, wOpts
 }
@@ -337,6 +339,7 @@ func getOptions(d *schema.ResourceData, meta interface{}) (*consulapi.QueryOptio
 	config := meta.(*Config)
 	client := config.client
 	var dc, token, namespace, partition string
+
 	if v, ok := d.GetOk("datacenter"); ok {
 		dc = v.(string)
 	}

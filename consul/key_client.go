@@ -29,24 +29,20 @@ func newKeyClient(d *schema.ResourceData, meta interface{}) *keyClient {
 	}
 }
 
-func (c *keyClient) Get(path string) (string, int, error) {
+func (c *keyClient) Get(path string) (bool, string, int, error) {
 	log.Printf(
 		"[DEBUG] Reading key '%s' in %s",
 		path, c.qOpts.Datacenter,
 	)
 	pair, _, err := c.client.Get(path, c.qOpts)
 	if err != nil {
-		return "", 0, fmt.Errorf("failed to read Consul key '%s': %s", path, err)
+		return false, "", 0, fmt.Errorf("failed to read Consul key '%s': %s", path, err)
 	}
-	value := ""
-	if pair != nil {
-		value = string(pair.Value)
+	if pair == nil {
+		return false, "", 0, nil
 	}
-	flags := 0
-	if pair != nil {
-		flags = int(pair.Flags)
-	}
-	return value, flags, nil
+
+	return true, string(pair.Value), int(pair.Flags), nil
 }
 
 func (c *keyClient) GetUnderPrefix(pathPrefix string) (consulapi.KVPairs, error) {

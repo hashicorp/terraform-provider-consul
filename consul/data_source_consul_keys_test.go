@@ -22,6 +22,28 @@ func TestAccDataConsulKeys_basic(t *testing.T) {
 					testAccCheckConsulKeysValue("data.consul_keys.read", "read", "written"),
 				),
 			},
+			{
+				Config:      testAccDataConsulKeysNonExistantKeyConfig,
+				ExpectError: regexp.MustCompile(`Key ".*" does not exist`),
+			},
+			{
+				Config: testAccDataConsulKeysNonExistantKeyDefaultBehaviourConfig,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckConsulKeysValue("data.consul_keys.read", "read", ""),
+				),
+			},
+			{
+				Config: testAccDataConsulKeysNonExistantKeyWithDefaultConfig,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckConsulKeysValue("data.consul_keys.read", "read", "myvalue"),
+				),
+			},
+			{
+				Config: testAccDataConsulKeysExistantKeyWithDefaultAndEmptyValueConfig,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckConsulKeysValue("data.consul_keys.read", "read", "myvalue"),
+				),
+			},
 		},
 	})
 }
@@ -72,7 +94,61 @@ func TestAccDataConsulKeys_datacenter(t *testing.T) {
 	})
 }
 
-const testAccDataConsulKeysConfig = `
+const (
+	testAccDataConsulKeysNonExistantKeyDefaultBehaviourConfig = `
+data "consul_keys" "read" {
+    key {
+        path = "test/set"
+        name = "read"
+    }
+}
+`
+	testAccDataConsulKeysNonExistantKeyConfig = `
+data "consul_keys" "read" {
+	error_on_missing_keys = true
+    key {
+        path = "test/set"
+        name = "read"
+    }
+}
+`
+
+	testAccDataConsulKeysNonExistantKeyWithDefaultConfig = `
+data "consul_keys" "read" {
+    key {
+        path = "test/set"
+        name = "read"
+		default = "myvalue"
+    }
+}
+
+`
+
+	testAccDataConsulKeysExistantKeyWithDefaultAndEmptyValueConfig = `
+resource "consul_keys" "write" {
+    datacenter = "dc1"
+
+    key {
+        path   = "test/set"
+        value  = ""
+		delete = true
+    }
+}
+
+data "consul_keys" "read" {
+    # Create a dependency on the resource so we're sure to
+    # have the value in place before we try to read it.
+    datacenter = consul_keys.write.datacenter
+
+    key {
+        path = "test/set"
+        name = "read"
+		default = "myvalue"
+    }
+}
+`
+
+	testAccDataConsulKeysConfig = `
 resource "consul_keys" "write" {
     datacenter = "dc1"
 
@@ -85,7 +161,7 @@ resource "consul_keys" "write" {
 data "consul_keys" "read" {
     # Create a dependency on the resource so we're sure to
     # have the value in place before we try to read it.
-    datacenter = "${consul_keys.write.datacenter}"
+    datacenter = consul_keys.write.datacenter
 
     key {
         path = "test/data_source"
@@ -94,7 +170,7 @@ data "consul_keys" "read" {
 }
 `
 
-const testAccDataConsulKeysConfigNamespaceCE = `
+	testAccDataConsulKeysConfigNamespaceCE = `
 data "consul_keys" "read" {
   namespace  = "test-data-consul-keys"
 
@@ -104,12 +180,12 @@ data "consul_keys" "read" {
   }
 }`
 
-const testAccDataConsulKeysConfigNamespaceEE = `
+	testAccDataConsulKeysConfigNamespaceEE = `
 resource "consul_keys" "write" {
   datacenter = "dc1"
 
   key {
-    path = "test/data_source"
+    path  = "test/data_source"
     value = "written"
   }
 }
@@ -119,7 +195,7 @@ resource "consul_namespace" "test" {
 }
 
 data "consul_keys" "read" {
-  namespace = consul_namespace.test.name
+  namespace  = consul_namespace.test.name
   datacenter = consul_keys.write.datacenter
 
   key {
@@ -128,14 +204,14 @@ data "consul_keys" "read" {
   }
 }`
 
-const testAccDataConsulKeysConfigDatacenter = `
+	testAccDataConsulKeysConfigDatacenter = `
 resource "consul_keys" "write" {
     datacenter = "dc2"
 
     key {
         path   = "test/dc"
         value  = "dc2"
-		delete = true
+        delete = true
     }
 }
 
@@ -155,3 +231,4 @@ data "consul_keys" "dc2" {
     }
 }
 `
+)

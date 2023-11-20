@@ -208,7 +208,7 @@ func resourceConsulKeysRead(d *schema.ResourceData, meta interface{}) error {
 			return err
 		}
 
-		value, flags, err := keyClient.Get(path)
+		_, value, flags, err := keyClient.Get(path)
 		if err != nil {
 			return err
 		}
