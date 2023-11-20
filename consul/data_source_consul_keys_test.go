@@ -104,11 +104,8 @@ data "consul_keys" "read" {
 }
 `
 	testAccDataConsulKeysNonExistantKeyConfig = `
-provider "consul" {
-    error_on_missing_key = true
-}
-
 data "consul_keys" "read" {
+	error_on_missing_keys = true
     key {
         path = "test/set"
         name = "read"
