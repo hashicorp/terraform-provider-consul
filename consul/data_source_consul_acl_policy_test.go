@@ -18,7 +18,7 @@ func TestAccDataACLPolicy_basic(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccDataSourceACLPolicyConfigNotFound,
-				ExpectError: regexp.MustCompile("could not find policy 'not-found'"),
+				ExpectError: regexp.MustCompile(`could not find policy "not-found"`),
 			},
 			{
 				Config: testAccDataSourceACLPolicyConfigBasic,
