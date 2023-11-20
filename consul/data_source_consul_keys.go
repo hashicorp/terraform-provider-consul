@@ -72,8 +72,6 @@ func dataSourceConsulKeys() *schema.Resource {
 }
 
 func dataSourceConsulKeysRead(d *schema.ResourceData, meta interface{}) error {
-	var errorOnMissingKey bool
-	config := meta.(*Config)
 	keyClient := newKeyClient(d, meta)
 
 	vars := make(map[string]string)
@@ -89,12 +87,16 @@ func dataSourceConsulKeysRead(d *schema.ResourceData, meta interface{}) error {
 		if err != nil {
 			return err
 		}
-		value = attributeValue(sub, value) //this return the value if it exists or the default value if it exists and has no value or an empty string if it doesn't exist.
-		errorOnMissingKey = config.ErrorOnMissingKey
 
-		if !exist && value == "" && errorOnMissingKey { //the key doesn't exist and we have no default value and errorOnMissingKey set to true.
-			return fmt.Errorf("Key '%s' does not exist", path)
+		// This returns the value if it exists or the default value if one is set.
+		// If the key does not exist and there is no default, value will be the
+		// empty string.
+		value = attributeValue(sub, value)
 
+		if !exist && value == "" && meta.(*Config).ErrorOnMissingKey {
+			// We return an error when the key does not exist, there is no default
+			// and error_on_missing_key has been set in the config.
+			return fmt.Errorf("Key %q does not exist", path)
 		}
 
 		vars[key] = value

@@ -38,21 +38,11 @@ func (c *keyClient) Get(path string) (bool, string, int, error) {
 	if err != nil {
 		return false, "", 0, fmt.Errorf("failed to read Consul key '%s': %s", path, err)
 	}
-	value := ""
 	if pair == nil {
 		return false, "", 0, nil
 	}
 
-	if pair != nil {
-		value = string(pair.Value)
-
-	}
-
-	flags := 0
-	if pair != nil {
-		flags = int(pair.Flags)
-	}
-	return true, value, flags, nil
+	return true, string(pair.Value), int(pair.Flags), nil
 }
 
 func (c *keyClient) GetUnderPrefix(pathPrefix string) (consulapi.KVPairs, error) {

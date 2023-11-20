@@ -208,7 +208,7 @@ func resourceConsulKeysRead(d *schema.ResourceData, meta interface{}) error {
 			return err
 		}
 
-		_, value, flags, err := keyClient.Get(path) //fadia you have made changes here by only adding _ since we don't want to verify if it exists or not
+		_, value, flags, err := keyClient.Get(path)
 		if err != nil {
 			return err
 		}

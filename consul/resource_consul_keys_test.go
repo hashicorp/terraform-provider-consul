@@ -114,7 +114,6 @@ func testAccCheckConsulKeysDestroy(client *consulapi.Client) func(s *terraform.S
 	}
 }
 
-// fadia why is this test function only testing at this path
 func testAccCheckConsulKeysExists(client *consulapi.Client) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		kv := client.KV()

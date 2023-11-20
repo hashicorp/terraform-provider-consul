@@ -34,7 +34,6 @@ type Config struct {
 }
 
 // Client returns a new client for accessing consul.
-
 func (c *Config) Client() (*consulapi.Client, error) {
 	config := consulapi.DefaultConfig()
 	if c.Datacenter != "" {

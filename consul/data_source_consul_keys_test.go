@@ -10,58 +10,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 )
 
-func TestAccDataConsulKeysNonExistentKeys(t *testing.T) {
-	providers, _ := startTestServer(t)
-
-	resource.Test(t, resource.TestCase{
-		Providers: providers,
-		Steps: []resource.TestStep{
-			{
-				Config:      testAccDataConsulKeysNonExistantKeyConfig,
-				ExpectError: regexp.MustCompile("Key '.*' does not exist"),
-			},
-			{
-				Config: testAccDataConsulKeysNonExistantKeyDefaultBehaviourConfig,
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckConsulKeysValue("data.consul_keys.read", "read", ""),
-				),
-			},
-		},
-	})
-}
-
-func TestAccDataConsulKeysNonExistentKeyWithDefault(t *testing.T) {
-	providers, _ := startTestServer(t)
-
-	resource.Test(t, resource.TestCase{
-		Providers: providers,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccDataConsulKeysNonExistantKeyWithDefaultConfig,
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckConsulKeysValue("data.consul_keys.read", "read", "myvalue"),
-				),
-			},
-		},
-	})
-}
-
-func TestAccDataConsulKeysExistentKeyWithEmptyValueAndDefault(t *testing.T) {
-	providers, _ := startTestServer(t)
-
-	resource.Test(t, resource.TestCase{
-		Providers: providers,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccDataConsulKeysExistantKeyWithDefaultAndEmptyValueConfig,
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckConsulKeysValue("data.consul_keys.read", "read", "myvalue"),
-				),
-			},
-		},
-	})
-}
-
 func TestAccDataConsulKeys_basic(t *testing.T) {
 	providers, _ := startTestServer(t)
 
@@ -72,6 +20,28 @@ func TestAccDataConsulKeys_basic(t *testing.T) {
 				Config: testAccDataConsulKeysConfig,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConsulKeysValue("data.consul_keys.read", "read", "written"),
+				),
+			},
+			{
+				Config:      testAccDataConsulKeysNonExistantKeyConfig,
+				ExpectError: regexp.MustCompile(`Key ".*" does not exist`),
+			},
+			{
+				Config: testAccDataConsulKeysNonExistantKeyDefaultBehaviourConfig,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckConsulKeysValue("data.consul_keys.read", "read", ""),
+				),
+			},
+			{
+				Config: testAccDataConsulKeysNonExistantKeyWithDefaultConfig,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckConsulKeysValue("data.consul_keys.read", "read", "myvalue"),
+				),
+			},
+			{
+				Config: testAccDataConsulKeysExistantKeyWithDefaultAndEmptyValueConfig,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckConsulKeysValue("data.consul_keys.read", "read", "myvalue"),
 				),
 			},
 		},
@@ -125,37 +95,33 @@ func TestAccDataConsulKeys_datacenter(t *testing.T) {
 	})
 }
 
-const testAccDataConsulKeysNonExistantKeyDefaultBehaviourConfig = `
+const (
+	testAccDataConsulKeysNonExistantKeyDefaultBehaviourConfig = `
 
 data "consul_keys" "read" {
     datacenter = "dc1"
     key {
         path = "test/set"
         name = "read"
-		
     }
 }
 `
-const testAccDataConsulKeysNonExistantKeyConfig = `
+	testAccDataConsulKeysNonExistantKeyConfig = `
 provider "consul" {
     error_on_missing_key = true
 }
+
 data "consul_keys" "read" {
     datacenter = "dc1"
     key {
         path = "test/set"
         name = "read"
-		
     }
 }
 `
 
-const testAccDataConsulKeysNonExistantKeyWithDefaultConfig = `
-
+	testAccDataConsulKeysNonExistantKeyWithDefaultConfig = `
 data "consul_keys" "read" {
-    # Create a dependency on the resource so we're sure to
-    # have the value in place before we try to read it.
-    datacenter = "dc1"
     key {
         path = "test/set"
         name = "read"
@@ -165,8 +131,7 @@ data "consul_keys" "read" {
 
 `
 
-const testAccDataConsulKeysExistantKeyWithDefaultAndEmptyValueConfig = `
-
+	testAccDataConsulKeysExistantKeyWithDefaultAndEmptyValueConfig = `
 resource "consul_keys" "write" {
     datacenter = "dc1"
 
@@ -179,7 +144,8 @@ resource "consul_keys" "write" {
 data "consul_keys" "read" {
     # Create a dependency on the resource so we're sure to
     # have the value in place before we try to read it.
-    datacenter = "dc1"
+    datacenter = consul_keys.write.datacenter
+
     key {
         path = "test/set"
         name = "read"
@@ -188,7 +154,7 @@ data "consul_keys" "read" {
 }
 `
 
-const testAccDataConsulKeysConfig = `
+	testAccDataConsulKeysConfig = `
 resource "consul_keys" "write" {
     datacenter = "dc1"
 
@@ -210,7 +176,7 @@ data "consul_keys" "read" {
 }
 `
 
-const testAccDataConsulKeysConfigNamespaceCE = `
+	testAccDataConsulKeysConfigNamespaceCE = `
 data "consul_keys" "read" {
   namespace  = "test-data-consul-keys"
 
@@ -220,7 +186,7 @@ data "consul_keys" "read" {
   }
 }`
 
-const testAccDataConsulKeysConfigNamespaceEE = `
+	testAccDataConsulKeysConfigNamespaceEE = `
 resource "consul_keys" "write" {
   datacenter = "dc1"
 
@@ -244,14 +210,14 @@ data "consul_keys" "read" {
   }
 }`
 
-const testAccDataConsulKeysConfigDatacenter = `
+	testAccDataConsulKeysConfigDatacenter = `
 resource "consul_keys" "write" {
     datacenter = "dc2"
 
     key {
         path   = "test/dc"
         value  = "dc2"
-		delete = true
+        delete = true
     }
 }
 
@@ -271,3 +237,4 @@ data "consul_keys" "dc2" {
     }
 }
 `
+)
