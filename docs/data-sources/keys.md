@@ -26,7 +26,7 @@ data "consul_keys" "app" {
 
 # Start our instance with the dynamic ami value
 resource "aws_instance" "app" {
-  ami = "${data.consul_keys.app.var.ami}"
+  ami = data.consul_keys.app.var.ami
 
   # ...
 }
