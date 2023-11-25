@@ -5,7 +5,7 @@
 
 [![Discuss](https://img.shields.io/badge/discuss-consul?logo=consul)](https://discuss.hashicorp.com/c/consul) [![Gitter chat](https://badges.gitter.im/hashicorp-consul/Lobby.png)](https://gitter.im/hashicorp-consul/Lobby)
 
-- [Terraforrm Website](https://www.terraform.io/)
+- [Terraform Website](https://www.terraform.io/)
 - [Consul Docs](https://www.consul.io/docs/intro)
 - [Consul Terraform Provider Docs](https://www.terraform.io/docs/providers/consul/)
 
