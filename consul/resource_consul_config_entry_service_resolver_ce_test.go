@@ -78,11 +78,19 @@ func TestAccConsulConfigEntryServiceResolverCETest(t *testing.T) {
 					resource.TestCheckResourceAttr("consul_config_entry_service_resolver.bar", "load_balancer.1867531597.hash_policies.0.field_value", "x-user-id"),
 				),
 			},
+			{
+				Config: testConsulConfigEntryServiceResolverCEMissingTimeout,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("consul_config_entry_service_resolver.var", "connect_timeout", ""),
+					resource.TestCheckResourceAttr("consul_config_entry_service_resolver.var", "request_timeout", ""),
+				),
+			},
 		},
 	})
 }
 
-const testConsulConfigEntryServiceResolverCEWithRedirect = `
+const (
+	testConsulConfigEntryServiceResolverCEWithRedirect = `
 resource "consul_config_entry_service_resolver" "foo" {
 	name = "consul-service-resolver-1"
 	meta = {
@@ -118,7 +126,7 @@ resource "consul_config_entry_service_resolver" "foo" {
 }
 `
 
-const testConsulConfigEntryServiceResolverCEWithFailover = `
+	testConsulConfigEntryServiceResolverCEWithFailover = `
 resource "consul_config_entry_service_resolver" "bar" {
 	name = "consul-service-resolver-2"
 	meta = {
@@ -167,3 +175,16 @@ resource "consul_config_entry_service_resolver" "bar" {
 	}
 }
 `
+
+	testConsulConfigEntryServiceResolverCEMissingTimeout = `
+resource "consul_config_entry_service_resolver" "var" {
+	name = "bug"
+
+	subsets {
+		name         = "subset"
+		filter       = "Service.Meta.test == \"test\""
+		only_passing = true
+	}
+}
+`
+)
