@@ -163,7 +163,7 @@ func resourceConsulACLToken() *schema.Resource {
 }
 
 func resourceConsulACLTokenCreate(d *schema.ResourceData, meta interface{}) error {
-	client, _, wOpts := getClient(d, meta)
+	client, qOpts, wOpts := getClient(d, meta)
 
 	log.Printf("[DEBUG] Creating ACL token")
 
@@ -175,6 +175,10 @@ func resourceConsulACLTokenCreate(d *schema.ResourceData, meta interface{}) erro
 	}
 
 	log.Printf("[DEBUG] Created ACL token %q", token.AccessorID)
+
+	if err := waitForACLTokenReplication(client.ACL(), qOpts, token.CreateIndex); err != nil {
+		return err
+	}
 
 	d.SetId(token.AccessorID)
 
@@ -265,7 +269,7 @@ func getTemplateVariables(templatedPolicy *consulapi.ACLTemplatedPolicy) []map[s
 }
 
 func resourceConsulACLTokenUpdate(d *schema.ResourceData, meta interface{}) error {
-	client, _, wOpts := getClient(d, meta)
+	client, qOpts, wOpts := getClient(d, meta)
 
 	id := d.Id()
 	log.Printf("[DEBUG] Updating ACL token %q", id)
@@ -273,11 +277,15 @@ func resourceConsulACLTokenUpdate(d *schema.ResourceData, meta interface{}) erro
 	aclToken := getToken(d)
 	aclToken.AccessorID = id
 
-	_, _, err := client.ACL().TokenUpdate(aclToken, wOpts)
+	u, _, err := client.ACL().TokenUpdate(aclToken, wOpts)
 	if err != nil {
 		return fmt.Errorf("error updating ACL token %q: %s", id, err)
 	}
 	log.Printf("[DEBUG] Updated ACL token %q", id)
+
+	if err := waitForACLTokenReplication(client.ACL(), qOpts, u.ModifyIndex); err != nil {
+		return err
+	}
 
 	return resourceConsulACLTokenRead(d, meta)
 }

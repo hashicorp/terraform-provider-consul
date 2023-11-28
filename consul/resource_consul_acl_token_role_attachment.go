@@ -58,9 +58,13 @@ func resourceConsulACLTokenRoleAttachmentCreate(d *schema.ResourceData, meta int
 		Name: roleName,
 	})
 
-	_, _, err = client.ACL().TokenUpdate(aclToken, wOpts)
+	u, _, err := client.ACL().TokenUpdate(aclToken, wOpts)
 	if err != nil {
 		return fmt.Errorf("error updating ACL token '%q' to set new role attachment: '%s'", tokenID, err)
+	}
+
+	if err := waitForACLTokenReplication(client.ACL(), qOpts, u.CreateIndex); err != nil {
+		return err
 	}
 
 	id := fmt.Sprintf("%s:%s", tokenID, roleName)
