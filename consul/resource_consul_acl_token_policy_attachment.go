@@ -63,8 +63,10 @@ func resourceConsulACLTokenPolicyAttachmentCreate(d *schema.ResourceData, meta i
 		return fmt.Errorf("error updating ACL token '%q' to set new policy attachment: '%s'", tokenID, err)
 	}
 
-	if err := waitForACLTokenReplication(client.ACL(), qOpts, u.ModifyIndex); err != nil {
-		return err
+	if !aclToken.Local {
+		if err := waitForACLTokenReplication(client.ACL(), qOpts, u.ModifyIndex); err != nil {
+			return err
+		}
 	}
 
 	id := fmt.Sprintf("%s:%s", tokenID, newPolicyName)

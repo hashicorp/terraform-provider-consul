@@ -176,8 +176,10 @@ func resourceConsulACLTokenCreate(d *schema.ResourceData, meta interface{}) erro
 
 	log.Printf("[DEBUG] Created ACL token %q", token.AccessorID)
 
-	if err := waitForACLTokenReplication(client.ACL(), qOpts, token.CreateIndex); err != nil {
-		return err
+	if !aclToken.Local {
+		if err := waitForACLTokenReplication(client.ACL(), qOpts, token.CreateIndex); err != nil {
+			return err
+		}
 	}
 
 	d.SetId(token.AccessorID)
@@ -283,8 +285,10 @@ func resourceConsulACLTokenUpdate(d *schema.ResourceData, meta interface{}) erro
 	}
 	log.Printf("[DEBUG] Updated ACL token %q", id)
 
-	if err := waitForACLTokenReplication(client.ACL(), qOpts, u.ModifyIndex); err != nil {
-		return err
+	if !aclToken.Local {
+		if err := waitForACLTokenReplication(client.ACL(), qOpts, u.ModifyIndex); err != nil {
+			return err
+		}
 	}
 
 	return resourceConsulACLTokenRead(d, meta)
