@@ -16,7 +16,7 @@ func waitForACLTokenReplication(acl *api.ACL, qOpts *api.QueryOptions, index uin
 			return fmt.Errorf("error fetching ACL replication status: %w", err)
 		}
 
-		if !rs.Enabled || rs.ReplicatedTokenIndex >= index {
+		if !rs.Enabled || rs.ReplicationType != "tokens" || rs.ReplicatedTokenIndex >= index {
 			return nil
 		}
 
