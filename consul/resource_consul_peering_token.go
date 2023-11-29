@@ -47,6 +47,13 @@ The functionality described here is available only in Consul version 1.13.0 and 
 					Type: schema.TypeString,
 				},
 			},
+			"server_external_addresses": {
+				Type:        schema.TypeList,
+				Elem:        &schema.Schema{Type: schema.TypeString},
+				Optional:    true,
+				ForceNew:    true,
+				Description: "The addresses for the cluster that generates the peering token. Addresses take the form {host or IP}:port. You can specify one or more load balancers or external IPs that route external traffic to this cluster's Consul servers.",
+			},
 			"peering_token": {
 				Type:        schema.TypeString,
 				Computed:    true,
@@ -67,9 +74,10 @@ func resourceConsulPeeringTokenCreate(d *schema.ResourceData, meta interface{}) 
 	}
 
 	req := api.PeeringGenerateTokenRequest{
-		PeerName:  name,
-		Partition: d.Get("partition").(string),
-		Meta:      m,
+		PeerName:                name,
+		Partition:               d.Get("partition").(string),
+		Meta:                    m,
+		ServerExternalAddresses: d.Get("server_external_addresses").([]string),
 	}
 
 	resp, _, err := client.Peerings().GenerateToken(context.Background(), req, wOpts)
