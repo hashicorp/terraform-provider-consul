@@ -17,10 +17,6 @@ func resourceSourceConsulPeeringToken() *schema.Resource {
 [Cluster Peering](https://www.consul.io/docs/connect/cluster-peering) can be used to create connections between two or more independent clusters so that services deployed to different partitions or datacenters can communicate.
 
 The ` + "`cluster_peering_token`" + ` resource can be used to generate a peering token that can later be used to establish a peering connection.
-
-~> **Cluster peering is currently in technical preview:** Functionality associated with cluster peering is subject to change. You should never use the technical preview release in secure environments or production scenarios. Features in technical preview may have performance issues, scaling issues, and limited support.
-
-The functionality described here is available only in Consul version 1.13.0 and later.
 `,
 
 		Create: resourceConsulPeeringTokenCreate,
@@ -49,6 +45,13 @@ The functionality described here is available only in Consul version 1.13.0 and 
 					Type: schema.TypeString,
 				},
 			},
+			"server_external_addresses": {
+				Type:        schema.TypeList,
+				Elem:        &schema.Schema{Type: schema.TypeString},
+				Optional:    true,
+				ForceNew:    true,
+				Description: "The addresses for the cluster that generates the peering token. Addresses take the form {host or IP}:port. You can specify one or more load balancers or external IPs that route external traffic to this cluster's Consul servers.",
+			},
 			"peering_token": {
 				Type:        schema.TypeString,
 				Computed:    true,
@@ -63,15 +66,18 @@ func resourceConsulPeeringTokenCreate(d *schema.ResourceData, meta interface{}) 
 	client, _, wOpts := getClient(d, meta)
 	name := d.Get("peer_name").(string)
 
-	m := map[string]string{}
-	for k, v := range d.Get("meta").(map[string]interface{}) {
-		m[k] = v.(string)
-	}
-
 	req := api.PeeringGenerateTokenRequest{
 		PeerName:  name,
 		Partition: d.Get("partition").(string),
-		Meta:      m,
+		Meta:      map[string]string{},
+	}
+
+	for k, v := range d.Get("meta").(map[string]interface{}) {
+		req.Meta[k] = v.(string)
+	}
+
+	for _, address := range d.Get("server_external_addresses").([]interface{}) {
+		req.ServerExternalAddresses = append(req.ServerExternalAddresses, address.(string))
 	}
 
 	resp, _, err := client.Peerings().GenerateToken(context.Background(), req, wOpts)

@@ -53,12 +53,24 @@ func TestAccConsulPeeringToken_basic(t *testing.T) {
 					return nil
 				},
 			},
+			{
+				Config: testAcConsulPeeringTokenServerExternalAddresses,
+			},
 		},
 	})
 }
 
-const testAccConsulPeeringTokenBasic = `
+const (
+	testAccConsulPeeringTokenBasic = `
 resource "consul_peering_token" "basic" {
   peer_name = "hello-world"
 }
 `
+
+	testAcConsulPeeringTokenServerExternalAddresses = `
+resource "consul_peering_token" "basic" {
+  peer_name = "hello-world"
+  server_external_addresses = ["1.2.3.4:8500"]
+}
+`
+)
