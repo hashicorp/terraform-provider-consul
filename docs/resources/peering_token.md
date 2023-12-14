@@ -5,8 +5,6 @@ subcategory: ""
 description: |-
   Cluster Peering https://www.consul.io/docs/connect/cluster-peering can be used to create connections between two or more independent clusters so that services deployed to different partitions or datacenters can communicate.
   The cluster_peering_token resource can be used to generate a peering token that can later be used to establish a peering connection.
-  ~> Cluster peering is currently in technical preview: Functionality associated with cluster peering is subject to change. You should never use the technical preview release in secure environments or production scenarios. Features in technical preview may have performance issues, scaling issues, and limited support.
-  The functionality described here is available only in Consul version 1.13.0 and later.
 ---
 
 # consul_peering_token (Resource)
@@ -14,10 +12,6 @@ description: |-
 [Cluster Peering](https://www.consul.io/docs/connect/cluster-peering) can be used to create connections between two or more independent clusters so that services deployed to different partitions or datacenters can communicate.
 
 The `cluster_peering_token` resource can be used to generate a peering token that can later be used to establish a peering connection.
-
-~> **Cluster peering is currently in technical preview:** Functionality associated with cluster peering is subject to change. You should never use the technical preview release in secure environments or production scenarios. Features in technical preview may have performance issues, scaling issues, and limited support.
-
-The functionality described here is available only in Consul version 1.13.0 and later.
 
 ## Example Usage
 
@@ -38,6 +32,7 @@ resource "consul_peering_token" "token" {
 
 - `meta` (Map of String) Specifies KV metadata to associate with the peering. This parameter is not required and does not directly impact the cluster peering process.
 - `partition` (String)
+- `server_external_addresses` (List of String) The addresses for the cluster that generates the peering token. Addresses take the form {host or IP}:port. You can specify one or more load balancers or external IPs that route external traffic to this cluster's Consul servers.
 
 ### Read-Only
 

@@ -17,8 +17,6 @@ func resourceSourceConsulPeeringToken() *schema.Resource {
 [Cluster Peering](https://www.consul.io/docs/connect/cluster-peering) can be used to create connections between two or more independent clusters so that services deployed to different partitions or datacenters can communicate.
 
 The ` + "`cluster_peering_token`" + ` resource can be used to generate a peering token that can later be used to establish a peering connection.
-
-The functionality described here is available only in Consul version 1.13.0 and later.
 `,
 
 		Create: resourceConsulPeeringTokenCreate,
