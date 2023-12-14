@@ -66,16 +66,18 @@ func resourceConsulPeeringTokenCreate(d *schema.ResourceData, meta interface{}) 
 	client, _, wOpts := getClient(d, meta)
 	name := d.Get("peer_name").(string)
 
-	m := map[string]string{}
-	for k, v := range d.Get("meta").(map[string]interface{}) {
-		m[k] = v.(string)
+	req := api.PeeringGenerateTokenRequest{
+		PeerName:  name,
+		Partition: d.Get("partition").(string),
+		Meta:      map[string]string{},
 	}
 
-	req := api.PeeringGenerateTokenRequest{
-		PeerName:                name,
-		Partition:               d.Get("partition").(string),
-		Meta:                    m,
-		ServerExternalAddresses: d.Get("server_external_addresses").([]string),
+	for k, v := range d.Get("meta").(map[string]interface{}) {
+		req.Meta[k] = v.(string)
+	}
+
+	for _, address := range d.Get("server_external_addresses").([]interface{}) {
+		req.ServerExternalAddresses = append(req.ServerExternalAddresses, address.(string))
 	}
 
 	resp, _, err := client.Peerings().GenerateToken(context.Background(), req, wOpts)
