@@ -558,7 +558,10 @@ func (s *serviceDefaults) Decode(d *schema.ResourceData) (consulapi.ConfigEntry,
 			upstreamConfig.PassiveHealthCheck = passiveHealthCheck
 		}
 		if upstreamConfigMap["mesh_gateway"] != nil {
-			upstreamConfig.MeshGateway = *getMeshGateway(upstreamConfigMap["mesh_gateway"])
+			mg := getMeshGateway(upstreamConfigMap["mesh_gateway"])
+			if mg != nil {
+				upstreamConfig.MeshGateway = *mg
+			}
 		}
 		if upstreamConfigMap["balance_outbound_connections"] != nil {
 			upstreamConfig.BalanceOutboundConnections = upstreamConfigMap["balance_outbound_connections"].(string)
@@ -585,7 +588,10 @@ func (s *serviceDefaults) Decode(d *schema.ResourceData) (consulapi.ConfigEntry,
 			upstreamConfig.PassiveHealthCheck = passiveHealthCheck
 		}
 		if upstreamConfigMap["mesh_gateway"] != nil {
-			upstreamConfig.MeshGateway = *getMeshGateway(upstreamConfigMap["mesh_gateway"])
+			mg := getMeshGateway(upstreamConfigMap["mesh_gateway"])
+			if mg != nil {
+				upstreamConfig.MeshGateway = *mg
+			}
 		}
 		if upstreamConfigMap["balance_outbound_connections"] != nil {
 			upstreamConfig.BalanceOutboundConnections = upstreamConfigMap["balance_outbound_connections"].(string)
@@ -801,12 +807,14 @@ func (s *serviceDefaults) Write(ce consulapi.ConfigEntry, d *schema.ResourceData
 		upstreamConfig["limits"] = limits
 		passiveHealthCheck := make([]map[string]interface{}, 1)
 		passiveHealthCheck[0] = make(map[string]interface{})
-		passiveHealthCheck[0]["interval"] = elem.PassiveHealthCheck.Interval.String()
-		passiveHealthCheck[0]["max_failures"] = elem.PassiveHealthCheck.MaxFailures
-		passiveHealthCheck[0]["enforcing_consecutive_5xx"] = elem.PassiveHealthCheck.EnforcingConsecutive5xx
-		passiveHealthCheck[0]["max_ejection_percent"] = elem.PassiveHealthCheck.MaxEjectionPercent
-		passiveHealthCheck[0]["base_ejection_time"] = elem.PassiveHealthCheck.BaseEjectionTime.String()
-		upstreamConfig["passive_health_check"] = passiveHealthCheck
+		if elem.PassiveHealthCheck != nil {
+			passiveHealthCheck[0]["interval"] = elem.PassiveHealthCheck.Interval.String()
+			passiveHealthCheck[0]["max_failures"] = elem.PassiveHealthCheck.MaxFailures
+			passiveHealthCheck[0]["enforcing_consecutive_5xx"] = elem.PassiveHealthCheck.EnforcingConsecutive5xx
+			passiveHealthCheck[0]["max_ejection_percent"] = elem.PassiveHealthCheck.MaxEjectionPercent
+			passiveHealthCheck[0]["base_ejection_time"] = elem.PassiveHealthCheck.BaseEjectionTime.String()
+			upstreamConfig["passive_health_check"] = passiveHealthCheck
+		}
 
 		meshGateway := make([]map[string]interface{}, 1)
 		meshGateway[0] = make(map[string]interface{})
