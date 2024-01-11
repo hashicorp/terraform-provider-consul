@@ -16,6 +16,12 @@ func TestAccConsulServiceDefaultsConfigCEEntryTest(t *testing.T) {
 		Providers: providers,
 		Steps: []resource.TestStep{
 			{
+				Config: testConsulServiceDefaultsConfigEntryWithUpstreamConfigPartialData,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("consul_config_entry_service_defaults.foo", "name", "service-defaults-test-3"),
+				),
+			},
+			{
 				Config: testConsulServiceDefaultsConfigEntryWithDestination,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("consul_config_entry_service_defaults.foo", "name", "service-defaults-test-1"),
@@ -191,6 +197,23 @@ resource "consul_config_entry_service_defaults" "foo" {
 			protocol        = "http"
 		}
 	}
+}
+`
+
+const testConsulServiceDefaultsConfigEntryWithUpstreamConfigPartialData = `
+resource "consul_config_entry_service_defaults" "foo" {
+  name = "service-defaults-test-3"
+  protocol = "http"
+  expose {}
+  upstream_config {
+    defaults {
+      limits {
+        max_connections = 4096
+        max_pending_requests = 8192
+        max_concurrent_requests = 8192
+      }
+    }
+  }
 }
 `
 
