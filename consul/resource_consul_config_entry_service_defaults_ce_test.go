@@ -19,6 +19,16 @@ func TestAccConsulServiceDefaultsConfigCEEntryTest(t *testing.T) {
 				Config: testConsulServiceDefaultsConfigEntryWithUpstreamConfigPartialData,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("consul_config_entry_service_defaults.foo", "name", "service-defaults-test-3"),
+					resource.TestCheckResourceAttr("consul_config_entry_service_defaults.foo", "protocol", "http"),
+					resource.TestCheckResourceAttr("consul_config_entry_service_defaults.foo", "expose.#", "1"),
+					resource.TestCheckResourceAttr("consul_config_entry_service_defaults.foo", "expose.2681277550.paths.#", "0"),
+					resource.TestCheckResourceAttr("consul_config_entry_service_defaults.foo", "expose.2681277550.checks", "false"),
+					resource.TestCheckResourceAttr("consul_config_entry_service_defaults.foo", "upstream_config.#", "1"),
+					resource.TestCheckResourceAttr("consul_config_entry_service_defaults.foo", "upstream_config.4080712591.defaults.3209567201.mesh_gateway.#", "0"),
+					resource.TestCheckResourceAttr("consul_config_entry_service_defaults.foo", "upstream_config.4080712591.defaults.3209567201.connect_timeout_ms", "0"),
+					resource.TestCheckResourceAttr("consul_config_entry_service_defaults.foo", "upstream_config.4080712591.defaults.3209567201.limits.4234567468.max_connections", "4096"),
+					resource.TestCheckResourceAttr("consul_config_entry_service_defaults.foo", "upstream_config.4080712591.defaults.3209567201.limits.4234567468.max_concurrent_requests", "8192"),
+					resource.TestCheckResourceAttr("consul_config_entry_service_defaults.foo", "upstream_config.4080712591.defaults.3209567201.limits.4234567468.max_pending_requests", "8192"),
 				),
 			},
 			{
@@ -143,6 +153,23 @@ func TestAccConsulServiceDefaultsConfigCEEntryTest(t *testing.T) {
 	})
 }
 
+const testConsulServiceDefaultsConfigEntryWithUpstreamConfigPartialData = `
+resource "consul_config_entry_service_defaults" "foo" {
+  name = "service-defaults-test-3"
+  protocol = "http"
+  expose {}
+  upstream_config {
+    defaults {
+      limits {
+        max_connections = 4096
+        max_pending_requests = 8192
+        max_concurrent_requests = 8192
+      }
+    }
+  }
+}
+`
+
 // Destination and Upstream Config are exclusive.
 const testConsulServiceDefaultsConfigEntryWithDestination = `
 resource "consul_config_entry_service_defaults" "foo" {
@@ -197,23 +224,6 @@ resource "consul_config_entry_service_defaults" "foo" {
 			protocol        = "http"
 		}
 	}
-}
-`
-
-const testConsulServiceDefaultsConfigEntryWithUpstreamConfigPartialData = `
-resource "consul_config_entry_service_defaults" "foo" {
-  name = "service-defaults-test-3"
-  protocol = "http"
-  expose {}
-  upstream_config {
-    defaults {
-      limits {
-        max_connections = 4096
-        max_pending_requests = 8192
-        max_concurrent_requests = 8192
-      }
-    }
-  }
 }
 `
 
