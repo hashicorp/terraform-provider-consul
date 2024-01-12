@@ -520,6 +520,9 @@ func (s *serviceDefaults) Decode(d *schema.ResourceData) (consulapi.ConfigEntry,
 	}
 
 	getMeshGateway := func(meshGateway interface{}) *consulapi.MeshGatewayConfig {
+		if meshGateway == nil {
+			return &consulapi.MeshGatewayConfig{}
+		}
 		meshGatewayList := meshGateway.(*schema.Set).List()
 		if len(meshGatewayList) > 0 {
 			meshGatewayData := meshGatewayList[0].(map[string]interface{})
@@ -527,7 +530,7 @@ func (s *serviceDefaults) Decode(d *schema.ResourceData) (consulapi.ConfigEntry,
 				Mode: consulapi.MeshGatewayMode(meshGatewayData["mode"].(string)),
 			}
 		}
-		return nil
+		return &consulapi.MeshGatewayConfig{}
 	}
 
 	getUpstreamConfigOverrides := func(upstreamConfigMap map[string]interface{}) (*consulapi.UpstreamConfig, error) {
@@ -560,12 +563,9 @@ func (s *serviceDefaults) Decode(d *schema.ResourceData) (consulapi.ConfigEntry,
 			}
 			upstreamConfig.PassiveHealthCheck = passiveHealthCheck
 		}
-		if upstreamConfigMap["mesh_gateway"] != nil {
-			mg := getMeshGateway(upstreamConfigMap["mesh_gateway"])
-			if mg != nil {
-				upstreamConfig.MeshGateway = *mg
-			}
-		}
+
+		upstreamConfig.MeshGateway = *getMeshGateway(upstreamConfigMap["mesh_gateway"])
+
 		if upstreamConfigMap["balance_outbound_connections"] != nil {
 			upstreamConfig.BalanceOutboundConnections = upstreamConfigMap["balance_outbound_connections"].(string)
 		}
@@ -590,12 +590,10 @@ func (s *serviceDefaults) Decode(d *schema.ResourceData) (consulapi.ConfigEntry,
 			}
 			upstreamConfig.PassiveHealthCheck = passiveHealthCheck
 		}
-		if upstreamConfigMap["mesh_gateway"] != nil {
-			mg := getMeshGateway(upstreamConfigMap["mesh_gateway"])
-			if mg != nil {
-				upstreamConfig.MeshGateway = *mg
-			}
-		}
+
+		mg := getMeshGateway(upstreamConfigMap["mesh_gateway"])
+		upstreamConfig.MeshGateway = *mg
+
 		if upstreamConfigMap["balance_outbound_connections"] != nil {
 			upstreamConfig.BalanceOutboundConnections = upstreamConfigMap["balance_outbound_connections"].(string)
 		}
@@ -731,10 +729,8 @@ func (s *serviceDefaults) Decode(d *schema.ResourceData) (consulapi.ConfigEntry,
 		}
 	}
 
-	if d.Get("mesh_gateway") != nil {
-		if v := getMeshGateway(d.Get("mesh_gateway")); v != nil {
-			configEntry.MeshGateway = *v
-		}
+	if v := getMeshGateway(d.Get("mesh_gateway")); v != nil {
+		configEntry.MeshGateway = *v
 	}
 
 	if d.Get("expose") != nil {
@@ -892,7 +888,9 @@ func (s *serviceDefaults) Write(ce consulapi.ConfigEntry, d *schema.ResourceData
 	meshGateway := make([]map[string]interface{}, 1)
 	meshGateway[0] = make(map[string]interface{})
 	meshGateway[0]["mode"] = sd.MeshGateway.Mode
-	sw.set("mesh_gateway", meshGateway)
+	if sd.MeshGateway.Mode != "" {
+		sw.set("mesh_gateway", meshGateway)
+	}
 
 	sw.set("external_sni", sd.ExternalSNI)
 
