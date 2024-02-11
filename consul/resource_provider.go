@@ -15,6 +15,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 	"github.com/mitchellh/mapstructure"
+
+	multicluster "github.com/hashicorp/terraform-provider-consul/consul/tools/openapi"
 )
 
 var (
@@ -113,7 +115,7 @@ func Provider() terraform.ResourceProvider {
 				Type:        schema.TypeString,
 				Optional:    true,
 				DefaultFunc: schema.EnvDefaultFunc("CONSUL_CAPATH", ""),
-				Description: "A path to a directory of PEM-encoded certificate authority files to use to check the authenticity of client and server connections. Can also be specified with the `CONSUL_CAPATH` environment variable.",
+				Description: "A path to a directory of PEM-encoded certificate authority files to use to check the authenticity of Client and server connections. Can also be specified with the `CONSUL_CAPATH` environment variable.",
 			},
 
 			"insecure_https": {
@@ -271,12 +273,21 @@ func providerConfigure(d *schema.ResourceData) (interface{}, error) {
 	if err := mapstructure.Decode(configRaw, &config); err != nil {
 		return nil, err
 	}
-	log.Printf("[INFO] Initializing Consul client")
-	client, err := config.Client()
+	log.Printf("[INFO] Initializing Consul Clients")
+
+	// configure V1 client
+	client, err := config.getClient()
 	if err != nil {
 		return nil, err
 	}
-	config.client = client
+	config.Client = client
+
+	// Configure the v2 client
+	v2Client, err := config.getV2Client()
+	if err != nil {
+		return nil, err
+	}
+	config.V2Client = v2Client
 
 	// Set headers if provided
 	headers := d.Get("header").([]interface{})
@@ -331,7 +342,15 @@ func providerConfigure(d *schema.ResourceData) (interface{}, error) {
 
 func getClient(d *schema.ResourceData, meta interface{}) (*consulapi.Client, *consulapi.QueryOptions, *consulapi.WriteOptions) {
 	config := meta.(*Config)
-	client := config.client
+	client := config.Client
+
+	qOpts, wOpts := getOptions(d, config)
+	return client, qOpts, wOpts
+}
+
+func getMulticlusterV2Client(d *schema.ResourceData, meta interface{}) (*multicluster.Client, *consulapi.QueryOptions, *consulapi.WriteOptions) {
+	config := meta.(*Config)
+	client := config.V2Client
 
 	qOpts, wOpts := getOptions(d, config)
 	return client, qOpts, wOpts
@@ -339,7 +358,7 @@ func getClient(d *schema.ResourceData, meta interface{}) (*consulapi.Client, *co
 
 func getOptions(d *schema.ResourceData, meta interface{}) (*consulapi.QueryOptions, *consulapi.WriteOptions) {
 	config := meta.(*Config)
-	client := config.client
+	client := config.Client
 	var dc, token, namespace, partition string
 
 	if v, ok := d.GetOk("datacenter"); ok {

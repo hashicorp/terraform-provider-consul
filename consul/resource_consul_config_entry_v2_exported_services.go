@@ -4,14 +4,18 @@
 package consul
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
+	"net/http"
 
 	"github.com/hashicorp/consul/api"
 	pbmulticluster "github.com/hashicorp/consul/proto-public/pbmulticluster/v2"
 	"github.com/hashicorp/consul/proto-public/pbresource"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 	"google.golang.org/protobuf/encoding/protojson"
+
+	multicluster "github.com/hashicorp/terraform-provider-consul/consul/tools/openapi"
 )
 
 func resourceConsulV2ExportedServices() *schema.Resource {
@@ -94,48 +98,116 @@ func resourceConsulV2ExportedServicesCreate(d *schema.ResourceData, meta interfa
 }
 
 func resourceConsulV2ExportedServicesUpdate(d *schema.ResourceData, meta interface{}) error {
-	client, qOpts, _ := getClient(d, meta)
+	client, _, _ := getMulticlusterV2Client(d, meta)
 	name := d.Get("name").(string)
 	kind := d.Get("kind").(string)
-	gvk := &api.GVK{
-		Group:   "multicluster",
-		Version: "v2",
-		Kind:    kind,
-	}
-	var consumers []map[string]any
+	partition := d.Get("partition").(string)
+	namespace := d.Get("namespace").(string)
+	var consumers []multicluster.HashicorpConsulMulticlusterV2ExportedServicesConsumer
 	peerConsumers := d.Get("peer_consumers").([]interface{})
 	for _, p := range peerConsumers {
-		consumers = append(consumers, map[string]any{"peer": p})
+		peerString := p.(string)
+		consumers = append(consumers, multicluster.HashicorpConsulMulticlusterV2ExportedServicesConsumer{
+			Peer: &peerString,
+		})
 	}
 	partitionConsumers := d.Get("partition_consumers").([]interface{})
 	for _, ap := range partitionConsumers {
-		consumers = append(consumers, map[string]any{"partition": ap})
+		partitionString := ap.(string)
+		consumers = append(consumers, multicluster.HashicorpConsulMulticlusterV2ExportedServicesConsumer{
+			Peer: &partitionString,
+		})
 	}
 	samenessConsumers := d.Get("sameness_group_consumers").([]interface{})
-	for _, ap := range samenessConsumers {
-		consumers = append(consumers, map[string]any{"sameness_group": ap})
+	for _, sg := range samenessConsumers {
+		sgString := sg.(string)
+		consumers = append(consumers, multicluster.HashicorpConsulMulticlusterV2ExportedServicesConsumer{
+			SamenessGroup: &sgString,
+		})
 	}
-	data := map[string]any{"consumers": consumers}
 	services := d.Get("services").([]interface{})
-	if len(services) > 0 {
-		data["services"] = services
+	var servicesData []string
+	for _, s := range services {
+		servicesData = append(servicesData, s.(string))
 	}
-	wReq := &api.WriteRequest{
-		Metadata: nil,
-		Data:     data,
-		Owner:    nil,
-	}
-	resp, _, err := client.Resource().Apply(gvk, name, qOpts, wReq)
+	resp, err := doWriteForKind(client, name, kind, namespace, partition, servicesData, consumers)
 	if err != nil || resp == nil {
 		return fmt.Errorf("failed to write exported services config '%s': %v", name, err)
 	}
-	d.SetId(resp.ID.Type.Kind + resp.ID.Tenancy.Partition + resp.ID.Tenancy.Namespace + resp.ID.Name)
+
+	// Probably should parse the response body to get this instead of just relying on OK response
+	d.SetId(kind + partition + namespace + name)
 	sw := newStateWriter(d)
-	sw.set("name", resp.ID.Name)
-	sw.set("kind", resp.ID.Type.Kind)
-	sw.set("partition", resp.ID.Tenancy.Partition)
-	sw.set("namespace", resp.ID.Tenancy.Namespace)
+	sw.set("name", name)
+	sw.set("kind", kind)
+	sw.set("partition", partition)
+	sw.set("namespace", namespace)
 	return resourceConsulV2ExportedServicesRead(d, meta)
+}
+
+func doWriteForKind(client *multicluster.Client, name string, kind string, namespace string, partition string, services []string, consumers []multicluster.HashicorpConsulMulticlusterV2ExportedServicesConsumer) (*http.Response, error) {
+	group := "multicluster"
+	gv := "v2"
+	gvk := &multicluster.HashicorpConsulResourceType{
+		Group:        &group,
+		GroupVersion: &gv,
+		Kind:         &kind,
+	}
+	id := &multicluster.HashicorpConsulResourceID{
+		Name: &name,
+		Tenancy: &multicluster.HashicorpConsulResourceTenancy{
+			Namespace: &namespace,
+			Partition: &partition,
+		},
+		Type: gvk,
+	}
+
+	var resp *http.Response
+	var err error
+	switch kind {
+	case "ExportedServices":
+		wParams := &multicluster.WriteExportedServicesParams{
+			Peer:      nil,
+			Namespace: &namespace,
+			Ns:        nil, // why is this a thing?
+			Partition: &partition,
+		}
+		body := multicluster.WriteExportedServicesJSONRequestBody{
+			Data: &multicluster.HashicorpConsulMulticlusterV2ExportedServices{
+				Consumers: &consumers,
+				Services:  &services,
+			},
+			Id: id,
+		}
+		resp, err = client.WriteExportedServices(context.Background(), name, wParams, body, nil)
+	case "NamespaceExportedServices":
+		wParams := &multicluster.WriteNamespaceExportedServicesParams{
+			Peer:      nil,
+			Namespace: &namespace,
+			Ns:        nil, // why is this a thing?
+			Partition: &partition,
+		}
+		body := multicluster.WriteNamespaceExportedServicesJSONRequestBody{
+			Data: &multicluster.HashicorpConsulMulticlusterV2NamespaceExportedServices{
+				Consumers: &consumers,
+			},
+			Id: id,
+		}
+		resp, err = client.WriteNamespaceExportedServices(context.Background(), name, wParams, body, nil)
+	case "PartitionExportedServices":
+		wParams := &multicluster.WritePartitionExportedServicesParams{
+			Peer:      nil,
+			Partition: &partition,
+		}
+		body := multicluster.WritePartitionExportedServicesJSONRequestBody{
+			Data: &multicluster.HashicorpConsulMulticlusterV2PartitionExportedServices{
+				Consumers: &consumers,
+			},
+			Id: id,
+		}
+		resp, err = client.WritePartitionExportedServices(context.Background(), name, wParams, body)
+	}
+	return resp, err
 }
 
 func resourceConsulV2ExportedServicesRead(d *schema.ResourceData, meta interface{}) error {

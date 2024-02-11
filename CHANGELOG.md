@@ -151,7 +151,7 @@ NEW FEATURES:
 
 BUG FIXES:
 
-* The same API client is now reused across all operations ([[#233](https://github.com/hashicorp/terraform-provider-consul/issues/233)]).
+* The same API Client is now reused across all operations ([[#233](https://github.com/hashicorp/terraform-provider-consul/issues/233)]).
 
 ## 2.10.0 (September 18, 2020)
 
