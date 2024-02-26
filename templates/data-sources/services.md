@@ -50,7 +50,7 @@ The `query_options` block supports the following:
 * `allow_stale` - (Optional) When `true`, the default, allow responses from
   Consul servers that are followers.
 
-* `require_consistent` - (Optional) When `true` force the client to perform a
+* `require_consistent` - (Optional) When `true` force the Client to perform a
   read on at least quorum servers and verify the result is the same.  Defaults
   to `false`.
 
@@ -60,7 +60,7 @@ The `query_options` block supports the following:
 
 * `wait_index` - (Optional) Index number used to enable blocking queries.
 
-* `wait_time` - (Optional) Max time the client should wait for a blocking query
+* `wait_time` - (Optional) Max time the Client should wait for a blocking query
   to return.
 
 * `namespace` - (Optional, Enterprise Only) The namespace to lookup the services.

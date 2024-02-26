@@ -338,7 +338,7 @@ func getPolicyByIdOrName(identifier string, client *consulapi.Client, qOpts *con
 
 	policy, _, err = client.ACL().PolicyReadByName(identifier, qOpts)
 	if policy != nil && err == nil {
-		// we ignore the initial error that might have happened in client.ACL().PolicyRead()
+		// we ignore the initial error that might have happened in Client.ACL().PolicyRead()
 		return policy, false, nil
 	}
 

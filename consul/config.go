@@ -10,6 +10,9 @@ import (
 	"strings"
 
 	consulapi "github.com/hashicorp/consul/api"
+
+	"github.com/hashicorp/terraform-provider-consul/consul/tools"
+	multicluster "github.com/hashicorp/terraform-provider-consul/consul/tools/openapi"
 )
 
 // Config is configuration defined in the provider block
@@ -29,11 +32,12 @@ type Config struct {
 	InsecureHttps bool   `mapstructure:"insecure_https"`
 	Namespace     string `mapstructure:"namespace"`
 
-	client *consulapi.Client
+	Client   *consulapi.Client
+	V2Client *multicluster.Client
 }
 
-// Client returns a new client for accessing consul.
-func (c *Config) Client() (*consulapi.Client, error) {
+// Client returns a new Client for accessing consul.
+func (c *Config) getApiConfig() (*consulapi.Config, error) {
 	config := consulapi.DefaultConfig()
 	if c.Datacenter != "" {
 		config.Datacenter = c.Datacenter
@@ -74,7 +78,7 @@ func (c *Config) Client() (*consulapi.Client, error) {
 	}
 
 	// This is a temporary workaround to add the Content-Type header when
-	// needed until the fix is released in the Consul api client.
+	// needed until the fix is released in the Consul api Client.
 	config.HttpClient = &http.Client{
 		Transport: transport{config.Transport},
 	}
@@ -83,7 +87,7 @@ func (c *Config) Client() (*consulapi.Client, error) {
 		tlsClientConfig, err := consulapi.SetupTLSConfig(&config.TLSConfig)
 
 		if err != nil {
-			return nil, fmt.Errorf("failed to create http client: %s", err)
+			return nil, fmt.Errorf("failed to create http Client config: %s", err)
 		}
 
 		config.Transport.TLSClientConfig = tlsClientConfig
@@ -104,10 +108,19 @@ func (c *Config) Client() (*consulapi.Client, error) {
 	if c.Token != "" {
 		config.Token = c.Token
 	}
+	return config, nil
+}
+
+func (c *Config) getClient() (*consulapi.Client, error) {
+
+	config, err := c.getApiConfig()
+	if err != nil {
+		return nil, err
+	}
 
 	client, err := consulapi.NewClient(config)
 
-	log.Printf("[INFO] Consul Client configured with address: '%s', scheme: '%s', datacenter: '%s'"+
+	log.Printf("[INFO] Consul getClient configured with address: '%s', scheme: '%s', datacenter: '%s'"+
 		", insecure_https: '%t'", config.Address, config.Scheme, config.Datacenter, config.TLSConfig.InsecureSkipVerify)
 	if err != nil {
 		return nil, err
@@ -115,8 +128,32 @@ func (c *Config) Client() (*consulapi.Client, error) {
 	return client, nil
 }
 
+func (c *Config) getV2Client() (*multicluster.Client, error) {
+	apiConfig, err := c.getApiConfig()
+	if err != nil {
+		return nil, err
+	}
+	httpClient, err := tools.NewHttpClient(apiConfig.Transport, apiConfig.TLSConfig)
+	if err != nil {
+		return nil, err
+	}
+
+	// build server including scheme and address
+	serverUrl := apiConfig.Address
+	if apiConfig.Scheme != "" {
+		serverUrl = apiConfig.Scheme + "://" + serverUrl
+	}
+
+	v2Client := &multicluster.Client{
+		Server:         serverUrl,
+		Client:         httpClient,
+		RequestEditors: nil,
+	}
+	return v2Client, nil
+}
+
 // transport adds the Content-Type header to all requests that might need it
-// until we update the API client to a version with
+// until we update the API Client to a version with
 // https://github.com/hashicorp/consul/pull/10204 at which time we will be able
 // to remove this hack.
 type transport struct {

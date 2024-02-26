@@ -72,7 +72,7 @@ The known compatibility between this provider and Consul is:
 - `address` (String) The HTTP(S) API address of the agent to use. Defaults to "127.0.0.1:8500".
 - `auth_jwt` (Block List, Max: 1) Authenticates to Consul using a JWT authentication method. (see [below for nested schema](#nestedblock--auth_jwt))
 - `ca_file` (String) A path to a PEM-encoded certificate authority used to verify the remote agent's certificate.
-- `ca_path` (String) A path to a directory of PEM-encoded certificate authority files to use to check the authenticity of client and server connections. Can also be specified with the `CONSUL_CAPATH` environment variable.
+- `ca_path` (String) A path to a directory of PEM-encoded certificate authority files to use to check the authenticity of Client and server connections. Can also be specified with the `CONSUL_CAPATH` environment variable.
 - `ca_pem` (String) PEM-encoded certificate authority used to verify the remote agent's certificate.
 - `cert_file` (String) A path to a PEM-encoded certificate provided to the remote agent; requires use of `key_file` or `key_pem`.
 - `cert_pem` (String) PEM-encoded certificate provided to the remote agent; requires use of `key_file` or `key_pem`.

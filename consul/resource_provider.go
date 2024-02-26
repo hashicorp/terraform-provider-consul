@@ -15,6 +15,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 	"github.com/mitchellh/mapstructure"
+
+	multicluster "github.com/hashicorp/terraform-provider-consul/consul/tools/openapi"
 )
 
 var (
@@ -113,7 +115,7 @@ func Provider() terraform.ResourceProvider {
 				Type:        schema.TypeString,
 				Optional:    true,
 				DefaultFunc: schema.EnvDefaultFunc("CONSUL_CAPATH", ""),
-				Description: "A path to a directory of PEM-encoded certificate authority files to use to check the authenticity of client and server connections. Can also be specified with the `CONSUL_CAPATH` environment variable.",
+				Description: "A path to a directory of PEM-encoded certificate authority files to use to check the authenticity of Client and server connections. Can also be specified with the `CONSUL_CAPATH` environment variable.",
 			},
 
 			"insecure_https": {
@@ -196,26 +198,27 @@ func Provider() terraform.ResourceProvider {
 		},
 
 		DataSourcesMap: map[string]*schema.Resource{
-			"consul_agent_self":           dataSourceConsulAgentSelf(),
-			"consul_agent_config":         dataSourceConsulAgentConfig(),
-			"consul_autopilot_health":     dataSourceConsulAutopilotHealth(),
-			"consul_nodes":                dataSourceConsulNodes(),
-			"consul_service":              dataSourceConsulService(),
-			"consul_service_health":       dataSourceConsulServiceHealth(),
-			"consul_services":             dataSourceConsulServices(),
-			"consul_keys":                 dataSourceConsulKeys(),
-			"consul_key_prefix":           dataSourceConsulKeyPrefix(),
-			"consul_acl_auth_method":      dataSourceConsulACLAuthMethod(),
-			"consul_acl_policy":           dataSourceConsulACLPolicy(),
-			"consul_acl_role":             dataSourceConsulACLRole(),
-			"consul_acl_token":            dataSourceConsulACLToken(),
-			"consul_acl_token_secret_id":  dataSourceConsulACLTokenSecretID(),
-			"consul_network_segments":     dataSourceConsulNetworkSegments(),
-			"consul_network_area_members": dataSourceConsulNetworkAreaMembers(),
-			"consul_datacenters":          dataSourceConsulDatacenters(),
-			"consul_config_entry":         dataSourceConsulConfigEntry(),
-			"consul_peering":              dataSourceConsulPeering(),
-			"consul_peerings":             dataSourceConsulPeerings(),
+			"consul_agent_self":                        dataSourceConsulAgentSelf(),
+			"consul_agent_config":                      dataSourceConsulAgentConfig(),
+			"consul_autopilot_health":                  dataSourceConsulAutopilotHealth(),
+			"consul_nodes":                             dataSourceConsulNodes(),
+			"consul_service":                           dataSourceConsulService(),
+			"consul_service_health":                    dataSourceConsulServiceHealth(),
+			"consul_services":                          dataSourceConsulServices(),
+			"consul_keys":                              dataSourceConsulKeys(),
+			"consul_key_prefix":                        dataSourceConsulKeyPrefix(),
+			"consul_acl_auth_method":                   dataSourceConsulACLAuthMethod(),
+			"consul_acl_policy":                        dataSourceConsulACLPolicy(),
+			"consul_acl_role":                          dataSourceConsulACLRole(),
+			"consul_acl_token":                         dataSourceConsulACLToken(),
+			"consul_acl_token_secret_id":               dataSourceConsulACLTokenSecretID(),
+			"consul_network_segments":                  dataSourceConsulNetworkSegments(),
+			"consul_network_area_members":              dataSourceConsulNetworkAreaMembers(),
+			"consul_datacenters":                       dataSourceConsulDatacenters(),
+			"consul_config_entry":                      dataSourceConsulConfigEntry(),
+			"consul_config_entry_v2_exported_services": dataSourceConsulConfigEntryV2ExportedServices(),
+			"consul_peering":                           dataSourceConsulPeering(),
+			"consul_peerings":                          dataSourceConsulPeerings(),
 
 			// Aliases to limit the impact of rename of catalog
 			// datasources
@@ -225,38 +228,39 @@ func Provider() terraform.ResourceProvider {
 		},
 
 		ResourcesMap: map[string]*schema.Resource{
-			"consul_acl_auth_method":                 resourceConsulACLAuthMethod(),
-			"consul_acl_binding_rule":                resourceConsulACLBindingRule(),
-			"consul_acl_policy":                      resourceConsulACLPolicy(),
-			"consul_acl_role_policy_attachment":      resourceConsulACLRolePolicyAttachment(),
-			"consul_acl_role":                        resourceConsulACLRole(),
-			"consul_acl_token_policy_attachment":     resourceConsulACLTokenPolicyAttachment(),
-			"consul_acl_token_role_attachment":       resourceConsulACLTokenRoleAttachment(),
-			"consul_acl_token":                       resourceConsulACLToken(),
-			"consul_admin_partition":                 resourceConsulAdminPartition(),
-			"consul_agent_service":                   resourceConsulAgentService(),
-			"consul_autopilot_config":                resourceConsulAutopilotConfig(),
-			"consul_catalog_entry":                   resourceConsulCatalogEntry(),
-			"consul_certificate_authority":           resourceConsulCertificateAuthority(),
-			"consul_config_entry_service_defaults":   resourceFromConfigEntryImplementation(&serviceDefaults{}),
-			"consul_config_entry_service_intentions": resourceFromConfigEntryImplementation(&serviceIntentions{}),
-			"consul_config_entry_service_resolver":   resourceFromConfigEntryImplementation(&serviceResolver{}),
-			"consul_config_entry_service_router":     resourceFromConfigEntryImplementation(&serviceRouter{}),
-			"consul_config_entry_service_splitter":   resourceFromConfigEntryImplementation(&serviceSplitter{}),
-			"consul_config_entry":                    resourceConsulConfigEntry(),
-			"consul_intention":                       resourceConsulIntention(),
-			"consul_key_prefix":                      resourceConsulKeyPrefix(),
-			"consul_keys":                            resourceConsulKeys(),
-			"consul_license":                         resourceConsulLicense(),
-			"consul_namespace_policy_attachment":     resourceConsulNamespacePolicyAttachment(),
-			"consul_namespace_role_attachment":       resourceConsulNamespaceRoleAttachment(),
-			"consul_namespace":                       resourceConsulNamespace(),
-			"consul_network_area":                    resourceConsulNetworkArea(),
-			"consul_node":                            resourceConsulNode(),
-			"consul_peering_token":                   resourceSourceConsulPeeringToken(),
-			"consul_peering":                         resourceSourceConsulPeering(),
-			"consul_prepared_query":                  resourceConsulPreparedQuery(),
-			"consul_service":                         resourceConsulService(),
+			"consul_acl_auth_method":                   resourceConsulACLAuthMethod(),
+			"consul_acl_binding_rule":                  resourceConsulACLBindingRule(),
+			"consul_acl_policy":                        resourceConsulACLPolicy(),
+			"consul_acl_role_policy_attachment":        resourceConsulACLRolePolicyAttachment(),
+			"consul_acl_role":                          resourceConsulACLRole(),
+			"consul_acl_token_policy_attachment":       resourceConsulACLTokenPolicyAttachment(),
+			"consul_acl_token_role_attachment":         resourceConsulACLTokenRoleAttachment(),
+			"consul_acl_token":                         resourceConsulACLToken(),
+			"consul_admin_partition":                   resourceConsulAdminPartition(),
+			"consul_agent_service":                     resourceConsulAgentService(),
+			"consul_autopilot_config":                  resourceConsulAutopilotConfig(),
+			"consul_catalog_entry":                     resourceConsulCatalogEntry(),
+			"consul_certificate_authority":             resourceConsulCertificateAuthority(),
+			"consul_config_entry_v2_exported_services": resourceConsulV2ExportedServices(),
+			"consul_config_entry_service_defaults":     resourceFromConfigEntryImplementation(&serviceDefaults{}),
+			"consul_config_entry_service_intentions":   resourceFromConfigEntryImplementation(&serviceIntentions{}),
+			"consul_config_entry_service_resolver":     resourceFromConfigEntryImplementation(&serviceResolver{}),
+			"consul_config_entry_service_router":       resourceFromConfigEntryImplementation(&serviceRouter{}),
+			"consul_config_entry_service_splitter":     resourceFromConfigEntryImplementation(&serviceSplitter{}),
+			"consul_config_entry":                      resourceConsulConfigEntry(),
+			"consul_intention":                         resourceConsulIntention(),
+			"consul_key_prefix":                        resourceConsulKeyPrefix(),
+			"consul_keys":                              resourceConsulKeys(),
+			"consul_license":                           resourceConsulLicense(),
+			"consul_namespace_policy_attachment":       resourceConsulNamespacePolicyAttachment(),
+			"consul_namespace_role_attachment":         resourceConsulNamespaceRoleAttachment(),
+			"consul_namespace":                         resourceConsulNamespace(),
+			"consul_network_area":                      resourceConsulNetworkArea(),
+			"consul_node":                              resourceConsulNode(),
+			"consul_peering_token":                     resourceSourceConsulPeeringToken(),
+			"consul_peering":                           resourceSourceConsulPeering(),
+			"consul_prepared_query":                    resourceConsulPreparedQuery(),
+			"consul_service":                           resourceConsulService(),
 		},
 
 		ConfigureFunc: providerConfigure,
@@ -269,12 +273,21 @@ func providerConfigure(d *schema.ResourceData) (interface{}, error) {
 	if err := mapstructure.Decode(configRaw, &config); err != nil {
 		return nil, err
 	}
-	log.Printf("[INFO] Initializing Consul client")
-	client, err := config.Client()
+	log.Printf("[INFO] Initializing Consul Clients")
+
+	// configure V1 client
+	client, err := config.getClient()
 	if err != nil {
 		return nil, err
 	}
-	config.client = client
+	config.Client = client
+
+	// Configure the v2 client
+	v2Client, err := config.getV2Client()
+	if err != nil {
+		return nil, err
+	}
+	config.V2Client = v2Client
 
 	// Set headers if provided
 	headers := d.Get("header").([]interface{})
@@ -329,7 +342,15 @@ func providerConfigure(d *schema.ResourceData) (interface{}, error) {
 
 func getClient(d *schema.ResourceData, meta interface{}) (*consulapi.Client, *consulapi.QueryOptions, *consulapi.WriteOptions) {
 	config := meta.(*Config)
-	client := config.client
+	client := config.Client
+
+	qOpts, wOpts := getOptions(d, config)
+	return client, qOpts, wOpts
+}
+
+func getMulticlusterV2Client(d *schema.ResourceData, meta interface{}) (*multicluster.Client, *consulapi.QueryOptions, *consulapi.WriteOptions) {
+	config := meta.(*Config)
+	client := config.V2Client
 
 	qOpts, wOpts := getOptions(d, config)
 	return client, qOpts, wOpts
@@ -337,7 +358,7 @@ func getClient(d *schema.ResourceData, meta interface{}) (*consulapi.Client, *co
 
 func getOptions(d *schema.ResourceData, meta interface{}) (*consulapi.QueryOptions, *consulapi.WriteOptions) {
 	config := meta.(*Config)
-	client := config.client
+	client := config.Client
 	var dc, token, namespace, partition string
 
 	if v, ok := d.GetOk("datacenter"); ok {

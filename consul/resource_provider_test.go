@@ -48,7 +48,7 @@ func TestResourceProvider(t *testing.T) {
 				data "consul_key_prefix" "app" {
 					path_prefix = "test"
 				}`,
-			ExpectError: regexp.MustCompile("server gave HTTP response to HTTPS client"),
+			ExpectError: regexp.MustCompile("server gave HTTP response to HTTPS Client"),
 		},
 		"insecure_https": {
 			Config: `
@@ -60,7 +60,7 @@ func TestResourceProvider(t *testing.T) {
 				data "consul_key_prefix" "app" {
 					path_prefix = "test"
 				}`,
-			ExpectError: regexp.MustCompile("server gave HTTP response to HTTPS client"),
+			ExpectError: regexp.MustCompile("server gave HTTP response to HTTPS Client"),
 		},
 		"insecure_https_err": {
 			Config: `
@@ -350,7 +350,7 @@ func waitForService(t *testing.T, address string) (terraform.ResourceProvider, *
 	config.Token = initialManagementToken
 	client, err := consulapi.NewClient(config)
 	if err != nil {
-		t.Fatalf("failed to instantiate client: %v", err)
+		t.Fatalf("failed to instantiate Client: %v", err)
 	}
 
 	logger := func(format string, args ...any) {}
