@@ -7,7 +7,6 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"github.com/hashicorp/consul/api"
 	pbmulticluster "github.com/hashicorp/consul/proto-public/pbmulticluster/v2"
 	"github.com/hashicorp/consul/proto-public/pbresource"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
@@ -94,10 +93,10 @@ func resourceConsulV2ExportedServicesCreate(d *schema.ResourceData, meta interfa
 }
 
 func resourceConsulV2ExportedServicesUpdate(d *schema.ResourceData, meta interface{}) error {
-	client, qOpts, _ := getClient(d, meta)
+	client, _, wOpts := getClient(d, meta)
 	name := d.Get("name").(string)
 	kind := d.Get("kind").(string)
-	gvk := &api.GVK{
+	gvk := &GVK{
 		Group:   "multicluster",
 		Version: "v2",
 		Kind:    kind,
@@ -112,20 +111,20 @@ func resourceConsulV2ExportedServicesUpdate(d *schema.ResourceData, meta interfa
 		consumers = append(consumers, map[string]any{"partition": ap})
 	}
 	samenessConsumers := d.Get("sameness_group_consumers").([]interface{})
-	for _, ap := range samenessConsumers {
-		consumers = append(consumers, map[string]any{"sameness_group": ap})
+	for _, sg := range samenessConsumers {
+		consumers = append(consumers, map[string]any{"sameness_group": sg})
 	}
 	data := map[string]any{"consumers": consumers}
 	services := d.Get("services").([]interface{})
 	if len(services) > 0 {
 		data["services"] = services
 	}
-	wReq := &api.WriteRequest{
+	wReq := &V2WriteRequest{
 		Metadata: nil,
 		Data:     data,
 		Owner:    nil,
 	}
-	resp, _, err := client.Resource().Apply(gvk, name, qOpts, wReq)
+	resp, _, err := v2MulticlusterApply(client, gvk, name, wOpts, wReq)
 	if err != nil || resp == nil {
 		return fmt.Errorf("failed to write exported services config '%s': %v", name, err)
 	}
@@ -142,12 +141,12 @@ func resourceConsulV2ExportedServicesRead(d *schema.ResourceData, meta interface
 	client, qOpts, _ := getClient(d, meta)
 	name := d.Get("name").(string)
 	kind := d.Get("kind").(string)
-	gvk := &api.GVK{
+	gvk := &GVK{
 		Group:   "multicluster",
 		Version: "v2",
 		Kind:    kind,
 	}
-	resp, err := client.Resource().Read(gvk, name, qOpts)
+	resp, err := v2MulticlusterRead(client, gvk, name, qOpts)
 	if err != nil || resp == nil {
 		return fmt.Errorf("exported services config not found: %s", name)
 	}
@@ -196,11 +195,11 @@ func resourceConsulV2ExportedServicesRead(d *schema.ResourceData, meta interface
 
 func resourceConsulV2ExportedServicesDelete(d *schema.ResourceData, meta interface{}) error {
 	client, qOpts, _ := getClient(d, meta)
-	gvk := &api.GVK{
+	gvk := &GVK{
 		Group:   "multicluster",
 		Version: "v2",
 		Kind:    "ExportedServices",
 	}
 	name := d.Get("name").(string)
-	return client.Resource().Delete(gvk, name, qOpts)
+	return v2MulticlusterDelete(client, gvk, name, qOpts)
 }

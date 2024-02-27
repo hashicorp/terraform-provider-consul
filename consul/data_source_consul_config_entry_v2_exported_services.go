@@ -7,7 +7,6 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"github.com/hashicorp/consul/api"
 	pbmulticluster "github.com/hashicorp/consul/proto-public/pbmulticluster/v2"
 	"github.com/hashicorp/consul/proto-public/pbresource"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
@@ -84,12 +83,12 @@ func dataSourceConsulV2ExportedServicesRead(d *schema.ResourceData, meta interfa
 	client, qOpts, _ := getClient(d, meta)
 	name := d.Get("name").(string)
 	kind := d.Get("kind").(string)
-	gvk := &api.GVK{
+	gvk := &GVK{ //&api.GVK{
 		Group:   "multicluster",
 		Version: "v2",
 		Kind:    kind,
 	}
-	resp, err := client.Resource().Read(gvk, name, qOpts)
+	resp, err := v2MulticlusterRead(client, gvk, name, qOpts)
 	if err != nil || resp == nil {
 		return fmt.Errorf("exported services config not found: %s", name)
 	}

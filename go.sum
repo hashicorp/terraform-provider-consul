@@ -410,12 +410,8 @@ github.com/googleapis/gax-go/v2 v2.7.1 h1:gF4c0zjUP2H/s/hEGyLA3I0fA2ZWjzYiONAD6c
 github.com/googleapis/gax-go/v2 v2.7.1/go.mod h1:4orTrqY6hXxxaUL4LHIPl6lGo8vAE38/qKbhSAKP6QI=
 github.com/googleapis/go-type-adapters v1.0.0/go.mod h1:zHW75FOG2aur7gAO2B+MLby+cLsWGBF62rFAi7WjWO4=
 github.com/grpc-ecosystem/grpc-gateway v1.16.0/go.mod h1:BDjrQk3hbvj6Nolgz8mAMFbcEtjT1g+wF4CSlocrBnw=
-github.com/hashicorp/consul/api v1.10.1-0.20240122152324-758ddf84e9c9 h1:qaS6rE768dt5hGPl2y4DIABXF4eA23BNSmWFpEr3kWQ=
-github.com/hashicorp/consul/api v1.10.1-0.20240122152324-758ddf84e9c9/go.mod h1:gInwZGrnWlE1Vvq6rSD5pUf6qwNa69NTLLknbdwQRUk=
-github.com/hashicorp/consul/api v1.10.1-0.20240209045659-981288e4082a h1:j2KLnImjuFUjhYK7Ly63dMVW7GWRFuPn5L1RIFoDye0=
-github.com/hashicorp/consul/api v1.10.1-0.20240209045659-981288e4082a/go.mod h1:gInwZGrnWlE1Vvq6rSD5pUf6qwNa69NTLLknbdwQRUk=
-github.com/hashicorp/consul/api v1.10.1-0.20240209095413-ae9fb4c83d42 h1:72SNfzBZccnJQ6diaGmUT6vHHzG5lcb4GiYAaED9kcM=
-github.com/hashicorp/consul/api v1.10.1-0.20240209095413-ae9fb4c83d42/go.mod h1:XOFRmXaFsTMJIU9jGh0iZQs54SizswiA7lIGfOOX0j0=
+github.com/hashicorp/consul/api v1.10.1-0.20240227042019-fd46676f3cb7 h1:SAnmime+Oi0TUG6q4uf0J9K/qgA5zmlvQCLxLO/hpGs=
+github.com/hashicorp/consul/api v1.10.1-0.20240227042019-fd46676f3cb7/go.mod h1:kAuXnZ0r0y/uLXcy8+aexlGVonsgt3nR552fwkbBnMc=
 github.com/hashicorp/consul/proto-public v0.1.2-0.20240208173503-e72afa654d22 h1:PQQfwXeitSSyeXffKDTB/pOpxOKodgXEiNYcEFpgEMI=
 github.com/hashicorp/consul/proto-public v0.1.2-0.20240208173503-e72afa654d22/go.mod h1:JF6983XNCzvw4wDNOLEwLqOq2IPw7iyT+pkswHSz08U=
 github.com/hashicorp/consul/sdk v0.15.0 h1:2qK9nDrr4tiJKRoxPGhm6B7xJjLVIQqkjiab2M4aKjU=
@@ -1232,8 +1228,8 @@ google.golang.org/protobuf v1.26.0/go.mod h1:9q0QmTI4eRPtz6boOQmLYwt+qCgq0jsYwAQ
 google.golang.org/protobuf v1.27.1/go.mod h1:9q0QmTI4eRPtz6boOQmLYwt+qCgq0jsYwAQnmE0givc=
 google.golang.org/protobuf v1.28.0/go.mod h1:HV8QOd/L58Z+nl8r43ehVNZIU/HEI6OcFqwMG9pJV4I=
 google.golang.org/protobuf v1.28.1/go.mod h1:HV8QOd/L58Z+nl8r43ehVNZIU/HEI6OcFqwMG9pJV4I=
-google.golang.org/protobuf v1.30.0 h1:kPPoIgf3TsEvrm0PFe15JQ+570QVxYzEvvHqChK+cng=
-google.golang.org/protobuf v1.30.0/go.mod h1:HV8QOd/L58Z+nl8r43ehVNZIU/HEI6OcFqwMG9pJV4I=
+google.golang.org/protobuf v1.32.0 h1:pPC6BG5ex8PDFnkbrGU3EixyhKcQ2aDuBS36lqK/C7I=
+google.golang.org/protobuf v1.32.0/go.mod h1:c6P6GXX6sHbq/GpV6MGZEdwhWPcYBgnhAHhKbcUYpos=
 gopkg.in/alecthomas/kingpin.v2 v2.2.6/go.mod h1:FMv+mEhP44yOT+4EoQTLFTRgOQ1FBLkstjWtayDeSgw=
 gopkg.in/check.v1 v0.0.0-20161208181325-20d25e280405/go.mod h1:Co6ibVJAznAaIkqp8huTwlJQCZ016jof/cbN4VW5Yz0=
 gopkg.in/check.v1 v1.0.0-20180628173108-788fd7840127/go.mod h1:Co6ibVJAznAaIkqp8huTwlJQCZ016jof/cbN4VW5Yz0=

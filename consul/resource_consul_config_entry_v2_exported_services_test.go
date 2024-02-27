@@ -10,13 +10,15 @@ import (
 )
 
 func TestAccConsulExportedServicesV2_basic(t *testing.T) {
-	providers, _ := startTestServer(t)
+	providers, client := startTestServer(t)
 
 	resource.Test(t, resource.TestCase{
 		Providers: providers,
+		PreCheck:  func() { skipTestOnConsulCommunityEdition(t) },
 		Steps: []resource.TestStep{
 			{
-				Config: testAccConsulExportedServicesV2Basic,
+				Config:   testAccConsulExportedServicesV2Basic,
+				SkipFunc: skipIfConsulVersionLT(client, "1.18.0"),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("consul_config_entry_v2_exported_services.test", "name", "test"),
 					resource.TestCheckResourceAttr("consul_config_entry_v2_exported_services.test", "kind", "ExportedServices"),
@@ -29,7 +31,8 @@ func TestAccConsulExportedServicesV2_basic(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccConsulNamespaceExportedServicesV2Basic,
+				Config:   testAccConsulNamespaceExportedServicesV2Basic,
+				SkipFunc: skipIfConsulVersionLT(client, "1.18.0"),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("consul_config_entry_v2_exported_services.nstest", "name", "nstest"),
 					resource.TestCheckResourceAttr("consul_config_entry_v2_exported_services.nstest", "kind", "NamespaceExportedServices"),
@@ -42,7 +45,8 @@ func TestAccConsulExportedServicesV2_basic(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccConsulPartitionExportedServicesV2Basic,
+				Config:   testAccConsulPartitionExportedServicesV2Basic,
+				SkipFunc: skipIfConsulVersionLT(client, "1.18.0"),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("consul_config_entry_v2_exported_services.ptest", "name", "ptest"),
 					resource.TestCheckResourceAttr("consul_config_entry_v2_exported_services.ptest", "kind", "PartitionExportedServices"),
