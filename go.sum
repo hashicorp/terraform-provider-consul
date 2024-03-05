@@ -410,10 +410,10 @@ github.com/googleapis/gax-go/v2 v2.7.1 h1:gF4c0zjUP2H/s/hEGyLA3I0fA2ZWjzYiONAD6c
 github.com/googleapis/gax-go/v2 v2.7.1/go.mod h1:4orTrqY6hXxxaUL4LHIPl6lGo8vAE38/qKbhSAKP6QI=
 github.com/googleapis/go-type-adapters v1.0.0/go.mod h1:zHW75FOG2aur7gAO2B+MLby+cLsWGBF62rFAi7WjWO4=
 github.com/grpc-ecosystem/grpc-gateway v1.16.0/go.mod h1:BDjrQk3hbvj6Nolgz8mAMFbcEtjT1g+wF4CSlocrBnw=
-github.com/hashicorp/consul/api v1.10.1-0.20240227042019-fd46676f3cb7 h1:SAnmime+Oi0TUG6q4uf0J9K/qgA5zmlvQCLxLO/hpGs=
-github.com/hashicorp/consul/api v1.10.1-0.20240227042019-fd46676f3cb7/go.mod h1:kAuXnZ0r0y/uLXcy8+aexlGVonsgt3nR552fwkbBnMc=
-github.com/hashicorp/consul/proto-public v0.1.2-0.20240208173503-e72afa654d22 h1:PQQfwXeitSSyeXffKDTB/pOpxOKodgXEiNYcEFpgEMI=
-github.com/hashicorp/consul/proto-public v0.1.2-0.20240208173503-e72afa654d22/go.mod h1:JF6983XNCzvw4wDNOLEwLqOq2IPw7iyT+pkswHSz08U=
+github.com/hashicorp/consul/api v1.10.1-0.20240305172350-4e7982a5b707 h1:MrRUoVSf9aqxENuxLggbawazAkaiHMMX4KZR8Q0lv/s=
+github.com/hashicorp/consul/api v1.10.1-0.20240305172350-4e7982a5b707/go.mod h1:GmIks4tBN5K6CD5UG2yS5IHR/UryqfZ31YBqPh/pA8E=
+github.com/hashicorp/consul/proto-public v0.6.0 h1:9qrBujmoTB5gQQ84kQO+YWvhjgYoYBNrOoHdo4cpHHM=
+github.com/hashicorp/consul/proto-public v0.6.0/go.mod h1:JF6983XNCzvw4wDNOLEwLqOq2IPw7iyT+pkswHSz08U=
 github.com/hashicorp/consul/sdk v0.15.0 h1:2qK9nDrr4tiJKRoxPGhm6B7xJjLVIQqkjiab2M4aKjU=
 github.com/hashicorp/consul/sdk v0.15.0/go.mod h1:r/OmRRPbHOe0yxNahLw7G9x5WG17E1BIECMtCjcPSNo=
 github.com/hashicorp/errwrap v1.0.0/go.mod h1:YH+1FKiLXxHSkmPseP+kNlulaMuP3n2brvKWEqk/Jc4=

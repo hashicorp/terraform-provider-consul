@@ -1,11 +1,8 @@
 module github.com/hashicorp/terraform-provider-consul
 
-// We need to use a replace directive instead of directly pinning because `api` requires version `0.5.1` and will clobber the pin, but not the replace directive.
-replace github.com/hashicorp/consul/proto-public => github.com/hashicorp/consul/proto-public v0.1.2-0.20240208173503-e72afa654d22
-
 require (
-	github.com/hashicorp/consul/api v1.10.1-0.20240227042019-fd46676f3cb7
-	github.com/hashicorp/consul/proto-public v0.5.2
+	github.com/hashicorp/consul/api v1.10.1-0.20240305172350-4e7982a5b707
+	github.com/hashicorp/consul/proto-public v0.6.0
 	github.com/hashicorp/errwrap v1.1.0
 	github.com/hashicorp/terraform-plugin-sdk v1.17.2
 	github.com/mitchellh/mapstructure v1.5.0
