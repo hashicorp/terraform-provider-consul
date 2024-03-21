@@ -102,16 +102,13 @@ func resourceConsulV2ExportedServicesUpdate(d *schema.ResourceData, meta interfa
 		Kind:    kind,
 	}
 	var consumers []map[string]any
-	peerConsumers := d.Get("peer_consumers").([]interface{})
-	for _, p := range peerConsumers {
+	for _, p := range d.Get("peer_consumers").([]interface{}) {
 		consumers = append(consumers, map[string]any{"peer": p})
 	}
-	partitionConsumers := d.Get("partition_consumers").([]interface{})
-	for _, ap := range partitionConsumers {
+	for _, ap := range d.Get("partition_consumers").([]interface{}) {
 		consumers = append(consumers, map[string]any{"partition": ap})
 	}
-	samenessConsumers := d.Get("sameness_group_consumers").([]interface{})
-	for _, sg := range samenessConsumers {
+	for _, sg := range d.Get("sameness_group_consumers").([]interface{}) {
 		consumers = append(consumers, map[string]any{"sameness_group": sg})
 	}
 	data := map[string]any{"consumers": consumers}
@@ -142,8 +139,8 @@ func resourceConsulV2ExportedServicesRead(d *schema.ResourceData, meta interface
 	name := d.Get("name").(string)
 	kind := d.Get("kind").(string)
 	gvk := &GVK{
-		Group:   "multicluster",
-		Version: "v2",
+		Group:   pbmulticluster.GroupName,
+		Version: pbmulticluster.Version,
 		Kind:    kind,
 	}
 	resp, err := v2MulticlusterRead(client, gvk, name, qOpts)
@@ -164,7 +161,7 @@ func resourceConsulV2ExportedServicesRead(d *schema.ResourceData, meta interface
 	}
 	id := &pbresource.ID{}
 	if err = protojson.Unmarshal(respID, id); err != nil {
-		return fmt.Errorf("Failed to unmarshal to proto message: %v", err)
+		return fmt.Errorf("failed to unmarshal to proto message: %v", err)
 	}
 	var partitions []string
 	var peers []string
@@ -195,10 +192,11 @@ func resourceConsulV2ExportedServicesRead(d *schema.ResourceData, meta interface
 
 func resourceConsulV2ExportedServicesDelete(d *schema.ResourceData, meta interface{}) error {
 	client, qOpts, _ := getClient(d, meta)
+	kind := d.Get("kind").(string)
 	gvk := &GVK{
-		Group:   "multicluster",
-		Version: "v2",
-		Kind:    "ExportedServices",
+		Group:   pbmulticluster.GroupName,
+		Version: pbmulticluster.Version,
+		Kind:    kind,
 	}
 	name := d.Get("name").(string)
 	return v2MulticlusterDelete(client, gvk, name, qOpts)

@@ -83,13 +83,13 @@ func dataSourceConsulV2ExportedServicesRead(d *schema.ResourceData, meta interfa
 	client, qOpts, _ := getClient(d, meta)
 	name := d.Get("name").(string)
 	kind := d.Get("kind").(string)
-	gvk := &GVK{ //&api.GVK{
-		Group:   "multicluster",
-		Version: "v2",
+	gvk := &GVK{
+		Group:   pbmulticluster.GroupName,
+		Version: pbmulticluster.Version,
 		Kind:    kind,
 	}
 	resp, err := v2MulticlusterRead(client, gvk, name, qOpts)
-	if err != nil || resp == nil {
+	if err != nil || resp == nil || resp["id"] == nil || resp["data"] == nil {
 		return fmt.Errorf("exported services config not found: %s", name)
 	}
 	respData, err := json.Marshal(resp["data"])
@@ -106,7 +106,7 @@ func dataSourceConsulV2ExportedServicesRead(d *schema.ResourceData, meta interfa
 	}
 	id := &pbresource.ID{}
 	if err = protojson.Unmarshal(respID, id); err != nil {
-		return fmt.Errorf("Failed to unmarshal to proto message: %v", err)
+		return fmt.Errorf("failed to unmarshal to proto message: %v", err)
 	}
 	var partitions []string
 	var peers []string
