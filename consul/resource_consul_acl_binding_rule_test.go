@@ -74,7 +74,7 @@ func TestAccConsulACLBindingRule_basic(t *testing.T) {
 			},
 			{
 				Config:      testResourceACLBindingRuleConfig_wrongType,
-				ExpectError: regexp.MustCompile(`Invalid Binding Rule: unknown BindType "foobar"`),
+				ExpectError: regexp.MustCompile(`unknown BindType "foobar"`),
 			},
 		},
 	})
