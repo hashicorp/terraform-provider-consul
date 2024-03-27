@@ -434,30 +434,32 @@ func (s *serviceIntentions) Write(ce consulapi.ConfigEntry, d *schema.ResourceDa
 	}
 	sw.set("meta", meta)
 
-	jwt := make([]map[string]interface{}, 1)
-	jwt[0] = make(map[string]interface{})
-	jwt[0]["providers"] = make([]map[string]interface{}, 0)
-	jwtProviders := make([]map[string]interface{}, 0)
-	for _, jwtProvider := range si.JWT.Providers {
-		jwtProviderMap := make(map[string]interface{})
-		jwtProviderMap["name"] = jwtProvider.Name
-		verifyClaims := make([]map[string]interface{}, 0)
-		for _, vc := range jwtProvider.VerifyClaims {
-			vcMap := make(map[string]interface{})
-			vcPaths := make([]string, 0)
-			for _, p := range vc.Path {
-				vcPaths = append(vcPaths, p)
+	if si.JWT != nil {
+		jwt := make([]map[string]interface{}, 1)
+		jwt[0] = make(map[string]interface{})
+		jwt[0]["providers"] = make([]map[string]interface{}, 0)
+		jwtProviders := make([]map[string]interface{}, 0)
+		for _, jwtProvider := range si.JWT.Providers {
+			jwtProviderMap := make(map[string]interface{})
+			jwtProviderMap["name"] = jwtProvider.Name
+			verifyClaims := make([]map[string]interface{}, 0)
+			for _, vc := range jwtProvider.VerifyClaims {
+				vcMap := make(map[string]interface{})
+				vcPaths := make([]string, 0)
+				for _, p := range vc.Path {
+					vcPaths = append(vcPaths, p)
+				}
+				vcMap["path"] = vcPaths
+				vcMap["value"] = vc.Value
+				verifyClaims = append(verifyClaims, vcMap)
 			}
-			vcMap["path"] = vcPaths
-			vcMap["value"] = vc.Value
-			verifyClaims = append(verifyClaims, vcMap)
+			jwtProviderMap["verify_claims"] = verifyClaims
+			jwtProviders = append(jwtProviders, jwtProviderMap)
 		}
-		jwtProviderMap["verify_claims"] = verifyClaims
-		jwtProviders = append(jwtProviders, jwtProviderMap)
-	}
-	jwt[0]["providers"] = jwtProviders
+		jwt[0]["providers"] = jwtProviders
 
-	sw.set("jwt", jwt)
+		sw.set("jwt", jwt)
+	}
 
 	sources := make([]map[string]interface{}, 0)
 	for _, source := range si.Sources {
