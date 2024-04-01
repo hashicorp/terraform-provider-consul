@@ -6,6 +6,7 @@ require (
 	github.com/hashicorp/errwrap v1.1.0
 	github.com/hashicorp/terraform-plugin-sdk v1.17.2
 	github.com/mitchellh/mapstructure v1.5.0
+  google.golang.org/protobuf v1.33.0
 )
 
 require (
@@ -98,7 +99,6 @@ require (
 	google.golang.org/appengine v1.6.7 // indirect
 	google.golang.org/genproto v0.0.0-20230410155749-daa745c078e1 // indirect
 	google.golang.org/grpc v1.56.3 // indirect
-	google.golang.org/protobuf v1.32.0
 )
 
 go 1.21
