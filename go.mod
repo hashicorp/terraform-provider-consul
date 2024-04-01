@@ -1,10 +1,12 @@
 module github.com/hashicorp/terraform-provider-consul
 
 require (
-	github.com/hashicorp/consul/api v1.26.1-rc1
+	github.com/hashicorp/consul/api v1.10.1-0.20240305172350-4e7982a5b707
+	github.com/hashicorp/consul/proto-public v0.6.0
 	github.com/hashicorp/errwrap v1.1.0
 	github.com/hashicorp/terraform-plugin-sdk v1.17.2
 	github.com/mitchellh/mapstructure v1.5.0
+  google.golang.org/protobuf v1.33.0
 )
 
 require (
@@ -39,7 +41,7 @@ require (
 	github.com/google/go-cmp v0.5.9 // indirect
 	github.com/google/uuid v1.3.0 // indirect
 	github.com/googleapis/gax-go/v2 v2.7.1 // indirect
-	github.com/hashicorp/consul/sdk v0.14.3-rc1
+	github.com/hashicorp/consul/sdk v0.15.0
 	github.com/hashicorp/go-checkpoint v0.5.0 // indirect
 	github.com/hashicorp/go-cleanhttp v0.5.2 // indirect
 	github.com/hashicorp/go-getter v1.7.0 // indirect
@@ -90,14 +92,13 @@ require (
 	golang.org/x/crypto v0.14.0 // indirect
 	golang.org/x/net v0.17.0 // indirect
 	golang.org/x/oauth2 v0.7.0 // indirect
-	golang.org/x/sys v0.13.0 // indirect
-	golang.org/x/text v0.13.0 // indirect
+	golang.org/x/sys v0.15.0 // indirect
+	golang.org/x/text v0.14.0 // indirect
 	golang.org/x/xerrors v0.0.0-20220907171357-04be3eba64a2 // indirect
 	google.golang.org/api v0.114.0 // indirect
 	google.golang.org/appengine v1.6.7 // indirect
 	google.golang.org/genproto v0.0.0-20230410155749-daa745c078e1 // indirect
 	google.golang.org/grpc v1.56.3 // indirect
-	google.golang.org/protobuf v1.33.0 // indirect
 )
 
 go 1.21
