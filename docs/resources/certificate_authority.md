@@ -20,7 +20,7 @@ The `consul_certificate_authority` resource can be used to manage the configurat
 resource "consul_certificate_authority" "connect" {
   connect_provider = "consul"
 
-  config_json = jsondecode({
+  config_json = jsonencode({
     LeafCertTTL         = "24h"
     RotationPeriod      = "2160h"
     IntermediateCertTTL = "8760h"
