@@ -121,7 +121,7 @@ Required:
 
 Optional:
 
-- `deregister_critical_service_after` (String) The time after which the service is automatically deregistered when in the `critical` state. Defaults to `30s`.
+- `deregister_critical_service_after` (String) The time after which the service is automatically deregistered when in the `critical` state. Defaults to `30s`. Setting to `0` will disable.
 - `header` (Block Set) The headers to send for an HTTP check. The attributes of each header is given below. (see [below for nested schema](#nestedblock--check--header))
 - `http` (String) The HTTP endpoint to call for an HTTP check.
 - `method` (String) The method to use for HTTP health-checks. Defaults to `GET`.
