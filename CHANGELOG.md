@@ -1,3 +1,9 @@
+## 2.20.1 (Unreleased)
+
+BUG FIXES:
+
+* The `connect_timeout` and `request_timeout` optional arguments of the `consul_config_entry_service_resolver` resource are now properly handled when not set in the configuration.
+
 ## 2.20.0 (November 20, 2023)
 
 BUG FIXES:

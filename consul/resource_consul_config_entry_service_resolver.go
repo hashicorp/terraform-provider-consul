@@ -344,9 +344,7 @@ func resourceConsulConfigEntryServiceResolverFailoverSetHash(v interface{}) int 
 				datacenters = append(datacenters, v.(string))
 			}
 		} else {
-			for _, v := range m["datacenters"].([]string) {
-				datacenters = append(datacenters, v)
-			}
+			datacenters = append(datacenters, m["datacenters"].([]string)...)
 		}
 		sort.Strings(datacenters)
 		for _, v := range datacenters {
@@ -357,7 +355,7 @@ func resourceConsulConfigEntryServiceResolverFailoverSetHash(v interface{}) int 
 		for _, target := range m["targets"].([]interface{}) {
 			var keys []string
 			targetMap := target.(map[string]interface{})
-			for k, _ := range targetMap {
+			for k := range targetMap {
 				keys = append(keys, k)
 			}
 			sort.Strings(keys)
@@ -382,17 +380,21 @@ func (s *serviceResolver) Decode(d *schema.ResourceData) (consulapi.ConfigEntry,
 		configEntry.Meta[k] = v.(string)
 	}
 
-	connectTimeout, err := time.ParseDuration(d.Get("connect_timeout").(string))
-	if err != nil {
-		return nil, err
+	if dur := d.Get("connect_timeout").(string); dur != "" {
+		connectTimeout, err := time.ParseDuration(dur)
+		if err != nil {
+			return nil, fmt.Errorf("failed to parse connect_timeout: %w", err)
+		}
+		configEntry.ConnectTimeout = connectTimeout
 	}
-	configEntry.ConnectTimeout = connectTimeout
 
-	requestTimeout, err := time.ParseDuration(d.Get("request_timeout").(string))
-	if err != nil {
-		return nil, err
+	if dur := d.Get("request_timeout").(string); dur != "" {
+		requestTimeout, err := time.ParseDuration(dur)
+		if err != nil {
+			return nil, fmt.Errorf("failed to parse request_timeout: %w", err)
+		}
+		configEntry.RequestTimeout = requestTimeout
 	}
-	configEntry.RequestTimeout = requestTimeout
 
 	subsets := make(map[string]consulapi.ServiceResolverSubset)
 
@@ -410,16 +412,15 @@ func (s *serviceResolver) Decode(d *schema.ResourceData) (consulapi.ConfigEntry,
 
 	if v := (d.Get("redirect").(*schema.Set)).List(); len(v) == 1 {
 		redirectMap := v[0].(map[string]interface{})
-		var serviceResolverRedirect *consulapi.ServiceResolverRedirect
-		serviceResolverRedirect = new(consulapi.ServiceResolverRedirect)
-		serviceResolverRedirect.Service = redirectMap["service"].(string)
-		serviceResolverRedirect.ServiceSubset = redirectMap["service_subset"].(string)
-		serviceResolverRedirect.Namespace = redirectMap["namespace"].(string)
-		serviceResolverRedirect.Partition = redirectMap["partition"].(string)
-		serviceResolverRedirect.SamenessGroup = redirectMap["sameness_group"].(string)
-		serviceResolverRedirect.Datacenter = redirectMap["datacenter"].(string)
-		serviceResolverRedirect.Peer = redirectMap["peer"].(string)
-		configEntry.Redirect = serviceResolverRedirect
+		configEntry.Redirect = &consulapi.ServiceResolverRedirect{
+			Service:       redirectMap["service"].(string),
+			ServiceSubset: redirectMap["service_subset"].(string),
+			Namespace:     redirectMap["namespace"].(string),
+			Partition:     redirectMap["partition"].(string),
+			SamenessGroup: redirectMap["sameness_group"].(string),
+			Datacenter:    redirectMap["datacenter"].(string),
+			Peer:          redirectMap["peer"].(string),
+		}
 	}
 
 	failoverList := d.Get("failover").(*schema.Set).List()
@@ -479,21 +480,19 @@ func (s *serviceResolver) Decode(d *schema.ResourceData) (consulapi.ConfigEntry,
 
 	if lb := (d.Get("load_balancer").(*schema.Set)).List(); len(lb) == 1 {
 		loadBalancer := lb[0].(map[string]interface{})
-		var ceLoadBalancer *consulapi.LoadBalancer
-		ceLoadBalancer = new(consulapi.LoadBalancer)
-		ceLoadBalancer.Policy = loadBalancer["policy"].(string)
+		ceLoadBalancer := &consulapi.LoadBalancer{
+			Policy: loadBalancer["policy"].(string),
+		}
 		if lrc := (loadBalancer["least_request_config"].(*schema.Set)).List(); len(lrc) == 1 {
-			var lreqConfig *consulapi.LeastRequestConfig
-			lreqConfig = new(consulapi.LeastRequestConfig)
-			lreqConfig.ChoiceCount = uint32(((lrc[0].(map[string]interface{}))["choice_count"]).(int))
-			ceLoadBalancer.LeastRequestConfig = lreqConfig
+			ceLoadBalancer.LeastRequestConfig = &consulapi.LeastRequestConfig{
+				ChoiceCount: uint32(((lrc[0].(map[string]interface{}))["choice_count"]).(int)),
+			}
 		}
 		if rhc := (loadBalancer["ring_hash_config"].(*schema.Set)).List(); len(rhc) == 1 {
-			var rhConfig *consulapi.RingHashConfig
-			rhConfig = new(consulapi.RingHashConfig)
-			rhConfig.MaximumRingSize = uint64(rhc[0].(map[string]interface{})["maximum_ring_size"].(int))
-			rhConfig.MinimumRingSize = uint64(rhc[0].(map[string]interface{})["minimum_ring_size"].(int))
-			ceLoadBalancer.RingHashConfig = rhConfig
+			ceLoadBalancer.RingHashConfig = &consulapi.RingHashConfig{
+				MaximumRingSize: uint64(rhc[0].(map[string]interface{})["maximum_ring_size"].(int)),
+				MinimumRingSize: uint64(rhc[0].(map[string]interface{})["minimum_ring_size"].(int)),
+			}
 		}
 		if hp := loadBalancer["hash_policies"].([]interface{}); len(hp) > 0 {
 			hashPolicyList := make([]consulapi.HashPolicy, len(hp))
@@ -501,8 +500,7 @@ func (s *serviceResolver) Decode(d *schema.ResourceData) (consulapi.ConfigEntry,
 				hashPolicyMap := hashPolicy.(map[string]interface{})
 				hashPolicyList[indx].Field = hashPolicyMap["field"].(string)
 				hashPolicyList[indx].FieldValue = hashPolicyMap["field_value"].(string)
-				var cookieConfig *consulapi.CookieConfig
-				cookieConfig = new(consulapi.CookieConfig)
+				cookieConfig := &consulapi.CookieConfig{}
 				if cc := hashPolicyMap["cookie_config"].(*schema.Set).List(); len(cc) == 1 {
 					cookieConfigMap := cc[0].(map[string]interface{})
 					cookieConfig.Path = cookieConfigMap["path"].(string)
@@ -540,8 +538,16 @@ func (s *serviceResolver) Write(ce consulapi.ConfigEntry, d *schema.ResourceData
 		meta[k] = v
 	}
 	sw.set("meta", meta)
-	sw.set("connect_timeout", sr.ConnectTimeout.String())
-	sw.set("request_timeout", sr.RequestTimeout.String())
+	if sr.ConnectTimeout != 0 {
+		sw.set("connect_timeout", sr.ConnectTimeout.String())
+	} else {
+		sw.set("connect_timeout", "")
+	}
+	if sr.RequestTimeout != 0 {
+		sw.set("request_timeout", sr.RequestTimeout.String())
+	} else {
+		sw.set("request_timeout", "")
+	}
 
 	subsets := make([]map[string]interface{}, len(sr.Subsets))
 	indx := 0
@@ -571,9 +577,9 @@ func (s *serviceResolver) Write(ce consulapi.ConfigEntry, d *schema.ResourceData
 		sw.set("redirect", redirect)
 	}
 
-	var failover *schema.Set
-	failover = new(schema.Set)
-	failover.F = resourceConsulConfigEntryServiceResolverFailoverSetHash
+	failover := &schema.Set{
+		F: resourceConsulConfigEntryServiceResolverFailoverSetHash,
+	}
 	for name, failoverValue := range sr.Failover {
 		failoverMap := make(map[string]interface{})
 		failoverMap["subset_name"] = name
