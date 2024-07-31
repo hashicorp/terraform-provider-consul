@@ -1,3 +1,13 @@
+## 2.21.0 (August 1, 2024)
+
+BUG FIXES:
+
+* The `consul_config_entry_service_intentions` resource no longer panics when optional JWT is unset ([#386](https://github.com/hashicorp/terraform-provider-consul/pull/386)).
+
+NEW FEATURES:
+
+* The `consul_peering_token` resource now exposes the [ServerExternalAddresses field](https://developer.hashicorp.com/consul/api-docs/v1.13.x/peering#serverexternaladdresses) from the API ([#387](https://github.com/hashicorp/terraform-provider-consul/pull/387)).
+
 ## 2.20.0 (November 20, 2023)
 
 BUG FIXES:
