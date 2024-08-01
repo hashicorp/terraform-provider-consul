@@ -6,7 +6,7 @@ require (
 	github.com/hashicorp/errwrap v1.1.0
 	github.com/hashicorp/terraform-plugin-sdk v1.17.2
 	github.com/mitchellh/mapstructure v1.5.0
-  google.golang.org/protobuf v1.33.0
+	google.golang.org/protobuf v1.33.0
 )
 
 require (
