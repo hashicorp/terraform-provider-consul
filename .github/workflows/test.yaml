@@ -1,16 +1,16 @@
 on:
   push:
     branches:
-      - master
+      - main
   pull_request:
     branches:
-      - master
+      - main
 jobs:
   test:
     strategy:
       fail-fast: false
       matrix:
-        consul-version: [1.16.6, 1.17.3, 1.18.0]
+        consul-version: [1.17.3, 1.18.2, 1.19.1]
         os: [ubuntu-latest]
     runs-on: ${{ matrix.os }}
     steps:
@@ -41,10 +41,10 @@ jobs:
       uses: actions/checkout@8f4b7f84864484a7bf31766abe9204da3cbe65b3 # v3.5.0
     - name: Install tfplugindocs
       run: |
-        curl -LO https://github.com/hashicorp/terraform-plugin-docs/releases/download/v0.16.0/tfplugindocs_0.16.0_linux_amd64.zip
-        sudo unzip tfplugindocs_0.16.0_linux_amd64.zip tfplugindocs -d /usr/local/bin
-        rm -f tfplugindocs_0.16.0_linux_amd64.zip
-    - name: Generate the documentation
+        curl -LO https://github.com/hashicorp/terraform-plugin-docs/releases/download/v0.19.4/tfplugindocs_0.19.4_linux_amd64.zip
+        sudo unzip tfplugindocs_0.19.4_linux_amd64.zip tfplugindocs -d /usr/local/bin
+        rm -f tfplugindocs_0.19.4_linux_amd64.zip
+    - name: Generate the documentation'
       run: |
         terraform fmt -recursive .
         tfplugindocs generate --ignore-deprecated true
