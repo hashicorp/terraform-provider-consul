@@ -595,6 +595,8 @@ resource "consul_config_entry" "service_intentions" {
 	name = consul_config_entry.sd.name
 	kind = "service-intentions"
 
+	depends_on = [consul_config_entry.jwt_provider]
+
 	config_json = jsonencode({
 		Sources = [
 			{
