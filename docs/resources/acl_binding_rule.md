@@ -3,7 +3,7 @@
 page_title: "consul_acl_binding_rule Resource - terraform-provider-consul"
 subcategory: ""
 description: |-
-  Starting with Consul 1.5.0, the consulaclbinding_rule resource can be used to managed Consul ACL binding rules.
+  Starting with Consul 1.5.0, the consul_acl_binding_rule resource can be used to managed Consul ACL binding rules.
 ---
 
 # consul_acl_binding_rule (Resource)
