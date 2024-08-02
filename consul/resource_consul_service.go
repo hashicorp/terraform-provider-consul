@@ -230,7 +230,7 @@ removed during the next [anti-entropy synchronization](https://www.consul.io/doc
 							Type:        schema.TypeString,
 							Optional:    true,
 							Default:     "30s",
-							Description: "The time after which the service is automatically deregistered when in the `critical` state. Defaults to `30s`.",
+							Description: "The time after which the service is automatically deregistered when in the `critical` state. Defaults to `30s`. Setting to `0` will disable.",
 						},
 					},
 				},
