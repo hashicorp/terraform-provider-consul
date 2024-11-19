@@ -14,8 +14,6 @@ description: |-
 
 The `cluster_peering` resource can be used to establish the peering after a peering token has been generated.
 
-~> **Cluster peering is currently in technical preview:** Functionality associated with cluster peering is subject to change. You should never use the technical preview release in secure environments or production scenarios. Features in technical preview may have performance issues, scaling issues, and limited support.
-
 The functionality described here is available only in Consul version 1.13.0 and later.
 
 ## Example Usage
