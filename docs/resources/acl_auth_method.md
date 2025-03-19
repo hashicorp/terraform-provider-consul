@@ -73,7 +73,7 @@ resource "consul_acl_auth_method" "oidc" {
 - `config_json` (String) The raw configuration for this ACL auth method.
 - `description` (String) A free form human readable description of the auth method.
 - `display_name` (String) An optional name to use instead of the name attribute when displaying information about this auth method.
-- `max_token_ttl` (String) The maximum life of any token created by this auth method. **This attribute is required and must be set to a nonzero for the OIDC auth method.**
+- `max_token_ttl` (String) The maximum life of any token created by this auth method. **This attribute is required and must be set to a nonzero for the OIDC auth method. This attribute must be excluded when setting up Nomad Workload Identities**
 - `namespace` (String) The namespace in which to create the auth method.
 - `namespace_rule` (Block List) A set of rules that control which namespace tokens created via this auth method will be created within. (see [below for nested schema](#nestedblock--namespace_rule))
 - `partition` (String) The partition the ACL auth method is associated with.
