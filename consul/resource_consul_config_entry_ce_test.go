@@ -565,7 +565,7 @@ resource "consul_config_entry" "service_intentions" {
 
 const testAccConsulConfigEntryCE_ServiceConfigL7b = `
 resource "consul_config_entry" "sd" {
-	name = "api"
+	name = "api-mixed"
 	kind = "service-defaults"
 
 	config_json = jsonencode({
