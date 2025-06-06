@@ -22,7 +22,7 @@ func TestAccConsulConfigEntryCE_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("consul_config_entry.foo", "name", "foo"),
 					resource.TestCheckResourceAttr("consul_config_entry.foo", "kind", "service-defaults"),
-					resource.TestCheckResourceAttr("consul_config_entry.foo", "config_json", "{\"Expose\":{},\"MeshGateway\":{},\"Protocol\":\"https\",\"TransparentProxy\":{}}"),
+					resource.TestCheckResourceAttr("consul_config_entry.foo", "config_json", "{\"Expose\":{},\"MeshGateway\":{},\"Protocol\":\"http\",\"TransparentProxy\":{}}"),
 				),
 			},
 			{
@@ -30,7 +30,7 @@ func TestAccConsulConfigEntryCE_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("consul_config_entry.foo", "name", "foo"),
 					resource.TestCheckResourceAttr("consul_config_entry.foo", "kind", "service-defaults"),
-					resource.TestCheckResourceAttr("consul_config_entry.foo", "config_json", "{\"Expose\":{},\"MeshGateway\":{},\"Protocol\":\"https\",\"TransparentProxy\":{}}"),
+					resource.TestCheckResourceAttr("consul_config_entry.foo", "config_json", "{\"Expose\":{},\"MeshGateway\":{},\"Protocol\":\"http\",\"TransparentProxy\":{}}"),
 				),
 			},
 			{
@@ -713,8 +713,6 @@ resource "consul_config_entry" "sd" {
 resource "consul_config_entry" "service_intentions" {
 	name = consul_config_entry.sd.name
 	kind = "service-intentions"
-
-	depends_on = [consul_config_entry.jwt_provider]
 
 	config_json = jsonencode({
 		Sources = [
