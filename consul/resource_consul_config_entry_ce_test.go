@@ -111,7 +111,7 @@ func TestAccConsulConfigEntryCE_basic(t *testing.T) {
 			{
 				Config: testAccConsulConfigEntryCE_ServiceConfigL7Mixed,
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("consul_config_entry.service_intentions", "name", "api"),
+					resource.TestCheckResourceAttr("consul_config_entry.service_intentions", "name", "api-mixed"),
 					resource.TestCheckResourceAttr("consul_config_entry.service_intentions", "kind", "service-intentions"),
 				),
 			},
@@ -565,7 +565,7 @@ resource "consul_config_entry" "service_intentions" {
 
 const testAccConsulConfigEntryCE_ServiceConfigL7b = `
 resource "consul_config_entry" "sd" {
-	name = "api-mixed"
+	name = "api"
 	kind = "service-defaults"
 
 	config_json = jsonencode({
@@ -695,7 +695,7 @@ resource "consul_config_entry" "service_intentions" {
 
 const testAccConsulConfigEntryCE_ServiceConfigL7Mixed = `
 resource "consul_config_entry" "sd" {
-	name = "api"
+	name = "api-mixed"
 	kind = "service-defaults"
 
 	config_json = jsonencode({
