@@ -125,13 +125,13 @@ func TestAccConsulConfigEntryCE_basic(t *testing.T) {
 				Config:        testAccConsulConfigEntryCE_ServiceConfigL7Mixed,
 				ImportState:   true,
 				ResourceName:  "consul_config_entry.service_intentions",
-				ImportStateId: "service-defaults/api",
+				ImportStateId: "service-defaults/api-mixed",
 			},
 			{
 				Config:        testAccConsulConfigEntryCE_ServiceConfigL7Mixed,
 				ImportState:   true,
 				ResourceName:  "consul_config_entry.service_intentions",
-				ImportStateId: "default/default/service-defaults/api",
+				ImportStateId: "default/default/service-defaults/api-mixed",
 			},
 			{
 				Config: testAccConsulConfigEntryCE_HTTPRoute,
