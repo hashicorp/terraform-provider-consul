@@ -581,7 +581,7 @@ resource "consul_config_entry" "sd" {
 }
 
 resource "consul_config_entry" "jwt_provider" {
-	name = "okta"
+	name = "okta-api"
 	kind = "jwt-provider"
 
 	config_json = jsonencode({
