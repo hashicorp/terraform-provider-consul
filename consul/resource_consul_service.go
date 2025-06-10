@@ -236,6 +236,13 @@ removed during the next [anti-entropy synchronization](https://www.consul.io/doc
 				},
 			},
 
+			"weights": {
+				Type:        schema.TypeMap,
+				Optional:    true,
+				Elem:        &schema.Schema{Type: schema.TypeInt},
+				Description: "Object that configures how the service responds to DNS SRV requests based on the service's health status. You can specify one or more of the following states and configure an integer value indicating its weight: `passing`, `warning`.",
+			},
+
 			"namespace": {
 				Type:        schema.TypeString,
 				Optional:    true,
@@ -374,6 +381,12 @@ func resourceConsulServiceRead(d *schema.ResourceData, meta interface{}) error {
 	sw.set("enable_tag_override", service.ServiceEnableTagOverride)
 	sw.set("namespace", service.Namespace)
 	sw.set("partition", service.Partition)
+
+	wr, ok := d.GetOk("weights")
+	if !ok {
+		wr = map[string]interface{}{}
+	}
+	sw.set("weights", normalizeServiceWeightsForRead(wr, service))
 
 	return sw.error()
 }
@@ -594,7 +607,42 @@ func getCatalogRegistration(d *schema.ResourceData, meta interface{}) (*consulap
 	}
 	registration.Service.Meta = serviceMeta
 
+	if sw, ok := d.GetOk("weights"); ok {
+		registration.Service.Weights = consulapi.AgentWeights{Passing: 1, Warning: 1}
+		serviceWeights := sw.(map[string]interface{})
+
+		if passing, ok := serviceWeights["passing"]; ok {
+			registration.Service.Weights.Passing = passing.(int)
+		}
+		if warning, ok := serviceWeights["warning"]; ok {
+			registration.Service.Weights.Warning = warning.(int)
+		}
+	}
+
 	registration.Service.EnableTagOverride = d.Get("enable_tag_override").(bool)
 
 	return registration, ident, nil
+}
+
+func normalizeServiceWeightsForRead(state interface{}, service *consulapi.CatalogService) map[string]int {
+	weights := map[string]int{}
+	if weights, ok := state.(map[string]interface{}); ok {
+		for k, v := range weights {
+			if val, ok := v.(int); ok {
+				weights[k] = val
+			}
+		}
+	}
+
+	normalized := map[string]int{}
+
+	if service.ServiceWeights.Passing != 1 || weights["passing"] != 0 {
+		normalized["passing"] = service.ServiceWeights.Passing
+	}
+
+	if service.ServiceWeights.Warning != 1 || weights["warning"] != 0 {
+		normalized["warning"] = service.ServiceWeights.Warning
+	}
+
+	return normalized
 }
