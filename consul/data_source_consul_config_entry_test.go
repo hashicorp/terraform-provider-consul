@@ -40,7 +40,7 @@ resource "consul_config_entry" "test" {
 
 	config_json = jsonencode({
 		MeshGateway      = {}
-		Protocol         = "https"
+		Protocol         = "http"
 		TransparentProxy = {}
 	})
 }
