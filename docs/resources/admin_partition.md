@@ -27,6 +27,7 @@ The following arguments are supported:
 
 * `name` - (Required) The partition name. This must be a valid DNS hostname label.
 * `description` - (Optional) Free form partition description.
+*  `disable_gossip` - (Optional). Set to `true` to disable the gossip pool for the partition. Defaults to`false`.",
 
 ## Attributes Reference
 
@@ -34,6 +35,7 @@ The following attributes are exported:
 
 * `name` - The partition name.
 * `description` - The partition description.
+* `disable_gossip` - If `true`, the gossip pool is disabled for the partition. Defaults to`false`.",
 
 ## Import
 
