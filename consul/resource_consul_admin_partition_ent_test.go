@@ -25,6 +25,7 @@ func TestAccConsulAdminParition_EntBasic(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr("consul_admin_partition.test", "name", "hello"),
 					resource.TestCheckResourceAttr("consul_admin_partition.test", "description", "world"),
+					resource.TestCheckResourceAttr("consul_admin_partition.test", "disable_gossip", "true"),
 				),
 			},
 			{
@@ -38,6 +39,7 @@ func TestAccConsulAdminParition_EntBasic(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr("consul_admin_partition.test", "name", "hello"),
 					resource.TestCheckResourceAttr("consul_admin_partition.test", "description", "world"),
+					resource.TestCheckResourceAttr("consul_admin_partition.test", "disable_gossip", "true"),
 				),
 			},
 			{
@@ -53,5 +55,5 @@ const testAccConsulAdminPartitionBasic = `
 resource "consul_admin_partition" "test" {
 	name        = "hello"
 	description = "world"
+        disable_gossip = true
 }
-`
