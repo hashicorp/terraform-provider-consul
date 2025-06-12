@@ -35,7 +35,7 @@ func resourceConsulAdminPartition() *schema.Resource {
                         "disable_gossip": {
                                 Type:        schema.TypeBool,
                                 Optional:    true,
-                                Description: "Free form partition description.",
+                                Description: "Set to `true` to enable a gossip pool for the partition. Defaults to`false`.",
 				Default:     false,
                         },
 		},
