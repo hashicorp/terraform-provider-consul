@@ -12,8 +12,7 @@ import (
 	"time"
 
 	consulapi "github.com/hashicorp/consul/api"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/hashcode"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 type serviceResolver struct{}
@@ -366,7 +365,7 @@ func resourceConsulConfigEntryServiceResolverFailoverSetHash(v interface{}) int 
 			}
 		}
 	}
-	return hashcode.String(buf.String())
+	return String(buf.String())
 }
 
 func (s *serviceResolver) Decode(d *schema.ResourceData) (consulapi.ConfigEntry, error) {

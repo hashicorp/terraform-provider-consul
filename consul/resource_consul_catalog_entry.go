@@ -10,8 +10,7 @@ import (
 	"strings"
 
 	consulapi "github.com/hashicorp/consul/api"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/hashcode"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func resourceConsulCatalogEntry() *schema.Resource {
@@ -96,7 +95,7 @@ func resourceConsulCatalogEntry() *schema.Resource {
 }
 
 func resourceConsulCatalogEntryServiceTagsHash(v interface{}) int {
-	return hashcode.String(v.(string))
+	return String(v.(string))
 }
 
 func resourceConsulCatalogEntryServicesHash(v interface{}) int {
@@ -118,7 +117,7 @@ func resourceConsulCatalogEntryServicesHash(v interface{}) int {
 			buf.WriteString(fmt.Sprintf("%s-", v))
 		}
 	}
-	return hashcode.String(buf.String())
+	return String(buf.String())
 }
 
 func resourceConsulCatalogEntryCreate(d *schema.ResourceData, meta interface{}) error {
