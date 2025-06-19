@@ -22,7 +22,7 @@ func TestAccConsulConfigEntryCE_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("consul_config_entry.foo", "name", "foo"),
 					resource.TestCheckResourceAttr("consul_config_entry.foo", "kind", "service-defaults"),
-					resource.TestCheckResourceAttr("consul_config_entry.foo", "config_json", "{\"Expose\":{},\"MeshGateway\":{},\"Protocol\":\"https\",\"TransparentProxy\":{}}"),
+					resource.TestCheckResourceAttr("consul_config_entry.foo", "config_json", "{\"Expose\":{},\"MeshGateway\":{},\"Protocol\":\"http\",\"TransparentProxy\":{}}"),
 				),
 			},
 			{
@@ -30,7 +30,7 @@ func TestAccConsulConfigEntryCE_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("consul_config_entry.foo", "name", "foo"),
 					resource.TestCheckResourceAttr("consul_config_entry.foo", "kind", "service-defaults"),
-					resource.TestCheckResourceAttr("consul_config_entry.foo", "config_json", "{\"Expose\":{},\"MeshGateway\":{},\"Protocol\":\"https\",\"TransparentProxy\":{}}"),
+					resource.TestCheckResourceAttr("consul_config_entry.foo", "config_json", "{\"Expose\":{},\"MeshGateway\":{},\"Protocol\":\"http\",\"TransparentProxy\":{}}"),
 				),
 			},
 			{
@@ -111,7 +111,7 @@ func TestAccConsulConfigEntryCE_basic(t *testing.T) {
 			{
 				Config: testAccConsulConfigEntryCE_ServiceConfigL7Mixed,
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("consul_config_entry.service_intentions", "name", "api"),
+					resource.TestCheckResourceAttr("consul_config_entry.service_intentions", "name", "api-mixed"),
 					resource.TestCheckResourceAttr("consul_config_entry.service_intentions", "kind", "service-intentions"),
 				),
 			},
@@ -125,13 +125,13 @@ func TestAccConsulConfigEntryCE_basic(t *testing.T) {
 				Config:        testAccConsulConfigEntryCE_ServiceConfigL7Mixed,
 				ImportState:   true,
 				ResourceName:  "consul_config_entry.service_intentions",
-				ImportStateId: "service-defaults/api",
+				ImportStateId: "service-defaults/api-mixed",
 			},
 			{
 				Config:        testAccConsulConfigEntryCE_ServiceConfigL7Mixed,
 				ImportState:   true,
 				ResourceName:  "consul_config_entry.service_intentions",
-				ImportStateId: "default/default/service-defaults/api",
+				ImportStateId: "default/default/service-defaults/api-mixed",
 			},
 			{
 				Config: testAccConsulConfigEntryCE_HTTPRoute,
@@ -227,7 +227,7 @@ resource "consul_config_entry" "foo" {
 
 	config_json = jsonencode({
 		MeshGateway      = {}
-		Protocol         = "https"
+		Protocol         = "http"
 		TransparentProxy = {}
 	})
 }
@@ -240,7 +240,7 @@ resource "consul_config_entry" "foo" {
 
 	config_json = jsonencode({
 		Expose           = {}
-		Protocol         = "https"
+		Protocol         = "http"
 		TransparentProxy = {}
 	})
 }
@@ -595,8 +595,6 @@ resource "consul_config_entry" "service_intentions" {
 	name = consul_config_entry.sd.name
 	kind = "service-intentions"
 
-	depends_on = [consul_config_entry.jwt_provider]
-
 	config_json = jsonencode({
 		Sources = [
 			{
@@ -695,7 +693,7 @@ resource "consul_config_entry" "service_intentions" {
 
 const testAccConsulConfigEntryCE_ServiceConfigL7Mixed = `
 resource "consul_config_entry" "sd" {
-	name = "api"
+	name = "api-mixed"
 	kind = "service-defaults"
 
 	config_json = jsonencode({
