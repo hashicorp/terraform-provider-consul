@@ -45,7 +45,7 @@ jobs:
     - name: Install Terraform
       run: |
           curl -LO https://releases.hashicorp.com/terraform/${TERRAFORM_VERSION}/terraform_${TERRAFORM_VERSION}_linux_amd64.zip
-          sudo unzip terraform_${TERRAFORM_VERSION}_linux_amd64.zip -d /usr/local/bin/
+          sudo unzip terraform_${TERRAFORM_VERSION}_linux_amd64.zip terraform -d /usr/local/bin/
           rm terraform_${TERRAFORM_VERSION}_linux_amd64.zip
     - name: Install tfplugindocs
       run: |
