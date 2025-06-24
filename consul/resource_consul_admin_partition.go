@@ -31,6 +31,13 @@ func resourceConsulAdminPartition() *schema.Resource {
 				Optional:    true,
 				Description: "Free form partition description.",
 			},
+
+			"disable_gossip": {
+				Type:        schema.TypeBool,
+				Optional:    true,
+				Description: "Disable gossip pool for the partition. Defaults to `false`.",
+				Default:     false,
+			},
 		},
 
 		Importer: &schema.ResourceImporter{
@@ -45,8 +52,9 @@ func resourceConsulAdminPartitionCreate(d *schema.ResourceData, meta interface{}
 	name := d.Get("name").(string)
 
 	partition := &api.Partition{
-		Name:        name,
-		Description: d.Get("description").(string),
+		Name:          name,
+		Description:   d.Get("description").(string),
+		DisableGossip: d.Get("disable_gossip").(bool),
 	}
 
 	_, _, err := partitions.Create(context.TODO(), partition, wOpts)
@@ -77,6 +85,7 @@ func resourceConsulAdminPartitionRead(d *schema.ResourceData, meta interface{}) 
 	sw := newStateWriter(d)
 	sw.set("name", partition.Name)
 	sw.set("description", partition.Description)
+	sw.set("disable_gossip", partition.DisableGossip)
 
 	return sw.error()
 }
@@ -87,8 +96,9 @@ func resourceConsulAdminPartitionUpdate(d *schema.ResourceData, meta interface{}
 	name := d.Get("name").(string)
 
 	partition := &api.Partition{
-		Name:        name,
-		Description: d.Get("description").(string),
+		Name:          name,
+		Description:   d.Get("description").(string),
+		DisableGossip: d.Get("disable_gossip").(bool),
 	}
 
 	_, _, err := partitions.Update(context.TODO(), partition, wOpts)
