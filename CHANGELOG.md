@@ -1,3 +1,10 @@
+## 2.22.0 (June 24, 2025)
+
+NEW FEATURES:
+
+* The `consul_admin_partition` resource now exposes `disable_gossip` to disable gossip in the partition ([#445](https://github.com/hashicorp/terraform-provider-consul/pull/445)).
+* The `consul_service` resource now supports `weights` to configure service weights ([#435](https://github.com/hashicorp/terraform-provider-consul/pull/435)).
+
 ## 2.21.0 (August 1, 2024)
 
 BUG FIXES:
