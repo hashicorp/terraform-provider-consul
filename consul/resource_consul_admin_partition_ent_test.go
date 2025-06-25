@@ -55,5 +55,6 @@ const testAccConsulAdminPartitionBasic = `
 resource "consul_admin_partition" "test" {
 	name        = "hello"
 	description = "world"
-        disable_gossip = true
+	disable_gossip = true
 }
+`

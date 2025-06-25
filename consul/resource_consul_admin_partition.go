@@ -32,12 +32,12 @@ func resourceConsulAdminPartition() *schema.Resource {
 				Description: "Free form partition description.",
 			},
 
-                        "disable_gossip": {
-                                Type:        schema.TypeBool,
-                                Optional:    true,
-                                Description: "Set to `true` to disable the gossip pool for the partition. Defaults to`false`.",
+			"disable_gossip": {
+				Type:        schema.TypeBool,
+				Optional:    true,
+				Description: "Disable gossip pool for the partition. Defaults to `false`.",
 				Default:     false,
-                        },
+			},
 		},
 
 		Importer: &schema.ResourceImporter{
@@ -52,8 +52,8 @@ func resourceConsulAdminPartitionCreate(d *schema.ResourceData, meta interface{}
 	name := d.Get("name").(string)
 
 	partition := &api.Partition{
-		Name:        name,
-		Description: d.Get("description").(string),
+		Name:          name,
+		Description:   d.Get("description").(string),
 		DisableGossip: d.Get("disable_gossip").(bool),
 	}
 
@@ -96,8 +96,8 @@ func resourceConsulAdminPartitionUpdate(d *schema.ResourceData, meta interface{}
 	name := d.Get("name").(string)
 
 	partition := &api.Partition{
-		Name:        name,
-		Description: d.Get("description").(string),
+		Name:          name,
+		Description:   d.Get("description").(string),
 		DisableGossip: d.Get("disable_gossip").(bool),
 	}
 

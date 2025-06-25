@@ -23,7 +23,7 @@ func TestAccDataConsulConfigEntry_basic(t *testing.T) {
 			{
 				Config: testAccDataConsulConfigEntry,
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr("data.consul_config_entry.read", "config_json", "{\"Expose\":{},\"MeshGateway\":{},\"Protocol\":\"https\",\"TransparentProxy\":{}}"),
+					resource.TestCheckResourceAttr("data.consul_config_entry.read", "config_json", "{\"Expose\":{},\"MeshGateway\":{},\"Protocol\":\"http\",\"TransparentProxy\":{}}"),
 					resource.TestCheckResourceAttr("data.consul_config_entry.read", "id", "service-defaults/foo"),
 					resource.TestCheckResourceAttr("data.consul_config_entry.read", "kind", "service-defaults"),
 					resource.TestCheckResourceAttr("data.consul_config_entry.read", "name", "foo"),
@@ -40,7 +40,7 @@ resource "consul_config_entry" "test" {
 
 	config_json = jsonencode({
 		MeshGateway      = {}
-		Protocol         = "https"
+		Protocol         = "http"
 		TransparentProxy = {}
 	})
 }

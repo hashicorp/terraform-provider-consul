@@ -104,6 +104,7 @@ resource "consul_service" "redis" {
 - `port` (Number) The port of the service.
 - `service_id` (String) If the service ID is not provided, it will be defaulted to the value of the `name` attribute.
 - `tags` (List of String) A list of values that are opaque to Consul, but can be used to distinguish between services or nodes.
+- `weights` (Map of Number) Object that configures how the service responds to DNS SRV requests based on the service's health status. You can specify one or more of the following states and configure an integer value indicating its weight: `passing`, `warning`.
 
 ### Read-Only
 

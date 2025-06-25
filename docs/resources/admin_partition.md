@@ -37,6 +37,7 @@ The following attributes are exported:
 * `description` - The partition description.
 * `disable_gossip` - If `true`, the gossip pool is disabled for the partition. Defaults to`false`.
 
+
 ## Import
 
 `consul_admin_partition` can be imported:

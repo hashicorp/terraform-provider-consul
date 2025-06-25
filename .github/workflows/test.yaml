@@ -10,14 +10,14 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        consul-version: [1.17.3, 1.18.2, 1.19.1]
+        consul-version: [1.19.2, 1.20.6, 1.21.1]
         os: [ubuntu-latest]
     runs-on: ${{ matrix.os }}
     steps:
     - name: Install Go
       uses: actions/setup-go@4d34df0c2316fe8122ab82dc22947d607c0c91f9 # v4.0.0
       with:
-        go-version: 1.21.x
+        go-version: 1.24.x
     - name: Checkout code
       uses: actions/checkout@8f4b7f84864484a7bf31766abe9204da3cbe65b3 # v3.5.0
     - name: Run go tests
@@ -32,18 +32,26 @@ jobs:
 
   docs:
     runs-on: ubuntu-latest
+    env:
+      TERRAFORM_VERSION: 1.9.5
+      TFPLUGINDOCS_VERSION: 0.19.4
     steps:
     - name: Install Go
       uses: actions/setup-go@4d34df0c2316fe8122ab82dc22947d607c0c91f9 # v4.0.0
       with:
-        go-version: 1.21.x
+        go-version: 1.24.x
     - name: Checkout code
       uses: actions/checkout@8f4b7f84864484a7bf31766abe9204da3cbe65b3 # v3.5.0
+    - name: Install Terraform
+      run: |
+          curl -LO https://releases.hashicorp.com/terraform/${TERRAFORM_VERSION}/terraform_${TERRAFORM_VERSION}_linux_amd64.zip
+          sudo unzip terraform_${TERRAFORM_VERSION}_linux_amd64.zip terraform -d /usr/local/bin/
+          rm terraform_${TERRAFORM_VERSION}_linux_amd64.zip
     - name: Install tfplugindocs
       run: |
-        curl -LO https://github.com/hashicorp/terraform-plugin-docs/releases/download/v0.19.4/tfplugindocs_0.19.4_linux_amd64.zip
-        sudo unzip tfplugindocs_0.19.4_linux_amd64.zip tfplugindocs -d /usr/local/bin
-        rm -f tfplugindocs_0.19.4_linux_amd64.zip
+        curl -LO https://github.com/hashicorp/terraform-plugin-docs/releases/download/v${TFPLUGINDOCS_VERSION}/tfplugindocs_${TFPLUGINDOCS_VERSION}_linux_amd64.zip
+        sudo unzip tfplugindocs_${TFPLUGINDOCS_VERSION}_linux_amd64.zip tfplugindocs -d /usr/local/bin
+        rm -f tfplugindocs_${TFPLUGINDOCS_VERSION}_linux_amd64.zip
     - name: Generate the documentation'
       run: |
         terraform fmt -recursive .
