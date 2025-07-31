@@ -51,7 +51,7 @@ jobs:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
       - name: Set variables
         id: set-product-version
-        uses: hashicorp/actions-set-product-version@v2
+        uses: hashicorp/actions-set-product-version@2ec1b51402b3070bccf7ca95306afbd039e574ff
 
   # Creates metadata.json file containing build metadata for consumption by CRT workflows.
   #
@@ -138,7 +138,7 @@ jobs:
     name: Go ${{ needs.get-go-version.outputs.go-version }} ${{ matrix.goos }} ${{ matrix.goarch }} build
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
-      - uses: hashicorp/actions-go-build@v1
+      - uses: hashicorp/actions-go-build@d2504eb37c72b06b618352881e3f1d7b563517c5
         env:
           CGO_ENABLED: 0
           BASE_VERSION: ${{ needs.set-product-version.outputs.product-base-version }}
