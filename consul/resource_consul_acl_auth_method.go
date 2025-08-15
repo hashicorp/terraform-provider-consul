@@ -134,7 +134,7 @@ func resourceConsulACLAuthMethod() *schema.Resource {
 }
 
 func resourceConsulACLAuthMethodCreate(d *schema.ResourceData, meta interface{}) error {
-	client, _, wOpts := getClient(d, meta)
+	client, qOpts, wOpts := getClient(d, meta)
 	ACL := client.ACL()
 
 	authMethod, err := getAuthMethod(d, meta)
@@ -142,8 +142,13 @@ func resourceConsulACLAuthMethodCreate(d *schema.ResourceData, meta interface{})
 		return err
 	}
 
-	if _, _, err := ACL.AuthMethodCreate(authMethod, wOpts); err != nil {
+	c, _, err := ACL.AuthMethodCreate(authMethod, wOpts)
+	if err != nil {
 		return fmt.Errorf("failed to create auth method '%s': %v", authMethod.Name, err)
+	}
+
+	if err := waitForACLTokenReplication(client.ACL(), qOpts, c.CreateIndex); err != nil {
+		return err
 	}
 
 	return resourceConsulACLAuthMethodRead(d, meta)
@@ -202,7 +207,7 @@ func resourceConsulACLAuthMethodRead(d *schema.ResourceData, meta interface{}) e
 }
 
 func resourceConsulACLAuthMethodUpdate(d *schema.ResourceData, meta interface{}) error {
-	client, _, wOpts := getClient(d, meta)
+	client, qOpts, wOpts := getClient(d, meta)
 	ACL := client.ACL()
 
 	authMethod, err := getAuthMethod(d, meta)
@@ -210,8 +215,13 @@ func resourceConsulACLAuthMethodUpdate(d *schema.ResourceData, meta interface{})
 		return err
 	}
 
-	if _, _, err := ACL.AuthMethodUpdate(authMethod, wOpts); err != nil {
+	u, _, err := ACL.AuthMethodUpdate(authMethod, wOpts)
+	if err != nil {
 		return fmt.Errorf("failed to update the auth method '%s': %v", authMethod.Name, err)
+	}
+
+	if err := waitForACLTokenReplication(client.ACL(), qOpts, u.ModifyIndex); err != nil {
+		return err
 	}
 
 	return resourceConsulACLAuthMethodRead(d, meta)
