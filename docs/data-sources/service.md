@@ -49,6 +49,9 @@ The following arguments are supported:
 
 * `tag` - (Optional) A single tag that can be used to filter the list of nodes
   to return based on a single matching tag..
+  
+* `filter` - (Optional) A filter expression to refine the query, see https://www.consul.io/api-docs/features/filtering
+  and https://www.consul.io/api-docs/catalog#filtering-1.
 
 The `query_options` block supports the following:
 
@@ -69,9 +72,6 @@ The `query_options` block supports the following:
   to return.
 
 * `namespace` - (Optional, Enterprise Only) The namespace to lookup the service.
-
-* `filter` - (Optional) A filter expression to refine the query, see https://www.consul.io/api-docs/features/filtering
-  and https://www.consul.io/api-docs/catalog#filtering-1.
 
 ## Attributes Reference
 
