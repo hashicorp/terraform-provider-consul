@@ -24,9 +24,11 @@ The known compatibility between this provider and Consul is:
 
 | Terraform provider version | Consul version |
 | -------------------------- | -------------- |
-| 2.15.0                     | >= 1.11.0      |
-| 2.14.0                     | >= 1.10.0      |
-| 2.13.0                     | >= 1.10.0      |
+| 2.22.0                     | >= 1.19.0      |
+| 2.21.0                     | >= 1.17.0      |
+| 2.20.0                     | >= 1.17.0      |
+| 2.19.0                     | >= 1.17.0      |
+| 2.18.0                     | >= 1.16.0      |
 
 
 Requirements
