@@ -10,7 +10,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        consul-version: [1.19.2, 1.20.6, 1.21.1]
+        consul-version: [1.19.2, 1.20.6, 1.21.4]
         os: [ubuntu-latest]
     runs-on: ${{ matrix.os }}
     steps:
