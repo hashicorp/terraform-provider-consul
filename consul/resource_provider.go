@@ -350,6 +350,9 @@ func getOptions(d *schema.ResourceData, meta interface{}) (*consulapi.QueryOptio
 	}
 	if v, ok := d.GetOk("token"); ok {
 		token = v.(string)
+	} else if config.Token != "" {
+		// Fall back to provider-level token when no resource-level override
+		token = config.Token
 	}
 	if v, ok := d.GetOk("partition"); ok {
 		partition = v.(string)
