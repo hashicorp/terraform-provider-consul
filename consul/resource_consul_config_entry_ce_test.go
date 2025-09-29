@@ -444,7 +444,7 @@ resource "consul_config_entry" "terminating_gateway" {
 
 const testAccConsulConfigEntryCE_ServiceConfigL4 = `
 resource "consul_config_entry" "jwt_provider" {
-	name = "okta"
+	name = "okta-l4"
 	kind = "jwt-provider"
 
 	config_json = jsonencode({
@@ -501,7 +501,7 @@ resource "consul_config_entry" "sd" {
 }
 
 resource "consul_config_entry" "jwt_provider" {
-	name = "okta"
+	name = "okta-l7"
 	kind = "jwt-provider"
 
 	config_json = jsonencode({
@@ -579,7 +579,7 @@ resource "consul_config_entry" "sd" {
 }
 
 resource "consul_config_entry" "jwt_provider" {
-	name = "okta"
+	name = "okta-l7b"
 	kind = "jwt-provider"
 
 	config_json = jsonencode({
