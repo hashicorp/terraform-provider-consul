@@ -366,6 +366,13 @@ func getOptions(d *schema.ResourceData, meta interface{}) (*consulapi.QueryOptio
 		}
 	}
 
+	if token == "" {
+		if config.Token != "" {
+			// Fall back to provider-level token when no resource-level override
+			token = config.Token
+		}
+	}
+
 	qOpts := &consulapi.QueryOptions{
 		Datacenter: dc,
 		Namespace:  namespace,
