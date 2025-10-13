@@ -1,3 +1,9 @@
+## 2.22.1 (October 14, 2025)
+
+BUG FIXES:
+
+* The provider now falls back to the login token for resource operations when the resource token is missing ([#458](https://github.com/hashicorp/terraform-provider-consul/pull/458)).
+
 ## 2.22.0 (June 24, 2025)
 
 NEW FEATURES:
