@@ -1,6 +1,6 @@
 module github.com/hashicorp/terraform-provider-consul
 
-go 1.25.1
+go 1.25.2
 
 require (
 	github.com/hashicorp/consul/api v1.32.1
