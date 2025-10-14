@@ -1,4 +1,4 @@
-## 2.22.1 (October 14, 2025)
+## 2.22.1 (October 16, 2025)
 
 BUG FIXES:
 
