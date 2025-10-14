@@ -101,3 +101,5 @@ require (
 	google.golang.org/grpc v1.56.3 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
+
+replace github.com/spf13/afero => github.com/spf13/afero v1.2.2
