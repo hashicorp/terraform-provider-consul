@@ -12,7 +12,7 @@ project "terraform-provider-consul" {
   team = "_UNUSED_"
 
   slack {
-    notification_channel = "C9KPKPKRN"
+    notification_channel = "C09KX8B2KC6"
   }
 
   github {
