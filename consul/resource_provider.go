@@ -324,6 +324,12 @@ func providerConfigure(d *schema.ResourceData) (interface{}, error) {
 			return nil, fmt.Errorf("failed to login using JWT auth method %q: %v", authMethod, err)
 		}
 		config.Token = token.SecretID
+
+		client, err := config.Client()
+		if err != nil {
+			return nil, err
+		}
+		config.client = client
 	}
 
 	return config, nil
