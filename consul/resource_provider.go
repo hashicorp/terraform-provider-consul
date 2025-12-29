@@ -6,14 +6,15 @@ package consul
 import (
 	"encoding/json"
 	"fmt"
-	"log"
 	"net/http"
 	"os"
 	"strings"
 
 	consulapi "github.com/hashicorp/consul/api"
+	"github.com/hashicorp/go-hclog"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-provider-consul/consul/auth"
 	"github.com/mitchellh/mapstructure"
 )
 
@@ -29,7 +30,7 @@ func deprecated(name string, resource *schema.Resource) *schema.Resource {
 
 // Provider returns a terraform.ResourceProvider.
 func Provider() terraform.ResourceProvider {
-	return &schema.Provider{
+	r := &schema.Provider{
 		Schema: map[string]*schema.Schema{
 			"datacenter": {
 				Type:        schema.TypeString,
@@ -263,15 +264,27 @@ func Provider() terraform.ResourceProvider {
 
 		ConfigureFunc: providerConfigure,
 	}
+
+	// Add all registered authentication login schemas
+	auth.MustAddAuthLoginSchema(r.Schema)
+
+	return r
 }
 
 func providerConfigure(d *schema.ResourceData) (interface{}, error) {
+	// Initialize logger
+	logger := hclog.New(&hclog.LoggerOptions{
+		Name:   "consul-provider",
+		Level:  hclog.Debug,
+		Output: os.Stderr,
+	})
+
 	var config *Config
 	configRaw := d.Get("").(map[string]interface{})
 	if err := mapstructure.Decode(configRaw, &config); err != nil {
 		return nil, err
 	}
-	log.Printf("[INFO] Initializing Consul client")
+	logger.Debug("Initializing Consul client")
 	client, err := config.Client()
 	if err != nil {
 		return nil, err
@@ -292,38 +305,67 @@ func providerConfigure(d *schema.ResourceData) (interface{}, error) {
 	}
 	client.SetHeaders(parsedHeaders)
 
-	authJWT := d.Get("auth_jwt").([]interface{})
-	if len(authJWT) > 0 {
-		authConfig := authJWT[0].(map[string]interface{})
-		authMethod := authConfig["auth_method"].(string)
-		tfeWorkloadIdentity := authConfig["use_terraform_cloud_workload_identity"].(bool)
-		bearerToken := authConfig["bearer_token"].(string)
+	// Check for new auth framework login methods first
+	authLogin, err := auth.GetAuthLogin(d)
+	if err != nil {
+		return nil, err
+	}
 
-		if tfeWorkloadIdentity {
-			bearerToken = os.Getenv("TFC_WORKLOAD_IDENTITY_TOKEN")
-			if bearerToken == "" {
-				return nil, fmt.Errorf("auth_jwt.use_terraform_cloud_workload_identity has been set but no token found in TFC_WORKLOAD_IDENTITY_TOKEN environment variable")
+	if authLogin != nil {
+		logger.Debug("Using auth login method", "method", authLogin.AuthMethodName())
+
+		// Note: Namespace and partition should be set via config or query/write options
+		// The Consul API client doesn't have SetNamespace/SetPartition methods
+		if ns, ok := authLogin.Namespace(); ok {
+			logger.Debug("Auth login namespace configured", "namespace", ns)
+			config.Namespace = ns
+		}
+		if part, ok := authLogin.Partition(); ok {
+			logger.Debug("Auth login partition configured", "partition", part)
+			// Partition is handled via Enterprise features
+		}
+
+		token, err := authLogin.Login(client)
+		if err != nil {
+			return nil, fmt.Errorf("failed to login using auth method %q: %v", authLogin.AuthMethodName(), err)
+		}
+		config.Token = token
+		logger.Debug("Successfully authenticated using auth method", "method", authLogin.AuthMethodName())
+	} else {
+		// Fallback to legacy auth_jwt for backward compatibility
+		authJWT := d.Get("auth_jwt").([]interface{})
+		if len(authJWT) > 0 {
+			authConfig := authJWT[0].(map[string]interface{})
+			authMethod := authConfig["auth_method"].(string)
+			tfeWorkloadIdentity := authConfig["use_terraform_cloud_workload_identity"].(bool)
+			bearerToken := authConfig["bearer_token"].(string)
+
+			if tfeWorkloadIdentity {
+				bearerToken = os.Getenv("TFC_WORKLOAD_IDENTITY_TOKEN")
+				if bearerToken == "" {
+					return nil, fmt.Errorf("auth_jwt.use_terraform_cloud_workload_identity has been set but no token found in TFC_WORKLOAD_IDENTITY_TOKEN environment variable")
+				}
+
+			} else if bearerToken == "" {
+				return nil, fmt.Errorf("either auth_jwt.bearer_token or auth_jwt.use_terraform_cloud_workload_identity should be set")
 			}
 
-		} else if bearerToken == "" {
-			return nil, fmt.Errorf("either auth_jwt.bearer_token or auth_jwt.use_terraform_cloud_workload_identity should be set")
-		}
+			meta := map[string]string{}
+			for k, v := range authConfig["meta"].(map[string]interface{}) {
+				meta[k] = v.(string)
+			}
 
-		meta := map[string]string{}
-		for k, v := range authConfig["meta"].(map[string]interface{}) {
-			meta[k] = v.(string)
+			_, wOpts := getOptions(d, config)
+			token, _, err := client.ACL().Login(&consulapi.ACLLoginParams{
+				AuthMethod:  authMethod,
+				BearerToken: bearerToken,
+				Meta:        meta,
+			}, wOpts)
+			if err != nil {
+				return nil, fmt.Errorf("failed to login using JWT auth method %q: %v", authMethod, err)
+			}
+			config.Token = token.SecretID
 		}
-
-		_, wOpts := getOptions(d, config)
-		token, _, err := client.ACL().Login(&consulapi.ACLLoginParams{
-			AuthMethod:  authMethod,
-			BearerToken: bearerToken,
-			Meta:        meta,
-		}, wOpts)
-		if err != nil {
-			return nil, fmt.Errorf("failed to login using JWT auth method %q: %v", authMethod, err)
-		}
-		config.Token = token.SecretID
 	}
 
 	return config, nil
