@@ -48,6 +48,66 @@ resource "aws_instance" "app" {
 }
 ```
 
+### Example AWS IAM Authentication Usage
+
+Authenticate to Consul using AWS IAM credentials:
+
+```hcl
+provider "consul" {
+  address = "https://consul.example.com:8501"
+  
+  auth_login_aws {
+    auth_method = "aws-iam"
+    
+    aws_region            = "us-east-1"
+    aws_access_key_id     = var.aws_access_key
+    aws_secret_access_key = var.aws_secret_key
+  }
+}
+```
+
+Or, using AWS profile from shared credentials file:
+
+```hcl
+provider "consul" {
+  address = "https://consul.example.com:8501"
+  
+  auth_login_aws {
+    auth_method           = "aws-iam"
+    aws_profile           = "dev"
+    aws_shared_credentials_file = "~/.aws/credentials"
+  }
+}
+```
+
+### Example JWT Authentication Usage
+
+Authenticate to Consul using a JWT token from Kubernetes:
+
+```hcl
+provider "consul" {
+  address = "https://consul.example.com:8501"
+  
+  auth_jwt {
+    auth_method = "kubernetes"
+    bearer_token = file("/var/run/secrets/kubernetes.io/serviceaccount/token")
+  }
+}
+```
+
+Or, using Terraform Cloud Workload Identity:
+
+```hcl
+provider "consul" {
+  address = "https://consul.example.com:8501"
+  
+  auth_jwt {
+    auth_method                        = "tfc"
+    use_terraform_cloud_workload_identity = true
+  }
+}
+```
+
 ## Compatibility
 
 The Consul Terraform provider uses features of the latest version of Consul.
@@ -63,6 +123,71 @@ The known compatibility between this provider and Consul is:
 | 2.19.0                     | >= 1.17.0      |
 | 2.18.0                     | >= 1.16.0      |
 
+## Authentication
+
+The Consul provider supports multiple authentication methods for connecting to a Consul cluster. Each authentication method is configured using a dedicated configuration block.
+
+### AWS IAM Authentication
+
+Provides support for authenticating to Consul using AWS IAM credentials.
+
+*For more details see:
+[AWS Auth Method (HTTP API)](https://developer.hashicorp.com/consul/api-docs/auth-methods/aws)*
+
+The `auth_login_aws` configuration block accepts the following arguments:
+
+* `auth_method` - (Required) The name of the Consul auth method to use for login.
+
+* `bearer_token` - (Optional) Pre-computed bearer token to use for login. If not provided, the provider will generate one using AWS credentials.
+
+* `aws_access_key_id` - (Optional) The AWS access key ID.  
+  *Can be specified with the `AWS_ACCESS_KEY_ID` environment variable.*
+
+* `aws_secret_access_key` - (Optional) The AWS secret access key.  
+  *Can be specified with the `AWS_SECRET_ACCESS_KEY` environment variable.*
+
+* `aws_session_token` - (Optional) The AWS session token.  
+  *Can be specified with the `AWS_SESSION_TOKEN` environment variable.*
+
+* `aws_profile` - (Optional) The name of the AWS profile.  
+  *Can be specified with the `AWS_PROFILE` environment variable.*
+
+* `aws_shared_credentials_file` - (Optional) Path to the AWS shared credentials file.  
+  *Can be specified with the `AWS_SHARED_CREDENTIALS_FILE` environment variable.*
+
+* `aws_web_identity_token_file` - (Optional) Path to the file containing an OAuth 2.0 access token or OpenID Connect ID token.  
+  *Can be specified with the `AWS_WEB_IDENTITY_TOKEN_FILE` environment variable.*
+
+* `aws_region` - (Optional) The AWS region.  
+  *Can be specified with the `AWS_REGION` or `AWS_DEFAULT_REGION` environment variables.*
+
+* `aws_role_arn` - (Optional) The ARN of the AWS Role to assume. *Used during STS AssumeRole*  
+  *Can be specified with the `AWS_ROLE_ARN` environment variable.*
+
+* `aws_role_session_name` - (Optional) Specifies the name to attach to the AWS role session. *Used during STS AssumeRole*  
+  *Can be specified with the `AWS_ROLE_SESSION_NAME` environment variable.*
+
+* `aws_sts_endpoint` - (Optional) The STS endpoint URL.
+
+* `aws_iam_endpoint` - (Optional) The IAM endpoint URL.
+
+* `server_id_header_value` - (Optional) The Consul Server ID header value to include in the STS signing request. This must match the ServerIDHeaderValue configured in the Consul auth method.
+
+* `meta` - (Optional) A map of arbitrary metadata to associate with the token. Can be useful to track origins or other contextual information.
+
+### JWT Authentication
+
+Provides support for authenticating to Consul using JWT tokens from various sources such as Kubernetes or other OIDC providers.
+
+The `auth_jwt` configuration block accepts the following arguments:
+
+* `auth_method` - (Required) The name of the auth method to use for login in Consul.
+
+* `bearer_token` - (Optional) The bearer token to present to the auth method during login. For Kubernetes, this is a Service Account Token (JWT).
+
+* `use_terraform_cloud_workload_identity` - (Optional) Whether to use a Terraform Cloud Workload Identity token. The token will be read from the `TFC_WORKLOAD_IDENTITY_TOKEN` environment variable.
+
+* `meta` - (Optional) A map of arbitrary metadata to associate with the token. Can be useful to track origins or other contextual information.
 
 <!-- schema generated by tfplugindocs -->
 ## Schema
@@ -70,6 +195,7 @@ The known compatibility between this provider and Consul is:
 ### Optional
 
 - `address` (String) The HTTP(S) API address of the agent to use. Defaults to "127.0.0.1:8500".
+- `auth_login_aws` (Block List, Max: 1) Authenticates to Consul using AWS IAM. (see [below for nested schema](#nestedblock--auth_login_aws))
 - `auth_jwt` (Block List, Max: 1) Authenticates to Consul using a JWT authentication method. (see [below for nested schema](#nestedblock--auth_jwt))
 - `ca_file` (String) A path to a PEM-encoded certificate authority used to verify the remote agent's certificate.
 - `ca_path` (String) A path to a directory of PEM-encoded certificate authority files to use to check the authenticity of client and server connections. Can also be specified with the `CONSUL_CAPATH` environment variable.
@@ -98,6 +224,30 @@ Optional:
 - `bearer_token` (String) The bearer token to present to the auth method during login for authentication purposes. For the Kubernetes auth method this is a [Service Account Token (JWT)](https://kubernetes.io/docs/reference/access-authn-authz/authentication/#service-account-tokens).
 - `meta` (Map of String) Specifies arbitrary KV metadata linked to the token. Can be useful to track origins.
 - `use_terraform_cloud_workload_identity` (Boolean) Whether to use a [Terraform Workload Identity token](https://developer.hashicorp.com/terraform/cloud-docs/workspaces/dynamic-provider-credentials/workload-identity-tokens). The token will be read from the `TFC_WORKLOAD_IDENTITY_TOKEN` environment variable.
+
+<a id="nestedblock--auth_login_aws"></a>
+### Nested Schema for `auth_login_aws`
+
+Required:
+
+- `auth_method` (String) The name of the Consul auth method to use for login.
+
+Optional:
+
+- `bearer_token` (String, Sensitive) Pre-computed bearer token to use for login. If not provided, the provider will generate one using AWS credentials.
+- `aws_access_key_id` (String) The AWS access key ID. *Can be specified with the `AWS_ACCESS_KEY_ID` environment variable.*
+- `aws_secret_access_key` (String, Sensitive) The AWS secret access key. *Can be specified with the `AWS_SECRET_ACCESS_KEY` environment variable.*
+- `aws_session_token` (String, Sensitive) The AWS session token. *Can be specified with the `AWS_SESSION_TOKEN` environment variable.*
+- `aws_profile` (String) The name of the AWS profile. *Can be specified with the `AWS_PROFILE` environment variable.*
+- `aws_shared_credentials_file` (String) Path to the AWS shared credentials file. *Can be specified with the `AWS_SHARED_CREDENTIALS_FILE` environment variable.*
+- `aws_web_identity_token_file` (String) Path to the file containing an OAuth 2.0 access token or OpenID Connect ID token. *Can be specified with the `AWS_WEB_IDENTITY_TOKEN_FILE` environment variable.*
+- `aws_region` (String) The AWS region. *Can be specified with the `AWS_REGION` or `AWS_DEFAULT_REGION` environment variables.*
+- `aws_role_arn` (String) The ARN of the AWS Role to assume. *Can be specified with the `AWS_ROLE_ARN` environment variable.*
+- `aws_role_session_name` (String) Specifies the name to attach to the AWS role session. *Can be specified with the `AWS_ROLE_SESSION_NAME` environment variable.*
+- `aws_sts_endpoint` (String) The STS endpoint URL.
+- `aws_iam_endpoint` (String) The IAM endpoint URL.
+- `server_id_header_value` (String) The Consul Server ID header value to include in the STS signing request. This must match the ServerIDHeaderValue configured in the Consul auth method.
+- `meta` (Map of String) Specifies arbitrary KV metadata linked to the token. Can be useful to track origins.
 
 
 <a id="nestedblock--header"></a>
