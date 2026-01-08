@@ -27,6 +27,8 @@ const (
 	EnvVarAWSRegion = "AWS_REGION"
 	// EnvVarAWSDefaultRegion is the environment variable for AWS default region
 	EnvVarAWSDefaultRegion = "AWS_DEFAULT_REGION"
+	// EnvVarBearerToken is the environment variable for bearer token (used across all auth methods)
+	EnvVarBearerToken = "CONSUL_LOGIN_BEARER_TOKEN"
 )
 
 // Schema Field Names for AWS authentication configuration

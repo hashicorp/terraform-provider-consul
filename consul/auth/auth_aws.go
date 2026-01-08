@@ -42,12 +42,8 @@ func GetAWSLoginSchemaResource(authField string) *schema.Resource {
 				Required:    true,
 				Description: `The name of the Consul auth method to use for login.`,
 			},
-			utils.FieldBearerToken: {
-				Type:        schema.TypeString,
-				Optional:    true,
-				Sensitive:   true,
-				Description: `Pre-computed bearer token to use for login. If not provided, the provider will generate one using AWS credentials.`,
-			},
+			// Bearer token is intentionally NOT exposed in schema
+			// It can be generated automatically from AWS credentials
 			// static credential fields
 			utils.FieldAWSAccessKeyID: {
 				Type:        schema.TypeString,
@@ -207,6 +203,11 @@ func (l *AuthLoginAWS) Login(client *consulapi.Client) (string, error) {
 
 func (l *AuthLoginAWS) getDefaults() authDefaults {
 	defaults := authDefaults{
+		{
+			field:      utils.FieldBearerToken,
+			envVars:    []string{utils.EnvVarBearerToken},
+			defaultVal: "",
+		},
 		{
 			field:      utils.FieldAWSAccessKeyID,
 			envVars:    []string{utils.EnvVarAWSAccessKeyID},
