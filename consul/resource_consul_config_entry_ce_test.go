@@ -483,6 +483,8 @@ resource "consul_config_entry" "service_intentions" {
 			}
 		]
 	})
+
+	depends_on = [consul_config_entry.jwt_provider]
 }
 `
 
@@ -560,6 +562,8 @@ resource "consul_config_entry" "service_intentions" {
 			}
 		]
 	})
+
+	depends_on = [consul_config_entry.jwt_provider, consul_config_entry.sd]
 }
 `
 
@@ -632,6 +636,8 @@ resource "consul_config_entry" "service_intentions" {
 			}
 		]
 	})
+
+	depends_on = [consul_config_entry.jwt_provider, consul_config_entry.sd]
 }
 `
 

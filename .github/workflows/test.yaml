@@ -5,12 +5,17 @@ on:
   pull_request:
     branches:
       - main
+  pull_request_target:
+    types: [labeled, unlabeled]
 jobs:
   test:
+    # Skip test job for label events - we only need to re-run docs validation when labels change
+    # The test job status from the original pull_request event remains valid
+    if: github.event_name != 'pull_request_target'
     strategy:
       fail-fast: false
       matrix:
-        consul-version: [1.19.2, 1.20.6, 1.21.4]
+        consul-version: [1.19.2, 1.20.6, 1.21.4, 1.22.2]
         os: [ubuntu-latest]
     runs-on: ${{ matrix.os }}
     steps:
@@ -36,27 +41,48 @@ jobs:
       TERRAFORM_VERSION: 1.9.5
       TFPLUGINDOCS_VERSION: 0.19.4
     steps:
+    - name: Checkout code
+      uses: actions/checkout@8f4b7f84864484a7bf31766abe9204da3cbe65b3 # v3.5.0
+    - name: Check for ignore-docs label
+      id: check-label
+      # Only check labels for PR events; push events always validate docs
+      if: github.event_name == 'pull_request' || github.event_name == 'pull_request_target'
+      env:
+        GH_TOKEN: ${{ github.token }}
+      run: |
+        PR_NUMBER=${{ github.event.pull_request.number }}
+        labels=$(gh pr view $PR_NUMBER --repo ${{ github.repository }} --json labels --jq '.labels[].name')
+        if echo "$labels" | grep -q "ignore-docs"; then
+          echo "skip_docs=true" >> $GITHUB_OUTPUT
+          echo "✓ Found ignore-docs label - will skip docs validation"
+        else
+          echo "skip_docs=false" >> $GITHUB_OUTPUT
+          echo "✓ No ignore-docs label found - will validate docs"
+        fi
     - name: Install Go
+      if: steps.check-label.outputs.skip_docs != 'true'
       uses: actions/setup-go@4d34df0c2316fe8122ab82dc22947d607c0c91f9 # v4.0.0
       with:
         go-version: 1.25.x
-    - name: Checkout code
-      uses: actions/checkout@8f4b7f84864484a7bf31766abe9204da3cbe65b3 # v3.5.0
     - name: Install Terraform
+      if: steps.check-label.outputs.skip_docs != 'true'
       run: |
           curl -LO https://releases.hashicorp.com/terraform/${TERRAFORM_VERSION}/terraform_${TERRAFORM_VERSION}_linux_amd64.zip
           sudo unzip terraform_${TERRAFORM_VERSION}_linux_amd64.zip terraform -d /usr/local/bin/
           rm terraform_${TERRAFORM_VERSION}_linux_amd64.zip
     - name: Install tfplugindocs
+      if: steps.check-label.outputs.skip_docs != 'true'
       run: |
         curl -LO https://github.com/hashicorp/terraform-plugin-docs/releases/download/v${TFPLUGINDOCS_VERSION}/tfplugindocs_${TFPLUGINDOCS_VERSION}_linux_amd64.zip
         sudo unzip tfplugindocs_${TFPLUGINDOCS_VERSION}_linux_amd64.zip tfplugindocs -d /usr/local/bin
         rm -f tfplugindocs_${TFPLUGINDOCS_VERSION}_linux_amd64.zip
     - name: Generate the documentation'
+      if: steps.check-label.outputs.skip_docs != 'true'
       run: |
         terraform fmt -recursive .
         tfplugindocs generate --ignore-deprecated true
     - name: Fail if repository has changes
+      if: steps.check-label.outputs.skip_docs != 'true'
       run: |
         git status --short
         [[ -z $(git status --porcelain) ]] || (echo "The docs/ folder is not up-to-date, please use 'tfplugindocs generate --ignore-deprecated true' to update it" && false)

@@ -10,76 +10,77 @@ import (
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-provider-consul/consul/auth/utils"
 )
 
 func TestAuthLoginAWS_Init(t *testing.T) {
 	tests := []authLoginInitTest{
 		{
 			name:      "basic",
-			authField: fieldAuthLoginAWS,
+			authField: utils.FieldAuthLoginAWS,
 			raw: map[string]interface{}{
-				fieldAuthLoginAWS: []interface{}{
+				utils.FieldAuthLoginAWS: []interface{}{
 					map[string]interface{}{
-						"namespace":                   "ns1",
-						"partition":                   "part1",
-						fieldAuthMethod:               "aws-auth",
-						fieldAWSAccessKeyID:           "key-id",
-						fieldAWSSecretAccessKey:       "sa-key",
-						fieldAWSSessionToken:          "session-token",
-						fieldAWSIAMEndpoint:           "iam.us-east-2.amazonaws.com",
-						fieldAWSSTSEndpoint:           "sts.us-east-2.amazonaws.com",
-						fieldAWSRegion:                "us-east-2",
-						fieldAWSSharedCredentialsFile: "credentials",
-						fieldAWSProfile:               "profile1",
-						fieldAWSRoleARN:               "role-arn",
-						fieldAWSRoleSessionName:       "session1",
-						fieldAWSWebIdentityTokenFile:  "web-token",
-						fieldServerIDHeaderValue:      "header1",
+						"namespace":                         "ns1",
+						"partition":                         "part1",
+						utils.FieldAuthMethod:               "aws-auth",
+						utils.FieldAWSAccessKeyID:           "key-id",
+						utils.FieldAWSSecretAccessKey:       "sa-key",
+						utils.FieldAWSSessionToken:          "session-token",
+						utils.FieldAWSIAMEndpoint:           "iam.us-east-2.amazonaws.com",
+						utils.FieldAWSSTSEndpoint:           "sts.us-east-2.amazonaws.com",
+						utils.FieldAWSRegion:                "us-east-2",
+						utils.FieldAWSSharedCredentialsFile: "credentials",
+						utils.FieldAWSProfile:               "profile1",
+						utils.FieldAWSRoleARN:               "role-arn",
+						utils.FieldAWSRoleSessionName:       "session1",
+						utils.FieldAWSWebIdentityTokenFile:  "web-token",
+						utils.FieldServerIDHeaderValue:      "header1",
 					},
 				},
 			},
 			expectParams: map[string]interface{}{
-				"namespace":                   "ns1",
-				"partition":                   "part1",
-				fieldAuthMethod:               "aws-auth",
-				fieldAWSAccessKeyID:           "key-id",
-				fieldAWSSecretAccessKey:       "sa-key",
-				fieldAWSSessionToken:          "session-token",
-				fieldAWSIAMEndpoint:           "iam.us-east-2.amazonaws.com",
-				fieldAWSSTSEndpoint:           "sts.us-east-2.amazonaws.com",
-				fieldAWSRegion:                "us-east-2",
-				fieldAWSSharedCredentialsFile: "credentials",
-				fieldAWSProfile:               "profile1",
-				fieldAWSRoleARN:               "role-arn",
-				fieldAWSRoleSessionName:       "session1",
-				fieldAWSWebIdentityTokenFile:  "web-token",
-				fieldServerIDHeaderValue:      "header1",
-				fieldBearerToken:              "",
-				fieldMeta:                     map[string]interface{}{},
+				"namespace":                         "ns1",
+				"partition":                         "part1",
+				utils.FieldAuthMethod:               "aws-auth",
+				utils.FieldAWSAccessKeyID:           "key-id",
+				utils.FieldAWSSecretAccessKey:       "sa-key",
+				utils.FieldAWSSessionToken:          "session-token",
+				utils.FieldAWSIAMEndpoint:           "iam.us-east-2.amazonaws.com",
+				utils.FieldAWSSTSEndpoint:           "sts.us-east-2.amazonaws.com",
+				utils.FieldAWSRegion:                "us-east-2",
+				utils.FieldAWSSharedCredentialsFile: "credentials",
+				utils.FieldAWSProfile:               "profile1",
+				utils.FieldAWSRoleARN:               "role-arn",
+				utils.FieldAWSRoleSessionName:       "session1",
+				utils.FieldAWSWebIdentityTokenFile:  "web-token",
+				utils.FieldServerIDHeaderValue:      "header1",
+				utils.FieldBearerToken:              "",
+				utils.FieldMeta:                     map[string]interface{}{},
 			},
 			wantErr: false,
 		},
 		{
 			name:         "error-missing-resource",
-			authField:    fieldAuthLoginAWS,
+			authField:    utils.FieldAuthLoginAWS,
 			expectParams: nil,
 			wantErr:      true,
-			expectErr:    fmt.Errorf("resource data missing field %q", fieldAuthLoginAWS),
+			expectErr:    fmt.Errorf("resource data missing field %q", utils.FieldAuthLoginAWS),
 		},
 		{
 			name:      "with-env-vars",
-			authField: fieldAuthLoginAWS,
+			authField: utils.FieldAuthLoginAWS,
 			raw: map[string]interface{}{
-				fieldAuthLoginAWS: []interface{}{
+				utils.FieldAuthLoginAWS: []interface{}{
 					map[string]interface{}{
-						fieldAuthMethod: "aws-auth",
+						utils.FieldAuthMethod: "aws-auth",
 					},
 				},
 			},
 			envVars: map[string]string{
-				envVarAWSAccessKeyID:     "env-key-id",
-				envVarAWSSecretAccessKey: "env-sa-key",
-				envVarAWSRegion:          "us-west-2",
+				utils.EnvVarAWSAccessKeyID:     "env-key-id",
+				utils.EnvVarAWSSecretAccessKey: "env-sa-key",
+				utils.EnvVarAWSRegion:          "us-west-2",
 			},
 			expectParams: nil, // Don't check params - AWS env vars from host will be included
 			wantErr:      false,
@@ -104,7 +105,7 @@ func TestAuthLoginAWS_AuthMethodName(t *testing.T) {
 		{
 			name: "with-auth-method",
 			params: map[string]interface{}{
-				fieldAuthMethod: "aws-iam-auth",
+				utils.FieldAuthMethod: "aws-iam-auth",
 			},
 			want: "aws-iam-auth",
 		},
@@ -135,11 +136,11 @@ func TestAuthLoginAWS_Login(t *testing.T) {
 			name: "successful-login-with-bearer-token",
 			authLogin: &AuthLoginAWS{
 				AuthLoginCommon: AuthLoginCommon{
-					authField:   fieldAuthLoginAWS,
+					authField:   utils.FieldAuthLoginAWS,
 					initialized: true,
 					params: map[string]interface{}{
-						fieldAuthMethod:  "aws-auth",
-						fieldBearerToken: "test-bearer-token",
+						utils.FieldAuthMethod:  "aws-auth",
+						utils.FieldBearerToken: "test-bearer-token",
 					},
 				},
 			},
@@ -149,9 +150,9 @@ func TestAuthLoginAWS_Login(t *testing.T) {
 					response := map[string]interface{}{
 						"SecretID": "test-secret-token-12345",
 					}
-					w.Header().Set("Content-Type", "application/json")
-					w.WriteHeader(http.StatusOK)
+					w.Header().Set("Content-Type", utils.HTTPContentTypeJSON)
 					json.NewEncoder(w).Encode(response)
+					_ = json.NewEncoder(w).Encode(response)
 				},
 			},
 			want:               "test-secret-token-12345",
@@ -163,10 +164,10 @@ func TestAuthLoginAWS_Login(t *testing.T) {
 			name: "error-no-auth-method",
 			authLogin: &AuthLoginAWS{
 				AuthLoginCommon: AuthLoginCommon{
-					authField:   fieldAuthLoginAWS,
+					authField:   utils.FieldAuthLoginAWS,
 					initialized: true,
 					params: map[string]interface{}{
-						fieldBearerToken: "test-bearer-token",
+						utils.FieldBearerToken: "test-bearer-token",
 					},
 				},
 			},
@@ -191,7 +192,7 @@ func TestAuthLoginAWS_Login(t *testing.T) {
 }
 
 func TestAuthLoginAWS_Schema(t *testing.T) {
-	s := GetAWSLoginSchema(fieldAuthLoginAWS)
+	s := GetAWSLoginSchema(utils.FieldAuthLoginAWS)
 
 	if s == nil {
 		t.Fatal("GetAWSLoginSchema() returned nil")
@@ -214,7 +215,7 @@ func TestAuthLoginAWS_Schema(t *testing.T) {
 		t.Fatal("schema.Elem is not a Resource")
 	}
 
-	requiredFields := []string{fieldAuthMethod}
+	requiredFields := []string{utils.FieldAuthMethod}
 	for _, field := range requiredFields {
 		if _, ok := resource.Schema[field]; !ok {
 			t.Errorf("missing required field: %s", field)
@@ -224,20 +225,20 @@ func TestAuthLoginAWS_Schema(t *testing.T) {
 	}
 
 	optionalFields := []string{
-		fieldAWSAccessKeyID,
-		fieldAWSSecretAccessKey,
-		fieldAWSSessionToken,
-		fieldAWSProfile,
-		fieldAWSSharedCredentialsFile,
-		fieldAWSWebIdentityTokenFile,
-		fieldAWSRoleARN,
-		fieldAWSRoleSessionName,
-		fieldAWSRegion,
-		fieldAWSSTSEndpoint,
-		fieldAWSIAMEndpoint,
-		fieldServerIDHeaderValue,
-		fieldBearerToken,
-		fieldMeta,
+		utils.FieldAWSAccessKeyID,
+		utils.FieldAWSSecretAccessKey,
+		utils.FieldAWSSessionToken,
+		utils.FieldAWSProfile,
+		utils.FieldAWSSharedCredentialsFile,
+		utils.FieldAWSWebIdentityTokenFile,
+		utils.FieldAWSRoleARN,
+		utils.FieldAWSRoleSessionName,
+		utils.FieldAWSRegion,
+		utils.FieldAWSSTSEndpoint,
+		utils.FieldAWSIAMEndpoint,
+		utils.FieldServerIDHeaderValue,
+		utils.FieldBearerToken,
+		utils.FieldMeta,
 		"namespace",
 		"partition",
 	}
