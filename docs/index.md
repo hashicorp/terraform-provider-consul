@@ -121,7 +121,6 @@ Optional:
 - `aws_shared_credentials_file` (String) Path to the AWS shared credentials file.
 - `aws_sts_endpoint` (String) The STS endpoint URL.
 - `aws_web_identity_token_file` (String) Path to the file containing an OAuth 2.0 access token or OpenID Connect ID token.
-- `bearer_token` (String, Sensitive) Pre-computed bearer token to use for login. If not provided, the provider will generate one using AWS credentials.
 - `meta` (Map of String) Specifies arbitrary KV metadata linked to the token. Can be useful to track origins.
 - `namespace` (String) The Consul namespace to authenticate to.
 - `partition` (String) The Consul admin partition to authenticate to.

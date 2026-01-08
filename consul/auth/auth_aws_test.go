@@ -237,7 +237,6 @@ func TestAuthLoginAWS_Schema(t *testing.T) {
 		utils.FieldAWSSTSEndpoint,
 		utils.FieldAWSIAMEndpoint,
 		utils.FieldServerIDHeaderValue,
-		utils.FieldBearerToken,
 		utils.FieldMeta,
 		"namespace",
 		"partition",
