@@ -1,6 +1,6 @@
 module github.com/hashicorp/terraform-provider-consul
 
-go 1.25.2
+go 1.25.6
 
 require (
 	github.com/aws/aws-sdk-go-v2 v1.41.0
@@ -112,7 +112,7 @@ require (
 	golang.org/x/net v0.47.0 // indirect
 	golang.org/x/oauth2 v0.27.0 // indirect
 	golang.org/x/sys v0.39.0 // indirect
-	golang.org/x/text v0.26.0 // indirect
+	golang.org/x/text v0.31.0 // indirect
 	golang.org/x/xerrors v0.0.0-20220907171357-04be3eba64a2 // indirect
 	google.golang.org/api v0.114.0 // indirect
 	google.golang.org/appengine v1.6.7 // indirect
