@@ -1,3 +1,9 @@
+## 2.23.0 (January 29, 2026)
+
+NEW FEATURE:
+
+* Supports authentication to Consul via AWS IAM token exchange in Consul Terraform provider ([#477](https://github.com/hashicorp/terraform-provider-consul/pull/477)).
+
 ## 2.22.1 (October 17, 2025)
 
 BUG FIXES:
