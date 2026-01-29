@@ -36,6 +36,7 @@ jobs:
       run: make vet
 
   docs:
+    if: github.event_name == 'pull_request' || github.event_name == 'pull_request_target'
     runs-on: ubuntu-latest
     env:
       TERRAFORM_VERSION: 1.9.5
