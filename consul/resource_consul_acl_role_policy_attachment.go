@@ -62,9 +62,13 @@ func resourceConsulACLRolePolicyAttachmentCreate(d *schema.ResourceData, meta in
 		Name: newPolicyName,
 	})
 
-	_, _, err = client.ACL().RoleUpdate(role, wOpts)
+	u, _, err := client.ACL().RoleUpdate(role, wOpts)
 	if err != nil {
 		return fmt.Errorf("error updating role '%q' to set new policy attachment: '%s'", roleID, err)
+	}
+
+	if err := waitForACLRoleReplication(client.ACL(), qOpts, u.ModifyIndex); err != nil {
+		return err
 	}
 
 	id := fmt.Sprintf("%s:%s", roleID, newPolicyName)
