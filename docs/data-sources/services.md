@@ -42,6 +42,9 @@ The following arguments are supported:
   same value found in `query_options` parameter specified below, or if that is
   empty, the `datacenter` value found in the Consul agent that this provider is
   configured to talk to.
+  
+* `filter` - (Optional) A filter expression to refine the query, see https://www.consul.io/api-docs/features/filtering
+  and https://www.consul.io/api-docs/catalog#filtering-1.
 
 * `query_options` - (Optional) See below.
 
