@@ -1,3 +1,9 @@
+## Unreleased
+
+BUG FIXES:
+
+* Upgrades `google.golang.org/grpc` to v1.79.3 to address the gRPC-Go authorization bypass for malformed `:path` headers ([#484](https://github.com/hashicorp/terraform-provider-consul/pull/484)).
+
 ## 2.23.0 (January 29, 2026)
 
 NEW FEATURE:
