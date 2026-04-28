@@ -32,6 +32,8 @@ func TestAccConsulService_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("consul_service.example", "tags.#", "1"),
 					resource.TestCheckResourceAttr("consul_service.example", "tags.0", "tag0"),
 					resource.TestCheckResourceAttr("consul_service.example", "meta.%", "0"),
+					resource.TestCheckNoResourceAttr("consul_service.example", "weights.passing"),
+					resource.TestCheckNoResourceAttr("consul_service.example", "weights.warning"),
 					testAccConsulExternalSource(client),
 				),
 			},
@@ -355,6 +357,41 @@ func TestAccConsulService_datacenter(t *testing.T) {
 	})
 }
 
+func TestAccConsulService_weights(t *testing.T) {
+	providers, client := startTestServer(t)
+
+	resource.Test(t, resource.TestCase{
+		Providers: providers,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccConsulServiceConfigBasicWeights,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("consul_service.example", "weights.passing", "10"),
+					resource.TestCheckResourceAttr("consul_service.example", "weights.warning", "5"),
+					testAccConsulWeights(client),
+				),
+			},
+		},
+	})
+}
+
+func TestAccConsulService_weightsOptional(t *testing.T) {
+	providers, _ := startTestServer(t)
+
+	resource.Test(t, resource.TestCase{
+		Providers: providers,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccConsulServiceConfigBasicWeightsOptional,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckNoResourceAttr("consul_service.example", "weights.passing"),
+					resource.TestCheckResourceAttr("consul_service.example", "weights.warning", "5"),
+				),
+			},
+		},
+	})
+}
+
 func testAccConsulExternalSource(client *consulapi.Client) func(s *terraform.State) error {
 	return func(s *terraform.State) error {
 		qOpts := consulapi.QueryOptions{}
@@ -402,6 +439,24 @@ func testAccRemoveConsulService(t *testing.T, client *consulapi.Client, node, se
 		if err != nil {
 			t.Errorf("err: %v", err)
 		}
+	}
+}
+
+func testAccConsulWeights(client *consulapi.Client) func(s *terraform.State) error {
+	return func(s *terraform.State) error {
+		qOpts := consulapi.QueryOptions{}
+
+		service, _, err := client.Catalog().Service("example", "", &qOpts)
+		if err != nil {
+			return fmt.Errorf("Failed to retrieve service: %v", err)
+		}
+
+		for _, s := range service {
+			if s.ServiceWeights.Passing == 1 || s.ServiceWeights.Warning == 1 {
+				return fmt.Errorf("default weights are still set")
+			}
+		}
+		return nil
 	}
 }
 
@@ -614,6 +669,43 @@ resource "consul_service" "example" {
 resource "consul_node" "compute" {
 	name    = "compute-example"
 	address = "www.hashicorptest.com"
+}
+`
+
+const testAccConsulServiceConfigBasicWeights = `
+resource "consul_service" "example" {
+	name    = "example"
+	node    = "${consul_node.compute.name}"
+	port    = 80
+	tags    = ["tag0"]
+
+	weights = {
+		passing = 10
+		warning = 5
+	}
+}
+
+resource "consul_node" "compute" {
+  name    = "compute-example"
+  address = "www.hashicorptest.com"
+}
+`
+
+const testAccConsulServiceConfigBasicWeightsOptional = `
+resource "consul_service" "example" {
+	name    = "example"
+	node    = "${consul_node.compute.name}"
+	port    = 80
+	tags    = ["tag0"]
+
+	weights = {
+		warning = 5
+	}
+}
+
+resource "consul_node" "compute" {
+  name    = "compute-example"
+  address = "www.hashicorptest.com"
 }
 `
 

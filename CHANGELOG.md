@@ -1,3 +1,28 @@
+## Unreleased
+
+BUG FIXES:
+
+* Upgrades `google.golang.org/grpc` to v1.79.3 to address the gRPC-Go authorization bypass for malformed `:path` headers and updates the Go version to 1.25.8 ([#484](https://github.com/hashicorp/terraform-provider-consul/pull/484)).
+
+## 2.23.0 (January 29, 2026)
+
+NEW FEATURE:
+
+* Supports authentication to Consul via AWS IAM token exchange in Consul Terraform provider ([#477](https://github.com/hashicorp/terraform-provider-consul/pull/477)).
+
+## 2.22.1 (October 17, 2025)
+
+BUG FIXES:
+
+* The provider now falls back to the login token for resource operations when the resource token is missing ([#458](https://github.com/hashicorp/terraform-provider-consul/pull/458)).
+
+## 2.22.0 (June 24, 2025)
+
+NEW FEATURES:
+
+* The `consul_admin_partition` resource now exposes `disable_gossip` to disable gossip in the partition ([#445](https://github.com/hashicorp/terraform-provider-consul/pull/445)).
+* The `consul_service` resource now supports `weights` to configure service weights ([#435](https://github.com/hashicorp/terraform-provider-consul/pull/435)).
+
 ## 2.21.0 (August 1, 2024)
 
 BUG FIXES:
