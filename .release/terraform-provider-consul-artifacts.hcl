@@ -1,3 +1,6 @@
+# Copyright IBM Corp. 2023, 2026
+# SPDX-License-Identifier: MPL-2.0
+
 schema = 1
 artifacts {
   # This should match the `matrix` in .github/workflows/build.yml

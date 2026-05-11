@@ -1,3 +1,6 @@
+# Copyright IBM Corp. 2023, 2026
+# SPDX-License-Identifier: MPL-2.0
+
 // Reference: https://github.com/hashicorp/crt-core-helloworld/blob/main/.release/ci.hcl (private repository)
 //
 // One way to validate this file, with a local build of the orchestrator (an internal repo):
