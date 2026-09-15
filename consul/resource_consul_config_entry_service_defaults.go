@@ -102,6 +102,21 @@ func (s *serviceDefaults) GetSchema() map[string]*schema.Schema {
 							Optional:    true,
 							Description: "Specifies a percentage that indicates how many times out of 100 that Consul ejects the host when it detects an outlier status.",
 						},
+						"enforcing_consecutive_gateway_failure": {
+							Type:        schema.TypeInt,
+							Optional:    true,
+							Description: "Specifies a percentage that indicates how many times out of 100 that Consul ejects the host when it detects consecutive gateway failures.",
+						},
+						"consecutive_5xx": {
+							Type:        schema.TypeInt,
+							Optional:    true,
+							Description: "Specifies the number of consecutive 5xx responses that trigger outlier detection.",
+						},
+						"consecutive_gateway_failure": {
+							Type:        schema.TypeInt,
+							Optional:    true,
+							Description: "Specifies the number of consecutive gateway failures that trigger outlier detection.",
+						},
 						"max_ejection_percent": {
 							Type:        schema.TypeInt,
 							Optional:    true,
@@ -190,6 +205,21 @@ func (s *serviceDefaults) GetSchema() map[string]*schema.Schema {
 							Type:        schema.TypeInt,
 							Optional:    true,
 							Description: "Specifies a percentage that indicates how many times out of 100 that Consul ejects the host when it detects an outlier status.",
+						},
+						"enforcing_consecutive_gateway_failure": {
+							Type:        schema.TypeInt,
+							Optional:    true,
+							Description: "Specifies a percentage that indicates how many times out of 100 that Consul ejects the host when it detects consecutive gateway failures.",
+						},
+						"consecutive_5xx": {
+							Type:        schema.TypeInt,
+							Optional:    true,
+							Description: "Specifies the number of consecutive 5xx responses that trigger outlier detection.",
+						},
+						"consecutive_gateway_failure": {
+							Type:        schema.TypeInt,
+							Optional:    true,
+							Description: "Specifies the number of consecutive gateway failures that trigger outlier detection.",
 						},
 						"max_ejection_percent": {
 							Type:        schema.TypeInt,
@@ -497,9 +527,12 @@ func (s *serviceDefaults) Decode(d *schema.ResourceData) (consulapi.ConfigEntry,
 				return &ui
 			}
 			passiveHealthCheck := &consulapi.PassiveHealthCheck{
-				MaxFailures:             uint32(passiveHealthCheckMap["max_failures"].(int)),
-				EnforcingConsecutive5xx: uint32Ptr(passiveHealthCheckMap["enforcing_consecutive_5xx"].(int)),
-				MaxEjectionPercent:      uint32Ptr(passiveHealthCheckMap["max_ejection_percent"].(int)),
+				MaxFailures:                        uint32(passiveHealthCheckMap["max_failures"].(int)),
+				EnforcingConsecutive5xx:            uint32Ptr(passiveHealthCheckMap["enforcing_consecutive_5xx"].(int)),
+				EnforcingConsecutiveGatewayFailure: uint32Ptr(passiveHealthCheckMap["enforcing_consecutive_gateway_failure"].(int)),
+				Consecutive5xx:                     uint32Ptr(passiveHealthCheckMap["consecutive_5xx"].(int)),
+				ConsecutiveGatewayFailure:          uint32Ptr(passiveHealthCheckMap["consecutive_gateway_failure"].(int)),
+				MaxEjectionPercent:                 uint32Ptr(passiveHealthCheckMap["max_ejection_percent"].(int)),
 			}
 			duration, err := time.ParseDuration(passiveHealthCheckMap["interval"].(string))
 			if err != nil {
@@ -776,6 +809,9 @@ func (s *serviceDefaults) Write(ce consulapi.ConfigEntry, d *schema.ResourceData
 		passiveHealthCheck[0]["interval"] = elem.PassiveHealthCheck.Interval.String()
 		passiveHealthCheck[0]["max_failures"] = elem.PassiveHealthCheck.MaxFailures
 		passiveHealthCheck[0]["enforcing_consecutive_5xx"] = elem.PassiveHealthCheck.EnforcingConsecutive5xx
+		passiveHealthCheck[0]["enforcing_consecutive_gateway_failure"] = elem.PassiveHealthCheck.EnforcingConsecutiveGatewayFailure
+		passiveHealthCheck[0]["consecutive_5xx"] = elem.PassiveHealthCheck.Consecutive5xx
+		passiveHealthCheck[0]["consecutive_gateway_failure"] = elem.PassiveHealthCheck.ConsecutiveGatewayFailure
 		passiveHealthCheck[0]["max_ejection_percent"] = elem.PassiveHealthCheck.MaxEjectionPercent
 		passiveHealthCheck[0]["base_ejection_time"] = elem.PassiveHealthCheck.BaseEjectionTime.String()
 		upstreamConfig["passive_health_check"] = passiveHealthCheck
@@ -804,6 +840,9 @@ func (s *serviceDefaults) Write(ce consulapi.ConfigEntry, d *schema.ResourceData
 		passiveHealthCheck[0]["interval"] = elem.PassiveHealthCheck.Interval.String()
 		passiveHealthCheck[0]["max_failures"] = elem.PassiveHealthCheck.MaxFailures
 		passiveHealthCheck[0]["enforcing_consecutive_5xx"] = elem.PassiveHealthCheck.EnforcingConsecutive5xx
+		passiveHealthCheck[0]["enforcing_consecutive_gateway_failure"] = elem.PassiveHealthCheck.EnforcingConsecutiveGatewayFailure
+		passiveHealthCheck[0]["consecutive_5xx"] = elem.PassiveHealthCheck.Consecutive5xx
+		passiveHealthCheck[0]["consecutive_gateway_failure"] = elem.PassiveHealthCheck.ConsecutiveGatewayFailure
 		passiveHealthCheck[0]["max_ejection_percent"] = elem.PassiveHealthCheck.MaxEjectionPercent
 		passiveHealthCheck[0]["base_ejection_time"] = elem.PassiveHealthCheck.BaseEjectionTime.String()
 		upstreamConfig["passive_health_check"] = passiveHealthCheck

@@ -4,8 +4,9 @@
 package consul
 
 import (
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 	"testing"
+
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 )
 
 func TestAccConsulServiceDefaultsConfigCEEntryTest(t *testing.T) {
@@ -64,47 +65,56 @@ func TestAccConsulServiceDefaultsConfigCEEntryTest(t *testing.T) {
 					resource.TestCheckResourceAttr("consul_config_entry_service_defaults.bar", "balance_inbound_connections", "exact_balance"),
 					resource.TestCheckResourceAttr("consul_config_entry_service_defaults.bar", "mode", "test"),
 					resource.TestCheckResourceAttr("consul_config_entry_service_defaults.bar", "upstream_config.#", "1"),
-					resource.TestCheckResourceAttr("consul_config_entry_service_defaults.bar", "upstream_config.4033055082.overrides.0.name", "backend"),
-					resource.TestCheckResourceAttr("consul_config_entry_service_defaults.bar", "upstream_config.4033055082.overrides.0.protocol", "tcp"),
-					resource.TestCheckResourceAttr("consul_config_entry_service_defaults.bar", "upstream_config.4033055082.overrides.0.connect_timeout_ms", "500"),
-					resource.TestCheckResourceAttr("consul_config_entry_service_defaults.bar", "upstream_config.4033055082.overrides.0.mesh_gateway.3192341522.mode", "tcp"),
-					resource.TestCheckResourceAttr("consul_config_entry_service_defaults.bar", "upstream_config.4033055082.overrides.0.balance_outbound_connections", "exact_balance"),
-					resource.TestCheckResourceAttr("consul_config_entry_service_defaults.bar", "upstream_config.4033055082.overrides.0.limits.#", "1"),
-					resource.TestCheckResourceAttr("consul_config_entry_service_defaults.bar", "upstream_config.4033055082.overrides.0.limits.1033039851.max_connections", "1900"),
-					resource.TestCheckResourceAttr("consul_config_entry_service_defaults.bar", "upstream_config.4033055082.overrides.0.limits.1033039851.max_pending_requests", "1900"),
-					resource.TestCheckResourceAttr("consul_config_entry_service_defaults.bar", "upstream_config.4033055082.overrides.0.limits.1033039851.max_concurrent_requests", "9399"),
-					resource.TestCheckResourceAttr("consul_config_entry_service_defaults.bar", "upstream_config.4033055082.overrides.0.passive_health_check.3595791510.interval", "19s"),
-					resource.TestCheckResourceAttr("consul_config_entry_service_defaults.bar", "upstream_config.4033055082.overrides.0.passive_health_check.3595791510.max_failures", "8"),
-					resource.TestCheckResourceAttr("consul_config_entry_service_defaults.bar", "upstream_config.4033055082.overrides.0.passive_health_check.3595791510.enforcing_consecutive_5xx", "10"),
-					resource.TestCheckResourceAttr("consul_config_entry_service_defaults.bar", "upstream_config.4033055082.overrides.0.passive_health_check.3595791510.max_ejection_percent", "10"),
-					resource.TestCheckResourceAttr("consul_config_entry_service_defaults.bar", "upstream_config.4033055082.overrides.0.passive_health_check.3595791510.base_ejection_time", "30s"),
-					resource.TestCheckResourceAttr("consul_config_entry_service_defaults.bar", "upstream_config.4033055082.overrides.1.name", "frontend"),
-					resource.TestCheckResourceAttr("consul_config_entry_service_defaults.bar", "upstream_config.4033055082.overrides.1.protocol", "tcp"),
-					resource.TestCheckResourceAttr("consul_config_entry_service_defaults.bar", "upstream_config.4033055082.overrides.1.connect_timeout_ms", "5000"),
-					resource.TestCheckResourceAttr("consul_config_entry_service_defaults.bar", "upstream_config.4033055082.overrides.1.mesh_gateway.3192341522.mode", "tcp"),
-					resource.TestCheckResourceAttr("consul_config_entry_service_defaults.bar", "upstream_config.4033055082.overrides.1.balance_outbound_connections", "exact_balance"),
-					resource.TestCheckResourceAttr("consul_config_entry_service_defaults.bar", "upstream_config.4033055082.overrides.1.limits.#", "1"),
-					resource.TestCheckResourceAttr("consul_config_entry_service_defaults.bar", "upstream_config.4033055082.overrides.1.limits.1033039851.max_connections", "1900"),
-					resource.TestCheckResourceAttr("consul_config_entry_service_defaults.bar", "upstream_config.4033055082.overrides.1.limits.1033039851.max_pending_requests", "1900"),
-					resource.TestCheckResourceAttr("consul_config_entry_service_defaults.bar", "upstream_config.4033055082.overrides.1.limits.1033039851.max_concurrent_requests", "9399"),
-					resource.TestCheckResourceAttr("consul_config_entry_service_defaults.bar", "upstream_config.4033055082.overrides.1.passive_health_check.3595791510.interval", "19s"),
-					resource.TestCheckResourceAttr("consul_config_entry_service_defaults.bar", "upstream_config.4033055082.overrides.1.passive_health_check.3595791510.max_failures", "8"),
-					resource.TestCheckResourceAttr("consul_config_entry_service_defaults.bar", "upstream_config.4033055082.overrides.1.passive_health_check.3595791510.enforcing_consecutive_5xx", "10"),
-					resource.TestCheckResourceAttr("consul_config_entry_service_defaults.bar", "upstream_config.4033055082.overrides.1.passive_health_check.3595791510.max_ejection_percent", "10"),
-					resource.TestCheckResourceAttr("consul_config_entry_service_defaults.bar", "upstream_config.4033055082.overrides.1.passive_health_check.3595791510.base_ejection_time", "30s"),
-					resource.TestCheckResourceAttr("consul_config_entry_service_defaults.bar", "upstream_config.4033055082.defaults.52894523.protocol", "http"),
-					resource.TestCheckResourceAttr("consul_config_entry_service_defaults.bar", "upstream_config.4033055082.defaults.52894523.connect_timeout_ms", "5000"),
-					resource.TestCheckResourceAttr("consul_config_entry_service_defaults.bar", "upstream_config.4033055082.defaults.52894523.mesh_gateway.3192341522.mode", "tcp"),
-					resource.TestCheckResourceAttr("consul_config_entry_service_defaults.bar", "upstream_config.4033055082.defaults.52894523.balance_outbound_connections", "exact_balance"),
-					resource.TestCheckResourceAttr("consul_config_entry_service_defaults.bar", "upstream_config.4033055082.defaults.52894523.limits.#", "1"),
-					resource.TestCheckResourceAttr("consul_config_entry_service_defaults.bar", "upstream_config.4033055082.defaults.52894523.limits.3460439324.max_connections", "1000"),
-					resource.TestCheckResourceAttr("consul_config_entry_service_defaults.bar", "upstream_config.4033055082.defaults.52894523.limits.3460439324.max_pending_requests", "9000"),
-					resource.TestCheckResourceAttr("consul_config_entry_service_defaults.bar", "upstream_config.4033055082.defaults.52894523.limits.3460439324.max_concurrent_requests", "2900"),
-					resource.TestCheckResourceAttr("consul_config_entry_service_defaults.bar", "upstream_config.4033055082.defaults.52894523.passive_health_check.2909148994.interval", "6h38m20s"),
-					resource.TestCheckResourceAttr("consul_config_entry_service_defaults.bar", "upstream_config.4033055082.defaults.52894523.passive_health_check.2909148994.max_failures", "29030"),
-					resource.TestCheckResourceAttr("consul_config_entry_service_defaults.bar", "upstream_config.4033055082.defaults.52894523.passive_health_check.2909148994.enforcing_consecutive_5xx", "1"),
-					resource.TestCheckResourceAttr("consul_config_entry_service_defaults.bar", "upstream_config.4033055082.defaults.52894523.passive_health_check.2909148994.max_ejection_percent", "12"),
-					resource.TestCheckResourceAttr("consul_config_entry_service_defaults.bar", "upstream_config.4033055082.defaults.52894523.passive_health_check.2909148994.base_ejection_time", "8h25m9s"),
+					resource.TestCheckResourceAttr("consul_config_entry_service_defaults.bar", "upstream_config.448751011.overrides.0.name", "backend"),
+					resource.TestCheckResourceAttr("consul_config_entry_service_defaults.bar", "upstream_config.448751011.overrides.0.protocol", "tcp"),
+					resource.TestCheckResourceAttr("consul_config_entry_service_defaults.bar", "upstream_config.448751011.overrides.0.connect_timeout_ms", "500"),
+					resource.TestCheckResourceAttr("consul_config_entry_service_defaults.bar", "upstream_config.448751011.overrides.0.mesh_gateway.3192341522.mode", "tcp"),
+					resource.TestCheckResourceAttr("consul_config_entry_service_defaults.bar", "upstream_config.448751011.overrides.0.balance_outbound_connections", "exact_balance"),
+					resource.TestCheckResourceAttr("consul_config_entry_service_defaults.bar", "upstream_config.448751011.overrides.0.limits.#", "1"),
+					resource.TestCheckResourceAttr("consul_config_entry_service_defaults.bar", "upstream_config.448751011.overrides.0.limits.1033039851.max_connections", "1900"),
+					resource.TestCheckResourceAttr("consul_config_entry_service_defaults.bar", "upstream_config.448751011.overrides.0.limits.1033039851.max_pending_requests", "1900"),
+					resource.TestCheckResourceAttr("consul_config_entry_service_defaults.bar", "upstream_config.448751011.overrides.0.limits.1033039851.max_concurrent_requests", "9399"),
+					resource.TestCheckResourceAttr("consul_config_entry_service_defaults.bar", "upstream_config.448751011.overrides.0.passive_health_check.667743736.interval", "19s"),
+					resource.TestCheckResourceAttr("consul_config_entry_service_defaults.bar", "upstream_config.448751011.overrides.0.passive_health_check.667743736.max_failures", "8"),
+					resource.TestCheckResourceAttr("consul_config_entry_service_defaults.bar", "upstream_config.448751011.overrides.0.passive_health_check.667743736.enforcing_consecutive_5xx", "10"),
+					resource.TestCheckResourceAttr("consul_config_entry_service_defaults.bar", "upstream_config.448751011.overrides.0.passive_health_check.667743736.max_ejection_percent", "10"),
+					resource.TestCheckResourceAttr("consul_config_entry_service_defaults.bar", "upstream_config.448751011.overrides.0.passive_health_check.667743736.base_ejection_time", "30s"),
+					resource.TestCheckResourceAttr("consul_config_entry_service_defaults.bar", "upstream_config.448751011.overrides.1.name", "frontend"),
+					resource.TestCheckResourceAttr("consul_config_entry_service_defaults.bar", "upstream_config.448751011.overrides.1.protocol", "tcp"),
+					resource.TestCheckResourceAttr("consul_config_entry_service_defaults.bar", "upstream_config.448751011.overrides.1.connect_timeout_ms", "5000"),
+					resource.TestCheckResourceAttr("consul_config_entry_service_defaults.bar", "upstream_config.448751011.overrides.1.mesh_gateway.3192341522.mode", "tcp"),
+					resource.TestCheckResourceAttr("consul_config_entry_service_defaults.bar", "upstream_config.448751011.overrides.1.balance_outbound_connections", "exact_balance"),
+					resource.TestCheckResourceAttr("consul_config_entry_service_defaults.bar", "upstream_config.448751011.overrides.1.limits.#", "1"),
+					resource.TestCheckResourceAttr("consul_config_entry_service_defaults.bar", "upstream_config.448751011.overrides.1.limits.1033039851.max_connections", "1900"),
+					resource.TestCheckResourceAttr("consul_config_entry_service_defaults.bar", "upstream_config.448751011.overrides.1.limits.1033039851.max_pending_requests", "1900"),
+					resource.TestCheckResourceAttr("consul_config_entry_service_defaults.bar", "upstream_config.448751011.overrides.1.limits.1033039851.max_concurrent_requests", "9399"),
+					resource.TestCheckResourceAttr("consul_config_entry_service_defaults.bar", "upstream_config.448751011.overrides.1.passive_health_check.667743736.interval", "19s"),
+					resource.TestCheckResourceAttr("consul_config_entry_service_defaults.bar", "upstream_config.448751011.overrides.1.passive_health_check.667743736.max_failures", "8"),
+					resource.TestCheckResourceAttr("consul_config_entry_service_defaults.bar", "upstream_config.448751011.overrides.1.passive_health_check.667743736.enforcing_consecutive_5xx", "10"),
+					resource.TestCheckResourceAttr("consul_config_entry_service_defaults.bar", "upstream_config.448751011.overrides.0.passive_health_check.667743736.enforcing_consecutive_gateway_failure", "20"),
+					resource.TestCheckResourceAttr("consul_config_entry_service_defaults.bar", "upstream_config.448751011.overrides.0.passive_health_check.667743736.consecutive_5xx", "3"),
+					resource.TestCheckResourceAttr("consul_config_entry_service_defaults.bar", "upstream_config.448751011.overrides.0.passive_health_check.667743736.consecutive_gateway_failure", "2"),
+					resource.TestCheckResourceAttr("consul_config_entry_service_defaults.bar", "upstream_config.448751011.overrides.1.passive_health_check.667743736.max_ejection_percent", "10"),
+					resource.TestCheckResourceAttr("consul_config_entry_service_defaults.bar", "upstream_config.448751011.overrides.1.passive_health_check.667743736.enforcing_consecutive_gateway_failure", "20"),
+					resource.TestCheckResourceAttr("consul_config_entry_service_defaults.bar", "upstream_config.448751011.overrides.1.passive_health_check.667743736.consecutive_5xx", "3"),
+					resource.TestCheckResourceAttr("consul_config_entry_service_defaults.bar", "upstream_config.448751011.overrides.1.passive_health_check.667743736.consecutive_gateway_failure", "2"),
+					resource.TestCheckResourceAttr("consul_config_entry_service_defaults.bar", "upstream_config.448751011.overrides.1.passive_health_check.667743736.base_ejection_time", "30s"),
+					resource.TestCheckResourceAttr("consul_config_entry_service_defaults.bar", "upstream_config.448751011.defaults.3100545094.passive_health_check.2201063194.enforcing_consecutive_gateway_failure", "2"),
+					resource.TestCheckResourceAttr("consul_config_entry_service_defaults.bar", "upstream_config.448751011.defaults.3100545094.passive_health_check.2201063194.consecutive_5xx", "4"),
+					resource.TestCheckResourceAttr("consul_config_entry_service_defaults.bar", "upstream_config.448751011.defaults.3100545094.passive_health_check.2201063194.consecutive_gateway_failure", "3"),
+					resource.TestCheckResourceAttr("consul_config_entry_service_defaults.bar", "upstream_config.448751011.defaults.3100545094.protocol", "http"),
+					resource.TestCheckResourceAttr("consul_config_entry_service_defaults.bar", "upstream_config.448751011.defaults.3100545094.connect_timeout_ms", "5000"),
+					resource.TestCheckResourceAttr("consul_config_entry_service_defaults.bar", "upstream_config.448751011.defaults.3100545094.mesh_gateway.3192341522.mode", "tcp"),
+					resource.TestCheckResourceAttr("consul_config_entry_service_defaults.bar", "upstream_config.448751011.defaults.3100545094.balance_outbound_connections", "exact_balance"),
+					resource.TestCheckResourceAttr("consul_config_entry_service_defaults.bar", "upstream_config.448751011.defaults.3100545094.limits.#", "1"),
+					resource.TestCheckResourceAttr("consul_config_entry_service_defaults.bar", "upstream_config.448751011.defaults.3100545094.limits.3460439324.max_connections", "1000"),
+					resource.TestCheckResourceAttr("consul_config_entry_service_defaults.bar", "upstream_config.448751011.defaults.3100545094.limits.3460439324.max_pending_requests", "9000"),
+					resource.TestCheckResourceAttr("consul_config_entry_service_defaults.bar", "upstream_config.448751011.defaults.3100545094.limits.3460439324.max_concurrent_requests", "2900"),
+					resource.TestCheckResourceAttr("consul_config_entry_service_defaults.bar", "upstream_config.448751011.defaults.3100545094.passive_health_check.2201063194.interval", "6h38m20s"),
+					resource.TestCheckResourceAttr("consul_config_entry_service_defaults.bar", "upstream_config.448751011.defaults.3100545094.passive_health_check.2201063194.max_failures", "29030"),
+					resource.TestCheckResourceAttr("consul_config_entry_service_defaults.bar", "upstream_config.448751011.defaults.3100545094.passive_health_check.2201063194.enforcing_consecutive_5xx", "1"),
+					resource.TestCheckResourceAttr("consul_config_entry_service_defaults.bar", "upstream_config.448751011.defaults.3100545094.passive_health_check.2201063194.max_ejection_percent", "12"),
+					resource.TestCheckResourceAttr("consul_config_entry_service_defaults.bar", "upstream_config.448751011.defaults.3100545094.passive_health_check.2201063194.base_ejection_time", "8h25m9s"),
 					resource.TestCheckResourceAttr("consul_config_entry_service_defaults.bar", "transparent_proxy.#", "1"),
 					resource.TestCheckResourceAttr("consul_config_entry_service_defaults.bar", "transparent_proxy.3186228498.outbound_listener_port", "1001"),
 					resource.TestCheckResourceAttr("consul_config_entry_service_defaults.bar", "transparent_proxy.3186228498.dialed_directly", "true"),
@@ -220,6 +230,9 @@ resource "consul_config_entry_service_defaults" "bar" {
 			passive_health_check {
 				interval                  = "19s"
 				max_failures              = 8
+				enforcing_consecutive_gateway_failure = 20
+				consecutive_5xx = 3
+				consecutive_gateway_failure = 2
 				enforcing_consecutive_5xx = 10
 				max_ejection_percent      = 10
 				base_ejection_time        = "30s"
@@ -242,6 +255,9 @@ resource "consul_config_entry_service_defaults" "bar" {
 				interval                  = "19s"
 				max_failures              = 8
 				enforcing_consecutive_5xx = 10
+				enforcing_consecutive_gateway_failure = 20
+				consecutive_5xx = 3
+				consecutive_gateway_failure = 2
 				max_ejection_percent      = 10
 				base_ejection_time        = "30s"
 			}
@@ -262,6 +278,9 @@ resource "consul_config_entry_service_defaults" "bar" {
 				interval                  = "6h38m20s"
 				max_failures              = 29030
 				enforcing_consecutive_5xx = 1
+				enforcing_consecutive_gateway_failure = 2
+				consecutive_5xx = 4
+				consecutive_gateway_failure = 3
 				max_ejection_percent      = 12
 				base_ejection_time        = "8h25m9s"
 			}
