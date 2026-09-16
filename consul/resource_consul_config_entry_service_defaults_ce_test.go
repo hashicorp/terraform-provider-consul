@@ -136,6 +136,10 @@ func TestAccConsulServiceDefaultsConfigCEEntryTest(t *testing.T) {
 			},
 		},
 	})
+}
+
+func TestAccConsulServiceDefaultsPassiveHealthCheckCEEntryTest(t *testing.T) {
+	providers, _ := startTestServer(t)
 
 	// Passive Health Checks are not supported consul versions below 2.0.0;
 	// Hence below Passive Health Checks test is allowed to run on consul versions 2.0.0 and above.
