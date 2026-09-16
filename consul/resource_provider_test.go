@@ -506,6 +506,29 @@ func skipTestOnConsulEnterpriseEdition(t *testing.T) {
 	}
 }
 
+// skipTestOnConsulVersionLT skips an acceptance test when the CI-provided
+// Consul version is lower than the feature's minimum supported version.
+func skipTestOnConsulVersionLT(t *testing.T, minimum string) {
+	currentValue := os.Getenv("CONSUL_VERSION")
+	if currentValue == "" {
+		return
+	}
+
+	minimumVersion, err := version.NewVersion(minimum)
+	if err != nil {
+		t.Fatalf("failed to parse minimum Consul version %q: %v", minimum, err)
+	}
+	currentVersion, err := version.NewVersion(currentValue)
+	if err != nil {
+		t.Fatalf("failed to parse Consul version %q: %v", currentValue, err)
+	}
+	if currentVersion.LessThan(minimumVersion) {
+		t.Skipf("test requires Consul %s or later, got %s", minimum, currentValue)
+	}
+}
+
+// skipIfConsulVersionLT returns a retry predicate that checks the live Consul
+// server version against the expected minimum version.
 func skipIfConsulVersionLT(client *api.Client, expected string) func() (bool, error) {
 	return func() (bool, error) {
 		expected, err := version.NewVersion(expected)

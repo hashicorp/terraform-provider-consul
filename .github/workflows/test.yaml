@@ -15,14 +15,16 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        consul-version: [1.19.2, 1.20.6, 1.21.4, 1.22.2]
+        consul-version: [1.19.2, 1.20.6, 1.21.4, 1.22.2, 2.0.4]
         os: [ubuntu-latest]
     runs-on: ${{ matrix.os }}
+    env:
+      CONSUL_VERSION: ${{ matrix.consul-version }}
     steps:
     - name: Install Go
       uses: actions/setup-go@4d34df0c2316fe8122ab82dc22947d607c0c91f9 # v4.0.0
       with:
-        go-version: 1.25.x
+        go-version: 1.26.x
     - name: Checkout code
       uses: actions/checkout@8f4b7f84864484a7bf31766abe9204da3cbe65b3 # v3.5.0
     - name: Run go tests
@@ -63,7 +65,7 @@ jobs:
       if: steps.check-label.outputs.skip_docs != 'true'
       uses: actions/setup-go@4d34df0c2316fe8122ab82dc22947d607c0c91f9 # v4.0.0
       with:
-        go-version: 1.25.x
+        go-version: 1.26.x
     - name: Install Terraform
       if: steps.check-label.outputs.skip_docs != 'true'
       run: |

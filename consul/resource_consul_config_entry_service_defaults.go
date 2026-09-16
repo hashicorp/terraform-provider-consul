@@ -5,13 +5,27 @@ package consul
 
 import (
 	"fmt"
+	"math"
 	"time"
 
 	consulapi "github.com/hashicorp/consul/api"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
 )
 
 type serviceDefaults struct{}
+
+func validateUint32(v interface{}, k string) (ws []string, errors []error) {
+	val, ok := v.(int)
+	if !ok {
+		errors = append(errors, fmt.Errorf("expected type of %s to be integer", k))
+		return
+	}
+	if val < 0 || uint64(val) > uint64(math.MaxUint32) {
+		errors = append(errors, fmt.Errorf("expected %s to be between 0 and %d, got %d", k, uint32(math.MaxUint32), val))
+	}
+	return
+}
 
 func (s *serviceDefaults) GetKind() string {
 	return consulapi.ServiceDefaults
@@ -93,34 +107,43 @@ func (s *serviceDefaults) GetSchema() map[string]*schema.Schema {
 							Description: "Specifies the time between checks.",
 						},
 						"max_failures": {
-							Type:        schema.TypeInt,
-							Optional:    true,
-							Description: "Specifies the number of consecutive failures allowed per check interval. If exceeded, Consul removes the host from the load balancer.",
+							Type:         schema.TypeInt,
+							Optional:     true,
+							ValidateFunc: validateUint32,
+							Description:  "Specifies the number of consecutive failures allowed per check interval. If exceeded, Consul removes the host from the load balancer.",
 						},
 						"enforcing_consecutive_5xx": {
-							Type:        schema.TypeInt,
-							Optional:    true,
-							Description: "Specifies a percentage that indicates how many times out of 100 that Consul ejects the host when it detects an outlier status.",
+							Type:         schema.TypeInt,
+							Optional:     true,
+							ValidateFunc: validation.IntBetween(0, 100),
+							Description:  "Specifies a percentage that indicates how many times out of 100 that Consul ejects the host when it detects an outlier status.",
 						},
+						// enforcing_consecutive_gateway_failure supported by Consul 2.0.0 and later.
 						"enforcing_consecutive_gateway_failure": {
-							Type:        schema.TypeInt,
-							Optional:    true,
-							Description: "Specifies a percentage that indicates how many times out of 100 that Consul ejects the host when it detects consecutive gateway failures.",
+							Type:         schema.TypeInt,
+							Optional:     true,
+							ValidateFunc: validation.IntBetween(0, 100),
+							Description:  "Specifies a percentage that indicates how many times out of 100 that Consul ejects the host when it detects consecutive gateway failures.",
 						},
+						// consecutive_5xx supported by Consul 2.0.0 and later.
 						"consecutive_5xx": {
-							Type:        schema.TypeInt,
-							Optional:    true,
-							Description: "Specifies the number of consecutive 5xx responses that trigger outlier detection.",
+							Type:         schema.TypeInt,
+							Optional:     true,
+							ValidateFunc: validateUint32,
+							Description:  "Specifies the number of consecutive 5xx responses that trigger outlier detection.",
 						},
+						// consecutive_gateway_failure supported by Consul 2.0.0 and later.
 						"consecutive_gateway_failure": {
-							Type:        schema.TypeInt,
-							Optional:    true,
-							Description: "Specifies the number of consecutive gateway failures that trigger outlier detection.",
+							Type:         schema.TypeInt,
+							Optional:     true,
+							ValidateFunc: validateUint32,
+							Description:  "Specifies the number of consecutive gateway failures that trigger outlier detection.",
 						},
 						"max_ejection_percent": {
-							Type:        schema.TypeInt,
-							Optional:    true,
-							Description: "Specifies the maximum percentage of an upstream cluster that Consul ejects when the proxy reports an outlier.",
+							Type:         schema.TypeInt,
+							Optional:     true,
+							ValidateFunc: validation.IntBetween(0, 100),
+							Description:  "Specifies the maximum percentage of an upstream cluster that Consul ejects when the proxy reports an outlier.",
 						},
 						"base_ejection_time": {
 							Type:        schema.TypeString,
@@ -197,34 +220,43 @@ func (s *serviceDefaults) GetSchema() map[string]*schema.Schema {
 							Description: "Specifies the time between checks.",
 						},
 						"max_failures": {
-							Type:        schema.TypeInt,
-							Optional:    true,
-							Description: "Specifies the number of consecutive failures allowed per check interval. If exceeded, Consul removes the host from the load balancer.",
+							Type:         schema.TypeInt,
+							Optional:     true,
+							ValidateFunc: validateUint32,
+							Description:  "Specifies the number of consecutive failures allowed per check interval. If exceeded, Consul removes the host from the load balancer.",
 						},
 						"enforcing_consecutive_5xx": {
-							Type:        schema.TypeInt,
-							Optional:    true,
-							Description: "Specifies a percentage that indicates how many times out of 100 that Consul ejects the host when it detects an outlier status.",
+							Type:         schema.TypeInt,
+							Optional:     true,
+							ValidateFunc: validation.IntBetween(0, 100),
+							Description:  "Specifies a percentage that indicates how many times out of 100 that Consul ejects the host when it detects an outlier status.",
 						},
+						// enforcing_consecutive_gateway_failure supported by Consul 2.0.0 and later.
 						"enforcing_consecutive_gateway_failure": {
-							Type:        schema.TypeInt,
-							Optional:    true,
-							Description: "Specifies a percentage that indicates how many times out of 100 that Consul ejects the host when it detects consecutive gateway failures.",
+							Type:         schema.TypeInt,
+							Optional:     true,
+							ValidateFunc: validation.IntBetween(0, 100),
+							Description:  "Specifies a percentage that indicates how many times out of 100 that Consul ejects the host when it detects consecutive gateway failures.",
 						},
+						// consecutive_5xx supported by Consul 2.0.0 and later.
 						"consecutive_5xx": {
-							Type:        schema.TypeInt,
-							Optional:    true,
-							Description: "Specifies the number of consecutive 5xx responses that trigger outlier detection.",
+							Type:         schema.TypeInt,
+							Optional:     true,
+							ValidateFunc: validateUint32,
+							Description:  "Specifies the number of consecutive 5xx responses that trigger outlier detection.",
 						},
+						// consecutive_gateway_failure supported by Consul 2.0.0 and later.
 						"consecutive_gateway_failure": {
-							Type:        schema.TypeInt,
-							Optional:    true,
-							Description: "Specifies the number of consecutive gateway failures that trigger outlier detection.",
+							Type:         schema.TypeInt,
+							Optional:     true,
+							ValidateFunc: validateUint32,
+							Description:  "Specifies the number of consecutive gateway failures that trigger outlier detection.",
 						},
 						"max_ejection_percent": {
-							Type:        schema.TypeInt,
-							Optional:    true,
-							Description: "Specifies the maximum percentage of an upstream cluster that Consul ejects when the proxy reports an outlier.",
+							Type:         schema.TypeInt,
+							Optional:     true,
+							ValidateFunc: validation.IntBetween(0, 100),
+							Description:  "Specifies the maximum percentage of an upstream cluster that Consul ejects when the proxy reports an outlier.",
 						},
 						"base_ejection_time": {
 							Type:        schema.TypeString,
