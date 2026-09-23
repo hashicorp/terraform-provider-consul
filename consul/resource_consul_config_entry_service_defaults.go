@@ -565,8 +565,9 @@ func (s *serviceDefaults) Decode(d *schema.ResourceData) (consulapi.ConfigEntry,
 		passiveHealthCheck := passiveHealthCheckSet.(*schema.Set).List()
 		if len(passiveHealthCheck) > 0 {
 			passiveHealthCheckMap := passiveHealthCheck[0].(map[string]interface{})
-			// uint32Ptr treats a configured zero as "unset" so Consul applies its own
-			// default. Use only for fields where zero is not a meaningful value.
+			// uint32Ptr treats a configured zero as "unset" so the field is omitted:
+			// Consul then applies its own default, and 2.0.0-only fields are not sent
+			// to older servers that would reject them.
 			uint32Ptr := func(i int) *uint32 {
 				if i == 0 {
 					return nil
@@ -575,7 +576,7 @@ func (s *serviceDefaults) Decode(d *schema.ResourceData) (consulapi.ConfigEntry,
 				return &ui
 			}
 			// uint32Value preserves an explicit zero, which is a distinct, valid value
-			// for the enforcing-percentage and max-ejection-percentage fields.
+			// for these percentage fields (both predate the 2.0.0 additions).
 			uint32Value := func(i int) *uint32 {
 				ui := uint32(i)
 				return &ui
@@ -583,7 +584,7 @@ func (s *serviceDefaults) Decode(d *schema.ResourceData) (consulapi.ConfigEntry,
 			passiveHealthCheck := &consulapi.PassiveHealthCheck{
 				MaxFailures:                        uint32(passiveHealthCheckMap["max_failures"].(int)),
 				EnforcingConsecutive5xx:            uint32Value(passiveHealthCheckMap["enforcing_consecutive_5xx"].(int)),
-				EnforcingConsecutiveGatewayFailure: uint32Value(passiveHealthCheckMap["enforcing_consecutive_gateway_failure"].(int)),
+				EnforcingConsecutiveGatewayFailure: uint32Ptr(passiveHealthCheckMap["enforcing_consecutive_gateway_failure"].(int)),
 				Consecutive5xx:                     uint32Ptr(passiveHealthCheckMap["consecutive_5xx"].(int)),
 				ConsecutiveGatewayFailure:          uint32Ptr(passiveHealthCheckMap["consecutive_gateway_failure"].(int)),
 				MaxEjectionPercent:                 uint32Value(passiveHealthCheckMap["max_ejection_percent"].(int)),
