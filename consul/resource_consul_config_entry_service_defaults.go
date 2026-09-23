@@ -5,13 +5,41 @@ package consul
 
 import (
 	"fmt"
+	"math"
 	"time"
 
 	consulapi "github.com/hashicorp/consul/api"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
 )
 
 type serviceDefaults struct{}
+
+func validateUint32(v interface{}, k string) (ws []string, errors []error) {
+	val, ok := v.(int)
+	if !ok {
+		errors = append(errors, fmt.Errorf("expected type of %s to be integer", k))
+		return
+	}
+	if val < 0 || uint64(val) > uint64(math.MaxUint32) {
+		errors = append(errors, fmt.Errorf("expected %s to be between 0 and %d, got %d", k, uint32(math.MaxUint32), val))
+	}
+	return
+}
+
+// validateUint32Min1 enforces Consul's minimum of 1 for fields where a zero would
+// otherwise bypass the server-side lower bound.
+func validateUint32Min1(v interface{}, k string) (ws []string, errors []error) {
+	val, ok := v.(int)
+	if !ok {
+		errors = append(errors, fmt.Errorf("expected type of %s to be integer", k))
+		return
+	}
+	if val < 1 || uint64(val) > uint64(math.MaxUint32) {
+		errors = append(errors, fmt.Errorf("expected %s to be between 1 and %d, got %d", k, uint32(math.MaxUint32), val))
+	}
+	return
+}
 
 func (s *serviceDefaults) GetKind() string {
 	return consulapi.ServiceDefaults
@@ -93,19 +121,43 @@ func (s *serviceDefaults) GetSchema() map[string]*schema.Schema {
 							Description: "Specifies the time between checks.",
 						},
 						"max_failures": {
-							Type:        schema.TypeInt,
-							Optional:    true,
-							Description: "Specifies the number of consecutive failures allowed per check interval. If exceeded, Consul removes the host from the load balancer.",
+							Type:         schema.TypeInt,
+							Optional:     true,
+							ValidateFunc: validateUint32,
+							Description:  "Specifies the number of consecutive failures allowed per check interval. If exceeded, Consul removes the host from the load balancer.",
 						},
 						"enforcing_consecutive_5xx": {
-							Type:        schema.TypeInt,
-							Optional:    true,
-							Description: "Specifies a percentage that indicates how many times out of 100 that Consul ejects the host when it detects an outlier status.",
+							Type:         schema.TypeInt,
+							Optional:     true,
+							ValidateFunc: validation.IntBetween(0, 100),
+							Description:  "Specifies a percentage that indicates how many times out of 100 that Consul ejects the host when it detects an outlier status.",
+						},
+						// enforcing_consecutive_gateway_failure supported by Consul 2.0.0 and later.
+						"enforcing_consecutive_gateway_failure": {
+							Type:         schema.TypeInt,
+							Optional:     true,
+							ValidateFunc: validation.IntBetween(0, 100),
+							Description:  "Specifies a percentage that indicates how many times out of 100 that Consul ejects the host when it detects consecutive gateway failures.",
+						},
+						// consecutive_5xx supported by Consul 2.0.0 and later.
+						"consecutive_5xx": {
+							Type:         schema.TypeInt,
+							Optional:     true,
+							ValidateFunc: validateUint32Min1,
+							Description:  "Specifies the number of consecutive 5xx responses that trigger outlier detection.",
+						},
+						// consecutive_gateway_failure supported by Consul 2.0.0 and later.
+						"consecutive_gateway_failure": {
+							Type:         schema.TypeInt,
+							Optional:     true,
+							ValidateFunc: validateUint32,
+							Description:  "Specifies the number of consecutive gateway failures that trigger outlier detection.",
 						},
 						"max_ejection_percent": {
-							Type:        schema.TypeInt,
-							Optional:    true,
-							Description: "Specifies the maximum percentage of an upstream cluster that Consul ejects when the proxy reports an outlier.",
+							Type:         schema.TypeInt,
+							Optional:     true,
+							ValidateFunc: validation.IntBetween(0, 100),
+							Description:  "Specifies the maximum percentage of an upstream cluster that Consul ejects when the proxy reports an outlier.",
 						},
 						"base_ejection_time": {
 							Type:        schema.TypeString,
@@ -182,19 +234,43 @@ func (s *serviceDefaults) GetSchema() map[string]*schema.Schema {
 							Description: "Specifies the time between checks.",
 						},
 						"max_failures": {
-							Type:        schema.TypeInt,
-							Optional:    true,
-							Description: "Specifies the number of consecutive failures allowed per check interval. If exceeded, Consul removes the host from the load balancer.",
+							Type:         schema.TypeInt,
+							Optional:     true,
+							ValidateFunc: validateUint32,
+							Description:  "Specifies the number of consecutive failures allowed per check interval. If exceeded, Consul removes the host from the load balancer.",
 						},
 						"enforcing_consecutive_5xx": {
-							Type:        schema.TypeInt,
-							Optional:    true,
-							Description: "Specifies a percentage that indicates how many times out of 100 that Consul ejects the host when it detects an outlier status.",
+							Type:         schema.TypeInt,
+							Optional:     true,
+							ValidateFunc: validation.IntBetween(0, 100),
+							Description:  "Specifies a percentage that indicates how many times out of 100 that Consul ejects the host when it detects an outlier status.",
+						},
+						// enforcing_consecutive_gateway_failure supported by Consul 2.0.0 and later.
+						"enforcing_consecutive_gateway_failure": {
+							Type:         schema.TypeInt,
+							Optional:     true,
+							ValidateFunc: validation.IntBetween(0, 100),
+							Description:  "Specifies a percentage that indicates how many times out of 100 that Consul ejects the host when it detects consecutive gateway failures.",
+						},
+						// consecutive_5xx supported by Consul 2.0.0 and later.
+						"consecutive_5xx": {
+							Type:         schema.TypeInt,
+							Optional:     true,
+							ValidateFunc: validateUint32Min1,
+							Description:  "Specifies the number of consecutive 5xx responses that trigger outlier detection.",
+						},
+						// consecutive_gateway_failure supported by Consul 2.0.0 and later.
+						"consecutive_gateway_failure": {
+							Type:         schema.TypeInt,
+							Optional:     true,
+							ValidateFunc: validateUint32,
+							Description:  "Specifies the number of consecutive gateway failures that trigger outlier detection.",
 						},
 						"max_ejection_percent": {
-							Type:        schema.TypeInt,
-							Optional:    true,
-							Description: "Specifies the maximum percentage of an upstream cluster that Consul ejects when the proxy reports an outlier.",
+							Type:         schema.TypeInt,
+							Optional:     true,
+							ValidateFunc: validation.IntBetween(0, 100),
+							Description:  "Specifies the maximum percentage of an upstream cluster that Consul ejects when the proxy reports an outlier.",
 						},
 						"base_ejection_time": {
 							Type:        schema.TypeString,
@@ -489,6 +565,9 @@ func (s *serviceDefaults) Decode(d *schema.ResourceData) (consulapi.ConfigEntry,
 		passiveHealthCheck := passiveHealthCheckSet.(*schema.Set).List()
 		if len(passiveHealthCheck) > 0 {
 			passiveHealthCheckMap := passiveHealthCheck[0].(map[string]interface{})
+			// uint32Ptr treats a configured zero as "unset" so the field is omitted:
+			// Consul then applies its own default, and 2.0.0-only fields are not sent
+			// to older servers that would reject them.
 			uint32Ptr := func(i int) *uint32 {
 				if i == 0 {
 					return nil
@@ -496,10 +575,19 @@ func (s *serviceDefaults) Decode(d *schema.ResourceData) (consulapi.ConfigEntry,
 				ui := uint32(i)
 				return &ui
 			}
+			// uint32Value preserves an explicit zero, which is a distinct, valid value
+			// for these percentage fields (both predate the 2.0.0 additions).
+			uint32Value := func(i int) *uint32 {
+				ui := uint32(i)
+				return &ui
+			}
 			passiveHealthCheck := &consulapi.PassiveHealthCheck{
-				MaxFailures:             uint32(passiveHealthCheckMap["max_failures"].(int)),
-				EnforcingConsecutive5xx: uint32Ptr(passiveHealthCheckMap["enforcing_consecutive_5xx"].(int)),
-				MaxEjectionPercent:      uint32Ptr(passiveHealthCheckMap["max_ejection_percent"].(int)),
+				MaxFailures:                        uint32(passiveHealthCheckMap["max_failures"].(int)),
+				EnforcingConsecutive5xx:            uint32Value(passiveHealthCheckMap["enforcing_consecutive_5xx"].(int)),
+				EnforcingConsecutiveGatewayFailure: uint32Ptr(passiveHealthCheckMap["enforcing_consecutive_gateway_failure"].(int)),
+				Consecutive5xx:                     uint32Ptr(passiveHealthCheckMap["consecutive_5xx"].(int)),
+				ConsecutiveGatewayFailure:          uint32Ptr(passiveHealthCheckMap["consecutive_gateway_failure"].(int)),
+				MaxEjectionPercent:                 uint32Value(passiveHealthCheckMap["max_ejection_percent"].(int)),
 			}
 			duration, err := time.ParseDuration(passiveHealthCheckMap["interval"].(string))
 			if err != nil {
@@ -776,6 +864,9 @@ func (s *serviceDefaults) Write(ce consulapi.ConfigEntry, d *schema.ResourceData
 		passiveHealthCheck[0]["interval"] = elem.PassiveHealthCheck.Interval.String()
 		passiveHealthCheck[0]["max_failures"] = elem.PassiveHealthCheck.MaxFailures
 		passiveHealthCheck[0]["enforcing_consecutive_5xx"] = elem.PassiveHealthCheck.EnforcingConsecutive5xx
+		passiveHealthCheck[0]["enforcing_consecutive_gateway_failure"] = elem.PassiveHealthCheck.EnforcingConsecutiveGatewayFailure
+		passiveHealthCheck[0]["consecutive_5xx"] = elem.PassiveHealthCheck.Consecutive5xx
+		passiveHealthCheck[0]["consecutive_gateway_failure"] = elem.PassiveHealthCheck.ConsecutiveGatewayFailure
 		passiveHealthCheck[0]["max_ejection_percent"] = elem.PassiveHealthCheck.MaxEjectionPercent
 		passiveHealthCheck[0]["base_ejection_time"] = elem.PassiveHealthCheck.BaseEjectionTime.String()
 		upstreamConfig["passive_health_check"] = passiveHealthCheck
@@ -804,6 +895,9 @@ func (s *serviceDefaults) Write(ce consulapi.ConfigEntry, d *schema.ResourceData
 		passiveHealthCheck[0]["interval"] = elem.PassiveHealthCheck.Interval.String()
 		passiveHealthCheck[0]["max_failures"] = elem.PassiveHealthCheck.MaxFailures
 		passiveHealthCheck[0]["enforcing_consecutive_5xx"] = elem.PassiveHealthCheck.EnforcingConsecutive5xx
+		passiveHealthCheck[0]["enforcing_consecutive_gateway_failure"] = elem.PassiveHealthCheck.EnforcingConsecutiveGatewayFailure
+		passiveHealthCheck[0]["consecutive_5xx"] = elem.PassiveHealthCheck.Consecutive5xx
+		passiveHealthCheck[0]["consecutive_gateway_failure"] = elem.PassiveHealthCheck.ConsecutiveGatewayFailure
 		passiveHealthCheck[0]["max_ejection_percent"] = elem.PassiveHealthCheck.MaxEjectionPercent
 		passiveHealthCheck[0]["base_ejection_time"] = elem.PassiveHealthCheck.BaseEjectionTime.String()
 		upstreamConfig["passive_health_check"] = passiveHealthCheck

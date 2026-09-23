@@ -174,7 +174,10 @@ Optional:
 Optional:
 
 - `base_ejection_time` (String) Specifies the minimum amount of time that an ejected host must remain outside the cluster before rejoining.
+- `consecutive_5xx` (Number) Specifies the number of consecutive 5xx responses that trigger outlier detection.
+- `consecutive_gateway_failure` (Number) Specifies the number of consecutive gateway failures that trigger outlier detection.
 - `enforcing_consecutive_5xx` (Number) Specifies a percentage that indicates how many times out of 100 that Consul ejects the host when it detects an outlier status.
+- `enforcing_consecutive_gateway_failure` (Number) Specifies a percentage that indicates how many times out of 100 that Consul ejects the host when it detects consecutive gateway failures.
 - `interval` (String) Specifies the time between checks.
 - `max_ejection_percent` (Number) Specifies the maximum percentage of an upstream cluster that Consul ejects when the proxy reports an outlier.
 - `max_failures` (Number) Specifies the number of consecutive failures allowed per check interval. If exceeded, Consul removes the host from the load balancer.
@@ -222,7 +225,10 @@ Optional:
 Optional:
 
 - `base_ejection_time` (String) Specifies the minimum amount of time that an ejected host must remain outside the cluster before rejoining.
+- `consecutive_5xx` (Number) Specifies the number of consecutive 5xx responses that trigger outlier detection.
+- `consecutive_gateway_failure` (Number) Specifies the number of consecutive gateway failures that trigger outlier detection.
 - `enforcing_consecutive_5xx` (Number) Specifies a percentage that indicates how many times out of 100 that Consul ejects the host when it detects an outlier status.
+- `enforcing_consecutive_gateway_failure` (Number) Specifies a percentage that indicates how many times out of 100 that Consul ejects the host when it detects consecutive gateway failures.
 - `interval` (String) Specifies the time between checks.
 - `max_ejection_percent` (Number) Specifies the maximum percentage of an upstream cluster that Consul ejects when the proxy reports an outlier.
 - `max_failures` (Number) Specifies the number of consecutive failures allowed per check interval. If exceeded, Consul removes the host from the load balancer.
