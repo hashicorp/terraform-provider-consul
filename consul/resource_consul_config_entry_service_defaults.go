@@ -27,6 +27,20 @@ func validateUint32(v interface{}, k string) (ws []string, errors []error) {
 	return
 }
 
+// validateUint32Min1 enforces Consul's minimum of 1 for fields where a zero would
+// otherwise bypass the server-side lower bound.
+func validateUint32Min1(v interface{}, k string) (ws []string, errors []error) {
+	val, ok := v.(int)
+	if !ok {
+		errors = append(errors, fmt.Errorf("expected type of %s to be integer", k))
+		return
+	}
+	if val < 1 || uint64(val) > uint64(math.MaxUint32) {
+		errors = append(errors, fmt.Errorf("expected %s to be between 1 and %d, got %d", k, uint32(math.MaxUint32), val))
+	}
+	return
+}
+
 func (s *serviceDefaults) GetKind() string {
 	return consulapi.ServiceDefaults
 }
@@ -129,7 +143,7 @@ func (s *serviceDefaults) GetSchema() map[string]*schema.Schema {
 						"consecutive_5xx": {
 							Type:         schema.TypeInt,
 							Optional:     true,
-							ValidateFunc: validateUint32,
+							ValidateFunc: validateUint32Min1,
 							Description:  "Specifies the number of consecutive 5xx responses that trigger outlier detection.",
 						},
 						// consecutive_gateway_failure supported by Consul 2.0.0 and later.
@@ -242,7 +256,7 @@ func (s *serviceDefaults) GetSchema() map[string]*schema.Schema {
 						"consecutive_5xx": {
 							Type:         schema.TypeInt,
 							Optional:     true,
-							ValidateFunc: validateUint32,
+							ValidateFunc: validateUint32Min1,
 							Description:  "Specifies the number of consecutive 5xx responses that trigger outlier detection.",
 						},
 						// consecutive_gateway_failure supported by Consul 2.0.0 and later.
@@ -551,6 +565,8 @@ func (s *serviceDefaults) Decode(d *schema.ResourceData) (consulapi.ConfigEntry,
 		passiveHealthCheck := passiveHealthCheckSet.(*schema.Set).List()
 		if len(passiveHealthCheck) > 0 {
 			passiveHealthCheckMap := passiveHealthCheck[0].(map[string]interface{})
+			// uint32Ptr treats a configured zero as "unset" so Consul applies its own
+			// default. Use only for fields where zero is not a meaningful value.
 			uint32Ptr := func(i int) *uint32 {
 				if i == 0 {
 					return nil
@@ -558,13 +574,19 @@ func (s *serviceDefaults) Decode(d *schema.ResourceData) (consulapi.ConfigEntry,
 				ui := uint32(i)
 				return &ui
 			}
+			// uint32Value preserves an explicit zero, which is a distinct, valid value
+			// for the enforcing-percentage and max-ejection-percentage fields.
+			uint32Value := func(i int) *uint32 {
+				ui := uint32(i)
+				return &ui
+			}
 			passiveHealthCheck := &consulapi.PassiveHealthCheck{
 				MaxFailures:                        uint32(passiveHealthCheckMap["max_failures"].(int)),
-				EnforcingConsecutive5xx:            uint32Ptr(passiveHealthCheckMap["enforcing_consecutive_5xx"].(int)),
-				EnforcingConsecutiveGatewayFailure: uint32Ptr(passiveHealthCheckMap["enforcing_consecutive_gateway_failure"].(int)),
+				EnforcingConsecutive5xx:            uint32Value(passiveHealthCheckMap["enforcing_consecutive_5xx"].(int)),
+				EnforcingConsecutiveGatewayFailure: uint32Value(passiveHealthCheckMap["enforcing_consecutive_gateway_failure"].(int)),
 				Consecutive5xx:                     uint32Ptr(passiveHealthCheckMap["consecutive_5xx"].(int)),
 				ConsecutiveGatewayFailure:          uint32Ptr(passiveHealthCheckMap["consecutive_gateway_failure"].(int)),
-				MaxEjectionPercent:                 uint32Ptr(passiveHealthCheckMap["max_ejection_percent"].(int)),
+				MaxEjectionPercent:                 uint32Value(passiveHealthCheckMap["max_ejection_percent"].(int)),
 			}
 			duration, err := time.ParseDuration(passiveHealthCheckMap["interval"].(string))
 			if err != nil {
