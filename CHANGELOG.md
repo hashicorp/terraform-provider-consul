@@ -3,6 +3,7 @@
 BUG FIXES:
 
 * Upgrades `google.golang.org/grpc` to v1.79.3 to address the gRPC-Go authorization bypass for malformed `:path` headers and updates the Go version to 1.25.8 ([#484](https://github.com/hashicorp/terraform-provider-consul/pull/484)).
+* Upgrades Go toolchain to `1.26.8` and `golang.org/x/net` to `v0.59.0` to address multiple stdlib security vulnerabilities ([#497](https://github.com/hashicorp/terraform-provider-consul/pull/497)).
 
 ## 2.23.0 (January 29, 2026)
 
