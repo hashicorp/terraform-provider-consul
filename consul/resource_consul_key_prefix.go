@@ -196,6 +196,13 @@ func resourceConsulKeyPrefixUpdate(d *schema.ResourceData, meta interface{}) err
 		// Write new and changed keys
 		for k, vI := range nm {
 			v := vI.(string)
+			ovI, ok := om[k]
+			if ok {
+				ov := ovI.(string)
+				if ov == v {
+					continue
+				}
+			}
 			fullPath := pathPrefix + k
 			err := keyClient.Put(fullPath, v, 0)
 			if err != nil {
@@ -229,10 +236,14 @@ func resourceConsulKeyPrefixUpdate(d *schema.ResourceData, meta interface{}) err
 		// Create a map with old paths (no values)
 		// We'll use it to determine which keys need to be deleted.
 		// (the ones which are not in the new list)
-		oldSubKeys := map[string]struct{}{}
+		type subKey struct {
+			value string
+			flags int
+		}
+		oldSubKeys := map[string]subKey{}
 		for _, rawKey := range oldKeys.(*schema.Set).List() {
 			key := rawKey.(map[string]interface{})
-			oldSubKeys[key["path"].(string)] = struct{}{}
+			oldSubKeys[key["path"].(string)] = subKey{value: key["value"].(string), flags: key["flags"].(int)}
 		}
 
 		// Upsert the new keys
@@ -245,6 +256,13 @@ func resourceConsulKeyPrefixUpdate(d *schema.ResourceData, meta interface{}) err
 
 			// Delete from old keys (if exists) so it will not be removed in last step
 			delete(oldSubKeys, name)
+
+			osk, ok := oldSubKeys[name]
+			if ok {
+				if osk.value == value && osk.flags == flags {
+					continue
+				}
+			}
 
 			fullPath := pathPrefix + name
 			err := keyClient.Put(fullPath, value, flags)
