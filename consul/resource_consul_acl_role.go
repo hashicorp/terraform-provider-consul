@@ -149,6 +149,10 @@ func resourceConsulACLRoleCreate(d *schema.ResourceData, meta interface{}) error
 		return fmt.Errorf("failed to create role '%s': %s", name, err)
 	}
 
+	if err := waitForACLRoleReplication(client.ACL(), qOpts, role.CreateIndex); err != nil {
+		return err
+	}
+
 	d.SetId(role.ID)
 	return resourceConsulACLRoleRead(d, meta)
 }
@@ -236,6 +240,10 @@ func resourceConsulACLRoleUpdate(d *schema.ResourceData, meta interface{}) error
 	role, _, err = ACL.RoleUpdate(role, wOpts)
 	if err != nil {
 		return fmt.Errorf("failed to update role '%s': %s", d.Id(), err)
+	}
+
+	if err := waitForACLRoleReplication(client.ACL(), qOpts, role.ModifyIndex); err != nil {
+		return err
 	}
 
 	d.SetId(role.ID)
