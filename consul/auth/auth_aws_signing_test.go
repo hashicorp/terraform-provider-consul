@@ -11,6 +11,7 @@ import (
 	"encoding/pem"
 	"fmt"
 	"io"
+	"log"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
@@ -328,3 +329,28 @@ func TestGenerateConsulAWSLoginData_FIPS(t *testing.T) {
 type roundTripFunc func(*http.Request) (*http.Response, error)
 
 func (f roundTripFunc) RoundTrip(r *http.Request) (*http.Response, error) { return f(r) }
+
+// TestResolveAWSCredentials_StaticCredsConfigLoadFailure verifies static credentials keep working
+// (as before) when the AWS config cannot be loaded, and that a warning is logged.
+func TestResolveAWSCredentials_StaticCredsConfigLoadFailure(t *testing.T) {
+	isolateAWSEnv(t)
+	t.Setenv("AWS_PROFILE", "does-not-exist")
+
+	var logs bytes.Buffer
+	log.SetOutput(&logs)
+	t.Cleanup(func() { log.SetOutput(os.Stderr) })
+
+	creds, awsCfg, err := resolveAWSCredentials(context.Background(), staticCredsParams("us-east-1"))
+	if err != nil {
+		t.Fatalf("resolveAWSCredentials() error: %v", err)
+	}
+	if creds.AccessKeyID != "AKIDTEST" {
+		t.Errorf("AccessKeyID = %q, want AKIDTEST", creds.AccessKeyID)
+	}
+	if awsCfg != nil {
+		t.Errorf("expected no AWS config when loading fails, got %+v", awsCfg)
+	}
+	if !strings.Contains(logs.String(), "[WARN] Failed to load AWS config") {
+		t.Errorf("expected a [WARN] log, got: %q", logs.String())
+	}
+}

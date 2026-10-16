@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"log"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/config"
@@ -43,6 +44,7 @@ func resolveAWSCredentials(ctx context.Context, params map[string]interface{}) (
 		cfg, err := config.LoadDefaultConfig(ctx, config.WithRegion(region))
 		if err != nil {
 			// Static credentials never required loading AWS config; keep working without it.
+			log.Printf("[WARN] Failed to load AWS config, AWS_CA_BUNDLE and FIPS endpoint settings will not be applied: %s", err)
 			return creds, nil, nil
 		}
 		return creds, &cfg, nil
