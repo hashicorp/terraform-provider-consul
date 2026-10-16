@@ -46,10 +46,12 @@ func resolveAWSCredentials(ctx context.Context, params map[string]interface{}) (
 		cfg, err := config.LoadDefaultConfig(ctx, config.WithRegion(region))
 		if err != nil {
 			var profileErr config.SharedConfigProfileNotExistError
+			// A missing source_profile is wrapped in this error even though the selected profile (and its FIPS setting) exists.
+			var assumeRoleErr config.SharedConfigAssumeRoleError
 			securitySettings := os.Getenv("AWS_CA_BUNDLE") != "" || os.Getenv("AWS_USE_FIPS_ENDPOINT") != ""
 			// Static credentials never required AWS config, so a missing profile alone must not break login,
 			// but never silently drop explicitly configured CA bundle or FIPS settings.
-			if errors.As(err, &profileErr) && !securitySettings {
+			if errors.As(err, &profileErr) && !errors.As(err, &assumeRoleErr) && !securitySettings {
 				log.Printf("[WARN] Failed to load AWS config, AWS_CA_BUNDLE and FIPS endpoint settings will not be applied: %s", err)
 				return creds, nil, nil
 			}

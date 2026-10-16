@@ -387,4 +387,25 @@ func TestResolveAWSCredentials_StaticCredsSecuritySettingsFailClosed(t *testing.
 			}
 		})
 	}
+
+	// A missing source_profile surfaces as a wrapped "profile not exist" error, but the selected
+	// profile exists and its use_fips_endpoint must not be silently dropped.
+	t.Run("profile FIPS with missing source profile", func(t *testing.T) {
+		isolateAWSEnv(t)
+		configFile := filepath.Join(t.TempDir(), "config")
+		profile := "[profile fips]\nuse_fips_endpoint = true\nrole_arn = arn:aws:iam::123456789012:role/test-role\nsource_profile = does-not-exist\n"
+		if err := os.WriteFile(configFile, []byte(profile), 0o600); err != nil {
+			t.Fatal(err)
+		}
+		t.Setenv("AWS_CONFIG_FILE", configFile)
+		t.Setenv("AWS_PROFILE", "fips")
+
+		_, awsCfg, err := resolveAWSCredentials(context.Background(), staticCredsParams("us-east-1"))
+		if err == nil {
+			t.Fatalf("expected an error, got config %+v", awsCfg)
+		}
+		if !strings.Contains(err.Error(), "failed to load AWS config") {
+			t.Errorf("unexpected error: %v", err)
+		}
+	})
 }
