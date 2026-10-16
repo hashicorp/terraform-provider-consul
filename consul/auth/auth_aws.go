@@ -264,7 +264,7 @@ func (l *AuthLoginAWS) generateAWSLoginData() (map[string]interface{}, error) {
 	ctx := context.Background()
 
 	// Resolve AWS credentials using aws-sdk-go-v2 credential chain
-	creds, err := resolveAWSCredentials(ctx, l.params)
+	creds, awsCfg, err := resolveAWSCredentials(ctx, l.params)
 	if err != nil {
 		return nil, fmt.Errorf("failed to resolve AWS credentials: %w", err)
 	}
@@ -279,7 +279,7 @@ func (l *AuthLoginAWS) generateAWSLoginData() (map[string]interface{}, error) {
 	serverIDHeaderValue, _ := l.params[utils.FieldServerIDHeaderValue].(string)
 
 	// Generate Consul-specific AWS login data
-	loginData, err := generateConsulAWSLoginData(creds, region, serverIDHeaderValue)
+	loginData, err := generateConsulAWSLoginData(creds, awsCfg, region, "", serverIDHeaderValue)
 	if err != nil {
 		return nil, fmt.Errorf("failed to generate login data: %w", err)
 	}
