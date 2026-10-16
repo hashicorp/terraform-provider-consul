@@ -7,6 +7,7 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/config"
+	"github.com/aws/aws-sdk-go-v2/credentials"
 	"github.com/aws/aws-sdk-go-v2/credentials/stscreds"
 	"github.com/aws/aws-sdk-go-v2/service/sts"
 	iamauth "github.com/hashicorp/consul-awsauth"
@@ -90,18 +91,15 @@ func resolveAWSCredentials(ctx context.Context, params map[string]interface{}) (
 
 // generateConsulAWSLoginData creates Consul-specific AWS login data
 // Following the Consul CLI implementation exactly
-func generateConsulAWSLoginData(creds aws.Credentials, region string, serverIDHeaderValue string) (map[string]interface{}, error) {
+// stsEndpoint overrides the STS endpoint used for the IAM entity lookup; empty uses the AWS default (tests point it at a fake server).
+func generateConsulAWSLoginData(creds aws.Credentials, region, stsEndpoint, serverIDHeaderValue string) (map[string]interface{}, error) {
 	// Create LoginInput for Consul AWS authentication
-	// The library's LoginInput.Creds field accepts interface{} which can be
-	// either SDK v1 *credentials.Credentials or SDK v2 aws.Credentials
-	// We pass v2 credentials directly - the library will access the fields through interface{}
-
 	loginInput := &iamauth.LoginInput{
-		// Pass aws.Credentials struct (not pointer) as interface{}
-		// The library can access AccessKeyID, SecretAccessKey, SessionToken fields through interface{}
-		Creds:                  utils.ToV1Credentials(creds),
+		// Creds are already resolved by resolveAWSCredentials; the library expects an aws.CredentialsProvider.
+		Creds:                  credentials.NewStaticCredentialsProvider(creds.AccessKeyID, creds.SecretAccessKey, creds.SessionToken),
 		IncludeIAMEntity:       utils.DefaultIncludeIAMEntity, // Required for binding rules with entity metadata
 		STSRegion:              region,
+		STSEndpoint:            stsEndpoint,
 		Logger:                 hclog.NewNullLogger(),
 		ServerIDHeaderValue:    serverIDHeaderValue,
 		ServerIDHeaderName:     utils.IAMServerIDHeaderName,      // Header name: "X-Consul-IAM-ServerID"

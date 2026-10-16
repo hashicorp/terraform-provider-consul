@@ -279,7 +279,7 @@ func (l *AuthLoginAWS) generateAWSLoginData() (map[string]interface{}, error) {
 	serverIDHeaderValue, _ := l.params[utils.FieldServerIDHeaderValue].(string)
 
 	// Generate Consul-specific AWS login data
-	loginData, err := generateConsulAWSLoginData(creds, region, serverIDHeaderValue)
+	loginData, err := generateConsulAWSLoginData(creds, region, "", serverIDHeaderValue)
 	if err != nil {
 		return nil, fmt.Errorf("failed to generate login data: %w", err)
 	}
