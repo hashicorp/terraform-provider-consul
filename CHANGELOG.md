@@ -6,6 +6,7 @@ BUG FIXES:
 * Upgrades Go toolchain to `1.26.8` and `golang.org/x/net` to `v0.59.0` to address multiple stdlib security vulnerabilities ([#497](https://github.com/hashicorp/terraform-provider-consul/pull/497)).
 * Upgrades `golang.org/x/net` to `v0.60.0`, `go.opentelemetry.io/otel` modules to `v1.45.0`, and `github.com/keybase/go-crypto` to the latest revision to address CVE-2026-78659, CVE-2026-78660, CVE-2026-78663, CVE-2026-78669, CVE-2026-97032, CVE-2026-81870, CVE-2020-9283, CVE-2020-29652, CVE-2021-43565 and CVE-2022-27191.
 * Upgrades Go toolchain to `1.26.9` to address multiple stdlib security vulnerabilities in `net/http`, `crypto/tls`, `mime/multipart`, `html/template` and `os`.
+* Upgrades `github.com/hashicorp/consul-awsauth` to use `aws-sdk-go-v2` and removes the `github.com/aws/aws-sdk-go` (v1) dependency from the provider binary to address GO-2022-0635 and GO-2022-0646.
 
 ## 2.23.0 (January 29, 2026)
 
