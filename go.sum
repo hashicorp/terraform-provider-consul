@@ -299,8 +299,8 @@ github.com/googleapis/gax-go/v2 v2.24.0 h1:myMaPYyF9MecEmvQqMqomIwn9t/4KCZN9qnws
 github.com/googleapis/gax-go/v2 v2.24.0/go.mod h1:IaTHBDd7NHxSCiu0vEs8pQZu4dGZrWwuSoxCnk16OFM=
 github.com/hashicorp/aws-sdk-go-base/v2 v2.0.0-beta.74 h1:mymLUKThnV9wFvogOK8NnsMP9/vlhnjXY98gr2QIGW8=
 github.com/hashicorp/aws-sdk-go-base/v2 v2.0.0-beta.74/go.mod h1:Bh9qYL8ehmDxSg14Tk8oxFCP90XHfs6NxV1D84884xA=
-github.com/hashicorp/consul-awsauth v0.0.0-20260422051333-7081e010a74d h1:/lLUqO/HPbn6LO2UqcesYiOQWMoBGuccphgNrsYgSiI=
-github.com/hashicorp/consul-awsauth v0.0.0-20260422051333-7081e010a74d/go.mod h1:D1LiYVM9NJA2BSo7ob5cdf90HVHpPnjDo0txd1A1rH0=
+github.com/hashicorp/consul-awsauth v0.0.0-20261016095115-05c9b4475cf5 h1:bc00nH2MkruwyDsz5WyPE6sMpDtMlDXXqllKR/0Sg0k=
+github.com/hashicorp/consul-awsauth v0.0.0-20261016095115-05c9b4475cf5/go.mod h1:D1LiYVM9NJA2BSo7ob5cdf90HVHpPnjDo0txd1A1rH0=
 github.com/hashicorp/consul/api v1.34.3 h1:OiZaQnwkS6uvutie3CF6NFXj8uScNezDlsU9MEqKT0s=
 github.com/hashicorp/consul/api v1.34.3/go.mod h1:A4wKd7yw7Wz4zn07p74+o0bLBi5dXsSDMMcMCEinY40=
 github.com/hashicorp/consul/proto-public v0.6.4 h1:7yN6qtUeVtq4ToEwgLxSpsVpvkw0iYpAeGgjxkaP0kk=

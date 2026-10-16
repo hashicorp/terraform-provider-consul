@@ -4,13 +4,18 @@
 package auth
 
 import (
+	"bytes"
+	"context"
 	"encoding/base64"
 	"encoding/json"
+	"encoding/pem"
 	"fmt"
 	"io"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
+	"os"
+	"path/filepath"
 	"strings"
 	"sync/atomic"
 	"testing"
@@ -34,8 +39,14 @@ const testCallerIdentityResponse = `<GetCallerIdentityResponse xmlns="https://st
 func newFakeSTSServer(t *testing.T, arn string, status int) (*httptest.Server, *int32) {
 	t.Helper()
 	var count int32
-	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		atomic.AddInt32(&count, 1)
+	srv := httptest.NewServer(fakeSTSHandler(t, arn, status, &count))
+	t.Cleanup(srv.Close)
+	return srv, &count
+}
+
+func fakeSTSHandler(t *testing.T, arn string, status int, count *int32) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		atomic.AddInt32(count, 1)
 		body, _ := io.ReadAll(r.Body)
 		if !strings.Contains(string(body), "Action=GetCallerIdentity") {
 			t.Errorf("unexpected STS request body: %s", body)
@@ -50,9 +61,7 @@ func newFakeSTSServer(t *testing.T, arn string, status int) (*httptest.Server, *
 			return
 		}
 		fmt.Fprint(w, `<ErrorResponse><Error><Type>Sender</Type><Code>InvalidClientTokenId</Code><Message>invalid</Message></Error></ErrorResponse>`)
-	}))
-	t.Cleanup(srv.Close)
-	return srv, &count
+	})
 }
 
 func decodeLoginField(t *testing.T, data map[string]interface{}, key string) string {
@@ -112,7 +121,7 @@ func TestGenerateConsulAWSLoginData(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			srv, count := newFakeSTSServer(t, tt.arn, http.StatusOK)
 
-			data, err := generateConsulAWSLoginData(creds, "us-east-1", srv.URL, "consul.example.com")
+			data, err := generateConsulAWSLoginData(creds, nil, "us-east-1", srv.URL, "consul.example.com")
 			if err != nil {
 				t.Fatalf("generateConsulAWSLoginData() error: %v", err)
 			}
@@ -188,7 +197,134 @@ func TestGenerateConsulAWSLoginData_STSError(t *testing.T) {
 	srv, _ := newFakeSTSServer(t, "", http.StatusForbidden)
 	creds := aws.Credentials{AccessKeyID: "AKIDTEST", SecretAccessKey: "test-secret-key"}
 
-	if _, err := generateConsulAWSLoginData(creds, "us-east-1", srv.URL, ""); err == nil {
+	if _, err := generateConsulAWSLoginData(creds, nil, "us-east-1", srv.URL, ""); err == nil {
 		t.Fatal("expected an error when STS rejects GetCallerIdentity")
 	}
 }
+
+// isolateAWSEnv clears AWS settings so the developer's environment and ~/.aws do not affect the test.
+func isolateAWSEnv(t *testing.T) {
+	t.Helper()
+	missing := filepath.Join(t.TempDir(), "missing")
+	t.Setenv("AWS_CONFIG_FILE", missing)
+	t.Setenv("AWS_SHARED_CREDENTIALS_FILE", missing)
+	for _, v := range []string{
+		"AWS_PROFILE", "AWS_DEFAULT_PROFILE", "AWS_REGION", "AWS_DEFAULT_REGION",
+		"AWS_ACCESS_KEY_ID", "AWS_SECRET_ACCESS_KEY", "AWS_SESSION_TOKEN",
+		"AWS_CA_BUNDLE", "AWS_USE_FIPS_ENDPOINT", "AWS_ENDPOINT_URL", "AWS_ENDPOINT_URL_STS", "AWS_ENDPOINT_URL_IAM",
+	} {
+		t.Setenv(v, "")
+	}
+}
+
+func staticCredsParams(region string) map[string]interface{} {
+	return map[string]interface{}{
+		utils.FieldAWSAccessKeyID:     "AKIDTEST",
+		utils.FieldAWSSecretAccessKey: "test-secret-key",
+		utils.FieldAWSRegion:          region,
+	}
+}
+
+// TestGenerateConsulAWSLoginData_CABundle verifies AWS_CA_BUNDLE is honored for the STS GetCallerIdentity lookup,
+// e.g. when STS is reached through a TLS-intercepting proxy with a private CA.
+func TestGenerateConsulAWSLoginData_CABundle(t *testing.T) {
+	isolateAWSEnv(t)
+	var count int32
+	srv := httptest.NewTLSServer(fakeSTSHandler(t, "arn:aws:iam::123456789012:user/test-user", http.StatusOK, &count))
+	t.Cleanup(srv.Close)
+
+	caFile := filepath.Join(t.TempDir(), "ca.pem")
+	caPEM := pem.EncodeToMemory(&pem.Block{Type: "CERTIFICATE", Bytes: srv.Certificate().Raw})
+	if err := os.WriteFile(caFile, caPEM, 0o600); err != nil {
+		t.Fatal(err)
+	}
+
+	t.Run("without AWS_CA_BUNDLE the private CA is not trusted", func(t *testing.T) {
+		creds, awsCfg, err := resolveAWSCredentials(context.Background(), staticCredsParams("us-east-1"))
+		if err != nil {
+			t.Fatalf("resolveAWSCredentials() error: %v", err)
+		}
+		_, err = generateConsulAWSLoginData(creds, awsCfg, "us-east-1", srv.URL, "")
+		if err == nil || !strings.Contains(err.Error(), "certificate") {
+			t.Fatalf("expected a certificate error, got: %v", err)
+		}
+	})
+
+	t.Run("with AWS_CA_BUNDLE login data is generated", func(t *testing.T) {
+		t.Setenv("AWS_CA_BUNDLE", caFile)
+		creds, awsCfg, err := resolveAWSCredentials(context.Background(), staticCredsParams("us-east-1"))
+		if err != nil {
+			t.Fatalf("resolveAWSCredentials() error: %v", err)
+		}
+		before := atomic.LoadInt32(&count)
+		if _, err := generateConsulAWSLoginData(creds, awsCfg, "us-east-1", srv.URL, ""); err != nil {
+			t.Fatalf("generateConsulAWSLoginData() error: %v", err)
+		}
+		if got := atomic.LoadInt32(&count) - before; got != 1 {
+			t.Errorf("expected 1 request to STS, got %d", got)
+		}
+	})
+}
+
+// TestGenerateConsulAWSLoginData_FIPS verifies AWS_USE_FIPS_ENDPOINT produces FIPS STS/IAM requests,
+// with the IAM request still signed for us-east-1 (IAM is global).
+func TestGenerateConsulAWSLoginData_FIPS(t *testing.T) {
+	isolateAWSEnv(t)
+	t.Setenv("AWS_USE_FIPS_ENDPOINT", "true")
+
+	creds, awsCfg, err := resolveAWSCredentials(context.Background(), staticCredsParams("us-west-2"))
+	if err != nil {
+		t.Fatalf("resolveAWSCredentials() error: %v", err)
+	}
+	if awsCfg == nil {
+		t.Fatal("expected an AWS config to be loaded")
+	}
+
+	// Answer the GetCallerIdentity lookup locally instead of calling AWS.
+	var requestedHosts []string
+	awsCfg.HTTPClient = &http.Client{Transport: roundTripFunc(func(r *http.Request) (*http.Response, error) {
+		requestedHosts = append(requestedHosts, r.URL.Host)
+		body := fmt.Sprintf(testCallerIdentityResponse, "arn:aws:sts::123456789012:assumed-role/test-role/test-session")
+		return &http.Response{
+			StatusCode: http.StatusOK,
+			Header:     http.Header{"Content-Type": []string{"text/xml"}},
+			Body:       io.NopCloser(bytes.NewBufferString(body)),
+			Request:    r,
+		}, nil
+	})}
+
+	data, err := generateConsulAWSLoginData(creds, awsCfg, "us-west-2", "", "")
+	if err != nil {
+		t.Fatalf("generateConsulAWSLoginData() error: %v", err)
+	}
+
+	if len(requestedHosts) != 1 || requestedHosts[0] != "sts-fips.us-west-2.amazonaws.com" {
+		t.Errorf("GetCallerIdentity lookup sent to %v, want [sts-fips.us-west-2.amazonaws.com]", requestedHosts)
+	}
+	if reqURL := decodeLoginField(t, data, "iam_request_url"); !strings.HasPrefix(reqURL, "https://sts-fips.us-west-2.amazonaws.com") {
+		t.Errorf("iam_request_url = %q, want sts-fips.us-west-2.amazonaws.com", reqURL)
+	}
+
+	var raw map[string][]string
+	if err := json.Unmarshal([]byte(decodeLoginField(t, data, "iam_request_headers")), &raw); err != nil {
+		t.Fatalf("iam_request_headers is not JSON: %v", err)
+	}
+	headers := http.Header(raw)
+	if auth := headers.Get("Authorization"); !strings.Contains(auth, "/us-west-2/sts/aws4_request") {
+		t.Errorf("STS request not signed for us-west-2: %q", auth)
+	}
+	if got := headers.Get(utils.GetEntityURLHeaderName); !strings.HasPrefix(got, "https://iam-fips.amazonaws.com") {
+		t.Errorf("%s = %q, want iam-fips.amazonaws.com", utils.GetEntityURLHeaderName, got)
+	}
+	var entityHeaders http.Header
+	if err := json.Unmarshal([]byte(headers.Get(utils.GetEntityHeadersHeaderName)), &entityHeaders); err != nil {
+		t.Fatalf("%s is not JSON: %v", utils.GetEntityHeadersHeaderName, err)
+	}
+	if auth := entityHeaders.Get("Authorization"); !strings.Contains(auth, "/us-east-1/iam/aws4_request") {
+		t.Errorf("IAM request not signed for us-east-1: %q", auth)
+	}
+}
+
+type roundTripFunc func(*http.Request) (*http.Response, error)
+
+func (f roundTripFunc) RoundTrip(r *http.Request) (*http.Response, error) { return f(r) }
