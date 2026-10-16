@@ -3,8 +3,10 @@ package auth
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"log"
+	"os"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/config"
@@ -43,9 +45,15 @@ func resolveAWSCredentials(ctx context.Context, params map[string]interface{}) (
 		}
 		cfg, err := config.LoadDefaultConfig(ctx, config.WithRegion(region))
 		if err != nil {
-			// Static credentials never required loading AWS config; keep working without it.
-			log.Printf("[WARN] Failed to load AWS config, AWS_CA_BUNDLE and FIPS endpoint settings will not be applied: %s", err)
-			return creds, nil, nil
+			var profileErr config.SharedConfigProfileNotExistError
+			securitySettings := os.Getenv("AWS_CA_BUNDLE") != "" || os.Getenv("AWS_USE_FIPS_ENDPOINT") != ""
+			// Static credentials never required AWS config, so a missing profile alone must not break login,
+			// but never silently drop explicitly configured CA bundle or FIPS settings.
+			if errors.As(err, &profileErr) && !securitySettings {
+				log.Printf("[WARN] Failed to load AWS config, AWS_CA_BUNDLE and FIPS endpoint settings will not be applied: %s", err)
+				return creds, nil, nil
+			}
+			return aws.Credentials{}, nil, fmt.Errorf("failed to load AWS config: %w", err)
 		}
 		return creds, &cfg, nil
 	}

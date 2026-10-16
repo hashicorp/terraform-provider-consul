@@ -212,7 +212,7 @@ func isolateAWSEnv(t *testing.T) {
 	for _, v := range []string{
 		"AWS_PROFILE", "AWS_DEFAULT_PROFILE", "AWS_REGION", "AWS_DEFAULT_REGION",
 		"AWS_ACCESS_KEY_ID", "AWS_SECRET_ACCESS_KEY", "AWS_SESSION_TOKEN",
-		"AWS_CA_BUNDLE", "AWS_USE_FIPS_ENDPOINT", "AWS_ENDPOINT_URL", "AWS_ENDPOINT_URL_STS", "AWS_ENDPOINT_URL_IAM",
+		"AWS_CA_BUNDLE", "AWS_USE_FIPS_ENDPOINT", "AWS_USE_DUALSTACK_ENDPOINT", "AWS_ENDPOINT_URL", "AWS_ENDPOINT_URL_STS", "AWS_ENDPOINT_URL_IAM",
 	} {
 		t.Setenv(v, "")
 	}
@@ -331,7 +331,7 @@ type roundTripFunc func(*http.Request) (*http.Response, error)
 func (f roundTripFunc) RoundTrip(r *http.Request) (*http.Response, error) { return f(r) }
 
 // TestResolveAWSCredentials_StaticCredsConfigLoadFailure verifies static credentials keep working
-// (as before) when the AWS config cannot be loaded, and that a warning is logged.
+// (as before) when only the shared-config profile is missing, and that a warning is logged.
 func TestResolveAWSCredentials_StaticCredsConfigLoadFailure(t *testing.T) {
 	isolateAWSEnv(t)
 	t.Setenv("AWS_PROFILE", "does-not-exist")
@@ -352,5 +352,39 @@ func TestResolveAWSCredentials_StaticCredsConfigLoadFailure(t *testing.T) {
 	}
 	if !strings.Contains(logs.String(), "[WARN] Failed to load AWS config") {
 		t.Errorf("expected a [WARN] log, got: %q", logs.String())
+	}
+}
+
+// TestResolveAWSCredentials_StaticCredsSecuritySettingsFailClosed verifies that, with static credentials,
+// explicitly configured CA bundle / FIPS settings are never silently dropped when the AWS config fails to load.
+func TestResolveAWSCredentials_StaticCredsSecuritySettingsFailClosed(t *testing.T) {
+	missingFile := filepath.Join(t.TempDir(), "missing-ca.pem")
+
+	tests := []struct {
+		name string
+		env  map[string]string
+	}{
+		{"unreadable CA bundle and FIPS", map[string]string{"AWS_CA_BUNDLE": missingFile, "AWS_USE_FIPS_ENDPOINT": "true"}},
+		{"unreadable CA bundle", map[string]string{"AWS_CA_BUNDLE": missingFile}},
+		{"invalid FIPS value", map[string]string{"AWS_USE_FIPS_ENDPOINT": "not-a-bool"}},
+		{"missing profile with FIPS", map[string]string{"AWS_PROFILE": "does-not-exist", "AWS_USE_FIPS_ENDPOINT": "true"}},
+		{"missing profile with CA bundle", map[string]string{"AWS_PROFILE": "does-not-exist", "AWS_CA_BUNDLE": missingFile}},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			isolateAWSEnv(t)
+			for k, v := range tt.env {
+				t.Setenv(k, v)
+			}
+
+			_, awsCfg, err := resolveAWSCredentials(context.Background(), staticCredsParams("us-east-1"))
+			if err == nil {
+				t.Fatalf("expected an error, got config %+v", awsCfg)
+			}
+			if !strings.Contains(err.Error(), "failed to load AWS config") {
+				t.Errorf("unexpected error: %v", err)
+			}
+		})
 	}
 }
