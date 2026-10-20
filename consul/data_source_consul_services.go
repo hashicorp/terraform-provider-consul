@@ -29,6 +29,10 @@ func dataSourceConsulServices() *schema.Resource {
 				Computed: true,
 				Type:     schema.TypeString,
 			},
+			"filter": {
+				Optional: true,
+				Type:     schema.TypeString,
+			},
 			"query_options": queryOpts,
 
 			// Out parameters
