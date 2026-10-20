@@ -34,6 +34,12 @@ func resourceConsulACLRolePolicyAttachment() *schema.Resource {
 				Required:    true,
 				Description: "The policy name.",
 			},
+			"partition": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				ForceNew:    true,
+				Description: "The partition the ACL policy and role are associated with.",
+			},
 		},
 	}
 }
