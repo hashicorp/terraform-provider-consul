@@ -117,6 +117,15 @@ func TestAccConsulConfigEntryEE_basic(t *testing.T) {
 				),
 			},
 			{
+				// Keep the JWT provider so the intention referencing it is removed first;
+				// Consul rejects deleting a JWT provider still used by an intention.
+				Config:             testAccConsulConfigEntryEE_ServiceConfigL7gRPC + testAccConsulConfigEntry_JWTProviderOkta,
+				ExpectNonEmptyPlan: true,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("consul_config_entry.service_intentions", "name", "billing"),
+				),
+			},
+			{
 				Config: testAccConsulConfigEntryEE_ServiceConfigL7gRPC,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("consul_config_entry.service_intentions", "name", "billing"),

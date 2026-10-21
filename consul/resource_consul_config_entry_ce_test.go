@@ -102,6 +102,15 @@ func TestAccConsulConfigEntryCE_basic(t *testing.T) {
 				),
 			},
 			{
+				// Keep the JWT provider so the intention referencing it is removed first;
+				// Consul rejects deleting a JWT provider still used by an intention.
+				Config:             testAccConsulConfigEntryCE_ServiceConfigL7gRPC + testAccConsulConfigEntry_JWTProviderOkta,
+				ExpectNonEmptyPlan: true,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("consul_config_entry.service_intentions", "name", "billing"),
+				),
+			},
+			{
 				Config: testAccConsulConfigEntryCE_ServiceConfigL7gRPC,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("consul_config_entry.service_intentions", "name", "billing"),
@@ -638,6 +647,23 @@ resource "consul_config_entry" "service_intentions" {
 	})
 
 	depends_on = [consul_config_entry.jwt_provider, consul_config_entry.sd]
+}
+`
+
+const testAccConsulConfigEntry_JWTProviderOkta = `
+resource "consul_config_entry" "jwt_provider" {
+	name = "okta"
+	kind = "jwt-provider"
+
+	config_json = jsonencode({
+		Issuer = "test-issuer"
+		JSONWebKeySet = {
+			Remote = {
+				URI = "https://127.0.0.1:9091"
+				FetchAsynchronously = true
+			}
+		}
+	})
 }
 `
 
