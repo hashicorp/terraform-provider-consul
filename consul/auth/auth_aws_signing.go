@@ -3,10 +3,14 @@ package auth
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
+	"log"
+	"os"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/config"
+	"github.com/aws/aws-sdk-go-v2/credentials"
 	"github.com/aws/aws-sdk-go-v2/credentials/stscreds"
 	"github.com/aws/aws-sdk-go-v2/service/sts"
 	iamauth "github.com/hashicorp/consul-awsauth"
@@ -16,21 +20,8 @@ import (
 
 // resolveAWSCredentials resolves AWS credentials using aws-sdk-go-v2 credential chain
 // It handles: static credentials, environment variables, profiles, web identity tokens, instance metadata, and assume role
-func resolveAWSCredentials(ctx context.Context, params map[string]interface{}) (aws.Credentials, error) {
-	// Check for static credentials first
-	accessKey := utils.GetStringParam(params, utils.FieldAWSAccessKeyID)
-	secretKey := utils.GetStringParam(params, utils.FieldAWSSecretAccessKey)
-	sessionToken := utils.GetStringParam(params, utils.FieldAWSSessionToken)
-
-	// If both access key and secret key are provided, use static credentials
-	if utils.IsNonEmpty(accessKey) && utils.IsNonEmpty(secretKey) {
-		return aws.Credentials{
-			AccessKeyID:     accessKey,
-			SecretAccessKey: secretKey,
-			SessionToken:    sessionToken,
-		}, nil
-	}
-
+// It also returns the loaded AWS config (HTTP client, FIPS settings, ...) for signing the login request.
+func resolveAWSCredentials(ctx context.Context, params map[string]interface{}) (aws.Credentials, *aws.Config, error) {
 	// Get region from params, environment variables, or use default
 	region := utils.GetStringParam(params, utils.FieldAWSRegion)
 	if !utils.IsNonEmpty(region) {
@@ -38,6 +29,35 @@ func resolveAWSCredentials(ctx context.Context, params map[string]interface{}) (
 	}
 	if !utils.IsNonEmpty(region) {
 		region = utils.DefaultAWSRegion
+	}
+
+	// Check for static credentials first
+	accessKey := utils.GetStringParam(params, utils.FieldAWSAccessKeyID)
+	secretKey := utils.GetStringParam(params, utils.FieldAWSSecretAccessKey)
+	sessionToken := utils.GetStringParam(params, utils.FieldAWSSessionToken)
+
+	// If both access key and secret key are provided, use static credentials
+	if utils.IsNonEmpty(accessKey) && utils.IsNonEmpty(secretKey) {
+		creds := aws.Credentials{
+			AccessKeyID:     accessKey,
+			SecretAccessKey: secretKey,
+			SessionToken:    sessionToken,
+		}
+		cfg, err := config.LoadDefaultConfig(ctx, config.WithRegion(region))
+		if err != nil {
+			var profileErr config.SharedConfigProfileNotExistError
+			// A missing source_profile is wrapped in this error even though the selected profile (and its FIPS setting) exists.
+			var assumeRoleErr config.SharedConfigAssumeRoleError
+			securitySettings := os.Getenv("AWS_CA_BUNDLE") != "" || os.Getenv("AWS_USE_FIPS_ENDPOINT") != ""
+			// Static credentials never required AWS config, so a missing profile alone must not break login,
+			// but never silently drop explicitly configured CA bundle or FIPS settings.
+			if errors.As(err, &profileErr) && !errors.As(err, &assumeRoleErr) && !securitySettings {
+				log.Printf("[WARN] Failed to load AWS config, AWS_CA_BUNDLE and FIPS endpoint settings will not be applied: %s", err)
+				return creds, nil, nil
+			}
+			return aws.Credentials{}, nil, fmt.Errorf("failed to load AWS config: %w", err)
+		}
+		return creds, &cfg, nil
 	}
 
 	// Build configuration using aws-sdk-go-v2
@@ -63,7 +83,7 @@ func resolveAWSCredentials(ctx context.Context, params map[string]interface{}) (
 	// Load base configuration
 	cfg, err := config.LoadDefaultConfig(ctx, cfgOpts...)
 	if err != nil {
-		return aws.Credentials{}, fmt.Errorf("failed to load AWS config: %w", err)
+		return aws.Credentials{}, nil, fmt.Errorf("failed to load AWS config: %w", err)
 	}
 
 	// Web identity token provider is automatically handled by config.LoadDefaultConfig
@@ -77,7 +97,7 @@ func resolveAWSCredentials(ctx context.Context, params map[string]interface{}) (
 
 		creds, err := assumeRoleProvider.Retrieve(ctx)
 		if err == nil {
-			return creds, nil
+			return creds, &cfg, nil
 		}
 		// Fall through to default credential chain if assume role fails
 	}
@@ -85,23 +105,23 @@ func resolveAWSCredentials(ctx context.Context, params map[string]interface{}) (
 	// Use the default credential chain from the config
 	// This will try: env vars, profile, instance metadata, ECS container credentials, etc.
 	// The config.LoadDefaultConfig handles EC2 instance metadata provider automatically
-	return cfg.Credentials.Retrieve(ctx)
+	creds, err := cfg.Credentials.Retrieve(ctx)
+	return creds, &cfg, err
 }
 
 // generateConsulAWSLoginData creates Consul-specific AWS login data
 // Following the Consul CLI implementation exactly
-func generateConsulAWSLoginData(creds aws.Credentials, region string, serverIDHeaderValue string) (map[string]interface{}, error) {
+// stsEndpoint overrides the STS endpoint used for the IAM entity lookup; empty uses the AWS default (tests point it at a fake server).
+// awsCfg (optional) supplies the HTTP client (e.g. AWS_CA_BUNDLE) and FIPS settings used to build the requests.
+func generateConsulAWSLoginData(creds aws.Credentials, awsCfg *aws.Config, region, stsEndpoint, serverIDHeaderValue string) (map[string]interface{}, error) {
 	// Create LoginInput for Consul AWS authentication
-	// The library's LoginInput.Creds field accepts interface{} which can be
-	// either SDK v1 *credentials.Credentials or SDK v2 aws.Credentials
-	// We pass v2 credentials directly - the library will access the fields through interface{}
-
 	loginInput := &iamauth.LoginInput{
-		// Pass aws.Credentials struct (not pointer) as interface{}
-		// The library can access AccessKeyID, SecretAccessKey, SessionToken fields through interface{}
-		Creds:                  utils.ToV1Credentials(creds),
+		// Creds are already resolved by resolveAWSCredentials; the library expects an aws.CredentialsProvider.
+		Creds:                  credentials.NewStaticCredentialsProvider(creds.AccessKeyID, creds.SecretAccessKey, creds.SessionToken),
+		Config:                 awsCfg,
 		IncludeIAMEntity:       utils.DefaultIncludeIAMEntity, // Required for binding rules with entity metadata
 		STSRegion:              region,
+		STSEndpoint:            stsEndpoint,
 		Logger:                 hclog.NewNullLogger(),
 		ServerIDHeaderValue:    serverIDHeaderValue,
 		ServerIDHeaderName:     utils.IAMServerIDHeaderName,      // Header name: "X-Consul-IAM-ServerID"
