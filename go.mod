@@ -7,7 +7,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/config v1.32.40
 	github.com/aws/aws-sdk-go-v2/credentials v1.19.39
 	github.com/aws/aws-sdk-go-v2/service/sts v1.46.0
-	github.com/hashicorp/consul-awsauth v0.0.0-20261016095115-05c9b4475cf5
+	github.com/hashicorp/consul-awsauth v0.0.0-20261021140429-9d778a2463db
 	github.com/hashicorp/consul/api v1.34.3
 	github.com/hashicorp/consul/proto-public v0.6.4
 	github.com/hashicorp/consul/sdk v0.18.1
