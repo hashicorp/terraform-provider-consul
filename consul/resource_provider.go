@@ -12,8 +12,7 @@ import (
 
 	consulapi "github.com/hashicorp/consul/api"
 	"github.com/hashicorp/go-hclog"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-consul/consul/auth"
 	"github.com/mitchellh/mapstructure"
 )
@@ -28,8 +27,8 @@ func deprecated(name string, resource *schema.Resource) *schema.Resource {
 	return resource
 }
 
-// Provider returns a terraform.ResourceProvider.
-func Provider() terraform.ResourceProvider {
+// Provider returns the Consul provider.
+func Provider() *schema.Provider {
 	r := &schema.Provider{
 		Schema: map[string]*schema.Schema{
 			"datacenter": {

@@ -8,17 +8,17 @@ import (
 	"testing"
 
 	consulapi "github.com/hashicorp/consul/api"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
 func TestAccConsulAgentService_basic(t *testing.T) {
 	providers, client := startTestServer(t)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() {},
-		Providers:    providers,
-		CheckDestroy: testAccCheckConsulAgentServiceDestroy(client),
+		PreCheck:          func() {},
+		ProviderFactories: providers,
+		CheckDestroy:      testAccCheckConsulAgentServiceDestroy(client),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccConsulAgentServiceConfig,

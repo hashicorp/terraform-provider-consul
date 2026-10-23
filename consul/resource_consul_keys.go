@@ -4,10 +4,11 @@
 package consul
 
 import (
+	"context"
 	"fmt"
 	"strconv"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func resourceConsulKeys() *schema.Resource {
@@ -20,7 +21,7 @@ func resourceConsulKeys() *schema.Resource {
 		SchemaVersion: 1,
 		MigrateState:  resourceConsulKeysMigrateState,
 
-		CustomizeDiff: func(d *schema.ResourceDiff, _ interface{}) error {
+		CustomizeDiff: func(_ context.Context, d *schema.ResourceDiff, _ interface{}) error {
 			if d.HasChange("key") {
 				d.SetNewComputed("var")
 			}

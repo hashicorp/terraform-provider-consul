@@ -10,16 +10,16 @@ import (
 
 	"github.com/hashicorp/consul/api"
 	consulapi "github.com/hashicorp/consul/api"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
 func TestAccConsulPreparedQuery_basic(t *testing.T) {
 	providers, client := startTestServer(t)
 
 	resource.Test(t, resource.TestCase{
-		Providers:    providers,
-		CheckDestroy: testAccCheckConsulPreparedQueryDestroy(client),
+		ProviderFactories: providers,
+		CheckDestroy:      testAccCheckConsulPreparedQueryDestroy(client),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccConsulPreparedQueryConfig,
@@ -109,8 +109,8 @@ func TestAccConsulPreparedQuery_import(t *testing.T) {
 	}
 
 	resource.Test(t, resource.TestCase{
-		Providers:    providers,
-		CheckDestroy: testAccCheckConsulPreparedQueryDestroy(client),
+		ProviderFactories: providers,
+		CheckDestroy:      testAccCheckConsulPreparedQueryDestroy(client),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccConsulPreparedQueryConfig,
@@ -128,7 +128,7 @@ func TestAccConsulPreparedQuery_blocks(t *testing.T) {
 	providers, _ := startTestServer(t)
 
 	resource.Test(t, resource.TestCase{
-		Providers: providers,
+		ProviderFactories: providers,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccConsulPreparedQueryBlocks,
@@ -163,7 +163,7 @@ func TestAccConsulPreparedQuery_datacenter(t *testing.T) {
 	providers, client := startRemoteDatacenterTestServer(t)
 
 	resource.Test(t, resource.TestCase{
-		Providers: providers,
+		ProviderFactories: providers,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccConsulPreparedQueryDatacenter,

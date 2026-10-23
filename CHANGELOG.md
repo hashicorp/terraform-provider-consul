@@ -1,7 +1,12 @@
 ## Unreleased
 
+NOTES:
+
+* The provider now uses `terraform-plugin-sdk` v2 and requires Terraform 0.12 or later; Terraform 0.11 is no longer supported.
+
 BUG FIXES:
 
+* Upgrades to `terraform-plugin-sdk` v2, removing `github.com/zclconf/go-cty-yaml` (CVE-2022-3064), `golang.org/x/crypto/openpgp` (GO-2026-5932) and `github.com/keybase/go-crypto` from the provider binary. `pgp_key` encryption in the `consul_acl_token_secret_id` data source now uses `github.com/ProtonMail/go-crypto` and produces the same message format as before, so existing `base64 -d | gpg -d` workflows keep working.
 * Upgrades `google.golang.org/grpc` to v1.79.3 to address the gRPC-Go authorization bypass for malformed `:path` headers and updates the Go version to 1.25.8 ([#484](https://github.com/hashicorp/terraform-provider-consul/pull/484)).
 * Upgrades Go toolchain to `1.26.8` and `golang.org/x/net` to `v0.59.0` to address multiple stdlib security vulnerabilities ([#497](https://github.com/hashicorp/terraform-provider-consul/pull/497)).
 * Upgrades `golang.org/x/net` to `v0.60.0`, `go.opentelemetry.io/otel` modules to `v1.45.0`, and `github.com/keybase/go-crypto` to the latest revision to address CVE-2026-78659, CVE-2026-78660, CVE-2026-78663, CVE-2026-78669, CVE-2026-97032, CVE-2026-81870, CVE-2020-9283, CVE-2020-29652, CVE-2021-43565 and CVE-2022-27191.

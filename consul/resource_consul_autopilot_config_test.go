@@ -9,16 +9,16 @@ import (
 	"testing"
 
 	consulapi "github.com/hashicorp/consul/api"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
 func TestAccConsulAutopilotConfig_basic(t *testing.T) {
 	providers, client := startTestServer(t)
 
 	resource.Test(t, resource.TestCase{
-		Providers:    providers,
-		CheckDestroy: testFinalConfiguration(client),
+		ProviderFactories: providers,
+		CheckDestroy:      testFinalConfiguration(client),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccConsulAutopilotConfigBasic,
@@ -55,7 +55,7 @@ func TestAccConsulAutopilotConfig_parseduration(t *testing.T) {
 
 	errorRegexp := regexp.MustCompile("could not parse 'last_contact_threshold': time: invalid duration")
 	resource.Test(t, resource.TestCase{
-		Providers: providers,
+		ProviderFactories: providers,
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccConsulAutopilotConfigParseDuration,
@@ -69,7 +69,7 @@ func TestAccConsulAutopilogConfig_datacenter(t *testing.T) {
 	providers, client := startRemoteDatacenterTestServer(t)
 
 	resource.Test(t, resource.TestCase{
-		Providers: providers,
+		ProviderFactories: providers,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccConsulAutopilotDatacenter,
