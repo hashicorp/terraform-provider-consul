@@ -20,7 +20,7 @@ jobs:
     runs-on: ${{ matrix.os }}
     env:
       CONSUL_VERSION: ${{ matrix.consul-version }}
-      TERRAFORM_VERSION: 1.9.5
+      TERRAFORM_VERSION: 1.17.0
     steps:
     - name: Install Go
       uses: actions/setup-go@4d34df0c2316fe8122ab82dc22947d607c0c91f9 # v4.0.0
