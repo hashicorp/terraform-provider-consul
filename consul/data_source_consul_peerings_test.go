@@ -19,10 +19,7 @@ func TestAccDataConsulPeerings_basic(t *testing.T) {
 				Config: testAccDataConsulPeeringsNone,
 			},
 			{
-				// The peering takes a bit of time to be established so we
-				// expect the state to change between the apply and the refresh
-				ExpectNonEmptyPlan: true,
-				Config:             testAccDataConsulPeeringsBasic,
+				Config: testAccDataConsulPeeringsBasic,
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr("data.consul_peerings.basic", "id", "peers"),
 					resource.TestCheckResourceAttrSet("data.consul_peerings.basic", "peers.#"),
