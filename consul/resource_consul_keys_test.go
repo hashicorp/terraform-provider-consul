@@ -8,16 +8,16 @@ import (
 	"testing"
 
 	consulapi "github.com/hashicorp/consul/api"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
 func TestAccConsulKeys_basic(t *testing.T) {
 	providers, client := startTestServer(t)
 
 	resource.Test(t, resource.TestCase{
-		Providers:    providers,
-		CheckDestroy: testAccCheckConsulKeysDestroy(client),
+		ProviderFactories: providers,
+		CheckDestroy:      testAccCheckConsulKeysDestroy(client),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccConsulKeysConfig,
@@ -26,7 +26,10 @@ func TestAccConsulKeys_basic(t *testing.T) {
 					testAccCheckConsulKeysValue("consul_keys.app", "enabled", "true"),
 					testAccCheckConsulKeysValue("consul_keys.app", "set", "acceptance"),
 					testAccCheckConsulKeysValue("consul_keys.app", "remove_one", "hello"),
-					resource.TestCheckResourceAttr("consul_keys.app", "key.4258512057.flags", "0"),
+					resource.TestCheckTypeSetElemNestedAttrs("consul_keys.app", "key.*", map[string]string{
+						"name":  "enabled",
+						"flags": "0",
+					}),
 				),
 			},
 			{
@@ -46,7 +49,7 @@ func TestAccConsulKeys_EmptyValue(t *testing.T) {
 	providers, client := startTestServer(t)
 
 	resource.Test(t, resource.TestCase{
-		Providers: providers,
+		ProviderFactories: providers,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccConsulKeysEmptyValue,
@@ -60,8 +63,8 @@ func TestAccConsulKeys_NamespaceCE(t *testing.T) {
 	providers, _ := startTestServer(t)
 
 	resource.Test(t, resource.TestCase{
-		Providers: providers,
-		PreCheck:  func() { skipTestOnConsulEnterpriseEdition(t) },
+		ProviderFactories: providers,
+		PreCheck:          func() { skipTestOnConsulEnterpriseEdition(t) },
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccConsulKeysNamespaceCE,
@@ -75,8 +78,8 @@ func TestAccConsulKeys_NamespaceEE(t *testing.T) {
 	providers, _ := startTestServer(t)
 
 	resource.Test(t, resource.TestCase{
-		Providers: providers,
-		PreCheck:  func() { skipTestOnConsulCommunityEdition(t) },
+		ProviderFactories: providers,
+		PreCheck:          func() { skipTestOnConsulCommunityEdition(t) },
 		Steps: []resource.TestStep{
 			{
 				Config: testAccConsulKeysNamespaceEE,
@@ -89,7 +92,7 @@ func TestAccConsulKeys_Datacenter(t *testing.T) {
 	providers, client := startRemoteDatacenterTestServer(t)
 
 	resource.Test(t, resource.TestCase{
-		Providers: providers,
+		ProviderFactories: providers,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccConsulKeysDatacenter,

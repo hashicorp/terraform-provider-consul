@@ -10,8 +10,7 @@ import (
 	"time"
 
 	consulapi "github.com/hashicorp/consul/api"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/hashcode"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 var headerResource = &schema.Resource{
@@ -152,7 +151,7 @@ removed during the next [anti-entropy synchronization](https://www.consul.io/doc
 					}
 					attrs = append(attrs, headers...)
 
-					return hashcode.String(hashcode.Strings(attrs))
+					return hashcodeString(hashcodeStrings(attrs))
 				},
 				Optional: true,
 				Elem: &schema.Resource{

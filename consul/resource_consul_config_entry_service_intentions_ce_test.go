@@ -4,7 +4,7 @@
 package consul
 
 import (
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"testing"
 )
 
@@ -12,8 +12,8 @@ func TestAccConsulConfigEntryServiceIntentionsCETest(t *testing.T) {
 	providers, _ := startTestServer(t)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:  func() { skipTestOnConsulEnterpriseEdition(t) },
-		Providers: providers,
+		PreCheck:          func() { skipTestOnConsulEnterpriseEdition(t) },
+		ProviderFactories: providers,
 		Steps: []resource.TestStep{
 			{
 				Config: testConsulConfigEntryServiceIntentionsCE,
@@ -30,10 +30,10 @@ func TestAccConsulConfigEntryServiceIntentionsCETest(t *testing.T) {
 					resource.TestCheckResourceAttr("consul_config_entry_service_intentions.foo", "sources.1.type", "consul"),
 					resource.TestCheckResourceAttr("consul_config_entry_service_intentions.foo", "sources.1.action", "deny"),
 					resource.TestCheckResourceAttr("consul_config_entry_service_intentions.foo", "sources.1.precedence", "9"),
-					resource.TestCheckResourceAttr("consul_config_entry_service_intentions.foo", "jwt.2394986741.providers.0.name", "okta"),
-					resource.TestCheckResourceAttr("consul_config_entry_service_intentions.foo", "jwt.2394986741.providers.0.verify_claims.0.path.0", "/"),
-					resource.TestCheckResourceAttr("consul_config_entry_service_intentions.foo", "jwt.2394986741.providers.0.verify_claims.0.path.1", "path1"),
-					resource.TestCheckResourceAttr("consul_config_entry_service_intentions.foo", "jwt.2394986741.providers.0.verify_claims.1.path.0", "/path"),
+					resource.TestCheckResourceAttr("consul_config_entry_service_intentions.foo", "jwt.0.providers.0.name", "okta"),
+					resource.TestCheckResourceAttr("consul_config_entry_service_intentions.foo", "jwt.0.providers.0.verify_claims.0.path.0", "/"),
+					resource.TestCheckResourceAttr("consul_config_entry_service_intentions.foo", "jwt.0.providers.0.verify_claims.0.path.1", "path1"),
+					resource.TestCheckResourceAttr("consul_config_entry_service_intentions.foo", "jwt.0.providers.0.verify_claims.1.path.0", "/path"),
 				),
 			},
 		},

@@ -10,15 +10,15 @@ import (
 	"testing"
 
 	consulapi "github.com/hashicorp/consul/api"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
 func TestAccConsulACLAuthMethod_basic(t *testing.T) {
 	providers, client := startTestServer(t)
 
 	resource.Test(t, resource.TestCase{
-		Providers: providers,
+		ProviderFactories: providers,
 
 		CheckDestroy: testAuthMethodDestroy(client),
 		Steps: []resource.TestStep{
@@ -87,8 +87,8 @@ func TestAccConsulACLAuthMethod_namespaceCE(t *testing.T) {
 	providers, _ := startTestServer(t)
 
 	resource.Test(t, resource.TestCase{
-		Providers: providers,
-		PreCheck:  func() { skipTestOnConsulEnterpriseEdition(t) },
+		ProviderFactories: providers,
+		PreCheck:          func() { skipTestOnConsulEnterpriseEdition(t) },
 		Steps: []resource.TestStep{
 			{
 				Config:      testResourceACLAuthMethodNamespaceCE,
@@ -102,8 +102,8 @@ func TestAccConsulACLAuthMethod_namespaceEE(t *testing.T) {
 	providers, _ := startTestServer(t)
 
 	resource.Test(t, resource.TestCase{
-		Providers: providers,
-		PreCheck:  func() { skipTestOnConsulCommunityEdition(t) },
+		ProviderFactories: providers,
+		PreCheck:          func() { skipTestOnConsulCommunityEdition(t) },
 		Steps: []resource.TestStep{
 			{
 				Config: testResourceACLAuthMethodNamespaceEE,

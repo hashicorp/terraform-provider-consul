@@ -7,14 +7,14 @@ import (
 	"context"
 	"testing"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 )
 
 func TestAccConsulAdminParition_EntBasic(t *testing.T) {
 	providers, client := startTestServer(t)
 
 	resource.Test(t, resource.TestCase{
-		Providers: providers,
+		ProviderFactories: providers,
 		PreCheck: func() {
 			skipTestOnConsulCommunityEdition(t)
 		},

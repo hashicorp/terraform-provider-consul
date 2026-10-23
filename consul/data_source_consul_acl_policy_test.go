@@ -7,14 +7,14 @@ import (
 	"regexp"
 	"testing"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 )
 
 func TestAccDataACLPolicy_basic(t *testing.T) {
 	providers, _ := startTestServer(t)
 
 	resource.Test(t, resource.TestCase{
-		Providers: providers,
+		ProviderFactories: providers,
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccDataSourceACLPolicyConfigNotFound,
@@ -38,8 +38,8 @@ func TestAccDataACLPolicy_namespaceCE(t *testing.T) {
 	providers, _ := startTestServer(t)
 
 	resource.Test(t, resource.TestCase{
-		Providers: providers,
-		PreCheck:  func() { skipTestOnConsulEnterpriseEdition(t) },
+		ProviderFactories: providers,
+		PreCheck:          func() { skipTestOnConsulEnterpriseEdition(t) },
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccDataSourceACLPolicyNamespaceCE,
@@ -53,8 +53,8 @@ func TestAccDataACLPolicy_namespaceEE(t *testing.T) {
 	providers, _ := startTestServer(t)
 
 	resource.Test(t, resource.TestCase{
-		Providers: providers,
-		PreCheck:  func() { skipTestOnConsulCommunityEdition(t) },
+		ProviderFactories: providers,
+		PreCheck:          func() { skipTestOnConsulCommunityEdition(t) },
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDataSourceACLPolicyNamespaceEE,

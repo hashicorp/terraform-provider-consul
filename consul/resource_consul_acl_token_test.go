@@ -8,8 +8,8 @@ import (
 	"testing"
 
 	consulapi "github.com/hashicorp/consul/api"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
 func testAccCheckConsulACLTokenDestroy(client *consulapi.Client) func(s *terraform.State) error {
@@ -31,8 +31,8 @@ func TestAccConsulACLToken_basic(t *testing.T) {
 	providers, client := startTestServer(t)
 
 	resource.Test(t, resource.TestCase{
-		Providers:    providers,
-		CheckDestroy: testAccCheckConsulACLTokenDestroy(client),
+		ProviderFactories: providers,
+		CheckDestroy:      testAccCheckConsulACLTokenDestroy(client),
 		Steps: []resource.TestStep{
 			{
 				Config: testResourceACLTokenConfigBasic,
@@ -60,7 +60,7 @@ func TestAccConsulACLToken_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("consul_acl_token.test", "node_identities.0.datacenter", "bar"),
 					resource.TestCheckResourceAttr("consul_acl_token.test", "node_identities.0.node_name", "foo"),
 					resource.TestCheckResourceAttr("consul_acl_token.test", "policies.#", "1"),
-					resource.TestCheckResourceAttr("consul_acl_token.test", "policies.111830242", "test2"),
+					resource.TestCheckTypeSetElemAttr("consul_acl_token.test", "policies.*", "test2"),
 					resource.TestCheckResourceAttr("consul_acl_token.test", "service_identities.#", "1"),
 					resource.TestCheckResourceAttr("consul_acl_token.test", "service_identities.0.datacenters.#", "1"),
 					resource.TestCheckResourceAttr("consul_acl_token.test", "service_identities.0.datacenters.0", "world"),
@@ -95,7 +95,7 @@ func TestAccConsulACLToken_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("consul_acl_token.test", "node_identities.#", "0"),
 					resource.TestCheckResourceAttr("consul_acl_token.test", "policies.#", "0"),
 					resource.TestCheckResourceAttr("consul_acl_token.test", "roles.#", "1"),
-					resource.TestCheckResourceAttr("consul_acl_token.test", "roles.1785148924", "test"),
+					resource.TestCheckTypeSetElemAttr("consul_acl_token.test", "roles.*", "test"),
 					resource.TestCheckResourceAttr("consul_acl_token.test", "service_identities.#", "0"),
 					resource.TestCheckResourceAttr("consul_acl_token.test", "templated_policies.#", "0"),
 				),
@@ -128,7 +128,7 @@ func TestAccConsulACLToken_import(t *testing.T) {
 	}
 
 	resource.Test(t, resource.TestCase{
-		Providers: providers,
+		ProviderFactories: providers,
 		Steps: []resource.TestStep{
 			{
 				Config: testResourceACLTokenConfigBasic,
@@ -146,8 +146,8 @@ func TestAccConsulACLToken_namespaceCE(t *testing.T) {
 	providers, _ := startTestServer(t)
 
 	resource.Test(t, resource.TestCase{
-		Providers: providers,
-		PreCheck:  func() { skipTestOnConsulEnterpriseEdition(t) },
+		ProviderFactories: providers,
+		PreCheck:          func() { skipTestOnConsulEnterpriseEdition(t) },
 		Steps: []resource.TestStep{
 			{
 				Config:      testResourceACLTokenConfigNamespaceCE,
@@ -161,8 +161,8 @@ func TestAccConsulACLToken_namespaceEE(t *testing.T) {
 	providers, _ := startTestServer(t)
 
 	resource.Test(t, resource.TestCase{
-		Providers: providers,
-		PreCheck:  func() { skipTestOnConsulCommunityEdition(t) },
+		ProviderFactories: providers,
+		PreCheck:          func() { skipTestOnConsulCommunityEdition(t) },
 		Steps: []resource.TestStep{
 			{
 				Config: testResourceACLTokenConfigNamespaceEE,

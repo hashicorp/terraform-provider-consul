@@ -8,8 +8,8 @@ import (
 	"testing"
 
 	consulapi "github.com/hashicorp/consul/api"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
 func testAccCheckConsulACLTokenRoleAttachmentDestroy(client *consulapi.Client) func(s *terraform.State) error {
@@ -75,8 +75,8 @@ func TestAccConsulACLTokenRoleAttachment_basic(t *testing.T) {
 	providers, client := startTestServer(t)
 
 	resource.Test(t, resource.TestCase{
-		Providers:    providers,
-		CheckDestroy: testAccCheckConsulACLTokenRoleAttachmentDestroy(client),
+		ProviderFactories: providers,
+		CheckDestroy:      testAccCheckConsulACLTokenRoleAttachmentDestroy(client),
 		Steps: []resource.TestStep{
 			{
 				Config: testResourceACLTokenRoleAttachmentConfigBasic,
@@ -119,7 +119,7 @@ func TestAccConsulACLTokenRoleAttachment_import(t *testing.T) {
 	}
 
 	resource.Test(t, resource.TestCase{
-		Providers: providers,
+		ProviderFactories: providers,
 		Steps: []resource.TestStep{
 			{
 				Config: testResourceACLTokenRoleAttachmentConfigBasic,

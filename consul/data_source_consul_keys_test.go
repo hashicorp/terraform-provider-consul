@@ -7,14 +7,14 @@ import (
 	"regexp"
 	"testing"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 )
 
 func TestAccDataConsulKeys_basic(t *testing.T) {
 	providers, _ := startTestServer(t)
 
 	resource.Test(t, resource.TestCase{
-		Providers: providers,
+		ProviderFactories: providers,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDataConsulKeysConfig,
@@ -52,8 +52,8 @@ func TestAccDataConsulKeys_namespaceCE(t *testing.T) {
 	providers, _ := startTestServer(t)
 
 	resource.Test(t, resource.TestCase{
-		Providers: providers,
-		PreCheck:  func() { skipTestOnConsulEnterpriseEdition(t) },
+		ProviderFactories: providers,
+		PreCheck:          func() { skipTestOnConsulEnterpriseEdition(t) },
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccDataConsulKeysConfigNamespaceCE,
@@ -67,8 +67,8 @@ func TestAccDataConsulKeys_namespaceEE(t *testing.T) {
 	providers, _ := startTestServer(t)
 
 	resource.Test(t, resource.TestCase{
-		Providers: providers,
-		PreCheck:  func() { skipTestOnConsulCommunityEdition(t) },
+		ProviderFactories: providers,
+		PreCheck:          func() { skipTestOnConsulCommunityEdition(t) },
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDataConsulKeysConfigNamespaceEE,
@@ -81,7 +81,7 @@ func TestAccDataConsulKeys_datacenter(t *testing.T) {
 	providers, _ := startRemoteDatacenterTestServer(t)
 
 	resource.Test(t, resource.TestCase{
-		Providers: providers,
+		ProviderFactories: providers,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDataConsulKeysConfigDatacenter,

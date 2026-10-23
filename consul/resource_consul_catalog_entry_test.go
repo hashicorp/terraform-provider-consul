@@ -8,17 +8,17 @@ import (
 	"testing"
 
 	consulapi "github.com/hashicorp/consul/api"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
 func TestAccConsulCatalogEntry_basic(t *testing.T) {
 	providers, client := startTestServer(t)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() {},
-		Providers:    providers,
-		CheckDestroy: testAccCheckConsulCatalogEntryDestroy(client),
+		PreCheck:          func() {},
+		ProviderFactories: providers,
+		CheckDestroy:      testAccCheckConsulCatalogEntryDestroy(client),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccConsulCatalogEntryConfig,
@@ -27,13 +27,15 @@ func TestAccConsulCatalogEntry_basic(t *testing.T) {
 					testAccCheckConsulCatalogEntryValue("consul_catalog_entry.app", "address", "127.0.0.1"),
 					testAccCheckConsulCatalogEntryValue("consul_catalog_entry.app", "node", "bastion"),
 					testAccCheckConsulCatalogEntryValue("consul_catalog_entry.app", "service.#", "1"),
-					testAccCheckConsulCatalogEntryValue("consul_catalog_entry.app", "service.3112399829.address", "www.google.com"),
-					testAccCheckConsulCatalogEntryValue("consul_catalog_entry.app", "service.3112399829.id", "google1"),
-					testAccCheckConsulCatalogEntryValue("consul_catalog_entry.app", "service.3112399829.name", "google"),
-					testAccCheckConsulCatalogEntryValue("consul_catalog_entry.app", "service.3112399829.port", "80"),
-					testAccCheckConsulCatalogEntryValue("consul_catalog_entry.app", "service.3112399829.tags.#", "2"),
-					testAccCheckConsulCatalogEntryValue("consul_catalog_entry.app", "service.3112399829.tags.2154398732", "tag0"),
-					testAccCheckConsulCatalogEntryValue("consul_catalog_entry.app", "service.3112399829.tags.4151227546", "tag1"),
+					resource.TestCheckTypeSetElemNestedAttrs("consul_catalog_entry.app", "service.*", map[string]string{
+						"address": "www.google.com",
+						"id":      "google1",
+						"name":    "google",
+						"port":    "80",
+						"tags.#":  "2",
+					}),
+					resource.TestCheckTypeSetElemAttr("consul_catalog_entry.app", "service.*.tags.*", "tag0"),
+					resource.TestCheckTypeSetElemAttr("consul_catalog_entry.app", "service.*.tags.*", "tag1"),
 				),
 			},
 		},
@@ -44,9 +46,9 @@ func TestAccConsulCatalogEntry_extremove(t *testing.T) {
 	providers, client := startTestServer(t)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() {},
-		Providers:    providers,
-		CheckDestroy: testAccCheckConsulCatalogEntryDestroy(client),
+		PreCheck:          func() {},
+		ProviderFactories: providers,
+		CheckDestroy:      testAccCheckConsulCatalogEntryDestroy(client),
 		Steps: []resource.TestStep{
 			{
 				Config:             testAccConsulCatalogEntryConfig,
@@ -56,13 +58,15 @@ func TestAccConsulCatalogEntry_extremove(t *testing.T) {
 					testAccCheckConsulCatalogEntryValue("consul_catalog_entry.app", "address", "127.0.0.1"),
 					testAccCheckConsulCatalogEntryValue("consul_catalog_entry.app", "node", "bastion"),
 					testAccCheckConsulCatalogEntryValue("consul_catalog_entry.app", "service.#", "1"),
-					testAccCheckConsulCatalogEntryValue("consul_catalog_entry.app", "service.3112399829.address", "www.google.com"),
-					testAccCheckConsulCatalogEntryValue("consul_catalog_entry.app", "service.3112399829.id", "google1"),
-					testAccCheckConsulCatalogEntryValue("consul_catalog_entry.app", "service.3112399829.name", "google"),
-					testAccCheckConsulCatalogEntryValue("consul_catalog_entry.app", "service.3112399829.port", "80"),
-					testAccCheckConsulCatalogEntryValue("consul_catalog_entry.app", "service.3112399829.tags.#", "2"),
-					testAccCheckConsulCatalogEntryValue("consul_catalog_entry.app", "service.3112399829.tags.2154398732", "tag0"),
-					testAccCheckConsulCatalogEntryValue("consul_catalog_entry.app", "service.3112399829.tags.4151227546", "tag1"),
+					resource.TestCheckTypeSetElemNestedAttrs("consul_catalog_entry.app", "service.*", map[string]string{
+						"address": "www.google.com",
+						"id":      "google1",
+						"name":    "google",
+						"port":    "80",
+						"tags.#":  "2",
+					}),
+					resource.TestCheckTypeSetElemAttr("consul_catalog_entry.app", "service.*.tags.*", "tag0"),
+					resource.TestCheckTypeSetElemAttr("consul_catalog_entry.app", "service.*.tags.*", "tag1"),
 					testAccCheckConsulCatalogEntryDeregister(client, "bastion"),
 				),
 			},

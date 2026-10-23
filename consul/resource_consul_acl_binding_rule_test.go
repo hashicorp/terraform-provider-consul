@@ -9,16 +9,16 @@ import (
 	"testing"
 
 	consulapi "github.com/hashicorp/consul/api"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
 func TestAccConsulACLBindingRule_basic(t *testing.T) {
 	providers, client := startTestServer(t)
 
 	resource.Test(t, resource.TestCase{
-		Providers:    providers,
-		CheckDestroy: testBindingRuleDestroy(client),
+		ProviderFactories: providers,
+		CheckDestroy:      testBindingRuleDestroy(client),
 		Steps: []resource.TestStep{
 			{
 				Config: testResourceACLBindingRuleConfigBasic,
@@ -84,8 +84,8 @@ func TestAccConsulACLBindingRule_namespaceCE(t *testing.T) {
 	providers, _ := startTestServer(t)
 
 	resource.Test(t, resource.TestCase{
-		Providers: providers,
-		PreCheck:  func() { skipTestOnConsulEnterpriseEdition(t) },
+		ProviderFactories: providers,
+		PreCheck:          func() { skipTestOnConsulEnterpriseEdition(t) },
 		Steps: []resource.TestStep{
 			{
 				Config:      testResourceACLBindingRuleConfig_namespaceCE,
@@ -99,8 +99,8 @@ func TestAccConsulACLBindingRule_namespaceEE(t *testing.T) {
 	providers, _ := startTestServer(t)
 
 	resource.Test(t, resource.TestCase{
-		Providers: providers,
-		PreCheck:  func() { skipTestOnConsulCommunityEdition(t) },
+		ProviderFactories: providers,
+		PreCheck:          func() { skipTestOnConsulCommunityEdition(t) },
 		Steps: []resource.TestStep{
 			{
 				Config: testResourceACLBindingRuleConfig_namespaceEE,

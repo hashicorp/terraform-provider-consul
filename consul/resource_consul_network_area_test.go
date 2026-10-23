@@ -9,17 +9,17 @@ import (
 	"testing"
 
 	consulapi "github.com/hashicorp/consul/api"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
 func TestAccConsulNetworkArea_basic(t *testing.T) {
 	providers, client := startTestServer(t)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { skipTestOnConsulCommunityEdition(t) },
-		Providers:    providers,
-		CheckDestroy: testAccConsulNetworkAreaCheckDestroy(client),
+		PreCheck:          func() { skipTestOnConsulCommunityEdition(t) },
+		ProviderFactories: providers,
+		CheckDestroy:      testAccConsulNetworkAreaCheckDestroy(client),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccConsulNetworkAreaBasic,
@@ -55,8 +55,8 @@ func TestAccConsulNetworkArea_CommunityEdition(t *testing.T) {
 	providers, _ := startTestServer(t)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:  func() { skipTestOnConsulEnterpriseEdition(t) },
-		Providers: providers,
+		PreCheck:          func() { skipTestOnConsulEnterpriseEdition(t) },
+		ProviderFactories: providers,
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccConsulNetworkAreaBasic,
@@ -73,8 +73,8 @@ func TestAccConsulNetworkArea_datacenter(t *testing.T) {
 		PreCheck: func() {
 			skipTestOnConsulCommunityEdition(t)
 		},
-		Providers:    providers,
-		CheckDestroy: testAccConsulNetworkAreaCheckDestroy(client),
+		ProviderFactories: providers,
+		CheckDestroy:      testAccConsulNetworkAreaCheckDestroy(client),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccConsulNetworkAreaDatacenter,

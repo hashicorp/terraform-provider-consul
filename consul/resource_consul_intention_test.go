@@ -9,17 +9,17 @@ import (
 	"testing"
 
 	consulapi "github.com/hashicorp/consul/api"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
 func TestAccConsulIntention_basic(t *testing.T) {
 	providers, client := startTestServer(t)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() {},
-		Providers:    providers,
-		CheckDestroy: testAccCheckConsulIntentionDestroy(client),
+		PreCheck:          func() {},
+		ProviderFactories: providers,
+		CheckDestroy:      testAccCheckConsulIntentionDestroy(client),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccConsulIntentionConfigBasic,
@@ -60,9 +60,9 @@ func TestAccConsulIntention_badAction(t *testing.T) {
 	providers, client := startTestServer(t)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() {},
-		Providers:    providers,
-		CheckDestroy: testAccCheckConsulIntentionDestroy(client),
+		PreCheck:          func() {},
+		ProviderFactories: providers,
+		CheckDestroy:      testAccCheckConsulIntentionDestroy(client),
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccConsulIntentionConfigBadAction,
@@ -76,8 +76,8 @@ func TestAccConsulIntention_namespaceCE(t *testing.T) {
 	providers, _ := startTestServer(t)
 
 	resource.Test(t, resource.TestCase{
-		Providers: providers,
-		PreCheck:  func() { skipTestOnConsulEnterpriseEdition(t) },
+		ProviderFactories: providers,
+		PreCheck:          func() { skipTestOnConsulEnterpriseEdition(t) },
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccConsulIntentionConfigNamespaceCE,
@@ -91,8 +91,8 @@ func TestAccConsulIntention_namespaceEE(t *testing.T) {
 	providers, _ := startTestServer(t)
 
 	resource.Test(t, resource.TestCase{
-		Providers: providers,
-		PreCheck:  func() { skipTestOnConsulCommunityEdition(t) },
+		ProviderFactories: providers,
+		PreCheck:          func() { skipTestOnConsulCommunityEdition(t) },
 		Steps: []resource.TestStep{
 			{
 				Config: testAccConsulIntentionConfigNamespaceEE,

@@ -4,6 +4,7 @@
 package consul
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -18,19 +19,17 @@ import (
 	consulapi "github.com/hashicorp/consul/api"
 	"github.com/hashicorp/consul/sdk/testutil/retry"
 	"github.com/hashicorp/go-version"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
 const (
 	initialManagementToken = "12345678-1234-1234-1234-1234567890ab"
 )
 
-var _ terraform.ResourceProvider = Provider()
-
 func TestResourceProvider(t *testing.T) {
-	if err := Provider().(*schema.Provider).InternalValidate(); err != nil {
+	if err := Provider().InternalValidate(); err != nil {
 		t.Fatalf("err: %s", err)
 	}
 
@@ -127,7 +126,7 @@ func TestResourceProvider(t *testing.T) {
 			providers, _ := startTestServer(t)
 
 			resource.Test(t, resource.TestCase{
-				Providers: providers,
+				ProviderFactories: providers,
 				Steps: []resource.TestStep{
 					{
 						Config:      tc.Config,
@@ -148,9 +147,8 @@ func TestResourceProvider_Configure(t *testing.T) {
 		"scheme":     "https",
 	}
 
-	err := rp.Configure(terraform.NewResourceConfigRaw(raw))
-	if err != nil {
-		t.Fatalf("err: %s", err)
+	if diags := rp.Configure(context.Background(), terraform.NewResourceConfigRaw(raw)); diags.HasError() {
+		t.Fatalf("err: %v", diags)
 	}
 }
 
@@ -166,9 +164,8 @@ func TestResourceProvider_ConfigureTLS(t *testing.T) {
 		"scheme":     "https",
 	}
 
-	err := rp.Configure(terraform.NewResourceConfigRaw(raw))
-	if err != nil {
-		t.Fatalf("err: %s", err)
+	if diags := rp.Configure(context.Background(), terraform.NewResourceConfigRaw(raw)); diags.HasError() {
+		t.Fatalf("err: %v", diags)
 	}
 }
 
@@ -197,9 +194,8 @@ func TestResourceProvider_ConfigureTLSPem(t *testing.T) {
 		"scheme":     "https",
 	}
 
-	err = rp.Configure(terraform.NewResourceConfigRaw(raw))
-	if err != nil {
-		t.Fatalf("err: %s", err)
+	if diags := rp.Configure(context.Background(), terraform.NewResourceConfigRaw(raw)); diags.HasError() {
+		t.Fatalf("err: %v", diags)
 	}
 }
 
@@ -215,7 +211,7 @@ func TestResourceProvider_ConfigureTLSPem(t *testing.T) {
 // datacenter, partition or namespace. This test just makes sure that I did not
 // forget one of those parameters in a schema.
 func TestProviderAttributesInResources(t *testing.T) {
-	rp := Provider().(*schema.Provider)
+	rp := Provider()
 
 	forceNewAttributes := []string{"datacenter", "namespace", "partition"}
 
@@ -298,7 +294,7 @@ func TestAccTokenReadProviderConfigureWithHeaders(t *testing.T) {
 	providers, _ := startTestServer(t)
 
 	resource.Test(t, resource.TestCase{
-		Providers: providers,
+		ProviderFactories: providers,
 		Steps: []resource.TestStep{
 			{
 				Config: testHeaderConfig,
@@ -306,7 +302,7 @@ func TestAccTokenReadProviderConfigureWithHeaders(t *testing.T) {
 		},
 	})
 
-	rootProvider := Provider().(*schema.Provider)
+	rootProvider := Provider()
 
 	rootProviderResource := &schema.Resource{
 		Schema: rootProvider.Schema,
@@ -344,7 +340,7 @@ func startServerWithConfig(t *testing.T, configFile string) {
 	})
 }
 
-func waitForService(t *testing.T, address string) (terraform.ResourceProvider, *consulapi.Client) {
+func waitForService(t *testing.T, address string) (func() (*schema.Provider, error), *consulapi.Client) {
 	config := consulapi.DefaultConfig()
 	config.Address = address
 	config.Token = initialManagementToken
@@ -370,7 +366,7 @@ func waitForService(t *testing.T, address string) (terraform.ResourceProvider, *
 		} else if len(services[0].Node.Meta) < 2 {
 			logger("missing metadata")
 		} else {
-			return Provider(), client
+			return func() (*schema.Provider, error) { return Provider(), nil }, client
 		}
 
 		time.Sleep(200 * time.Millisecond)
@@ -380,17 +376,17 @@ func waitForService(t *testing.T, address string) (terraform.ResourceProvider, *
 	return nil, nil
 }
 
-func startTestServer(t *testing.T) (map[string]terraform.ResourceProvider, *consulapi.Client) {
+func startTestServer(t *testing.T) (map[string]func() (*schema.Provider, error), *consulapi.Client) {
 	startServerWithConfig(t, "consul.hcl")
 
 	provider, client := waitForService(t, "http://localhost:8500")
 
-	return map[string]terraform.ResourceProvider{
+	return map[string]func() (*schema.Provider, error){
 		"consul": provider,
 	}, client
 }
 
-func startRemoteDatacenterTestServer(t *testing.T) (map[string]terraform.ResourceProvider, *consulapi.Client) {
+func startRemoteDatacenterTestServer(t *testing.T) (map[string]func() (*schema.Provider, error), *consulapi.Client) {
 	if os.Getenv("SKIP_REMOTE_DATACENTER_TESTS") != "" {
 		t.Skip("Remote datacenter skipped because SKIP_REMOTE_DATACENTER_TESTS is set")
 	}
@@ -404,7 +400,7 @@ func startRemoteDatacenterTestServer(t *testing.T) (map[string]terraform.Resourc
 	for i := 0; i < 20; i++ {
 		datacenters, err := client.Catalog().Datacenters()
 		if err == nil && len(datacenters) == 2 {
-			return map[string]terraform.ResourceProvider{
+			return map[string]func() (*schema.Provider, error){
 				"consul":       provider,
 				"consulremote": remoteProvider,
 			}, client
@@ -459,7 +455,7 @@ func waitForActiveCARoot(t testing.TB, address string) {
 	})
 }
 
-func startPeeringTestServers(t *testing.T) (map[string]terraform.ResourceProvider, *consulapi.Client) {
+func startPeeringTestServers(t *testing.T) (map[string]func() (*schema.Provider, error), *consulapi.Client) {
 	if os.Getenv("SKIP_REMOTE_DATACENTER_TESTS") != "" {
 		t.Skip("Remote datacenter skipped because SKIP_REMOTE_DATACENTER_TESTS is set")
 	}
@@ -473,7 +469,7 @@ func startPeeringTestServers(t *testing.T) (map[string]terraform.ResourceProvide
 	waitForActiveCARoot(t, "http://localhost:8500")
 	waitForActiveCARoot(t, "http://localhost:9500")
 
-	return map[string]terraform.ResourceProvider{
+	return map[string]func() (*schema.Provider, error){
 		"consul":       provider,
 		"consulremote": remoteProvider,
 	}, client
