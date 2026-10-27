@@ -1,0 +1,74 @@
+name: Provider upgrade test
+
+# Runs TestAccConsulProviderUpgrade: state created by a released provider must be read by this build without changes.
+# It downloads the baseline release and takes several minutes, so on PRs it only runs when the run-upgrade-test label
+# is added, and on later pushes while the label is present.
+on:
+  pull_request:
+    branches:
+      - main
+    types: [labeled, synchronize]
+  workflow_dispatch:
+    inputs:
+      baseline_release:
+        description: "Released provider version to upgrade from (empty: baselineRelease in consul/upgrade_test.go)"
+        required: false
+        default: ""
+      consul_version:
+        description: "Consul version to run against"
+        required: false
+        default: "2.0.4"
+  # Uncomment to also run it monthly.
+  # schedule:
+  #   - cron: "0 6 1 * *"
+
+permissions:
+  contents: read
+
+jobs:
+  upgrade:
+    if: >-
+      github.event_name == 'workflow_dispatch' ||
+      (github.event.action == 'labeled' && github.event.label.name == 'run-upgrade-test') ||
+      (github.event.action == 'synchronize' && contains(github.event.pull_request.labels.*.name, 'run-upgrade-test'))
+    concurrency:
+      group: upgrade-test-${{ github.event.pull_request.number || github.run_id }}
+      cancel-in-progress: true
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      # Inputs are passed through env, not interpolated into scripts.
+      CONSUL_VERSION: ${{ inputs.consul_version || '2.0.4' }}
+      TF_ACC_UPGRADE_BASELINE: ${{ inputs.baseline_release }}
+      TERRAFORM_VERSION: 1.17.0
+    steps:
+    - name: Validate inputs
+      run: |
+        for v in "$CONSUL_VERSION" "$TF_ACC_UPGRADE_BASELINE"; do
+          if [ -n "$v" ] && ! [[ "$v" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "invalid version: $v (expected X.Y.Z)"
+            exit 1
+          fi
+        done
+    - name: Install Go
+      uses: actions/setup-go@4d34df0c2316fe8122ab82dc22947d607c0c91f9 # v4.0.0
+      with:
+        go-version: 1.26.x
+    - name: Checkout code
+      uses: actions/checkout@8f4b7f84864484a7bf31766abe9204da3cbe65b3 # v3.5.0
+    - name: Install Terraform
+      run: |
+        curl -LO https://releases.hashicorp.com/terraform/${TERRAFORM_VERSION}/terraform_${TERRAFORM_VERSION}_linux_amd64.zip
+        sudo unzip -o terraform_${TERRAFORM_VERSION}_linux_amd64.zip terraform -d /usr/local/bin/
+        rm terraform_${TERRAFORM_VERSION}_linux_amd64.zip
+        terraform version
+    - name: Install Consul
+      run: |
+        curl -LO https://releases.hashicorp.com/consul/${CONSUL_VERSION}/consul_${CONSUL_VERSION}_linux_amd64.zip
+        sudo unzip -o consul_${CONSUL_VERSION}_linux_amd64.zip consul -d /usr/local/bin/
+        rm consul_${CONSUL_VERSION}_linux_amd64.zip
+        consul version
+    - name: Run provider upgrade test
+      run: |
+        TF_ACC=1 TF_ACC_UPGRADE=1 SKIP_REMOTE_DATACENTER_TESTS=1 \
+          go test ./consul/ -run TestAccConsulProviderUpgrade -v -count=1 -timeout 25m
