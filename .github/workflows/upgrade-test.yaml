@@ -1,12 +1,12 @@
 name: Provider upgrade test
 
 # Runs TestAccConsulProviderUpgrade: state created by a released provider must be read by this build without changes.
-# It downloads the baseline release and takes several minutes, so it is not part of the per-PR test workflow.
+# It downloads the baseline release and takes several minutes, so on PRs it only runs when the run-upgrade-test label is added.
 on:
-  # TODO: temporary, to verify the workflow in CI; remove before merge.
   pull_request:
     branches:
       - main
+    types: [labeled]
   workflow_dispatch:
     inputs:
       baseline_release:
@@ -26,6 +26,10 @@ permissions:
 
 jobs:
   upgrade:
+    if: github.event_name == 'workflow_dispatch' || github.event.label.name == 'run-upgrade-test'
+    concurrency:
+      group: upgrade-test-${{ github.event.pull_request.number || github.run_id }}
+      cancel-in-progress: true
     runs-on: ubuntu-latest
     timeout-minutes: 30
     env:
