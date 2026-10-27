@@ -28,6 +28,8 @@ const (
 	excludeNewerThanBaseline upgradeExclusion = "uses passive_health_check attributes the baseline release does not have"
 	// TODO: include once both provider names (consul, consulremote) can be pinned to the baseline release in step 1.
 	excludeSecondProviderName upgradeExclusion = "its second provider name (consulremote) maps to a different provider address than the baseline release"
+	// TODO: include once the fixture creates the partitions and namespaces it uses.
+	excludeMissingEnterpriseScopes upgradeExclusion = "uses partitions or namespaces that neither the config nor the test server creates"
 )
 
 // TestAccConsulProviderUpgrade tests upgrading the provider release, as users do: state created by the baseline
@@ -144,9 +146,9 @@ func TestAccConsulProviderUpgrade(t *testing.T) {
 		{"ConsulServiceDefaultsConfigEntryWithUpstreamConfig", testConsulServiceDefaultsConfigEntryWithUpstreamConfig, "ce", "", false, included},
 		{"ConsulServiceDefaultsPassiveHealthCheckConfigEntryWithDestination", testConsulServiceDefaultsPassiveHealthCheckConfigEntryWithDestination, "ce", "", false, included},
 		{"ConsulServiceDefaultsPassiveHealthCheckConfigEntryWithUpstreamConfig", testConsulServiceDefaultsPassiveHealthCheckConfigEntryWithUpstreamConfig, "ce", "", false, excludeNewerThanBaseline},
-		{"ConsulServiceDefaultsConfigEntryWithDestinationEE", testConsulServiceDefaultsConfigEntryWithDestinationEE, "ent", "", false, included},
-		{"ConsulServiceDefaultsConfigEntryWithUpstreamConfigEE", testConsulServiceDefaultsConfigEntryWithUpstreamConfigEE, "ent", "", false, included},
-		{"ConsulServiceDefaultsPassiveHealthCheckConfigEntryWithDestinationEE", testConsulServiceDefaultsPassiveHealthCheckConfigEntryWithDestinationEE, "ent", "", false, included},
+		{"ConsulServiceDefaultsConfigEntryWithDestinationEE", testConsulServiceDefaultsConfigEntryWithDestinationEE, "ent", "", false, excludeMissingEnterpriseScopes},
+		{"ConsulServiceDefaultsConfigEntryWithUpstreamConfigEE", testConsulServiceDefaultsConfigEntryWithUpstreamConfigEE, "ent", "", false, excludeMissingEnterpriseScopes},
+		{"ConsulServiceDefaultsPassiveHealthCheckConfigEntryWithDestinationEE", testConsulServiceDefaultsPassiveHealthCheckConfigEntryWithDestinationEE, "ent", "", false, excludeMissingEnterpriseScopes},
 		{"ConsulServiceDefaultsPassiveHealthCheckConfigEntryWithUpstreamConfigEE", testConsulServiceDefaultsPassiveHealthCheckConfigEntryWithUpstreamConfigEE, "ent", "", false, excludeNewerThanBaseline},
 		{"ConsulConfigEntryServiceIntentionsCE", testConsulConfigEntryServiceIntentionsCE, "ce", "", false, included},
 		{"ConsulConfigEntryServiceIntentionsEE", testConsulConfigEntryServiceIntentionsEE, "ent", "", false, included},
@@ -159,9 +161,9 @@ func TestAccConsulProviderUpgrade(t *testing.T) {
 		{"ConsulConfigEntryServiceRouterCE_noMatch", testConsulConfigEntryServiceRouterCE_noMatch, "ce", "", false, included},
 		{"ConsulConfigEntryServiceRouterCE_noDestination", testConsulConfigEntryServiceRouterCE_noDestination, "ce", "", false, included},
 		{"ConsulConfigEntryServiceRouterEE_Empty", testConsulConfigEntryServiceRouterEE_Empty, "ent", "", false, included},
-		{"ConsulConfigEntryServiceRouterEE", testConsulConfigEntryServiceRouterEE, "ent", "", false, included},
-		{"ConsulConfigEntryServiceRouterEE_noMatch", testConsulConfigEntryServiceRouterEE_noMatch, "ent", "", false, included},
-		{"ConsulConfigEntryServiceRouterEE_noDestination", testConsulConfigEntryServiceRouterEE_noDestination, "ent", "", false, included},
+		{"ConsulConfigEntryServiceRouterEE", testConsulConfigEntryServiceRouterEE, "ent", "", false, excludeMissingEnterpriseScopes},
+		{"ConsulConfigEntryServiceRouterEE_noMatch", testConsulConfigEntryServiceRouterEE_noMatch, "ent", "", false, excludeMissingEnterpriseScopes},
+		{"ConsulConfigEntryServiceRouterEE_noDestination", testConsulConfigEntryServiceRouterEE_noDestination, "ent", "", false, excludeMissingEnterpriseScopes},
 		{"ConsulConfigEntryServiceSplitterCE", testConsulConfigEntryServiceSplitter("", ""), "ce", "", false, included},
 		{"ConsulConfigEntryServiceSplitterEE", testConsulConfigEntryServiceSplitter("default", "default"), "ent", "", false, included},
 		{"ConsulExportedServicesV2Basic", testAccConsulExportedServicesV2Basic, "ent", "1.18.0", false, included},
