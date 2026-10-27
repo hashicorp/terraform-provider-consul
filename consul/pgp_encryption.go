@@ -21,7 +21,11 @@ import (
 
 const (
 	keybasePrefix = "keybase:"
-	// Public key bundles are a few KB, but keys with many signatures can be much larger than 64 KB.
+	// keybaseMaxResponseBytes caps the keybase lookup response at 1 MiB so a misbehaving server cannot make the
+	// provider read an unbounded body; a larger response fails to decode with "unexpected EOF".
+	// The lookup (fields=public_keys) returns all of a user's key bundles, not only the primary key: measured
+	// responses for long-lived accounts are 91-159 KB (one primary bundle alone is 66 KB), so a 64 KB cap would
+	// reject real users. 1 MiB is ~6x the largest observed response.
 	keybaseMaxResponseBytes = 1 << 20
 )
 
