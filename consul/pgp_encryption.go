@@ -8,18 +8,28 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
+	"io"
+	"net/http"
 	"net/url"
 	"strings"
+	"time"
 
 	"github.com/ProtonMail/go-crypto/openpgp"
 	"github.com/ProtonMail/go-crypto/openpgp/packet"
 	cleanhttp "github.com/hashicorp/go-cleanhttp"
 )
 
-const keybasePrefix = "keybase:"
+const (
+	keybasePrefix = "keybase:"
+	// Public key bundles are a few KB, but keys with many signatures can be much larger than 64 KB.
+	keybaseMaxResponseBytes = 1 << 20
+)
 
-// keybaseLookupURL is a variable so tests can point it at a fake server.
-var keybaseLookupURL = "https://keybase.io/_/api/1.0/user/lookup.json"
+// keybaseLookupURL and keybaseTimeout are variables so tests can point them at a fake server.
+var (
+	keybaseLookupURL = "https://keybase.io/_/api/1.0/user/lookup.json"
+	keybaseTimeout   = 30 * time.Second
+)
 
 // encryptValueWithPGPKey encrypts value with pgpKey (a base64-encoded public key or "keybase:<username>")
 // and returns the base64-encoded encrypted message.
@@ -69,11 +79,17 @@ func encryptWithPGPKey(base64Key string, value []byte) ([]byte, error) {
 // fetchKeybasePublicKey returns the base64-encoded binary primary public key of a keybase user.
 func fetchKeybasePublicKey(username string) (string, error) {
 	query := url.Values{"usernames": {username}, "fields": {"public_keys"}}
-	resp, err := cleanhttp.DefaultClient().Get(keybaseLookupURL + "?" + query.Encode())
+	client := cleanhttp.DefaultClient()
+	client.Timeout = keybaseTimeout
+	resp, err := client.Get(keybaseLookupURL + "?" + query.Encode())
 	if err != nil {
 		return "", err
 	}
 	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		return "", fmt.Errorf("keybase returned HTTP %d", resp.StatusCode)
+	}
 
 	var out struct {
 		Status struct {
@@ -87,7 +103,7 @@ func fetchKeybasePublicKey(username string) (string, error) {
 			} `json:"public_keys"`
 		}
 	}
-	if err := json.NewDecoder(resp.Body).Decode(&out); err != nil {
+	if err := json.NewDecoder(io.LimitReader(resp.Body, keybaseMaxResponseBytes)).Decode(&out); err != nil {
 		return "", err
 	}
 	if out.Status.Name != "OK" {

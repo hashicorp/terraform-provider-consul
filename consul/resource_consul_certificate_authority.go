@@ -101,16 +101,8 @@ func resourceConsulCertificateAuthorityRead(d *schema.ResourceData, meta interfa
 
 	sw.set("connect_provider", conf.Provider)
 	sw.setJson("config_json", conf.Config)
-
-	// The deprecated 'config' map cannot hold nested maps or lists; such configurations come from 'config_json'.
-	if isFlatConfig(conf.Config) {
-		if err = d.Set("config", conf.Config); err != nil {
-			return fmt.Errorf("failed to set 'config': %v", err)
-		}
-	} else if c := d.Get("config_json").(string); c != "" {
-		sw.set("config", map[string]interface{}{})
-	} else {
-		return fmt.Errorf("failed to set 'config': it contains nested values, use 'config_json' instead")
+	if err := sw.setDeprecatedConfig(conf.Config); err != nil {
+		return err
 	}
 
 	return sw.error()

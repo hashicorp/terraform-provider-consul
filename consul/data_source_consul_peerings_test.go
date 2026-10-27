@@ -20,7 +20,7 @@ func TestAccDataConsulPeerings_basic(t *testing.T) {
 			},
 			{
 				// Disabled with terraform-plugin-sdk v2: SDK v1's in-process Terraform reported the
-				// post-apply data source re-read as a plan change, but Terraform 0.13+ does not.
+				// post-apply data source re-read as a plan change, but the Terraform CLI that SDK v2 tests run does not.
 				// // The peering takes a bit of time to be established so we
 				// // expect the state to change between the apply and the refresh
 				// ExpectNonEmptyPlan: true,

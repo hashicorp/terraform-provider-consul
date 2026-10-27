@@ -12,6 +12,7 @@ import (
 	"net/http/httptest"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/ProtonMail/go-crypto/openpgp"
 	"github.com/ProtonMail/go-crypto/openpgp/armor"
@@ -220,6 +221,50 @@ func TestEncryptValueWithPGPKey_KeybaseUsernameEscaped(t *testing.T) {
 	}
 	if got := req.URL.Query()["fields"]; len(got) != 1 || got[0] != "public_keys" {
 		t.Errorf("fields = %q, want [public_keys]", got)
+	}
+}
+
+// TestEncryptValueWithPGPKey_KeybaseHTTPFailures verifies a misbehaving keybase server returns an error instead of
+// hanging or having its response used; each response would otherwise yield a valid key.
+func TestEncryptValueWithPGPKey_KeybaseHTTPFailures(t *testing.T) {
+	entity, _ := newTestPGPKey(t, &packet.Config{Algorithm: packet.PubKeyAlgoRSA, RSABits: 2048})
+	validBody, err := json.Marshal(keybaseResponse("OK", armoredPublicKey(t, entity)))
+	if err != nil {
+		t.Fatal(err)
+	}
+	oversizedBody := append([]byte(`{"padding":"`+strings.Repeat("a", keybaseMaxResponseBytes)+`",`), validBody[1:]...)
+
+	tests := []struct {
+		name    string
+		handler http.HandlerFunc
+		wantErr string
+	}{
+		{"non-200 status", func(w http.ResponseWriter, _ *http.Request) {
+			w.WriteHeader(http.StatusInternalServerError)
+			_, _ = w.Write(validBody)
+		}, "keybase returned HTTP 500"},
+		{"no response before timeout", func(_ http.ResponseWriter, r *http.Request) {
+			<-r.Context().Done()
+		}, "Client.Timeout exceeded"},
+		{"response larger than the cap", func(w http.ResponseWriter, _ *http.Request) {
+			_, _ = w.Write(oversizedBody)
+		}, "unexpected EOF"},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			srv := httptest.NewServer(tt.handler)
+			t.Cleanup(srv.Close)
+
+			origURL, origTimeout := keybaseLookupURL, keybaseTimeout
+			keybaseLookupURL, keybaseTimeout = srv.URL, 200*time.Millisecond
+			t.Cleanup(func() { keybaseLookupURL, keybaseTimeout = origURL, origTimeout })
+
+			_, err := encryptValueWithPGPKey("keybase:test_user", "secret", "test")
+			if err == nil || !strings.Contains(err.Error(), tt.wantErr) {
+				t.Fatalf("error = %v, want it to contain %q", err, tt.wantErr)
+			}
+		})
 	}
 }
 
