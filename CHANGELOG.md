@@ -2,7 +2,7 @@
 
 NOTES:
 
-* The provider now uses `terraform-plugin-sdk` v2 and requires Terraform 0.12 or later; Terraform 0.11 is no longer supported.
+* The provider now uses `terraform-plugin-sdk` v2 and no longer supports Terraform 0.11 (plugin protocol 4). Use Terraform 0.13 or later, as listed in the README.
 
 BUG FIXES:
 
