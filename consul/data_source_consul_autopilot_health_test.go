@@ -7,14 +7,14 @@ import (
 	"regexp"
 	"testing"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 )
 
 func TestAccDataConsulAutopilotHealth_basic(t *testing.T) {
 	providers, _ := startTestServer(t)
 
 	resource.Test(t, resource.TestCase{
-		Providers: providers,
+		ProviderFactories: providers,
 		Steps: []resource.TestStep{
 			resource.TestStep{
 				Config: testAccDataAutopilotHealth,
@@ -44,7 +44,7 @@ func TestAccDataConsulAutopilotHealth_config(t *testing.T) {
 	providers, _ := startTestServer(t)
 
 	resource.Test(t, resource.TestCase{
-		Providers: providers,
+		ProviderFactories: providers,
 		Steps: []resource.TestStep{
 			resource.TestStep{
 				Config: testAccDataAutopilotHealthDatacenter,
@@ -65,7 +65,7 @@ func TestAccDataConsulAutopilotHealth_wrongDatacenter(t *testing.T) {
 	}
 
 	resource.Test(t, resource.TestCase{
-		Providers: providers,
+		ProviderFactories: providers,
 		Steps: []resource.TestStep{
 			resource.TestStep{
 				Config:      testAccDataAutopilotHealthWrongDatacenter,

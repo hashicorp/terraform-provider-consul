@@ -7,7 +7,7 @@ import (
 	"fmt"
 
 	consulapi "github.com/hashicorp/consul/api"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func resourceConsulAgentService() *schema.Resource {
@@ -82,7 +82,6 @@ func resourceConsulAgentServiceCreate(d *schema.ResourceData, meta interface{}) 
 		return fmt.Errorf("failed to read service '%s' from Consul agent: %v", name, err)
 	} else {
 		d.Set("address", service.Address)
-		d.Set("id", service.ID)
 		d.SetId(service.ID)
 		d.Set("name", service.Service)
 		d.Set("port", service.Port)
@@ -100,11 +99,8 @@ func resourceConsulAgentServiceRead(d *schema.ResourceData, meta interface{}) er
 
 	if services, err := agent.Services(); err != nil {
 		return fmt.Errorf("failed to get services from Consul agent: %v", err)
-	} else if service, ok := services[name]; !ok {
-		d.Set("id", "")
-	} else {
+	} else if service, ok := services[name]; ok {
 		d.Set("address", service.Address)
-		d.Set("id", service.ID)
 		d.SetId(service.ID)
 		d.Set("name", service.Service)
 		d.Set("port", service.Port)

@@ -7,15 +7,15 @@ import (
 	"regexp"
 	"testing"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 )
 
 func TestAccConsulNetworkAreaMembers_basic(t *testing.T) {
 	providers, _ := startTestServer(t)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:  func() { skipTestOnConsulCommunityEdition(t) },
-		Providers: providers,
+		PreCheck:          func() { skipTestOnConsulCommunityEdition(t) },
+		ProviderFactories: providers,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccConsulNetworkAreaMembersBasic,
@@ -38,8 +38,8 @@ func TestAccConsulNetworkAreaMembers_CommunityEdition(t *testing.T) {
 	providers, _ := startTestServer(t)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:  func() { skipTestOnConsulEnterpriseEdition(t) },
-		Providers: providers,
+		PreCheck:          func() { skipTestOnConsulEnterpriseEdition(t) },
+		ProviderFactories: providers,
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccConsulNetworkAreaMembers_CommunityEdition,
@@ -56,7 +56,7 @@ func TestAccConsulNetworkAreaMembers_datacenter(t *testing.T) {
 		PreCheck: func() {
 			skipTestOnConsulCommunityEdition(t)
 		},
-		Providers: providers,
+		ProviderFactories: providers,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccConsulNetworkAreaMembers_datacenter,

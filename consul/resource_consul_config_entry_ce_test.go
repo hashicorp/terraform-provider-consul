@@ -7,15 +7,15 @@ import (
 	"regexp"
 	"testing"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 )
 
 func TestAccConsulConfigEntryCE_basic(t *testing.T) {
 	providers, _ := startTestServer(t)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:  func() { skipTestOnConsulEnterpriseEdition(t) },
-		Providers: providers,
+		PreCheck:          func() { skipTestOnConsulEnterpriseEdition(t) },
+		ProviderFactories: providers,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccConsulConfigEntryCE_ServiceDefaults,
@@ -153,8 +153,8 @@ func TestAccConsulConfigEntryCE_ServicesExported(t *testing.T) {
 	providers, _ := startTestServer(t)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:  func() { skipTestOnConsulEnterpriseEdition(t) },
-		Providers: providers,
+		PreCheck:          func() { skipTestOnConsulEnterpriseEdition(t) },
+		ProviderFactories: providers,
 		Steps: []resource.TestStep{
 			{
 				Config: TestAccConsulConfigEntryCE_exportedServicesCE,
@@ -173,8 +173,8 @@ func TestAccConsulConfigEntryCE_Mesh(t *testing.T) {
 	providers, _ := startTestServer(t)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:  func() { skipTestOnConsulEnterpriseEdition(t) },
-		Providers: providers,
+		PreCheck:          func() { skipTestOnConsulEnterpriseEdition(t) },
+		ProviderFactories: providers,
 		Steps: []resource.TestStep{
 			{
 				Config: TestAccConsulConfigEntryCE_meshCE,
@@ -191,8 +191,8 @@ func TestAccConsulConfigEntryCE_JWTProvider_Remote(t *testing.T) {
 	providers, _ := startTestServer(t)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:  func() { skipTestOnConsulEnterpriseEdition(t) },
-		Providers: providers,
+		PreCheck:          func() { skipTestOnConsulEnterpriseEdition(t) },
+		ProviderFactories: providers,
 		Steps: []resource.TestStep{
 			{
 				Config:             TestAccConsulConfigEntryCE_jwtRemote,
@@ -212,8 +212,8 @@ func TestAccConsulConfigEntryCE_JWTProvider_Local(t *testing.T) {
 	providers, _ := startTestServer(t)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:  func() { skipTestOnConsulEnterpriseEdition(t) },
-		Providers: providers,
+		PreCheck:          func() { skipTestOnConsulEnterpriseEdition(t) },
+		ProviderFactories: providers,
 		Steps: []resource.TestStep{
 			{
 				ExpectNonEmptyPlan: true,

@@ -7,7 +7,7 @@ import (
 	"regexp"
 	"testing"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 )
 
 func TestAccConsulLicense_CommunityEdition(t *testing.T) {
@@ -17,7 +17,7 @@ func TestAccConsulLicense_CommunityEdition(t *testing.T) {
 		PreCheck: func() {
 			skipTestOnConsulEnterpriseEdition(t)
 		},
-		Providers: providers,
+		ProviderFactories: providers,
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccConsulLicense,
@@ -34,7 +34,7 @@ func TestAccConsulLicense_EnterpriseEdition(t *testing.T) {
 		PreCheck: func() {
 			skipTestOnConsulCommunityEdition(t)
 		},
-		Providers: providers,
+		ProviderFactories: providers,
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccConsulLicense,

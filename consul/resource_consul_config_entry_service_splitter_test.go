@@ -7,7 +7,7 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 )
 
 func TestAccConsulConfigEntryServiceSplitterTest(t *testing.T) {
@@ -21,7 +21,7 @@ func TestAccConsulConfigEntryServiceSplitterTest(t *testing.T) {
 	}
 
 	resource.Test(t, resource.TestCase{
-		Providers: providers,
+		ProviderFactories: providers,
 		Steps: []resource.TestStep{
 			{
 				Config: config,
@@ -78,8 +78,8 @@ func TestAccConsulConfigEntryServiceSplitterTest(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
-					"splits.2.request_headers.#",
-					"splits.2.response_headers.#",
+					"splits.2.request_headers",
+					"splits.2.response_headers",
 				},
 			},
 		},

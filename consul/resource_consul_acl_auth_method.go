@@ -9,7 +9,7 @@ import (
 	"time"
 
 	consulapi "github.com/hashicorp/consul/api"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func resourceConsulACLAuthMethod() *schema.Resource {
@@ -169,18 +169,8 @@ func resourceConsulACLAuthMethodRead(d *schema.ResourceData, meta interface{}) e
 	sw.set("type", authMethod.Type)
 	sw.set("description", authMethod.Description)
 	sw.setJson("config_json", authMethod.Config)
-
-	if err = d.Set("config", authMethod.Config); err != nil {
-		// When a complex configuration is used we can fail to set config as it
-		// will not support fields with maps or lists in them. In this case it
-		// means that the user used the 'config_json' field, and since we
-		// succeeded to set that and 'config' is deprecated, we can just use
-		// an empty placeholder value and ignore the error.
-		if c := d.Get("config_json").(string); c != "" {
-			sw.set("config", map[string]interface{}{})
-		} else {
-			return fmt.Errorf("failed to set 'config': %v", err)
-		}
+	if err := sw.setDeprecatedConfig(authMethod.Config); err != nil {
+		return err
 	}
 
 	sw.set("display_name", authMethod.DisplayName)
@@ -276,4 +266,32 @@ func getAuthMethod(d *schema.ResourceData, meta interface{}) (*consulapi.ACLAuth
 	}
 
 	return authMethod, nil
+}
+
+// isStringMap reports whether config fits the deprecated 'config' map of strings. Booleans, numbers, maps and lists
+// do not: SDK v2 rejects them when setting a map of strings (and panics under TF_ACC).
+func isStringMap(config map[string]interface{}) bool {
+	for _, v := range config {
+		switch v.(type) {
+		case string, nil:
+		default:
+			return false
+		}
+	}
+	return true
+}
+
+// setDeprecatedConfig sets the deprecated 'config' map; configurations it cannot hold come from 'config_json'.
+func (sw *stateWriter) setDeprecatedConfig(config map[string]interface{}) error {
+	if isStringMap(config) {
+		if err := sw.d.Set("config", config); err != nil {
+			return fmt.Errorf("failed to set 'config': %v", err)
+		}
+		return nil
+	}
+	if sw.d.Get("config_json").(string) == "" {
+		return fmt.Errorf("failed to set 'config': it contains non-string values, use 'config_json' instead")
+	}
+	sw.set("config", map[string]interface{}{})
+	return nil
 }

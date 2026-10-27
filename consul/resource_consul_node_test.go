@@ -8,16 +8,16 @@ import (
 	"testing"
 
 	consulapi "github.com/hashicorp/consul/api"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
 func TestAccConsulNode_basic(t *testing.T) {
 	providers, client := startTestServer(t)
 
 	resource.Test(t, resource.TestCase{
-		Providers:    providers,
-		CheckDestroy: testAccCheckConsulNodeDestroy(client),
+		ProviderFactories: providers,
+		CheckDestroy:      testAccCheckConsulNodeDestroy(client),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccConsulNodeConfigBasic,
@@ -62,9 +62,9 @@ func TestAccConsulNode_nodeMeta(t *testing.T) {
 	providers, client := startTestServer(t)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() {},
-		Providers:    providers,
-		CheckDestroy: testAccCheckConsulNodeDestroy(client),
+		PreCheck:          func() {},
+		ProviderFactories: providers,
+		CheckDestroy:      testAccCheckConsulNodeDestroy(client),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccConsulNodeConfigNodeMeta,
@@ -98,8 +98,8 @@ func TestAccConsulNode_datacenter(t *testing.T) {
 	providers, client := startRemoteDatacenterTestServer(t)
 
 	resource.Test(t, resource.TestCase{
-		Providers:    providers,
-		CheckDestroy: testAccCheckConsulNodeDestroy(client),
+		ProviderFactories: providers,
+		CheckDestroy:      testAccCheckConsulNodeDestroy(client),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccConsulNodeConfigDatacenter,

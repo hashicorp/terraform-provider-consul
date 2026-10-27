@@ -8,16 +8,16 @@ import (
 	"testing"
 
 	consulapi "github.com/hashicorp/consul/api"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
 func TestAccConsulACLRole_basic(t *testing.T) {
 	providers, client := startTestServer(t)
 
 	resource.Test(t, resource.TestCase{
-		Providers:    providers,
-		CheckDestroy: testRoleDestroy(client),
+		ProviderFactories: providers,
+		CheckDestroy:      testRoleDestroy(client),
 		Steps: []resource.TestStep{
 			{
 				Config: testResourceACLRoleConfigBasic,
@@ -29,8 +29,10 @@ func TestAccConsulACLRole_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("consul_acl_role.test", "node_identities.#", "0"),
 					resource.TestCheckResourceAttr("consul_acl_role.test", "policies.#", "1"),
 					resource.TestCheckResourceAttr("consul_acl_role.test", "service_identities.#", "1"),
-					resource.TestCheckResourceAttr("consul_acl_role.test", "service_identities.3690720679.datacenters.#", "0"),
-					resource.TestCheckResourceAttr("consul_acl_role.test", "service_identities.3690720679.service_name", "foo"),
+					resource.TestCheckTypeSetElemNestedAttrs("consul_acl_role.test", "service_identities.*", map[string]string{
+						"datacenters.#": "0",
+						"service_name":  "foo",
+					}),
 				),
 			},
 			{
@@ -45,8 +47,10 @@ func TestAccConsulACLRole_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("consul_acl_role.test", "node_identities.0.node_name", "hello"),
 					resource.TestCheckResourceAttr("consul_acl_role.test", "policies.#", "0"),
 					resource.TestCheckResourceAttr("consul_acl_role.test", "service_identities.#", "1"),
-					resource.TestCheckResourceAttr("consul_acl_role.test", "service_identities.2708159462.datacenters.#", "0"),
-					resource.TestCheckResourceAttr("consul_acl_role.test", "service_identities.2708159462.service_name", "bar"),
+					resource.TestCheckTypeSetElemNestedAttrs("consul_acl_role.test", "service_identities.*", map[string]string{
+						"datacenters.#": "0",
+						"service_name":  "bar",
+					}),
 				),
 			},
 			{
@@ -79,7 +83,7 @@ func TestAccConsulACLRole_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("consul_acl_role.test", "namespace", ""),
 					resource.TestCheckResourceAttr("consul_acl_role.test", "node_identities.#", "0"),
 					resource.TestCheckResourceAttr("consul_acl_role.test", "policies.#", "1"),
-					resource.TestCheckResourceAttr("consul_acl_role.test", "policies.2198728100", "test-role"),
+					resource.TestCheckTypeSetElemAttr("consul_acl_role.test", "policies.*", "test-role"),
 					resource.TestCheckResourceAttr("consul_acl_role.test", "service_identities.#", "0"),
 				),
 			},
@@ -91,8 +95,8 @@ func TestAccConsulACLRole_NamespaceCE(t *testing.T) {
 	providers, _ := startTestServer(t)
 
 	resource.Test(t, resource.TestCase{
-		Providers: providers,
-		PreCheck:  func() { skipTestOnConsulEnterpriseEdition(t) },
+		ProviderFactories: providers,
+		PreCheck:          func() { skipTestOnConsulEnterpriseEdition(t) },
 		Steps: []resource.TestStep{
 			{
 				Config:      testResourceACLRoleNamespaceCE,
@@ -106,8 +110,8 @@ func TestAccConsulACLRole_NamespaceEE(t *testing.T) {
 	providers, _ := startTestServer(t)
 
 	resource.Test(t, resource.TestCase{
-		Providers: providers,
-		PreCheck:  func() { skipTestOnConsulCommunityEdition(t) },
+		ProviderFactories: providers,
+		PreCheck:          func() { skipTestOnConsulCommunityEdition(t) },
 		Steps: []resource.TestStep{
 			{
 				Config: testResourceACLRoleNamespaceEE,

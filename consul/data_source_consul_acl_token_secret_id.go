@@ -6,8 +6,7 @@ package consul
 import (
 	"fmt"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/encryption"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func dataSourceConsulACLTokenSecretID() *schema.Resource {
@@ -64,12 +63,7 @@ func dataSourceConsulACLTokenSecretIDRead(d *schema.ResourceData, meta interface
 
 	d.SetId(accessorID)
 	if v, ok := d.GetOk("pgp_key"); ok {
-		pgpKey := v.(string)
-		encryptionKey, err := encryption.RetrieveGPGKey(pgpKey)
-		if err != nil {
-			return err
-		}
-		_, encrypted, err := encryption.EncryptValue(encryptionKey, aclToken.SecretID, "ACL Token secret ID")
+		encrypted, err := encryptValueWithPGPKey(v.(string), aclToken.SecretID, "ACL Token secret ID")
 		if err != nil {
 			return err
 		}

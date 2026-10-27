@@ -9,15 +9,15 @@ import (
 	"testing"
 
 	consulapi "github.com/hashicorp/consul/api"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
 func TestAccConsulKeyPrefix_basic(t *testing.T) {
 	providers, client := startTestServer(t)
 
 	resource.Test(t, resource.TestCase{
-		Providers: providers,
+		ProviderFactories: providers,
 		CheckDestroy: resource.ComposeTestCheckFunc(
 			testAccCheckConsulKeyPrefixKeyAbsent(client, "species"),
 			testAccCheckConsulKeyPrefixKeyAbsent(client, "meat"),
@@ -83,7 +83,7 @@ func TestAccCheckConsulKeyPrefix_Import(t *testing.T) {
 	providers, _ := startTestServer(t)
 
 	resource.Test(t, resource.TestCase{
-		Providers: providers,
+		ProviderFactories: providers,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccConsulKeyPrefixConfig_Import,
@@ -103,8 +103,8 @@ func TestAccConsulKeyPrefix_namespaceCE(t *testing.T) {
 	providers, _ := startTestServer(t)
 
 	resource.Test(t, resource.TestCase{
-		Providers: providers,
-		PreCheck:  func() { skipTestOnConsulEnterpriseEdition(t) },
+		ProviderFactories: providers,
+		PreCheck:          func() { skipTestOnConsulEnterpriseEdition(t) },
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccConsulKeyPrefixConfig_namespaceCE,
@@ -118,8 +118,8 @@ func TestAccConsulKeyPrefix_namespaceEE(t *testing.T) {
 	providers, _ := startTestServer(t)
 
 	resource.Test(t, resource.TestCase{
-		Providers: providers,
-		PreCheck:  func() { skipTestOnConsulCommunityEdition(t) },
+		ProviderFactories: providers,
+		PreCheck:          func() { skipTestOnConsulCommunityEdition(t) },
 		Steps: []resource.TestStep{
 			{
 				Config: testAccConsulKeyPrefixConfig_namespaceEE,
@@ -134,7 +134,7 @@ func TestAccConsulKeyPrefix_deleted(t *testing.T) {
 	providers, client := startTestServer(t)
 
 	resource.Test(t, resource.TestCase{
-		Providers: providers,
+		ProviderFactories: providers,
 		Steps: []resource.TestStep{
 			{
 				// Apply the config and remove the prefix in Consul
@@ -182,7 +182,7 @@ func TestAccConsulKeyPrefix_datacenter(t *testing.T) {
 	providers, client := startRemoteDatacenterTestServer(t)
 
 	resource.Test(t, resource.TestCase{
-		Providers: providers,
+		ProviderFactories: providers,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccConsulKeyPrefixConfig_datacenter,

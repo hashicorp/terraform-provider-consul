@@ -6,15 +6,15 @@ package consul
 import (
 	"testing"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 )
 
 func TestAccConsulConfigEntryServiceRouterEETest(t *testing.T) {
 	providers, _ := startTestServer(t)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:  func() { skipTestOnConsulCommunityEdition(t) },
-		Providers: providers,
+		PreCheck:          func() { skipTestOnConsulCommunityEdition(t) },
+		ProviderFactories: providers,
 		Steps: []resource.TestStep{
 			{
 				Config: testConsulConfigEntryServiceRouterEE_Empty,

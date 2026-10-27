@@ -8,8 +8,8 @@ import (
 	"testing"
 
 	consulapi "github.com/hashicorp/consul/api"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
 func testAccCheckConsulACLPolicyDestroy(client *consulapi.Client) func(s *terraform.State) error {
@@ -35,8 +35,8 @@ func TestAccConsulACLPolicy_basic(t *testing.T) {
 	providers, client := startTestServer(t)
 
 	resource.Test(t, resource.TestCase{
-		Providers:    providers,
-		CheckDestroy: testAccCheckConsulACLPolicyDestroy(client),
+		ProviderFactories: providers,
+		CheckDestroy:      testAccCheckConsulACLPolicyDestroy(client),
 		Steps: []resource.TestStep{
 			{
 				Config: testResourceACLPolicyConfigBasic,
@@ -86,7 +86,7 @@ func TestAccConsulACLPolicy_import(t *testing.T) {
 	}
 
 	resource.Test(t, resource.TestCase{
-		Providers: providers,
+		ProviderFactories: providers,
 		Steps: []resource.TestStep{
 			{
 				Config: testResourceACLPolicyConfigBasic,
@@ -104,8 +104,8 @@ func TestAccConsulACLPolicy_NamespaceCE(t *testing.T) {
 	providers, _ := startTestServer(t)
 
 	resource.Test(t, resource.TestCase{
-		Providers: providers,
-		PreCheck:  func() { skipTestOnConsulEnterpriseEdition(t) },
+		ProviderFactories: providers,
+		PreCheck:          func() { skipTestOnConsulEnterpriseEdition(t) },
 		Steps: []resource.TestStep{
 			{
 				Config:      testResourceACLPolicyNamespaceCE,
@@ -119,8 +119,8 @@ func TestAccConsulACLPolicy_NamespaceEE(t *testing.T) {
 	providers, _ := startTestServer(t)
 
 	resource.Test(t, resource.TestCase{
-		Providers: providers,
-		PreCheck:  func() { skipTestOnConsulCommunityEdition(t) },
+		ProviderFactories: providers,
+		PreCheck:          func() { skipTestOnConsulCommunityEdition(t) },
 		Steps: []resource.TestStep{
 			{
 				Config: testResourceACLPolicyNamespaceEE,

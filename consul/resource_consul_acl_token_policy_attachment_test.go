@@ -8,8 +8,8 @@ import (
 	"testing"
 
 	consulapi "github.com/hashicorp/consul/api"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
 func testAccCheckConsulACLTokenPolicyAttachmentDestroy(client *consulapi.Client) func(s *terraform.State) error {
@@ -76,8 +76,8 @@ func TestAccConsulACLTokenPolicyAttachment_basic(t *testing.T) {
 	providers, client := startTestServer(t)
 
 	resource.Test(t, resource.TestCase{
-		Providers:    providers,
-		CheckDestroy: testAccCheckConsulACLTokenPolicyAttachmentDestroy(client),
+		ProviderFactories: providers,
+		CheckDestroy:      testAccCheckConsulACLTokenPolicyAttachmentDestroy(client),
 		Steps: []resource.TestStep{
 			{
 				Config: testResourceACLTokenPolicyAttachmentConfigBasic,
@@ -120,7 +120,7 @@ func TestAccConsulACLTokenPolicyAttachment_import(t *testing.T) {
 	}
 
 	resource.Test(t, resource.TestCase{
-		Providers: providers,
+		ProviderFactories: providers,
 		Steps: []resource.TestStep{
 			{
 				Config: testResourceACLTokenPolicyAttachmentConfigBasic,

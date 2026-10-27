@@ -6,7 +6,7 @@ package consul
 import (
 	"fmt"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func dataSourceConsulACLAuthMethod() *schema.Resource {
@@ -109,18 +109,8 @@ func dataSourceConsulACLAuthMethodRead(d *schema.ResourceData, meta interface{})
 	sw.set("type", authMethod.Type)
 	sw.set("description", authMethod.Description)
 	sw.setJson("config_json", authMethod.Config)
-
-	if err = d.Set("config", authMethod.Config); err != nil {
-		// When a complex configuration is used we can fail to set config as it
-		// will not support fields with maps or lists in them. In this case it
-		// means that the user used the 'config_json' field, and since we
-		// succeeded to set that and 'config' is deprecated, we can just use
-		// an empty placeholder value and ignore the error.
-		if c := d.Get("config_json").(string); c != "" {
-			sw.set("config", map[string]interface{}{})
-		} else {
-			return fmt.Errorf("failed to set 'config': %v", err)
-		}
+	if err := sw.setDeprecatedConfig(authMethod.Config); err != nil {
+		return err
 	}
 	sw.set("display_name", authMethod.DisplayName)
 	sw.set("max_token_ttl", authMethod.MaxTokenTTL.String())

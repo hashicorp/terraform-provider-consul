@@ -10,16 +10,16 @@ import (
 	"time"
 
 	consulapi "github.com/hashicorp/consul/api"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
 func TestAccConsulService_basic(t *testing.T) {
 	providers, client := startTestServer(t)
 
 	resource.Test(t, resource.TestCase{
-		Providers:    providers,
-		CheckDestroy: testAccCheckConsulServiceDestroy(client),
+		ProviderFactories: providers,
+		CheckDestroy:      testAccCheckConsulServiceDestroy(client),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccConsulServiceConfigBasic,
@@ -75,8 +75,8 @@ func TestAccConsulService_basicModify(t *testing.T) {
 	providers, client := startTestServer(t)
 
 	resource.Test(t, resource.TestCase{
-		Providers:    providers,
-		CheckDestroy: testAccCheckConsulServiceDestroy(client),
+		ProviderFactories: providers,
+		CheckDestroy:      testAccCheckConsulServiceDestroy(client),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccConsulServiceConfigBasic,
@@ -112,8 +112,8 @@ func TestAccConsulService_serviceID(t *testing.T) {
 	providers, client := startTestServer(t)
 
 	resource.Test(t, resource.TestCase{
-		Providers:    providers,
-		CheckDestroy: testAccCheckConsulServiceDestroy(client),
+		ProviderFactories: providers,
+		CheckDestroy:      testAccCheckConsulServiceDestroy(client),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccConsulServiceConfigServiceID,
@@ -132,8 +132,8 @@ func TestAccConsulServiceCheck(t *testing.T) {
 	providers, client := startTestServer(t)
 
 	resource.Test(t, resource.TestCase{
-		Providers:    providers,
-		CheckDestroy: testAccCheckConsulServiceDestroy(client),
+		ProviderFactories: providers,
+		CheckDestroy:      testAccCheckConsulServiceDestroy(client),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccConsulServiceCheck,
@@ -141,22 +141,26 @@ func TestAccConsulServiceCheck(t *testing.T) {
 					resource.TestCheckResourceAttr("consul_service.example", "name", "example"),
 					resource.TestCheckResourceAttr("consul_service.example", "port", "80"),
 					resource.TestCheckResourceAttr("consul_service.example", "check.#", "1"),
-					resource.TestCheckResourceAttr("consul_service.example", "check.1210848548.check_id", "service:redis1"),
-					resource.TestCheckResourceAttr("consul_service.example", "check.1210848548.name", "Redis health check"),
-					resource.TestCheckResourceAttr("consul_service.example", "check.1210848548.notes", "Script based health check"),
-					resource.TestCheckResourceAttr("consul_service.example", "check.1210848548.status", "passing"),
-					resource.TestCheckResourceAttr("consul_service.example", "check.1210848548.http", "https://www.hashicorptest.com"),
-					resource.TestCheckResourceAttr("consul_service.example", "check.1210848548.interval", "5s"),
-					resource.TestCheckResourceAttr("consul_service.example", "check.1210848548.timeout", "1s"),
-					resource.TestCheckResourceAttr("consul_service.example", "check.1210848548.deregister_critical_service_after", "30s"),
-					resource.TestCheckResourceAttr("consul_service.example", "check.1210848548.header.#", "2"),
-					resource.TestCheckResourceAttr("consul_service.example", "check.1210848548.header.344754333.name", "bar"),
-					resource.TestCheckResourceAttr("consul_service.example", "check.1210848548.header.344754333.value.#", "1"),
-					resource.TestCheckResourceAttr("consul_service.example", "check.1210848548.header.344754333.value.0", "test"),
-					resource.TestCheckResourceAttr("consul_service.example", "check.1210848548.header.2976766922.name", "foo"),
-					resource.TestCheckResourceAttr("consul_service.example", "check.1210848548.header.2976766922.value.#", "1"),
-					resource.TestCheckResourceAttr("consul_service.example", "check.1210848548.header.2976766922.value.0", "test"),
-					resource.TestCheckResourceAttr("consul_service.no-deregister", "check.1732085461.deregister_critical_service_after", "30s"),
+					resource.TestCheckResourceAttr("consul_service.example", "check.0.check_id", "service:redis1"),
+					resource.TestCheckResourceAttr("consul_service.example", "check.0.name", "Redis health check"),
+					resource.TestCheckResourceAttr("consul_service.example", "check.0.notes", "Script based health check"),
+					resource.TestCheckResourceAttr("consul_service.example", "check.0.status", "passing"),
+					resource.TestCheckResourceAttr("consul_service.example", "check.0.http", "https://www.hashicorptest.com"),
+					resource.TestCheckResourceAttr("consul_service.example", "check.0.interval", "5s"),
+					resource.TestCheckResourceAttr("consul_service.example", "check.0.timeout", "1s"),
+					resource.TestCheckResourceAttr("consul_service.example", "check.0.deregister_critical_service_after", "30s"),
+					resource.TestCheckResourceAttr("consul_service.example", "check.0.header.#", "2"),
+					resource.TestCheckTypeSetElemNestedAttrs("consul_service.example", "check.0.header.*", map[string]string{
+						"name":    "bar",
+						"value.#": "1",
+						"value.0": "test",
+					}),
+					resource.TestCheckTypeSetElemNestedAttrs("consul_service.example", "check.0.header.*", map[string]string{
+						"name":    "foo",
+						"value.#": "1",
+						"value.0": "test",
+					}),
+					resource.TestCheckResourceAttr("consul_service.no-deregister", "check.0.deregister_critical_service_after", "30s"),
 				),
 			},
 			{
@@ -216,7 +220,7 @@ func TestAccConsulServiceCheckOrder(t *testing.T) {
 	providers, _ := startTestServer(t)
 
 	resource.Test(t, resource.TestCase{
-		Providers: providers,
+		ProviderFactories: providers,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccConsulServiceCheckOrder,
@@ -231,7 +235,7 @@ func TestAccDataConsulServiceSameServiceMultipleNodes(t *testing.T) {
 	providers, _ := startTestServer(t)
 
 	resource.Test(t, resource.TestCase{
-		Providers: providers,
+		ProviderFactories: providers,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDataConsulServiceSameServiceMultipleNodes,
@@ -244,8 +248,8 @@ func TestAccConsulService_nodeDoesNotExist(t *testing.T) {
 	providers, client := startTestServer(t)
 
 	resource.Test(t, resource.TestCase{
-		Providers:    providers,
-		CheckDestroy: testAccCheckConsulServiceDestroy(client),
+		ProviderFactories: providers,
+		CheckDestroy:      testAccCheckConsulServiceDestroy(client),
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccConsulServiceConfigNoNode,
@@ -261,7 +265,7 @@ func TestAccConsulService_dontOverrideNodeMeta(t *testing.T) {
 	// This would raise an error if consul_service changed attributes of consul_node
 	// since the next plan would not be empty
 	resource.Test(t, resource.TestCase{
-		Providers: providers,
+		ProviderFactories: providers,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccConsulServiceDontOverrideNodeMeta,
@@ -274,7 +278,7 @@ func TestAccConsulService_multipleInstances(t *testing.T) {
 	providers, client := startTestServer(t)
 
 	resource.Test(t, resource.TestCase{
-		Providers: providers,
+		ProviderFactories: providers,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccConsulServiceMultipleInstances,
@@ -291,8 +295,8 @@ func TestAccConsulService_NamespaceCE(t *testing.T) {
 	providers, _ := startTestServer(t)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:  func() { skipTestOnConsulEnterpriseEdition(t) },
-		Providers: providers,
+		PreCheck:          func() { skipTestOnConsulEnterpriseEdition(t) },
+		ProviderFactories: providers,
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccConsulServiceNamespaceCE,
@@ -306,8 +310,8 @@ func TestAccConsulService_NamespaceEE(t *testing.T) {
 	providers, _ := startTestServer(t)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:  func() { skipTestOnConsulCommunityEdition(t) },
-		Providers: providers,
+		PreCheck:          func() { skipTestOnConsulCommunityEdition(t) },
+		ProviderFactories: providers,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccConsulServiceNamespaceEE,
@@ -320,7 +324,7 @@ func TestAccConsulService_datacenter(t *testing.T) {
 	providers, client := startRemoteDatacenterTestServer(t)
 
 	resource.Test(t, resource.TestCase{
-		Providers: providers,
+		ProviderFactories: providers,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccConsulServiceDatacenter,
@@ -361,7 +365,7 @@ func TestAccConsulService_weights(t *testing.T) {
 	providers, client := startTestServer(t)
 
 	resource.Test(t, resource.TestCase{
-		Providers: providers,
+		ProviderFactories: providers,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccConsulServiceConfigBasicWeights,
@@ -379,7 +383,7 @@ func TestAccConsulService_weightsOptional(t *testing.T) {
 	providers, _ := startTestServer(t)
 
 	resource.Test(t, resource.TestCase{
-		Providers: providers,
+		ProviderFactories: providers,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccConsulServiceConfigBasicWeightsOptional,
