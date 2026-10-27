@@ -268,27 +268,29 @@ func getAuthMethod(d *schema.ResourceData, meta interface{}) (*consulapi.ACLAuth
 	return authMethod, nil
 }
 
-// isFlatConfig reports whether config fits in a map of strings, i.e. has no nested maps or lists.
-func isFlatConfig(config map[string]interface{}) bool {
+// isStringMap reports whether config fits the deprecated 'config' map of strings. Booleans, numbers, maps and lists
+// do not: SDK v2 rejects them when setting a map of strings (and panics under TF_ACC).
+func isStringMap(config map[string]interface{}) bool {
 	for _, v := range config {
 		switch v.(type) {
-		case map[string]interface{}, []interface{}:
+		case string, nil:
+		default:
 			return false
 		}
 	}
 	return true
 }
 
-// setDeprecatedConfig sets the deprecated 'config' map, which cannot hold nested values; those come from 'config_json'.
+// setDeprecatedConfig sets the deprecated 'config' map; configurations it cannot hold come from 'config_json'.
 func (sw *stateWriter) setDeprecatedConfig(config map[string]interface{}) error {
-	if isFlatConfig(config) {
+	if isStringMap(config) {
 		if err := sw.d.Set("config", config); err != nil {
 			return fmt.Errorf("failed to set 'config': %v", err)
 		}
 		return nil
 	}
 	if sw.d.Get("config_json").(string) == "" {
-		return fmt.Errorf("failed to set 'config': it contains nested values, use 'config_json' instead")
+		return fmt.Errorf("failed to set 'config': it contains non-string values, use 'config_json' instead")
 	}
 	sw.set("config", map[string]interface{}{})
 	return nil
