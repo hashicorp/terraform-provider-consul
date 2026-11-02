@@ -374,11 +374,11 @@ resource "consul_config_entry_service_defaults" "bar" {
 				max_concurrent_requests = 9399
 			}
 			passive_health_check {
-				interval                  = 19
+				interval                  = "19s"
 				max_failures              = 8
 				enforcing_consecutive_5xx = 10
 				max_ejection_percent      = 10
-				base_ejection_time        = 30
+				base_ejection_time        = "30s"
 			}
 		}
 		overrides {
@@ -395,11 +395,11 @@ resource "consul_config_entry_service_defaults" "bar" {
 				max_concurrent_requests = 9399
 			}
 			passive_health_check {
-				interval                  = 19
+				interval                  = "19s"
 				max_failures              = 8
 				enforcing_consecutive_5xx = 10
 				max_ejection_percent      = 10
-				base_ejection_time        = 30
+				base_ejection_time        = "30s"
 			}
 		}
 		defaults {
@@ -415,11 +415,11 @@ resource "consul_config_entry_service_defaults" "bar" {
 				max_concurrent_requests = 2900
 			}
 			passive_health_check {
-				interval                  = 23900
+				interval                  = "6h38m20s"
 				max_failures              = 29030
 				enforcing_consecutive_5xx = 1
 				max_ejection_percent      = 12
-				base_ejection_time        = 30309
+				base_ejection_time        = "8h25m9s"
 			}
 		}
 	}
@@ -547,14 +547,14 @@ resource "consul_config_entry_service_defaults" "bar" {
 				max_concurrent_requests = 9399
 			}
 			passive_health_check {
-				interval                  = 19
+				interval                  = "19s"
 				max_failures              = 8
 				enforcing_consecutive_5xx = 10
 				enforcing_consecutive_gateway_failure = 20
 				consecutive_5xx = 3
 				consecutive_gateway_failure = 2
 				max_ejection_percent      = 10
-				base_ejection_time        = 30
+				base_ejection_time        = "30s"
 			}
 		}
 		overrides {
@@ -571,14 +571,14 @@ resource "consul_config_entry_service_defaults" "bar" {
 				max_concurrent_requests = 9399
 			}
 			passive_health_check {
-				interval                  = 19
+				interval                  = "19s"
 				max_failures              = 8
 				enforcing_consecutive_5xx = 10
 				enforcing_consecutive_gateway_failure = 20
 				consecutive_5xx = 3
 				consecutive_gateway_failure = 2
 				max_ejection_percent      = 10
-				base_ejection_time        = 30
+				base_ejection_time        = "30s"
 			}
 		}
 		defaults {
@@ -594,14 +594,14 @@ resource "consul_config_entry_service_defaults" "bar" {
 				max_concurrent_requests = 2900
 			}
 			passive_health_check {
-				interval                  = 23900
+				interval                  = "6h38m20s"
 				max_failures              = 29030
 				enforcing_consecutive_5xx = 1
 				enforcing_consecutive_gateway_failure = 2
 				consecutive_5xx = 4
 				consecutive_gateway_failure = 3
 				max_ejection_percent      = 12
-				base_ejection_time        = 30309
+				base_ejection_time        = "8h25m9s"
 			}
 		}
 	}
