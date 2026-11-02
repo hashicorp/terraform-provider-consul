@@ -1,17 +1,19 @@
-## Unreleased
+## 2.24.0 (November 2, 2026)
 
 NOTES:
 
-* The provider now uses `terraform-plugin-sdk` v2 and no longer supports Terraform 0.11 (plugin protocol 4). Use Terraform 0.13 or later, as listed in the README.
+* The provider now uses `terraform-plugin-sdk` v2 and no longer supports Terraform 0.11 (plugin protocol 4). Use Terraform 0.13 or later, as listed in the README ([#507](https://github.com/hashicorp/terraform-provider-consul/pull/507)).
+
+NEW FEATURES:
+
+* The `consul_config_entry_service_defaults` resource now supports `consecutive_5xx`, `consecutive_gateway_failure` and `enforcing_consecutive_gateway_failure` in the upstream `passive_health_check` block ([#495](https://github.com/hashicorp/terraform-provider-consul/pull/495)).
 
 BUG FIXES:
 
-* Upgrades to `terraform-plugin-sdk` v2, removing `github.com/zclconf/go-cty-yaml` (CVE-2022-3064), `golang.org/x/crypto/openpgp` (GO-2026-5932) and `github.com/keybase/go-crypto` from the provider binary. `pgp_key` encryption in the `consul_acl_token_secret_id` data source now uses `github.com/ProtonMail/go-crypto` and produces the same message format as before, so existing `base64 -d | gpg -d` workflows keep working.
-* Upgrades `google.golang.org/grpc` to v1.79.3 to address the gRPC-Go authorization bypass for malformed `:path` headers and updates the Go version to 1.25.8 ([#484](https://github.com/hashicorp/terraform-provider-consul/pull/484)).
-* Upgrades Go toolchain to `1.26.8` and `golang.org/x/net` to `v0.59.0` to address multiple stdlib security vulnerabilities ([#497](https://github.com/hashicorp/terraform-provider-consul/pull/497)).
-* Upgrades `golang.org/x/net` to `v0.60.0`, `go.opentelemetry.io/otel` modules to `v1.45.0`, and `github.com/keybase/go-crypto` to the latest revision to address CVE-2026-78659, CVE-2026-78660, CVE-2026-78663, CVE-2026-78669, CVE-2026-97032, CVE-2026-81870, CVE-2020-9283, CVE-2020-29652, CVE-2021-43565 and CVE-2022-27191.
-* Upgrades Go toolchain to `1.26.9` to address multiple stdlib security vulnerabilities in `net/http`, `crypto/tls`, `mime/multipart`, `html/template` and `os`.
-* Upgrades Go toolchain to `1.26.10` to address GO-2026-6809 (`crypto/x509` did not distrust compromised intermediate certificates).
+* Upgrades to `terraform-plugin-sdk` v2, removing `github.com/zclconf/go-cty-yaml` (CVE-2022-3064), `golang.org/x/crypto/openpgp` (GO-2026-5932), `github.com/keybase/go-crypto` (CVE-2020-9283, CVE-2020-29652, CVE-2021-43565, CVE-2022-27191) and `go.opentelemetry.io/otel` (CVE-2026-81870) from the provider binary. `pgp_key` encryption in the `consul_acl_token_secret_id` data source now uses `github.com/ProtonMail/go-crypto` and produces the same message format as before, so existing `base64 -d | gpg -d` workflows keep working ([#507](https://github.com/hashicorp/terraform-provider-consul/pull/507)).
+* Upgrades Go toolchain to `1.26.10` to address multiple stdlib security vulnerabilities in `net/http`, `crypto/tls`, `crypto/x509` (GO-2026-6809), `mime/multipart`, `html/template` and `os` ([#497](https://github.com/hashicorp/terraform-provider-consul/pull/497), [#501](https://github.com/hashicorp/terraform-provider-consul/pull/501), [#506](https://github.com/hashicorp/terraform-provider-consul/pull/506)).
+* Upgrades `golang.org/x/net` to `v0.62.0` to address CVE-2026-78659, CVE-2026-78660, CVE-2026-78661, CVE-2026-78663, CVE-2026-78669, CVE-2026-97032 and CVE-2026-97045 ([#497](https://github.com/hashicorp/terraform-provider-consul/pull/497), [#501](https://github.com/hashicorp/terraform-provider-consul/pull/501), [#509](https://github.com/hashicorp/terraform-provider-consul/pull/509)).
+* Upgrades `google.golang.org/grpc` to `v1.84.0` to address the gRPC-Go authorization bypass for malformed `:path` headers ([#484](https://github.com/hashicorp/terraform-provider-consul/pull/484)).
 * Upgrades `github.com/hashicorp/consul-awsauth` to the latest revision, which uses `aws-sdk-go-v2`, removing the `github.com/aws/aws-sdk-go` (v1) dependency from the provider binary to address GO-2022-0635 and GO-2022-0646 ([#502](https://github.com/hashicorp/terraform-provider-consul/pull/502)).
 * The AWS IAM provider login (`auth_login_aws`) now honors `AWS_CA_BUNDLE` and `AWS_USE_FIPS_ENDPOINT` / `use_fips_endpoint` when generating login data. When static credentials (`aws_access_key_id` and `aws_secret_access_key`) are set, the AWS configuration is now also loaded so these settings apply; if it cannot be loaded, login continues only when the configured profile is missing and no CA bundle or FIPS setting is set, otherwise the error is returned ([#502](https://github.com/hashicorp/terraform-provider-consul/pull/502), [hashicorp/consul-awsauth#22](https://github.com/hashicorp/consul-awsauth/pull/22)).
 
