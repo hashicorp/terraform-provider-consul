@@ -14,7 +14,9 @@ binary {
 
   triage {
 		suppress {
-			vulnerabilities = []
+			vulnerabilities = [
+				"GO-2026-5932", // x/crypto/openpgp: no fixed version exists upstream; provider imports no openpgp package.
+			]
 		}
 	}
 }
