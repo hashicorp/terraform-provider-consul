@@ -263,7 +263,7 @@ resource "consul_config_entry" "exported_services" {
 
 ```hcl
 resource "consul_config_entry" "mesh" {
-	name      = "mesh"
+	#name      = "mesh"  ### The "name" argument field doesn't align with the consul configuration entry object which may cause throw error when customize to any other name instead of "mesh". Ref. https://developer.hashicorp.com/consul/docs/connect/config-entries/mesh#available-fields
 	kind      = "mesh"
   partition = "default"
 
