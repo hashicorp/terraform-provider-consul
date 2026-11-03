@@ -86,7 +86,7 @@ func resourceConsulACLBindingRule() *schema.Resource {
 }
 
 func resourceConsulACLBindingRuleCreate(d *schema.ResourceData, meta interface{}) error {
-	client, _, wOpts := getClient(d, meta)
+	client, qOpts, wOpts := getClient(d, meta)
 	ACL := client.ACL()
 
 	rule := getBindingRule(d, meta)
@@ -94,6 +94,10 @@ func resourceConsulACLBindingRuleCreate(d *schema.ResourceData, meta interface{}
 	rule, _, err := ACL.BindingRuleCreate(rule, wOpts)
 	if err != nil {
 		return fmt.Errorf("failed to create binding rule: %v", err)
+	}
+
+	if err := waitForACLTokenReplication(client.ACL(), qOpts, rule.CreateIndex); err != nil {
+		return err
 	}
 
 	d.SetId(rule.ID)
@@ -133,14 +137,18 @@ func resourceConsulACLBindingRuleRead(d *schema.ResourceData, meta interface{}) 
 }
 
 func resourceConsulACLBindingRuleUpdate(d *schema.ResourceData, meta interface{}) error {
-	client, _, wOpts := getClient(d, meta)
+	client, qOpts, wOpts := getClient(d, meta)
 	ACL := client.ACL()
 
 	rule := getBindingRule(d, meta)
 
-	_, _, err := ACL.BindingRuleUpdate(rule, wOpts)
+	u, _, err := ACL.BindingRuleUpdate(rule, wOpts)
 	if err != nil {
 		return fmt.Errorf("failed to update binding rule '%s': %v", d.Id(), err)
+	}
+
+	if err := waitForACLTokenReplication(client.ACL(), qOpts, u.ModifyIndex); err != nil {
+		return err
 	}
 
 	return resourceConsulACLBindingRuleRead(d, meta)
