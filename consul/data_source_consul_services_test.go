@@ -24,6 +24,12 @@ func TestAccDataConsulServices_basic(t *testing.T) {
 					testAccCheckDataSourceValue("data.consul_services.read", "services.consul", ""),
 				),
 			},
+			{
+				Config: testAccDataConsulServicesConfig_wrongFilter,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDataSourceValue("data.consul_services.read", "services.%", "0"),
+				),
+			},
 		},
 	})
 }
@@ -114,6 +120,22 @@ data "consul_services" "read" {
     wait_index = 0
     wait_time = "1m"
   }
+
+  filter = "ServiceName == consul"
+}
+`
+
+const testAccDataConsulServicesConfig_wrongFilter = `
+data "consul_services" "read" {
+  query_options {
+    allow_stale = true
+    require_consistent = false
+    token = ""
+    wait_index = 0
+    wait_time = "1m"
+  }
+
+  filter = "ServiceName != consul"
 }
 `
 
